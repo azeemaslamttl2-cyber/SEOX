@@ -31,7 +31,7 @@ function getConnectionConfig(env = process.env) {
     // ignore logging errors
   }
 
-  return { host, port, user, password, database, waitForConnections: true, connectionLimit: 10, queueLimit: 0 };
+  return { host, port, user, password, database, charset: 'utf8mb4_general_ci', waitForConnections: true, connectionLimit: 10, queueLimit: 0 };
 }
 
 async function withPool(env, callback) {
@@ -69,7 +69,7 @@ async function ensureUsersTable(pool, env = process.env) {
       updated_at DATETIME NOT NULL,
       PRIMARY KEY (id),
       UNIQUE KEY uq_users_email (email)
-    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci
   `);
 }
 

@@ -38,7 +38,7 @@ try {
       updated_at DATETIME NOT NULL,
       PRIMARY KEY (id),
       UNIQUE KEY uq_users_email (email)
-    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci
   `);
 
   const passwordHash = await buildPasswordHash(password);

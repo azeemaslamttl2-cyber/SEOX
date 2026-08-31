@@ -32,7 +32,7 @@ CREATE TABLE IF NOT EXISTS `admin_affiliates` (
   `joined_at` datetime DEFAULT NULL,
   `created_at` datetime NOT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- Dumping data for table code-step-mysql.admin_affiliates: ~0 rows (approximately)
 
@@ -48,7 +48,7 @@ CREATE TABLE IF NOT EXISTS `admin_niches` (
   `keywords` int DEFAULT NULL,
   `created_at` datetime NOT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- Dumping data for table code-step-mysql.admin_niches: ~0 rows (approximately)
 
@@ -64,7 +64,7 @@ CREATE TABLE IF NOT EXISTS `admin_payments` (
   `status` varchar(50) DEFAULT NULL,
   `created_at` datetime NOT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- Dumping data for table code-step-mysql.admin_payments: ~0 rows (approximately)
 
@@ -77,7 +77,7 @@ CREATE TABLE IF NOT EXISTS `admin_settings` (
   `updated_by` varchar(255) DEFAULT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `uq_admin_settings_key` (`setting_key`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- Dumping data for table code-step-mysql.admin_settings: ~0 rows (approximately)
 
@@ -91,7 +91,7 @@ CREATE TABLE IF NOT EXISTS `content_writer_profiles` (
   PRIMARY KEY (`id`),
   UNIQUE KEY `uq_content_writer_profiles_user` (`user_id`),
   CONSTRAINT `fk_content_writer_profiles_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- Dumping data for table code-step-mysql.content_writer_profiles: ~0 rows (approximately)
 
@@ -107,7 +107,7 @@ CREATE TABLE IF NOT EXISTS `gsc_connections` (
   PRIMARY KEY (`id`),
   UNIQUE KEY `uq_gsc_connections_user` (`user_id`),
   CONSTRAINT `fk_gsc_connections_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- Dumping data for table code-step-mysql.gsc_connections: ~0 rows (approximately)
 
@@ -123,7 +123,7 @@ CREATE TABLE IF NOT EXISTS `stripe_connections` (
   PRIMARY KEY (`id`),
   UNIQUE KEY `uq_stripe_connections_user` (`user_id`),
   CONSTRAINT `fk_stripe_connections_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- Dumping data for table code-step-mysql.stripe_connections: ~0 rows (approximately)
 
@@ -140,7 +140,7 @@ CREATE TABLE IF NOT EXISTS `tool_results` (
   PRIMARY KEY (`id`),
   UNIQUE KEY `uq_tool_result` (`user_id`,`project_id`,`tool_key`),
   CONSTRAINT `fk_tool_results_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=72 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=72 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- Dumping data for table code-step-mysql.tool_results: ~7 rows (approximately)
 INSERT INTO `tool_results` (`id`, `user_id`, `project_id`, `tool_key`, `project_url`, `result`, `created_at`, `updated_at`) VALUES
@@ -166,7 +166,7 @@ CREATE TABLE IF NOT EXISTS `user_meta` (
   PRIMARY KEY (`id`),
   UNIQUE KEY `uq_user_meta_user` (`user_id`),
   CONSTRAINT `fk_user_meta_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- Dumping data for table code-step-mysql.user_meta: ~0 rows (approximately)
 
@@ -204,7 +204,7 @@ CREATE TABLE IF NOT EXISTS `user_projects` (
   KEY `idx_project_domain` (`domain`),
   KEY `idx_project_owner` (`owner_uid`),
   CONSTRAINT `fk_user_projects_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- Dumping data for table code-step-mysql.user_projects: ~6 rows (approximately)
 INSERT INTO `user_projects` (`id`, `user_id`, `project_id`, `project_name`, `domain`, `full_url`, `protocol`, `scope`, `folder`, `schedule`, `user_agent`, `url_limit`, `total_urls`, `compare_to`, `crawled_on`, `render_js`, `respect_robots`, `notify_email`, `owner`, `owner_email`, `owner_uid`, `project_data`, `selected_project_id`, `deleted_project_ids`, `created_at`, `updated_at`) VALUES
@@ -263,7 +263,7 @@ CREATE TABLE IF NOT EXISTS `users` (
   `deleted_at` datetime DEFAULT NULL COMMENT 'Soft delete',
   PRIMARY KEY (`id`),
   UNIQUE KEY `uq_users_email` (`email`)
-) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- Dumping data for table code-step-mysql.users: ~1 rows (approximately)
 INSERT INTO `users` (`id`, `email`, `password_hash`, `display_name`, `username`, `first_name`, `last_name`, `profile_image`, `profile_image_public_id`, `bio`, `phone_number`, `country`, `city`, `timezone`, `language`, `provider`, `provider_id`, `email_verified`, `email_verified_at`, `is_active`, `is_admin`, `role`, `plan`, `subscription_status`, `trial_ends_at`, `subscription_ends_at`, `two_factor_enabled`, `two_factor_secret`, `remember_token`, `last_login_at`, `last_login_ip`, `failed_login_attempts`, `locked_until`, `notification_preferences`, `theme_preference`, `dashboard_preferences`, `google_id`, `github_id`, `facebook_id`, `twitter_id`, `metadata`, `created_at`, `updated_at`, `deleted_at`) VALUES
@@ -282,7 +282,7 @@ CREATE TABLE IF NOT EXISTS `yandex_connections` (
   PRIMARY KEY (`id`),
   UNIQUE KEY `uq_yandex_connections_user` (`user_id`),
   CONSTRAINT `fk_yandex_connections_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- Dumping data for table code-step-mysql.yandex_connections: ~0 rows (approximately)
 
