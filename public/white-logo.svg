@@ -1,0 +1,19 @@
+<svg width="41" height="53" viewBox="0 0 41 53" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <g id="icon-group" clip-path="url(#clip0_279_2)">
+    <path class="ln" pathLength="1000" d="M23.19 7.22998V26.71L20.39 28.32L17.63 26.71V7.22998" stroke="#FFFFFF" stroke-miterlimit="10"/>
+    <path class="ln" pathLength="1000" d="M28.98 19.92V10.63L26.13 8.95001V29.1L20.39 32.42L14.68 29.11L14.67 8.97001L11.84 10.64V19.32" stroke="#FFFFFF" stroke-miterlimit="10"/>
+    <path class="ln" pathLength="1000" d="M20.39 48.12L3.32999 38.32V27.57V24.18L6.15999 25.89" stroke="#FFFFFF" stroke-miterlimit="10"/>
+    <path class="ln" pathLength="1000" d="M20.39 40.25L31.79 33.72L31.8 20.85L28.86 22.55V31.34L20.39 36.22L11.95 31.34V22.55L9 20.85L9.01 33.72L20.39 40.25Z" stroke="#FFFFFF" stroke-miterlimit="10"/>
+    <path class="ln" pathLength="1000" d="M31.84 24.05L34.64 22.5V25.89V35.99L20.39 44.2L6.16 35.99V25.89V22.5L8.96 24.05" stroke="#FFFFFF" stroke-miterlimit="10"/>
+    <path class="ln" pathLength="1000" d="M20.39 48.12L37.47 38.32V27.57V24.18L34.64 25.89" stroke="#FFFFFF" stroke-miterlimit="10"/>
+    <path class="ln" pathLength="1000" d="M37.47 27.57L40.3 25.86V40.6L20.39 52.09L0.5 40.6V25.86L3.33 27.57" stroke="#FFFFFF" stroke-miterlimit="10"/>
+    <path class="ln" pathLength="1000" d="M20.42 0L20.39 28.32" stroke="#FFFFFF" stroke-linejoin="bevel"/>
+    <path class="ln" pathLength="1000" d="M20.42 36.22L20.39 52.09" stroke="#FFFFFF" stroke-miterlimit="10"/>
+  </g>
+
+  <defs>
+    <clipPath id="clip0_279_2">
+      <rect width="40.8" height="52.67" fill="white"/>
+    </clipPath>
+  </defs>
+</svg>

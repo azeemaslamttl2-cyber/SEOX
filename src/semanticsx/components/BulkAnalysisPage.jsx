@@ -1125,7 +1125,7 @@ const SiteDetailView = ({ site, getValidAccessToken, onBack }) => {
                                                         <stop offset="100%" stopColor="#8b5cf6" stopOpacity={0} />
                                                     </linearGradient>
                                                 </defs>
-                                                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" />
+                                                <CartesianGrid strokeDasharray="3 3" stroke="#eef0f5" />
                                                 <XAxis
                                                     dataKey="date"
                                                     tick={{ fontSize: 12 }}

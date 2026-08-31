@@ -93,8 +93,8 @@ function AreaChart({ points, color = "#df3c27", height = 140, labels = [] }) {
         const val = Math.round(frac * maxVal);
         return (
           <g key={frac}>
-            <line x1={pad} y1={y} x2={w - pad} y2={y} stroke="rgba(255,255,255,0.06)" strokeWidth="1" />
-            <text x={pad - 8} y={y + 4} textAnchor="end" fill="rgba(255,255,255,0.3)" fontSize="10" fontFamily="Gotham, Century Gothic, sans-serif">
+            <line x1={pad} y1={y} x2={w - pad} y2={y} stroke="#eef0f5" strokeWidth="1" />
+            <text x={pad - 8} y={y + 4} textAnchor="end" fill="#727a94" fontSize="10" fontFamily="Gotham, Century Gothic, sans-serif">
               {val ? `Rs ${(val / 1000).toFixed(0)}k` : "Rs 0"}
             </text>
           </g>
@@ -104,10 +104,10 @@ function AreaChart({ points, color = "#df3c27", height = 140, labels = [] }) {
       <path d={linePath} fill="none" stroke={color} strokeWidth="2.5" strokeLinejoin="round" />
       {pathPoints.map((p, i) => {
         const [x, y] = p.split(",").map(Number);
-        return <circle key={i} cx={x} cy={y} r="3" fill="#171638" stroke={color} strokeWidth="2" />;
+        return <circle key={i} cx={x} cy={y} r="3" fill="#ffffff" stroke={color} strokeWidth="2" />;
       })}
       {labels.map((label, i) => (
-        <text key={i} x={pad + i * stepX} y={h + 14} textAnchor="middle" fill="rgba(255,255,255,0.35)" fontSize="10" fontFamily="Gotham, Century Gothic, sans-serif">
+        <text key={i} x={pad + i * stepX} y={h + 14} textAnchor="middle" fill="#727a94" fontSize="10" fontFamily="Gotham, Century Gothic, sans-serif">
           {label}
         </text>
       ))}
@@ -134,7 +134,7 @@ function DualLineChart({ series1, series2, color1 = "#df3c27", color2 = "#2d2b6f
       <path d={`M${toPath(series1)}`} fill="none" stroke={color1} strokeWidth="2.5" strokeLinejoin="round" />
       <path d={`M${toPath(series2)}`} fill="none" stroke={color2} strokeWidth="2.5" strokeLinejoin="round" />
       {labels.map((l, i) => (
-        <text key={i} x={pad + i * stepX} y={h + 14} textAnchor="middle" fill="rgba(255,255,255,0.3)" fontSize="9" fontFamily="Gotham, Century Gothic, sans-serif">{l}</text>
+        <text key={i} x={pad + i * stepX} y={h + 14} textAnchor="middle" fill="#727a94" fontSize="9" fontFamily="Gotham, Century Gothic, sans-serif">{l}</text>
       ))}
       <circle cx={w / 2 - 60} cy={h + 26} r="4" fill={color1} />
       <text x={w / 2 - 52} y={h + 30} fill="rgba(255,255,255,0.5)" fontSize="10" fontFamily="Gotham, Century Gothic, sans-serif">Clicks</text>
@@ -167,12 +167,12 @@ function UserGrowthChart({ data, labels }) {
       </defs>
       {[0, 0.5, 1].map((f) => {
         const y = h - pad - f * (h - pad * 2);
-        return <line key={f} x1={pad} y1={y} x2={w - pad} y2={y} stroke="rgba(255,255,255,0.06)" strokeWidth="1" />;
+        return <line key={f} x1={pad} y1={y} x2={w - pad} y2={y} stroke="#eef0f5" strokeWidth="1" />;
       })}
       <path d={areaPath} fill="url(#ug-grad)" />
       <path d={linePath} fill="none" stroke="#22c55e" strokeWidth="2" strokeLinejoin="round" />
       {labels.map((l, i) => (
-        <text key={i} x={pad + i * stepX} y={h + 10} textAnchor="middle" fill="rgba(255,255,255,0.3)" fontSize="9" fontFamily="Gotham, Century Gothic, sans-serif">{l}</text>
+        <text key={i} x={pad + i * stepX} y={h + 10} textAnchor="middle" fill="#727a94" fontSize="9" fontFamily="Gotham, Century Gothic, sans-serif">{l}</text>
       ))}
     </svg>
   );
