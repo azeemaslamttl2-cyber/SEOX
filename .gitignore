@@ -24,3 +24,12 @@ service-account.json
 *.sw?
 /Backlinksdata
 /semanticsx-fucntions
+
+functions/_lib/mysql-repository.js
+functions/_lib/mysql.js
+functions/api/auth.js
+mysql_tables.sql
+mysql_tables_with_data.sql
+scripts/add-dummy-user.sql
+scripts/seed-login-user.mjs
+src/app/api/save-project.js
