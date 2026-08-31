@@ -1,0 +1,222 @@
+$ErrorActionPreference = 'Stop'
+$root = 'D:\wamp64\www\code-step-mysql'
+$targetDir = Join-Path $root 'migration/mysql'
+New-Item -ItemType Directory -Force -Path $targetDir | Out-Null
+
+$ignore = @('.git', 'node_modules', 'dist', 'coverage')
+$files = Get-ChildItem -Path $root -Recurse -File | Where-Object {
+  $full = $_.FullName
+  $skip = $false
+  foreach ($token in $ignore) {
+    if ($full -match [regex]::Escape([IO.Path]::DirectorySeparatorChar + $token + [IO.Path]::DirectorySeparatorChar)) {
+      $skip = $true
+      break
+    }
+  }
+  if (-not $skip) {
+    $_.FullName.Substring($root.Length + 1).Replace('\\', '/')
+  }
+} | Sort-Object
+
+$projectSql = foreach ($rel in $files) {
+  "INSERT INTO project_files (path, category, language, notes) VALUES ('{0}', 'source', NULL, NULL);" -f ($rel -replace "'", "''")
+}
+Set-Content -Path (Join-Path $targetDir 'seed_project_files.sql') -Value $projectSql -Encoding UTF8
+
+$analysisSql = @(
+  "INSERT INTO configuration_files (path, config_type, current_value_summary, replacement_strategy, notes) VALUES ('.env', 'env', 'Firebase and MySQL env vars must be migrated', 'Replace with MySQL connection variables and JWT settings', 'Migration from Firebase config to MySQL');",
+  "INSERT INTO configuration_files (path, config_type, current_value_summary, replacement_strategy, notes) VALUES ('.env.example', 'env-example', 'Template values for Firebase web config', 'Replace with MySQL and auth provider variables', 'Migration from Firebase config to MySQL');",
+  "INSERT INTO configuration_files (path, config_type, current_value_summary, replacement_strategy, notes) VALUES ('.env.local', 'env-local', 'Local Firebase credentials', 'Remove Firebase config and add MySQL connection settings', 'Migration from Firebase config to MySQL');",
+  "INSERT INTO configuration_files (path, config_type, current_value_summary, replacement_strategy, notes) VALUES ('.dev.vars.example', 'cloudflare-env', 'Cloudflare Pages secrets for Firebase and Stripe', 'Replace Firebase service account with MySQL credentials', 'Migration from Firebase config to MySQL');",
+  "INSERT INTO configuration_files (path, config_type, current_value_summary, replacement_strategy, notes) VALUES ('wrangler.jsonc', 'wrangler', 'Cloudflare deployment config', 'Keep, but remove Firebase-specific runtime assumptions', 'Migration from Firebase config to MySQL');",
+  "INSERT INTO configuration_files (path, config_type, current_value_summary, replacement_strategy, notes) VALUES ('package.json', 'package', 'Frontend dependencies', 'Remove firebase package, add mysql client or API wrapper dependency', 'Migration from Firebase config to MySQL');",
+  "INSERT INTO firestore_collections (collection_name, source_file, description, document_fields_json, inferred_types_json, relationships_json, mysql_table_name, notes) VALUES ('adminSettings', 'functions/api/api-settings.js', 'Admin API settings document', '[\"dataforseoLogin\",\"dataforseoPassword\",\"dataforseoUpdatedAt\",\"dataforseoUpdatedBy\"]', '[\"string\",\"string\",\"string\",\"string\"]', '[\"stored in a single admin settings row\"]', 'admin_settings', 'Mapped to MySQL table');",
+  "INSERT INTO firestore_collections (collection_name, source_file, description, document_fields_json, inferred_types_json, relationships_json, mysql_table_name, notes) VALUES ('stripeConnections', 'functions/api/stripe-connect.js', 'Stripe Connect account state', '[\"stripeAccountId\",\"email\",\"createdAt\",\"updatedAt\",\"lastOnboardingLinkAt\"]', '[\"string\",\"string\",\"string\",\"string\",\"string\"]', '[\"one row per uid\"]', 'stripe_connections', 'Mapped to MySQL table');",
+  "INSERT INTO firestore_collections (collection_name, source_file, description, document_fields_json, inferred_types_json, relationships_json, mysql_table_name, notes) VALUES ('users/{uid}/gscConnection', 'functions/api/gsc-token.js', 'Google Search Console OAuth token store', '[\"accessToken\",\"refreshToken\",\"expiresAt\",\"googleEmail\",\"updatedAt\"]', '[\"string\",\"string\",\"number\",\"string\",\"string\"]', '[\"one row per user\"]', 'gsc_connections', 'Mapped to MySQL table');",
+  "INSERT INTO firestore_collections (collection_name, source_file, description, document_fields_json, inferred_types_json, relationships_json, mysql_table_name, notes) VALUES ('users/{uid}/yandexConnection', 'functions/_handlers/webmaster-api.js', 'Yandex Webmaster OAuth token store', '[\"accessToken\",\"refreshToken\",\"expiresAt\",\"yandexEmail\",\"yandexUserId\",\"updatedAt\"]', '[\"string\",\"string\",\"number\",\"string\",\"string\",\"string\"]', '[\"one row per user\"]', 'yandex_connections', 'Mapped to MySQL table');",
+  "INSERT INTO firestore_collections (collection_name, source_file, description, document_fields_json, inferred_types_json, relationships_json, mysql_table_name, notes) VALUES ('users/{uid}/projects', 'functions/api/projects.js', 'User project metadata', '[\"id\",\"name\",\"domain\",\"ownerUid\",\"ownerEmail\",\"updatedAt\"]', '[\"string\",\"string\",\"string\",\"string\",\"string\",\"string\"]', '[\"one row per project\"]', 'user_projects', 'Mapped to MySQL table');",
+  "INSERT INTO firestore_collections (collection_name, source_file, description, document_fields_json, inferred_types_json, relationships_json, mysql_table_name, notes) VALUES ('users/{uid}/meta', 'functions/api/projects.js', 'Selected project and deleted IDs', '[\"selectedProjectId\",\"deletedProjectIds\",\"updatedAt\"]', '[\"string\",\"array\",\"string\"]', '[\"one row per user\"]', 'user_meta', 'Mapped to MySQL table');",
+  "INSERT INTO firestore_collections (collection_name, source_file, description, document_fields_json, inferred_types_json, relationships_json, mysql_table_name, notes) VALUES ('users/{uid}/projects/{projectId}/toolResults', 'functions/api/projects.js', 'Tool result snapshots', '[\"projectId\",\"toolKey\",\"projectUrl\",\"result\",\"updatedAt\"]', '[\"string\",\"string\",\"string\",\"json\",\"string\"]', '[\"one row per tool per project\"]', 'tool_results', 'Mapped to MySQL table');",
+  "INSERT INTO firestore_collections (collection_name, source_file, description, document_fields_json, inferred_types_json, relationships_json, mysql_table_name, notes) VALUES ('project_data', 'src/pages/content/ContentWriterDashboard.jsx', 'Content writer articles state', '[\"contentWriterArticles\",\"contentWriterStates_\*\"]', '[\"array\",\"json\"]', '[\"one row per user\"]', 'content_writer_profiles', 'Mapped to MySQL table');",
+  "INSERT INTO database_schema_mapping (firestore_collection, mysql_table, mapping_notes) VALUES ('adminSettings', 'admin_settings', 'Single-row settings store');",
+  "INSERT INTO database_schema_mapping (firestore_collection, mysql_table, mapping_notes) VALUES ('stripeConnections', 'stripe_connections', 'One row per user connection');",
+  "INSERT INTO database_schema_mapping (firestore_collection, mysql_table, mapping_notes) VALUES ('users/{uid}/gscConnection', 'gsc_connections', 'One row per user');",
+  "INSERT INTO database_schema_mapping (firestore_collection, mysql_table, mapping_notes) VALUES ('users/{uid}/yandexConnection', 'yandex_connections', 'One row per user');",
+  "INSERT INTO database_schema_mapping (firestore_collection, mysql_table, mapping_notes) VALUES ('users/{uid}/projects', 'user_projects', 'One row per project');",
+  "INSERT INTO database_schema_mapping (firestore_collection, mysql_table, mapping_notes) VALUES ('users/{uid}/meta', 'user_meta', 'One row per user');",
+  "INSERT INTO database_schema_mapping (firestore_collection, mysql_table, mapping_notes) VALUES ('users/{uid}/projects/{projectId}/toolResults', 'tool_results', 'One row per tool result');",
+  "INSERT INTO database_schema_mapping (firestore_collection, mysql_table, mapping_notes) VALUES ('project_data', 'content_writer_profiles', 'One row per user with JSON payloads');",
+  "INSERT INTO api_endpoints (path, method, handler_file, uses_firebase_auth, uses_firestore, notes) VALUES ('/api/projects', 'GET', 'functions/api/projects.js', 1, 1, 'Project listing and persistence');",
+  "INSERT INTO api_endpoints (path, method, handler_file, uses_firebase_auth, uses_firestore, notes) VALUES ('/api/projects', 'POST', 'functions/api/projects.js', 1, 1, 'Project metadata save');",
+  "INSERT INTO api_endpoints (path, method, handler_file, uses_firebase_auth, uses_firestore, notes) VALUES ('/api/projects', 'DELETE', 'functions/api/projects.js', 1, 1, 'Delete project');",
+  "INSERT INTO api_endpoints (path, method, handler_file, uses_firebase_auth, uses_firestore, notes) VALUES ('/api/api-settings', 'GET', 'functions/api/api-settings.js', 1, 1, 'Read settings');",
+  "INSERT INTO api_endpoints (path, method, handler_file, uses_firebase_auth, uses_firestore, notes) VALUES ('/api/api-settings', 'POST', 'functions/api/api-settings.js', 1, 1, 'Write settings');",
+  "INSERT INTO api_endpoints (path, method, handler_file, uses_firebase_auth, uses_firestore, notes) VALUES ('/api/gsc-token', 'POST', 'functions/api/gsc-token.js', 1, 1, 'Search Console OAuth token operations');",
+  "INSERT INTO api_endpoints (path, method, handler_file, uses_firebase_auth, uses_firestore, notes) VALUES ('/api/stripe-connect', 'GET', 'functions/api/stripe-connect.js', 1, 1, 'Stripe connection lookup');",
+  "INSERT INTO api_endpoints (path, method, handler_file, uses_firebase_auth, uses_firestore, notes) VALUES ('/api/stripe-connect', 'POST', 'functions/api/stripe-connect.js', 1, 1, 'Stripe onboarding flow');",
+  "INSERT INTO api_endpoints (path, method, handler_file, uses_firebase_auth, uses_firestore, notes) VALUES ('/api/admin-data', 'GET', 'functions/api/admin-data.js', 1, 1, 'Admin dashboard data');",
+  "INSERT INTO api_endpoints (path, method, handler_file, uses_firebase_auth, uses_firestore, notes) VALUES ('/api/admin-stripe', 'GET', 'functions/api/admin-stripe.js', 1, 1, 'Admin Stripe connection list');",
+  "INSERT INTO api_endpoints (path, method, handler_file, uses_firebase_auth, uses_firestore, notes) VALUES ('/api/webmaster-api', 'POST', 'functions/api/webmaster-api.js', 1, 1, 'Yandex token persistence');",
+  "INSERT INTO progress_status (phase, status, completed_items, notes) VALUES ('analysis', 'completed', 12, 'Firebase/Firestore inventory and migration plan created');"
+)
+Set-Content -Path (Join-Path $targetDir 'seed_analysis.sql') -Value $analysisSql -Encoding UTF8
+
+$ddl = @(
+  'CREATE TABLE IF NOT EXISTS users (',
+  '  id VARCHAR(128) PRIMARY KEY,',
+  '  email VARCHAR(255) NOT NULL,',
+  '  display_name VARCHAR(255) NULL,',
+  '  provider VARCHAR(50) NOT NULL DEFAULT ''email'',',
+  '  created_at DATETIME NOT NULL,',
+  '  updated_at DATETIME NOT NULL,',
+  '  KEY idx_users_email (email)',
+  ');',
+  '',
+  'CREATE TABLE IF NOT EXISTS user_projects (',
+  '  id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,',
+  '  user_id VARCHAR(128) NOT NULL,',
+  '  project_id VARCHAR(255) NOT NULL,',
+  '  project_data JSON NOT NULL,',
+  '  selected_project_id VARCHAR(255) NULL,',
+  '  deleted_project_ids JSON NULL,',
+  '  created_at DATETIME NOT NULL,',
+  '  updated_at DATETIME NOT NULL,',
+  '  PRIMARY KEY (id),',
+  '  UNIQUE KEY uq_user_project (user_id, project_id),',
+  '  CONSTRAINT fk_user_projects_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE',
+  ');',
+  '',
+  'CREATE TABLE IF NOT EXISTS user_meta (',
+  '  user_id VARCHAR(128) NOT NULL,',
+  '  selected_project_id VARCHAR(255) NULL,',
+  '  deleted_project_ids JSON NULL,',
+  '  updated_at DATETIME NOT NULL,',
+  '  PRIMARY KEY (user_id),',
+  '  CONSTRAINT fk_user_meta_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE',
+  ');',
+  '',
+  'CREATE TABLE IF NOT EXISTS tool_results (',
+  '  id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,',
+  '  user_id VARCHAR(128) NOT NULL,',
+  '  project_id VARCHAR(255) NOT NULL,',
+  '  tool_key VARCHAR(100) NOT NULL,',
+  '  project_url VARCHAR(500) NULL,',
+  '  result JSON NOT NULL,',
+  '  created_at DATETIME NOT NULL,',
+  '  updated_at DATETIME NOT NULL,',
+  '  PRIMARY KEY (id),',
+  '  UNIQUE KEY uq_tool_result (user_id, project_id, tool_key),',
+  '  CONSTRAINT fk_tool_results_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE',
+  ');',
+  '',
+  'CREATE TABLE IF NOT EXISTS admin_settings (',
+  '  id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,',
+  '  setting_key VARCHAR(100) NOT NULL,',
+  '  setting_value JSON NULL,',
+  '  updated_at DATETIME NOT NULL,',
+  '  updated_by VARCHAR(255) NULL,',
+  '  PRIMARY KEY (id),',
+  '  UNIQUE KEY uq_admin_settings_key (setting_key)',
+  ');',
+  '',
+  'CREATE TABLE IF NOT EXISTS stripe_connections (',
+  '  user_id VARCHAR(128) NOT NULL,',
+  '  stripe_account_id VARCHAR(255) NULL,',
+  '  email VARCHAR(255) NULL,',
+  '  created_at DATETIME NOT NULL,',
+  '  updated_at DATETIME NOT NULL,',
+  '  last_onboarding_link_at DATETIME NULL,',
+  '  PRIMARY KEY (user_id),',
+  '  CONSTRAINT fk_stripe_connections_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE',
+  ');',
+  '',
+  'CREATE TABLE IF NOT EXISTS gsc_connections (',
+  '  user_id VARCHAR(128) NOT NULL,',
+  '  access_token TEXT NULL,',
+  '  refresh_token TEXT NULL,',
+  '  expires_at DATETIME NULL,',
+  '  google_email VARCHAR(255) NULL,',
+  '  updated_at DATETIME NOT NULL,',
+  '  PRIMARY KEY (user_id),',
+  '  CONSTRAINT fk_gsc_connections_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE',
+  ');',
+  '',
+  'CREATE TABLE IF NOT EXISTS yandex_connections (',
+  '  user_id VARCHAR(128) NOT NULL,',
+  '  access_token TEXT NULL,',
+  '  refresh_token TEXT NULL,',
+  '  expires_at DATETIME NULL,',
+  '  yandex_email VARCHAR(255) NULL,',
+  '  yandex_user_id VARCHAR(255) NULL,',
+  '  updated_at DATETIME NOT NULL,',
+  '  PRIMARY KEY (user_id),',
+  '  CONSTRAINT fk_yandex_connections_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE',
+  ');',
+  '',
+  'CREATE TABLE IF NOT EXISTS content_writer_profiles (',
+  '  user_id VARCHAR(128) NOT NULL,',
+  '  profile_data JSON NOT NULL,',
+  '  created_at DATETIME NOT NULL,',
+  '  updated_at DATETIME NOT NULL,',
+  '  PRIMARY KEY (user_id),',
+  '  CONSTRAINT fk_content_writer_profiles_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE',
+  ');',
+  '',
+  'CREATE TABLE IF NOT EXISTS admin_payments (',
+  '  id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,',
+  '  user_id VARCHAR(128) NULL,',
+  '  user_name VARCHAR(255) NULL,',
+  '  email VARCHAR(255) NULL,',
+  '  plan VARCHAR(100) NULL,',
+  '  amount VARCHAR(100) NULL,',
+  '  payment_date DATETIME NULL,',
+  '  status VARCHAR(50) NULL,',
+  '  created_at DATETIME NOT NULL,',
+  '  PRIMARY KEY (id),',
+  '  KEY idx_admin_payments_status (status)',
+  ');',
+  '',
+  'CREATE TABLE IF NOT EXISTS admin_niches (',
+  '  id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,',
+  '  user_id VARCHAR(128) NULL,',
+  '  user_name VARCHAR(255) NULL,',
+  '  email VARCHAR(255) NULL,',
+  '  niche VARCHAR(255) NULL,',
+  '  status VARCHAR(50) NULL,',
+  '  submitted_at DATETIME NULL,',
+  '  keywords INT NULL,',
+  '  created_at DATETIME NOT NULL,',
+  '  PRIMARY KEY (id)',
+  ');',
+  '',
+  'CREATE TABLE IF NOT EXISTS admin_affiliates (',
+  '  id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,',
+  '  name VARCHAR(255) NULL,',
+  '  email VARCHAR(255) NULL,',
+  '  code VARCHAR(100) NULL,',
+  '  referrals INT NULL,',
+  '  earnings DECIMAL(12,2) NULL,',
+  '  conversion_rate DECIMAL(6,4) NULL,',
+  '  status VARCHAR(50) NULL,',
+  '  joined_at DATETIME NULL,',
+  '  created_at DATETIME NOT NULL,',
+  '  PRIMARY KEY (id)',
+  ');'
+)
+Set-Content -Path (Join-Path $targetDir 'app_schema.sql') -Value $ddl -Encoding UTF8
+
+$migrationSql = @(
+  'INSERT INTO users (id, email, display_name, provider, created_at, updated_at)',
+  'SELECT uid, email, display_name, ''firebase'', NOW(), NOW() FROM staging_users WHERE uid IS NOT NULL;',
+  '',
+  'INSERT INTO user_projects (user_id, project_id, project_data, selected_project_id, deleted_project_ids, created_at, updated_at)',
+  'SELECT user_id, project_id, JSON_OBJECT(''raw'', project_payload), selected_project_id, JSON_ARRAY(), NOW(), NOW() FROM staging_projects;',
+  '',
+  'INSERT INTO gsc_connections (user_id, access_token, refresh_token, expires_at, google_email, updated_at)',
+  'SELECT user_id, access_token, refresh_token, FROM_UNIXTIME(expires_at/1000), google_email, NOW() FROM staging_gsc_connections;'
+)
+Set-Content -Path (Join-Path $targetDir 'data_migration.sql') -Value $migrationSql -Encoding UTF8
+
+Set-Content -Path (Join-Path $targetDir 'project_file_inventory.txt') -Value $files -Encoding UTF8
+
+Write-Host "Wrote migration artifacts to $targetDir"

@@ -1,0 +1,22 @@
+# Copy this file to .dev.vars for `npm run cloudflare:dev`.
+# Never commit .dev.vars.
+
+DEEPSEEK_API_KEY=
+PAGESPEED_API_KEY=
+DATAFORSEO_LOGIN=
+DATAFORSEO_PASSWORD=
+
+# Google Search Console OAuth server credentials.
+GOOGLE_CLIENT_ID=
+GOOGLE_CLIENT_SECRET=
+
+MYSQL_HOST=127.0.0.1
+MYSQL_PORT=3306
+MYSQL_USER=root
+MYSQL_PASSWORD=
+MYSQL_DATABASE=code-step-mysql
+AUTH_JWT_SECRET=replace-with-a-random-32-character-minimum-secret
+ADMIN_EMAILS=
+
+STRIPE_SECRET_KEY=
+APP_URL=http://localhost:8788

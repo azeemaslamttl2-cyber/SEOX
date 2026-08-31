@@ -1,0 +1,94 @@
+# ✅ API Feature Filtering - FIXED
+
+## Problem You Reported
+
+When calling:
+```
+http://localhost:3000/api/project-details?admin_token=fdghsungicrgb7s7igsi7bds7dgb&url=https://ucp.edu.pk/&project_id=proj_1785496699892&feature=eeat
+```
+
+You got this error:
+```json
+{
+  "error": "Feature 'eeat' not found or not available for this project. Available features include: "
+}
+```
+
+But `eeat` WAS available in your data!
+
+## What Was Wrong
+
+The implementation was looking for features in the wrong place:
+- ❌ Looking for: `projectData.toolResults.eeat`
+- ✅ Actually stored at: `projectData.eeat`
+
+Your data structure stores features as **top-level properties**, not nested in `toolResults`.
+
+## What's Fixed
+
+Updated the feature extraction logic to:
+1. ✅ Look for features at top-level of projectData
+2. ✅ Automatically parse JSON string values
+3. ✅ Ignore metadata fields (owner, scope, ownerEmail, etc.)
+4. ✅ Normalize feature names (speed → speed_test)
+5. ✅ Return accurate available features in error messages
+
+## Test Results
+
+All 15 tests passing:
+```bash
+$ node --test functions/_handlers/project-details.test.js
+
+✔ returns only the requested project fields...
+✔ rejects a missing admin token with 400
+✔ normalizes project_data JSON strings into an object
+✔ rejects a missing project with 404
+✔ rejects duplicate project_id when adding a project
+✔ rejects duplicate website URL when adding a project
+✔ validates required request parameters
+✔ returns all data when feature parameter is not provided (backward compatibility)
+✔ returns only the requested feature (e.g., eeat)
+✔ returns only the requested feature (e.g., speed_test)
+✔ normalizes speed feature name to speed_test
+✔ handles feature names case-insensitively
+✔ returns 404 error when requested feature does not exist
+✔ returns 404 error when feature not available (empty features)
+✔ parses JSON string feature values correctly
+
+ℹ tests 15
+ℹ suites 0
+ℹ pass 15
+ℹ fail 0
+✅ duration_ms 176.1577
+```
+
+## Now Try This
+
+```bash
+# Get eeat feature
+http://localhost:3000/api/project-details?admin_token=fdghsungicrgb7s7igsi7bds7dgb&project_id=proj_1785496699892&feature=eeat
+
+# Get speed_test feature
+http://localhost:3000/api/project-details?admin_token=fdghsungicrgb7s7igsi7bds7dgb&project_id=proj_1785496699892&feature=speed_test
+
+# Get speed (auto-normalized to speed_test)
+http://localhost:3000/api/project-details?admin_token=fdghsungicrgb7s7igsi7bds7dgb&project_id=proj_1785496699892&feature=speed
+```
+
+Each will now return only the requested feature with automatic JSON parsing! ✅
+
+## Files Changed
+
+1. **functions/api/project-details.js** - Added feature parameter extraction
+2. **functions/_handlers/project-details.js** - Rewrote extractFeatureData() function
+3. **functions/_handlers/project-details.test.js** - Updated tests for actual data structure
+
+## Backward Compatible
+
+✅ All existing API calls work unchanged  
+✅ Feature parameter is optional  
+✅ No breaking changes
+
+---
+
+**Status:** Production Ready ✅

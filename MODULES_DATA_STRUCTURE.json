@@ -1,0 +1,204 @@
+{
+  "project_data_structure": {
+    "description": "Complete structure of data saved in user_projects.project_data column",
+    "toolResults": {
+      "dashboardChecks": {
+        "module": "Dashboard",
+        "description": "Dashboard tool checks and metrics",
+        "example": {
+          "result": {
+            "tools": {
+              "gsc": { "key": "gsc", "score": null, "status": "skipped" },
+              "bing": { "key": "bing", "status": "skipped" },
+              "robots": { "key": "robots", "score": 50, "status": "complete" }
+            },
+            "status": "complete",
+            "version": 1,
+            "projectId": "proj_xxx",
+            "metrics": { "clicks": 0, "impressions": 0, "ctr": 0, "position": 0 }
+          },
+          "ownerUid": "user_id",
+          "ownerEmail": "email@example.com",
+          "projectUrl": "https://example.com",
+          "updatedAt": "2026-07-31 10:17:42.433"
+        }
+      },
+      "eeat": {
+        "module": "E-E-A-T Audit",
+        "legacyPath": "$.eeat",
+        "description": "Expertise, Experience, Authority, Trustworthiness audit results",
+        "dataType": "Object with score, rating, sections, checks"
+      },
+      "semantic": {
+        "module": "Semantic Audit",
+        "legacyPath": "$.semantic_audit",
+        "description": "Semantic analysis of page content",
+        "dataType": "Object with entities, seoScore, imageAlts, hyperlinks"
+      },
+      "robots": {
+        "module": "Robots.txt Analyzer",
+        "legacyPath": "$.robots",
+        "description": "Robots.txt file analysis and compliance check",
+        "dataType": "Object with rules, sitemaps, score"
+      },
+      "speed": {
+        "module": "Speed Optimization / PageSpeed Insights",
+        "legacyPath": "$.speed_test",
+        "description": "PageSpeed Insights metrics (LCP, FCP, CLS, mobile/desktop scores)",
+        "dataType": "Object with cwv array, mobile/desktop scores"
+      },
+      "duplicate": {
+        "module": "Duplicate Checker",
+        "legacyPath": "$.duplicate",
+        "description": "Content duplication detection results",
+        "dataType": "Object with duplicates list, score"
+      },
+      "gsc": {
+        "module": "GSC Audit / Google Search Console",
+        "description": "Google Search Console metrics (clicks, impressions, CTR, position)",
+        "dataType": "Object with metrics, queries, pages"
+      },
+      "bing": {
+        "module": "Bing Webmaster Tools",
+        "description": "Bing Webmaster metrics (clicks, impressions, CTR, position)",
+        "dataType": "Object with metrics, queries, pages"
+      },
+      "backlinks": {
+        "module": "Backlinks Audit",
+        "legacyPath": "$.backlinks_audit",
+        "description": "Backlink analysis from external sources",
+        "dataType": "Object with totalBacklinks, referringDomains, backlinks array"
+      },
+      "plagiarism": {
+        "module": "Plagiarism Checker",
+        "description": "Content plagiarism detection results",
+        "dataType": "Object with plagiarismScore, sources array"
+      },
+      "crawlOptimization": {
+        "module": "Crawl Optimization",
+        "legacyPath": "$.crawl_optimization",
+        "description": "Crawler optimization metrics and issues",
+        "dataType": "Object with low, clean, medium, high priority counts"
+      },
+      "sitemap": {
+        "module": "Sitemap Generator",
+        "legacyPath": "$.sitemap",
+        "description": "XML Sitemap generation and validation",
+        "dataType": "Object with sitemaps array, urlCount"
+      },
+      "speed_test": {
+        "module": "Speed Test",
+        "description": "Alternative storage for speed metrics",
+        "dataType": "Same as 'speed' field"
+      }
+    },
+    "llmsTxt": {
+      "module": "LLMs.txt Generator",
+      "storageLocation": "Root level (NOT nested in toolResults)",
+      "description": "Generated LLMs.txt content for AI model compatibility",
+      "example": {
+        "llmsTxt": "# LLMs.txt content...",
+        "extractedUrls": ["https://example.com/page1"],
+        "ownerUid": "user_id",
+        "projectUrl": "https://example.com",
+        "updatedAt": "2026-07-31 11:06:32.375"
+      }
+    },
+    "branded-keywords": {
+      "module": "Keyword Research / Cannibalization",
+      "storageLocation": "Root level (NOT nested in toolResults)",
+      "description": "Branded keywords tracked for keyword cannibalization analysis",
+      "dataType": "Array of keyword objects",
+      "example": [
+        {
+          "keyword": "brand name",
+          "clicks": 100,
+          "impressions": 5000,
+          "ctr": 2.0,
+          "position": 1.5
+        }
+      ]
+    },
+    "contentWriter_articles": {
+      "module": "Content Writer / Semantic Content Writer",
+      "storageLocation": "Root level (NOT nested in toolResults)",
+      "description": "Articles created by the content writer AI tool",
+      "dataType": "Array of article objects",
+      "example": [
+        {
+          "id": "article_123",
+          "title": "Article Title",
+          "content": "Article content...",
+          "status": "draft",
+          "topic": "target keyword",
+          "wordCount": 1500,
+          "seoScore": 75
+        }
+      ]
+    },
+    "contentWriter_state": {
+      "module": "Content Writer UI State",
+      "storageLocation": "Root level (NOT nested in toolResults)",
+      "description": "Current state of content writer editor",
+      "dataType": "Object with editor state, current article, etc.",
+      "example": {
+        "currentArticleId": "article_123",
+        "lastSavedAt": "2026-07-31T10:30:00Z",
+        "editorState": "text content here",
+        "focusedTopic": "target keyword"
+      }
+    },
+    "onpage_analysis": {
+      "module": "On-Page Analyzer",
+      "storageLocation": "Root level",
+      "description": "On-page SEO analysis results",
+      "dataType": "Object with title, meta, headings, keywords, readability",
+      "example": {
+        "url": "https://example.com/page",
+        "title": "Page Title",
+        "metaDescription": "Meta description...",
+        "readability": 75,
+        "seoScore": 80,
+        "issues": []
+      }
+    },
+    "projectMetadata": {
+      "storageLocation": "Root level",
+      "description": "Project configuration and metadata",
+      "fields": {
+        "owner": "string - Project owner name",
+        "scope": "string - Crawl scope (subdomains, directory, domain, exact)",
+        "folder": "string - Folder or subfolder setting",
+        "ownerUid": "string - User ID of project owner",
+        "protocol": "string - Protocol setting (https-http, https-only, http-only)",
+        "renderJs": "boolean - Whether JavaScript rendering is enabled",
+        "schedule": "string - Crawl schedule (weekly, monthly, manual)",
+        "urlLimit": "number - Maximum URLs to crawl",
+        "createdAt": "string - ISO timestamp of project creation",
+        "userAgent": "string - User agent for crawling",
+        "ownerEmail": "string - Owner email address",
+        "notifyEmail": "boolean - Whether to send email notifications",
+        "respectRobots": "boolean - Whether to respect robots.txt rules"
+      }
+    },
+    "commonStructure": {
+      "description": "Common structure for all tool results",
+      "fields": {
+        "result": "object - The actual tool result data",
+        "ownerUid": "string - User ID who ran the tool",
+        "ownerEmail": "string - Email of user who ran the tool",
+        "projectUrl": "string - URL of the project being analyzed",
+        "updatedAt": "string - Timestamp when result was saved"
+      }
+    },
+    "notes": {
+      "note1": "Most tool results are stored under $.toolResults.{toolKey}",
+      "note2": "Some tools have legacy paths for backward compatibility (see legacyPath fields)",
+      "note3": "LLMs.txt is stored at $.llmsTxt (NOT nested in toolResults)",
+      "note4": "Content writer and keyword data are stored at root level, not in toolResults",
+      "note5": "Each tool result wrapper includes ownerUid, ownerEmail, projectUrl, and updatedAt",
+      "note6": "Total of 14 registered tool keys in TOOL_RESULT_KEYS",
+      "note7": "Additional custom data can be stored at root level using saveProjectData API"
+    }
+  }
+}

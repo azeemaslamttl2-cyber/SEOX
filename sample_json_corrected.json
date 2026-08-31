@@ -1,0 +1,167 @@
+{
+  "project_id": "proj_1785493059344",
+  "project_data": {
+    "owner": "Admin User",
+    "scope": "subdomains",
+    "folder": "none",
+    "ownerUid": "1",
+    "protocol": "https-http",
+    "renderJs": false,
+    "schedule": "weekly",
+    "urlLimit": 10000,
+    "createdAt": "2026-07-31T10:17:39.344Z",
+    "userAgent": "seox-desktop",
+    "ownerEmail": "azeemalsamhh@gmail.com",
+    "notifyEmail": true,
+    "respectRobots": true,
+    "toolResults": {
+      "eeat": {
+        "result": {
+          "url": "https://www.britannica.com/",
+          "score": 21,
+          "rating": "Poor",
+          "sections": [
+            {
+              "id": "authority",
+              "title": "Authority & Technical",
+              "total": 10,
+              "checks": [],
+              "passed": 3,
+              "percent": 30
+            }
+          ],
+          "cachedAgo": "Just now",
+          "manualTotal": 47,
+          "failedChecks": 57,
+          "passedChecks": 15,
+          "totalAutomated": 72,
+          "manualCompleted": 0
+        },
+        "ownerUid": "1",
+        "updatedAt": "2026-07-31 10:30:53.410",
+        "ownerEmail": "azeemalsamhh@gmail.com",
+        "projectUrl": "https://www.britannica.com"
+      },
+      "speed": {
+        "result": {
+          "cwv": [
+            {
+              "full": "Largest Contentful Paint",
+              "good": true,
+              "value": "--",
+              "metric": "LCP"
+            },
+            {
+              "full": "First Contentful Paint",
+              "good": true,
+              "value": "--",
+              "metric": "FCP"
+            },
+            {
+              "full": "Cumulative Layout Shift",
+              "good": true,
+              "value": "--",
+              "metric": "CLS"
+            }
+          ],
+          "url": "https://www.britannica.com/",
+          "mobile": {
+            "label": "Mobile Score",
+            "score": 81
+          },
+          "desktop": {
+            "label": "Desktop Score",
+            "score": 81
+          },
+          "sections": []
+        },
+        "ownerUid": "1",
+        "updatedAt": "2026-07-31 10:24:05.075",
+        "ownerEmail": "azeemalsamhh@gmail.com",
+        "projectUrl": "https://www.britannica.com"
+      },
+      "semantic": {
+        "result": {
+          "url": "https://www.britannica.com/",
+          "entities": [],
+          "seoScore": 35,
+          "cachedAgo": "Just now",
+          "imageAlts": [],
+          "plainText": "No visible text could be extracted from this page.",
+          "hyperlinks": [],
+          "performance": [],
+          "seoAnalysis": []
+        },
+        "ownerUid": "1",
+        "updatedAt": "2026-07-31 10:31:36.538",
+        "ownerEmail": "azeemalsamhh@gmail.com",
+        "projectUrl": "https://www.britannica.com"
+      },
+      "dashboardChecks": {
+        "result": {
+          "tools": {
+            "gsc": {
+              "key": "gsc",
+              "href": "/tech-seo/gsc-audit",
+              "group": "Search Console",
+              "label": "GSC Audit",
+              "score": null,
+              "detail": "No Google Search Console connection is available.",
+              "status": "skipped",
+              "summary": "Connect GSC"
+            },
+            "bing": {
+              "key": "bing",
+              "href": "/tech-seo/bing",
+              "group": "Search Console",
+              "label": "Bing Webmaster",
+              "score": null,
+              "status": "skipped"
+            },
+            "robots": {
+              "key": "robots",
+              "href": "/tech-seo/robots",
+              "group": "Technical SEO",
+              "label": "Robots.txt Analyzer",
+              "score": 50,
+              "status": "complete"
+            },
+            "duplicate": {
+              "key": "duplicate",
+              "href": "/tech-seo/duplicate",
+              "group": "Content & Links",
+              "label": "Duplicate Checker",
+              "score": 100,
+              "status": "complete"
+            }
+          },
+          "status": "complete",
+          "version": 1,
+          "projectId": "proj_1785493059344"
+        },
+        "ownerUid": "1",
+        "updatedAt": "2026-07-31 10:17:42.433",
+        "ownerEmail": "azeemalsamhh@gmail.com",
+        "projectUrl": "https://www.britannica.com/"
+      },
+      "crawlOptimization": {
+        "result": {
+          "low": 0,
+          "url": "https://www.britannica.com/",
+          "clean": 15,
+          "medium": 3,
+          "sections": [],
+          "totalChecks": 21,
+          "highPriority": 3,
+          "pageSourceSize": "5.6 KB"
+        },
+        "ownerUid": "1",
+        "updatedAt": "2026-07-31 11:06:32.375",
+        "ownerEmail": "azeemalsamhh@gmail.com",
+        "projectUrl": "https://www.britannica.com"
+      }
+    }
+  },
+  "full_url": "https://www.britannica.com",
+  "project_name": "https://www.britannica.com/"
+}

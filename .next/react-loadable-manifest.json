@@ -1,0 +1,80 @@
+{
+  "App.jsx -> ./semanticsx/components/AIAgentsPage.jsx": {
+    "id": "App.jsx -> ./semanticsx/components/AIAgentsPage.jsx",
+    "files": [
+      "static/chunks/src_semanticsx_components_AIAgentsPage_jsx.js"
+    ]
+  },
+  "App.jsx -> ./semanticsx/components/AIModelCompatibility.jsx": {
+    "id": "App.jsx -> ./semanticsx/components/AIModelCompatibility.jsx",
+    "files": [
+      "static/chunks/src_semanticsx_components_AIModelCompatibility_jsx.js"
+    ]
+  },
+  "App.jsx -> ./semanticsx/components/AIModelIndexChecker.jsx": {
+    "id": "App.jsx -> ./semanticsx/components/AIModelIndexChecker.jsx",
+    "files": [
+      "static/chunks/src_semanticsx_components_AIModelIndexChecker_jsx.js"
+    ]
+  },
+  "App.jsx -> ./semanticsx/components/BingBulkAnalysisPage.jsx": {
+    "id": "App.jsx -> ./semanticsx/components/BingBulkAnalysisPage.jsx",
+    "files": [
+      "static/chunks/src_semanticsx_components_BingBulkAnalysisPage_jsx.js"
+    ]
+  },
+  "App.jsx -> ./semanticsx/components/BulkAnalysisPage.jsx": {
+    "id": "App.jsx -> ./semanticsx/components/BulkAnalysisPage.jsx",
+    "files": [
+      "static/chunks/src_semanticsx_components_BulkAnalysisPage_jsx.js"
+    ]
+  },
+  "App.jsx -> ./semanticsx/components/CompetitorSchemaChecker.jsx": {
+    "id": "App.jsx -> ./semanticsx/components/CompetitorSchemaChecker.jsx",
+    "files": [
+      "static/chunks/src_semanticsx_components_CompetitorSchemaChecker_jsx.js"
+    ]
+  },
+  "App.jsx -> ./semanticsx/components/ImageGeoTagger.jsx": {
+    "id": "App.jsx -> ./semanticsx/components/ImageGeoTagger.jsx",
+    "files": [
+      "static/chunks/src_semanticsx_components_ImageGeoTagger_jsx.js"
+    ]
+  },
+  "App.jsx -> ./semanticsx/components/LlmsTxtGenerator.jsx": {
+    "id": "App.jsx -> ./semanticsx/components/LlmsTxtGenerator.jsx",
+    "files": [
+      "static/chunks/src_semanticsx_components_LlmsTxtGenerator_jsx.js"
+    ]
+  },
+  "App.jsx -> ./semanticsx/components/RankGridPro.jsx": {
+    "id": "App.jsx -> ./semanticsx/components/RankGridPro.jsx",
+    "files": [
+      "static/chunks/src_semanticsx_components_RankGridPro_jsx.js"
+    ]
+  },
+  "App.jsx -> ./semanticsx/components/SchemaGenerator.jsx": {
+    "id": "App.jsx -> ./semanticsx/components/SchemaGenerator.jsx",
+    "files": [
+      "static/chunks/src_semanticsx_components_SchemaGenerator_jsx.js"
+    ]
+  },
+  "App.jsx -> ./semanticsx/components/SemanticResourcesPage.jsx": {
+    "id": "App.jsx -> ./semanticsx/components/SemanticResourcesPage.jsx",
+    "files": [
+      "static/chunks/src_semanticsx_components_SemanticResourcesPage_jsx.js"
+    ]
+  },
+  "App.jsx -> ./semanticsx/components/SemanticTopicalMapPlaceholder.jsx": {
+    "id": "App.jsx -> ./semanticsx/components/SemanticTopicalMapPlaceholder.jsx",
+    "files": [
+      "static/chunks/src_semanticsx_components_SemanticTopicalMapPlaceholder_jsx.js"
+    ]
+  },
+  "App.jsx -> ./semanticsx/components/YandexBulkAnalysisPage.jsx": {
+    "id": "App.jsx -> ./semanticsx/components/YandexBulkAnalysisPage.jsx",
+    "files": [
+      "static/chunks/src_semanticsx_components_YandexBulkAnalysisPage_jsx.js"
+    ]
+  }
+}
