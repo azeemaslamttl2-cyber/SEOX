@@ -73,7 +73,7 @@ const AIBacklinkGenerator = () => {
         <div className="min-h-screen bg-gradient-to-br from-slate-50 to-indigo-50">
             {/* Hero Section */}
             <div className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white py-16 px-6">
-                <div className="max-w-5xl mx-auto">
+                <div className="">
                     <div className="flex flex-col lg:flex-row items-center gap-8 lg:gap-12">
                         {/* Left side - Text content */}
                         <div className="flex-1">
@@ -129,7 +129,7 @@ const AIBacklinkGenerator = () => {
                 </div>
             </div>
 
-            <div className="max-w-5xl mx-auto px-6 py-12">
+            <div className="px-6 py-12">
 
                 {/* Features Grid */}
                 <section className="mb-16">

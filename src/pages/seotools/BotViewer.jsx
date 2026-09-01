@@ -36,7 +36,7 @@ export default function BotViewer() {
   }
 
   return (
-    <div className="mx-auto max-w-6xl space-y-4">
+    <div className="space-y-4">
       <ToolHeader title="Bot Viewer" Icon={Eye} gradient="from-slate-800 via-indigo-800 to-blue-700" subtitle="See your site through the eyes of search engine and social bots" />
 
       <div className="rounded-2xl border border-white/[0.08] bg-[#0d1117] p-5">

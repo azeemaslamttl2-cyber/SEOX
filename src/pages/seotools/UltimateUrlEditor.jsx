@@ -32,7 +32,7 @@ export default function UltimateUrlEditor() {
   }
 
   return (
-    <div className="mx-auto max-w-6xl space-y-4">
+    <div className="space-y-4">
       <ToolHeader title="Ultimate URL Editor" Icon={Link2} gradient="from-slate-800 via-cyan-800 to-cyan-700" subtitle="Clean, trim, and manipulate URLs in bulk" />
 
       <div className="rounded-2xl border border-white/[0.08] bg-[#0d1117] p-5">

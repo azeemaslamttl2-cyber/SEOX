@@ -1245,7 +1245,7 @@ const AIAgentsPage = () => {
 
     return (
         <div className="p-3 md:p-6">
-            <div className="max-w-7xl mx-auto">
+            <div className="">
             {/* Animation Keyframes */}
             <style>{`
                 @keyframes fadeInUp {

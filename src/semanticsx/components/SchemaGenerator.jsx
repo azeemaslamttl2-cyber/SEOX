@@ -4290,7 +4290,7 @@ Return ONLY valid JSON-LD, no markdown or explanation.`
     if (!activeSchema) {
         return (
             <div className="p-6">
-                <div className="max-w-6xl mx-auto">
+                <div className="">
                     {/* Header */}
                     <div className="bg-gradient-to-r from-brand-500 via-amber-500 to-amber-600 rounded-2xl p-8 text-white mb-8 shadow-xl">
                         <div className="flex items-center gap-4">
@@ -4340,7 +4340,7 @@ Return ONLY valid JSON-LD, no markdown or explanation.`
 
     return (
         <div className="p-6">
-            <div className="max-w-7xl mx-auto">
+            <div className="">
                 {/* Back Button */}
                 <button
                     onClick={() => { navigate('/schema-seo'); setGeneratedSchema(null); }}

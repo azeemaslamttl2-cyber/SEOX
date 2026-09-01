@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { Search, ChevronDown, Download, Plus, HelpCircle, Link2, Copy, Check, Zap, Target, ArrowRight } from "lucide-react";
+import { ArrowRight, Check, ChevronDown, Copy, Download, HelpCircle, Link2, Network, Plus, Search, Target, Zap } from "lucide-react";
 import { useCrawl } from "../../context/CrawlContext.jsx";
 
 /* ─── Seed-based deterministic random ─── */
@@ -645,12 +645,15 @@ export default function InternalLinks() {
   }, [rows, searchQuery]);
 
   return (
-    <div className="mx-auto max-w-6xl space-y-4">
-      <h1 className="flex items-center gap-2 font-display text-xl font-bold tracking-tight">
-        Internal link opportunities
-        <HelpCircle className="h-4 w-4 text-white/30" />
-        <span className="text-xs font-normal text-white/40 ml-1">How to use</span>
-      </h1>
+    <div className="space-y-4">
+      <div className="auditor-hero">
+        <h1 className="flex items-center gap-2 font-display text-xl font-bold tracking-tight">
+          <Network className="h-5 w-5" />
+          Internal link opportunities
+          <HelpCircle className="h-4 w-4 text-white/30" />
+          <span className="text-xs font-normal text-white/40 ml-1">How to use</span>
+        </h1>
+      </div>
 
       {/* Search & filter bar */}
       <div className="flex flex-wrap items-center gap-2 rounded-2xl border border-white/10 bg-ink-800/60 p-2 backdrop-blur">

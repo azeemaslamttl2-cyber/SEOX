@@ -356,7 +356,7 @@ const SiteDetailView = ({ site, apiKey, onBack }) => {
         <div className="min-h-screen bg-gradient-to-br from-slate-50 to-orange-50">
             {/* Header */}
             <div className="bg-white border-b border-gray-100 sticky top-0 z-10">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+                <div className="px-4 sm:px-6 lg:px-8 py-4">
                     <div className="flex items-center gap-4">
                         <button onClick={onBack} className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
                             <ArrowLeft className="w-5 h-5 text-gray-600" />
@@ -371,7 +371,7 @@ const SiteDetailView = ({ site, apiKey, onBack }) => {
             </div>
 
             {/* Toolbar */}
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+            <div className="px-4 sm:px-6 lg:px-8 py-4">
                 <div className="flex items-center gap-3 flex-wrap">
                     {/* Metric Toggle Buttons */}
                     <div className="bg-gray-100 rounded-lg p-1 flex items-center gap-1">
@@ -420,7 +420,7 @@ const SiteDetailView = ({ site, apiKey, onBack }) => {
             </div>
 
             {/* Tabs */}
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="px-4 sm:px-6 lg:px-8">
                 <div className="flex gap-1 bg-gray-100 rounded-xl p-1 w-fit">
                     {tabs.map((tab) => (
                         <button key={tab.id} onClick={() => setActiveTab(tab.id)}
@@ -432,7 +432,7 @@ const SiteDetailView = ({ site, apiKey, onBack }) => {
             </div>
 
             {/* Content */}
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+            <div className="px-4 sm:px-6 lg:px-8 py-6">
                 {isLoading ? (
                     <div className="flex items-center justify-center py-20">
                         <Loader2 className="w-8 h-8 text-orange-500 animate-spin" />
@@ -812,7 +812,7 @@ const BingBulkAnalysisPage = () => {
         <div className="min-h-screen bg-gradient-to-br from-slate-50 to-orange-50">
             {/* Header */}
             <div className="bg-white border-b border-gray-100">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+                <div className="px-4 sm:px-6 lg:px-8 py-6">
                     <div className="flex items-center justify-between relative">
                         <div className="flex items-center gap-4 min-w-[140px]" />
 
@@ -833,7 +833,7 @@ const BingBulkAnalysisPage = () => {
             </div>
 
             {/* Toolbar */}
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+            <div className="px-4 sm:px-6 lg:px-8 py-4">
                 <div className="flex items-center gap-3 flex-wrap">
                     {/* Search */}
                     <div className="relative flex-1 max-w-md">
@@ -881,7 +881,7 @@ const BingBulkAnalysisPage = () => {
             </div>
 
             {/* Sites Grid */}
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-8">
+            <div className="px-4 sm:px-6 lg:px-8 pb-8">
                 {isLoadingSites ? (
                     <div className="flex items-center justify-center py-20">
                         <Loader2 className="w-8 h-8 text-orange-500 animate-spin" />

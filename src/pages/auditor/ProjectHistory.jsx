@@ -1,4 +1,4 @@
-import { CheckCircle2, Clock3, Verified } from "lucide-react";
+import { CheckCircle2, Clock3, History, Verified } from "lucide-react";
 import { useCrawl, formatDuration } from "../../context/CrawlContext.jsx";
 
 export default function ProjectHistory() {
@@ -32,9 +32,10 @@ export default function ProjectHistory() {
     : [];
 
   return (
-    <div className="mx-auto max-w-6xl space-y-5">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="font-display text-xl font-bold tracking-tight">Project history</h1>
+    <div className="space-y-5">
+      <div className="auditor-hero flex flex-wrap items-center justify-between gap-3">
+        <h1 className="font-display text-xl font-bold tracking-tight">
+          <History className="h-5 w-5" />Project history</h1>
         <div className="flex items-center gap-1.5 text-xs text-white/70">
           <span className="font-mono">{project?.fullUrl || project?.domain || "No project selected"}</span>
           {project && (

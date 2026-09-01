@@ -476,7 +476,7 @@ export default function GscAudit() {
   }
 
   return (
-    <div className="mx-auto max-w-6xl">
+    <div className="">
       {/* ─── Hero Header ─── */}
       <div className="gsc-audit-hero">
         <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">

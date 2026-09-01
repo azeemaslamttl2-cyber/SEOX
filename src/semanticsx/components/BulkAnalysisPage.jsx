@@ -2082,7 +2082,7 @@ const BulkAnalysisPage = () => {
     if (selectedSite) {
         return (
             <div className="min-h-screen bg-stone-950 p-6">
-                <div className="max-w-7xl mx-auto">
+                <div className="">
                     <SiteDetailView site={selectedSite} getValidAccessToken={getValidAccessToken} onBack={handleBack} />
                 </div>
             </div>
@@ -2093,7 +2093,7 @@ const BulkAnalysisPage = () => {
         <div className="min-h-screen bg-stone-950">
             {/* Header */}
             <div className="bg-[#0d1117] border-b border-white/[0.08] sticky top-0 z-40">
-                <div className="max-w-7xl mx-auto px-6 py-4">
+                <div className="px-6 py-4">
                     <div className="flex items-center justify-between relative">
                         <div className="flex items-center gap-4 min-w-[140px]" />
 
@@ -2155,7 +2155,7 @@ const BulkAnalysisPage = () => {
 
             {/* Metric Toolbar */}
             <div className="bg-[#0d1117] border-b border-white/[0.06]">
-                <div className="max-w-7xl mx-auto px-6 py-3">
+                <div className="px-6 py-3">
                     <div className="flex items-center gap-3">
                         {/* Search */}
                         <div className="relative flex-1 flex justify-center">
@@ -2358,7 +2358,7 @@ const BulkAnalysisPage = () => {
             </div>
 
             {/* Content */}
-            <div className="max-w-7xl mx-auto px-6 py-8">
+            <div className="px-6 py-8">
                 {error && (
                     <div className="mb-6 p-4 bg-red-500/10 border border-red-500/20 rounded-xl flex items-center gap-3 text-red-400">
                         <AlertCircle className="w-5 h-5" />

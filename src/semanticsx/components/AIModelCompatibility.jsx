@@ -300,7 +300,7 @@ Return JSON format:
         <div className="bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900 pb-12">
             {/* Hero Section */}
             <div className="relative overflow-hidden">
-                <div className="max-w-6xl mx-auto px-6 py-16">
+                <div className="px-6 py-16">
                     <div className="grid lg:grid-cols-2 gap-12 items-center">
                         {/* Left - Info */}
                         <div>
@@ -373,7 +373,7 @@ Return JSON format:
 
             {/* Info Section - Only show when no results */}
             {!results && (
-                <div className="max-w-6xl mx-auto px-6">
+                <div className="px-6">
                     {/* AI Models We Analyze */}
                     <div className="mb-12">
                         <h2 className="text-2xl font-bold text-white mb-6 flex items-center gap-3">
@@ -460,7 +460,7 @@ Return JSON format:
 
             {/* Results Section */}
             {results && (
-                <div className="max-w-6xl mx-auto px-6">
+                <div className="px-6">
                     {/* Overall Score Card */}
                     <div className="bg-white rounded-2xl shadow-xl p-8 mb-8">
                         <div className="flex items-center gap-6">

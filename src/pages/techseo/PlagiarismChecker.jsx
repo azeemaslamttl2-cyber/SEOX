@@ -246,7 +246,7 @@ export default function PlagiarismChecker() {
   }
 
   return (
-    <div className="mx-auto max-w-6xl">
+    <div className="">
       {/* ─── Hero Header ─── */}
       <div className="plagiarism-hero">
         <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">

@@ -110,7 +110,7 @@ export default function BacklinkDirectory() {
     const cat = allBacklinkCategories[selectedCat];
     const Icon = iconMap[cat.icon] || FolderOpen;
     return (
-      <div className="mx-auto max-w-6xl">
+      <div className="">
         {/* Category Header */}
         <div className="relative overflow-hidden rounded-3xl border border-white/[0.06] bg-gradient-to-r from-indigo-600 to-violet-600">
           <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_30%_50%,rgba(255,255,255,0.08),transparent)]" />
@@ -222,7 +222,7 @@ export default function BacklinkDirectory() {
 
   // Category grid view
   return (
-    <div className="mx-auto max-w-6xl">
+    <div className="">
       {/* ─── Hero Header ─── */}
       <div className="dashboard-welcome backlink-directory-welcome relative overflow-hidden rounded-2xl border border-brand-600 bg-brand-500 p-6 sm:p-8">
         <div className="pointer-events-none absolute -right-16 -top-16 h-56 w-56 animate-float-slow rounded-full bg-college-blue/20 blur-3xl" />

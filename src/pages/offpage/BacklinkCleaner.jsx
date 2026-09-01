@@ -80,7 +80,7 @@ export default function BacklinkCleaner() {
   }
 
   return (
-    <div className="mx-auto max-w-6xl">
+    <div className="">
       {/* ─── Hero Header ─── */}
       <div className="relative overflow-hidden rounded-3xl border border-white/[0.06] bg-ink-800">
         <div className="pointer-events-none absolute inset-0">

@@ -1,19 +1,6 @@
 import { useDeferredValue, useEffect, useState, useMemo } from "react";
 import { useSearchParams } from "react-router-dom";
-import {
-  ChevronDown,
-  Search,
-  ExternalLink,
-  Code2,
-  Download,
-  Columns3,
-  Plus,
-  HelpCircle,
-  X,
-  CheckCircle2,
-  RotateCcw,
-  Folder,
-} from "lucide-react";
+import { CheckCircle2, ChevronDown, Code2, Columns3, Download, ExternalLink, FileSearch, Folder, HelpCircle, Plus, RotateCcw, Search, X } from "lucide-react";
 import { useAuditData } from "../../hooks/useAuditData.js";
 import { useCrawl } from "../../context/CrawlContext.jsx";
 
@@ -1161,9 +1148,10 @@ export default function PageExplorer() {
   ];
 
   return (
-    <div className="mx-auto max-w-6xl space-y-4">
-      <div className="flex flex-wrap items-center justify-between gap-3">
+    <div className="space-y-4">
+      <div className="auditor-hero flex flex-wrap items-center justify-between gap-3">
         <h1 className="flex items-center gap-2 font-display text-xl font-bold tracking-tight">
+          <FileSearch className="h-5 w-5" />
           Page explorer
           <HelpCircle className="h-4 w-4 text-white/30" />
         </h1>

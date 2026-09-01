@@ -175,7 +175,7 @@ export default function CrawlOptimization() {
   }
 
   return (
-    <div className="mx-auto max-w-6xl">
+    <div className="">
       {/* ─── Hero Header ─── */}
       <div className="crawl-hero rounded-3xl border border-brand-600 bg-brand-500 p-6 sm:p-8">
         <div className="crawl-title-row flex items-center justify-start">

@@ -24,7 +24,7 @@ export default function WordCounter() {
   ];
 
   return (
-    <div className="mx-auto max-w-6xl space-y-4">
+    <div className="space-y-4">
       <ToolHeader title="Word Counter" Icon={Hash} gradient="from-slate-800 via-emerald-800 to-teal-700" subtitle="Count words, characters, sentences, and reading time" />
 
       <div className="rounded-2xl border border-white/[0.08] bg-[#0d1117] p-5">

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Code2, Download, HelpCircle, Sparkles, Eye, BarChart3 } from "lucide-react";
+import { Code2, Download, Gauge, HelpCircle, Sparkles, Eye, BarChart3 } from "lucide-react";
 import Card from "../../components/auditor/Card.jsx";
 import DonutChart from "../../components/auditor/DonutChart.jsx";
 import HealthGauge from "../../components/auditor/HealthGauge.jsx";
@@ -93,27 +93,37 @@ export default function AuditorOverview() {
   };
 
   return (
-    <div className="mx-auto max-w-6xl space-y-5">
+    <div className="space-y-5">
       {/* Page header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <h1 className="font-display text-xl font-bold tracking-tight">Overview</h1>
-          <button
-            type="button"
-            title="Use Overview to spot crawl health, current issue counts, error patterns, and export the active project data."
-            className="flex items-center gap-1 text-xs text-white/40 hover:text-white/70"
-          >
-            <HelpCircle className="h-3.5 w-3.5" />
-            How to use
-          </button>
+      <div className="auditor-hero">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+          <div className="auditor-title flex items-center gap-3">
+            <Gauge className="h-5 w-5" />
+            <div>
+              <h1 className="font-display">Overview</h1>
+              <p className="auditor-description">
+                Crawl health, current issue counts and error patterns for the active project.
+              </p>
+            </div>
+          </div>
+          <div className="flex flex-shrink-0 items-center gap-2">
+            <button
+              type="button"
+              title="Use Overview to spot crawl health, current issue counts, error patterns, and export the active project data."
+              className="auditor-help-button"
+            >
+              <HelpCircle className="h-3.5 w-3.5" />
+              How to use
+            </button>
+            <button
+              type="button"
+              onClick={() => window.print()}
+              className="ui-button auditor-print-button"
+            >
+              <Download className="h-4 w-4" /> Print to PDF
+            </button>
+          </div>
         </div>
-        <button
-          type="button"
-          onClick={() => window.print()}
-          className="flex items-center gap-1.5 rounded-lg border border-white/10 bg-white/[0.03] px-3 py-1.5 text-xs text-white/70 transition hover:bg-white/[0.06]"
-        >
-          <Download className="h-3.5 w-3.5" /> Print to PDF
-        </button>
       </div>
 
       {/* Top row: 3 columns (Crawled URLs · Health Score · Issues distribution) */}
@@ -141,13 +151,10 @@ export default function AuditorOverview() {
       </div>
 
       {/* Second row: 2 donuts */}
-      <div className="grid gap-4 xl:grid-cols-[1fr_1.1fr_1fr]">
+      <div className="grid gap-4 lg:grid-cols-2">
         <Card title="Crawl status of links found" hint total={crawlStatus.total}>
           <DonutChart segments={crawlStatus.segments} />
         </Card>
-
-        {/* Reserved center column to align with health score above on wide screens */}
-        <div className="hidden xl:block" />
 
         <Card title="Error distribution" hint total={errorDistribution.total}>
           <DonutChart segments={errorDistribution.segments} />
@@ -155,9 +162,9 @@ export default function AuditorOverview() {
       </div>
 
       {/* What's new table */}
-      <div className="rounded-2xl border border-white/10 bg-ink-800/60 backdrop-blur">
-        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-white/10 px-4 py-3">
-          <div className="flex items-center gap-1">
+      <div className="auditor-card auditor-card-flush">
+        <div className="auditor-toolbar">
+          <div className="admin-tabs auditor-tabs">
             <TabButton active={tab === "whatsnew"} onClick={() => setTab("whatsnew")}>
               What's new
             </TabButton>
@@ -166,10 +173,10 @@ export default function AuditorOverview() {
             </TabButton>
           </div>
           <div className="flex items-center gap-2">
-            <button className="flex items-center gap-1.5 rounded-lg border border-white/10 bg-white/[0.04] px-2.5 py-1.5 text-xs text-white/70 hover:bg-white/[0.08]">
+            <button className="ui-button auditor-toolbar-button">
               <Code2 className="h-3.5 w-3.5" /> AI · API
             </button>
-            <button className="flex items-center gap-1.5 rounded-lg border border-white/10 bg-white/[0.04] px-2.5 py-1.5 text-xs text-white/70 hover:bg-white/[0.08]">
+            <button className="ui-button auditor-toolbar-button">
               <Download className="h-3.5 w-3.5" /> Export all issues
             </button>
           </div>
@@ -275,16 +282,9 @@ function TabButton({ active, onClick, children }) {
   return (
     <button
       onClick={onClick}
-      className={`relative rounded-md px-3 py-1.5 text-sm font-medium transition ${
-        active
-          ? "text-white"
-          : "text-white/50 hover:text-white"
-      }`}
+      className={`admin-tab ${active ? "active" : ""}`}
     >
       {children}
-      {active && (
-        <span className="absolute inset-x-2 -bottom-3 h-0.5 rounded-full bg-gradient-to-r from-brand-400 to-amber-400" />
-      )}
     </button>
   );
 }

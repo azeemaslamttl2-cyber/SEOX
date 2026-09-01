@@ -1162,7 +1162,7 @@ const ScreamingFrogAnalyzer = () => {
     };
 
     return (
-        <div className="mx-auto max-w-6xl">
+        <div className="">
             {/* ─── Hero Header ─── */}
             <div className="sf-hero">
                 <div className="sf-title flex items-center gap-3">

@@ -478,7 +478,7 @@ Generate a best-practice template that incorporates the best patterns from these
 
     return (
         <div className="p-3 md:p-6">
-            <div className="max-w-7xl mx-auto">
+            <div className="">
                 {/* Header */}
                 <div className="bg-gradient-to-r from-brand-500 via-amber-500 to-amber-600 rounded-2xl p-4 md:p-8 text-white mb-6 shadow-xl">
                     <div className="flex items-center gap-3 md:gap-4 mb-4">

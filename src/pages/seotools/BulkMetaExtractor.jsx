@@ -48,7 +48,7 @@ export default function BulkMetaExtractor() {
   }
 
   return (
-    <div className="mx-auto max-w-6xl space-y-4">
+    <div className="space-y-4">
       <ToolHeader title="Bulk Meta Extractor" Icon={Database} gradient="from-slate-800 via-violet-800 to-indigo-700" subtitle="Extract meta data from multiple URLs at once" />
 
       <div className="rounded-2xl border border-white/[0.08] bg-[#0d1117] p-5">

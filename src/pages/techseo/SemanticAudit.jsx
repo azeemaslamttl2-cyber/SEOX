@@ -725,7 +725,7 @@ export default function SemanticAudit() {
   }
 
   return (
-    <div className="mx-auto max-w-6xl">
+    <div className="">
 
       {/* ─────────── HERO ─────────── */}
       <div className="semantic-hero relative overflow-hidden rounded-3xl border border-brand-600 bg-brand-500">

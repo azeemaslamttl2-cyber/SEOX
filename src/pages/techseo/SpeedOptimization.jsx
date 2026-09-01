@@ -304,7 +304,7 @@ export default function SpeedOptimization() {
   }
 
   return (
-    <div className="mx-auto max-w-6xl">
+    <div className="">
       {/* ─── Hero Header ─── */}
         <div className="speed-hero rounded-3xl border border-brand-600 bg-brand-500 p-6 sm:p-8">
         <div className="speed-title-row flex items-center justify-start">

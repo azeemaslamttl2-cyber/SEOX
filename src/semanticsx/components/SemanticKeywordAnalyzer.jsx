@@ -428,7 +428,7 @@ const SemanticKeywordAnalyzer = () => {
 
     return (
         <div className="content-tool-page tool-dark-surface bg-gradient-to-br from-slate-50 to-teal-50 p-3 md:p-6">
-            <div className="max-w-6xl mx-auto">
+            <div className="">
                 {/* Header */}
                 <div className="bg-gradient-to-r from-teal-600 to-cyan-600 rounded-2xl p-4 md:p-8 text-white mb-6 md:mb-8 shadow-xl">
                     <div className="flex items-center gap-3 md:gap-4 mb-4">
