@@ -113,7 +113,7 @@ export default function KeywordResearch() {
   }
 
   return (
-    <div className="keyword-research-page mx-auto max-w-[1100px] space-y-5">
+    <div className="keyword-research-page space-y-5">
       <div className="dashboard-welcome keyword-research-welcome relative overflow-hidden rounded-2xl border border-brand-600 bg-brand-500 p-6 sm:p-8">
         <div className="pointer-events-none absolute -right-16 -top-16 h-56 w-56 animate-float-slow rounded-full bg-college-blue/20 blur-3xl" />
         <div className="pointer-events-none absolute -bottom-20 -left-12 h-56 w-56 animate-float rounded-full bg-college-yellow/20 blur-3xl" />

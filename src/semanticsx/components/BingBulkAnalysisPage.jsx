@@ -353,7 +353,7 @@ const SiteDetailView = ({ site, apiKey, onBack }) => {
     }, [detailData]);
 
     return (
-        <div className="bing-connect-page">
+        <div className="bulk-page">
             {/* Header */}
             <div className="bg-white border-b border-gray-100 sticky top-0 z-10">
                 <div className="px-4 sm:px-6 lg:px-8 py-4">
@@ -765,8 +765,8 @@ const BingBulkAnalysisPage = () => {
     // API Key Setup UI
     if (!isConfigured) {
         return (
-            <div className="bing-connect-page">
-                <div>
+            <div className="bulk-page">
+                <div className="connect-column">
                     <div className="bing-connect-hero">
                         <div className="bing-connect-title">
                             <BarChart3 className="h-5 w-5" />
@@ -809,7 +809,7 @@ const BingBulkAnalysisPage = () => {
 
     // Main Sites Grid
     return (
-        <div className="bing-connect-page">
+        <div className="bulk-page">
             {/* Header */}
             <div className="bg-white border-b border-gray-100">
                 <div className="px-4 sm:px-6 lg:px-8 py-6">

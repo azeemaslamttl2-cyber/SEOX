@@ -142,7 +142,7 @@ export default function KeywordCannibalization() {
   }
 
   return (
-    <div className="keyword-cannibalization-page mx-auto max-w-[1100px] space-y-5">
+    <div className="keyword-cannibalization-page space-y-5">
       <div className="keyword-cannibalization-header flex items-center justify-between gap-3">
         <Header />
         <div className="flex items-center gap-2">

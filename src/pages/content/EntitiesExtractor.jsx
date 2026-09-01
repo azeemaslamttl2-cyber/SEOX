@@ -88,7 +88,7 @@ export default function EntitiesExtractor() {
   }
 
   return (
-    <div className="entities-extractor-workspace mx-auto max-w-5xl space-y-6 rounded-[28px] bg-[#f5f7fb] p-3 sm:p-4">
+    <div className="entities-extractor-workspace space-y-6 rounded-[28px] bg-[#f5f7fb] p-3 sm:p-4">
       {/* Hero Header */}
       <div className="extractor-hero relative overflow-hidden rounded-[22px] border border-[#3a3b7b] bg-[#2b2d75] p-5 shadow-[0_12px_28px_-18px_rgba(21,23,59,0.9)] sm:p-6">
         <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(255,255,255,0.12),transparent_34%),linear-gradient(90deg,rgba(255,255,255,0.04),rgba(255,255,255,0))]" />

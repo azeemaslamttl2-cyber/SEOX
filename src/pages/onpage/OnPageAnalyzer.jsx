@@ -342,88 +342,78 @@ export default function OnPageAnalyzer() {
   }
 
   return (
-    <div className="on-page-analyzer mx-auto max-w-5xl">
+    <div className="on-page-analyzer">
 
       {/* ─── Hero Header ─── */}
-      <div className="relative overflow-hidden rounded-3xl border border-white/[0.06] bg-ink-800">
-        {/* Ambient effects */}
-        <div className="pointer-events-none absolute inset-0">
-          <div className="absolute -right-24 -top-24 h-72 w-72 rounded-full bg-brand-500/[0.06] blur-[80px]" />
-          <div className="absolute -bottom-16 left-1/3 h-64 w-64 rounded-full bg-amber-500/[0.04] blur-[60px]" />
-          <div
-            className="absolute inset-0 opacity-[0.02]"
-            style={{ backgroundImage: "radial-gradient(circle at 1px 1px, white 1px, transparent 0)", backgroundSize: "20px 20px" }}
-          />
-        </div>
-
-        <div className="relative z-10 p-6 lg:p-8">
+      <div className="analyzer-hero">
+        <div>
           {/* Title */}
-          <div className="flex items-center justify-center gap-3">
-            <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br from-brand-500 to-amber-500 shadow-lg shadow-brand-500/20">
-              <Search className="h-5 w-5 text-white" />
+          <div className="analyzer-title">
+            <Search className="h-5 w-5" />
+            <div>
+              <h1 className="font-display">On-Page SEO Analyzer</h1>
+              <p className="analyzer-description">
+                Enter a URL and your target keyword to analyze 40+ on-page SEO factors across 9 categories
+              </p>
             </div>
-            <h1 className="font-display text-2xl font-black tracking-tight text-white">
-              On-Page SEO Analyzer
-            </h1>
           </div>
-          <p className="mt-2 text-center text-sm text-white/40">
-            Enter a URL and your target keyword to analyze 40+ on-page SEO factors across 9 categories
-          </p>
 
           {/* Input fields */}
-          <div className="mt-6 flex items-stretch gap-px overflow-hidden rounded-2xl border border-white/[0.08]">
+          <div className="analyzer-input-panel">
             {/* URL */}
-            <div className="flex flex-1 items-center gap-2 bg-ink-900/80 px-4 py-3">
-              <Globe className="h-4 w-4 text-brand-400" />
+            <div className="analyzer-field analyzer-field-url">
+              <Globe className="h-4 w-4" />
               <input
                 value={url}
                 onChange={(e) => setUrl(e.target.value)}
-                className="flex-1 bg-transparent text-sm text-white placeholder:text-white/25 focus:outline-none"
+                className="analyzer-input"
                 placeholder="https://www.example.com"
               />
             </div>
             {/* Page path */}
-            <div className="flex items-center bg-ink-900/60 px-4 py-3 border-l border-white/[0.06]">
+            <div className="analyzer-field">
               <input
                 value={pagePath}
                 onChange={(e) => setPagePath(e.target.value)}
-                className="w-44 bg-transparent text-sm text-white/60 placeholder:text-white/20 focus:outline-none"
+                className="analyzer-input"
                 placeholder="/page-path (optional, leave empty for homepage)"
               />
             </div>
             {/* Keyword */}
-            <div className="flex items-center gap-2 bg-ink-900/60 px-4 py-3 border-l border-white/[0.06]">
-              <Target className="h-4 w-4 text-amber-400/60" />
+            <div className="analyzer-field">
+              <Target className="h-4 w-4" />
               <input
                 value={keyword}
                 onChange={(e) => setKeyword(e.target.value)}
-                className="w-52 bg-transparent text-sm text-white/70 placeholder:text-white/20 focus:outline-none"
+                className="analyzer-input"
                 placeholder="Enter primary keyword (e.g., best running shoes)"
               />
             </div>
           </div>
 
           {/* Buttons */}
-          <div className="mt-4 flex items-center justify-center gap-3">
-            <button
-              onClick={handleAnalyze}
-              disabled={isAnalyzing}
-              className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-brand-500 to-amber-500 px-6 py-2.5 text-sm font-bold text-white shadow-lg shadow-brand-500/25 transition hover:shadow-brand-500/40 disabled:cursor-not-allowed disabled:opacity-60"
-            >
-              {isAnalyzing ? <RefreshIcon /> : <Search className="h-4 w-4" />} {isAnalyzing ? "Analyzing..." : "Analyze On-Page SEO"}
-            </button>
-            <button className="flex items-center gap-2 rounded-xl border border-white/10 bg-white/[0.04] px-5 py-2.5 text-sm font-semibold text-white/60 hover:bg-white/[0.07]">
-              <Download className="h-4 w-4" /> Download Report
-            </button>
-          </div>
+          <div className="analyzer-footer">
+            {/* View source link */}
+            <div className="analyzer-source-row">
+              <button className="analyzer-source-button flex items-center gap-1.5 text-xs text-brand-300 hover:underline">
+                <Code2 className="h-3.5 w-3.5" /> View Page Source ({d.pageSource})
+              </button>
+            </div>
 
-          {/* View source link */}
-          <div className="mt-3 flex justify-center">
-            <button className="analyzer-source-button flex items-center gap-1.5 text-xs text-brand-300 hover:underline">
-              <Code2 className="h-3.5 w-3.5" /> View Page Source ({d.pageSource})
-            </button>
+            <div className="analyzer-actions">
+              <button
+                onClick={handleAnalyze}
+                disabled={isAnalyzing}
+                className="ui-button ui-button-primary analyzer-analyze-button"
+              >
+                {isAnalyzing ? <RefreshIcon /> : <Search className="h-4 w-4" />} {isAnalyzing ? "Analyzing..." : "Analyze On-Page SEO"}
+              </button>
+              <button className="ui-button analyzer-secondary-button">
+                <Download className="h-4 w-4" /> Download Report
+              </button>
+            </div>
           </div>
-          {error && <p className="mt-3 text-center text-xs font-semibold text-rose-300">{error}</p>}
+          {error && <div className="app-alert app-alert-error mt-3">{error}</div>}
         </div>
       </div>
 
@@ -436,18 +426,18 @@ export default function OnPageAnalyzer() {
           </span>
         </div>
 
-        <div className="flex flex-col items-center gap-6 lg:flex-row lg:justify-between">
+        <div className="analyzer-score-row">
           {/* Score Ring */}
           <div className="flex justify-center lg:justify-start">
             <ScoreRing score={d.score} />
           </div>
 
           {/* Summary cards */}
-          <div className="grid grid-cols-4 gap-3 flex-1 max-w-lg">
-            <SummaryCard value={d.totalChecks} label="Total Checks" color="text-white/80" bg="border-white/[0.06]" />
-            <SummaryCard value={d.passed} label="Passed" color="text-emerald-400" bg="border-emerald-500/20 bg-emerald-500/[0.03]" />
-            <SummaryCard value={d.failed} label="Failed" color="text-rose-400" bg="border-rose-500/20 bg-rose-500/[0.03]" />
-            <SummaryCard value={d.manual} label="Manual Review" color="text-amber-400" bg="border-amber-500/20 bg-amber-500/[0.03]" />
+          <div className="analyzer-summary-grid">
+            <SummaryCard value={d.totalChecks} label="Total Checks" tone="neutral" />
+            <SummaryCard value={d.passed} label="Passed" tone="success" />
+            <SummaryCard value={d.failed} label="Failed" tone="danger" />
+            <SummaryCard value={d.manual} label="Manual Review" tone="warning" />
           </div>
         </div>
       </div>
@@ -464,10 +454,10 @@ export default function OnPageAnalyzer() {
                 className="flex w-full items-center justify-between gap-4 px-5 py-4 text-left transition hover:bg-white/[0.02]"
               >
                 <div className="flex items-center gap-3">
-                  <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-brand-500/10 text-brand-400">
+                  <span className="analyzer-section-icon">
                     <Icon className="h-4 w-4" />
                   </span>
-                  <span className="font-display text-[13px] font-bold text-white/90">{section.title}</span>
+                  <span className="analyzer-section-title font-display">{section.title}</span>
                 </div>
                 <div className="flex items-center gap-3">
                   <SectionBar passed={section.passed} total={section.total} />
@@ -502,9 +492,9 @@ export default function OnPageAnalyzer() {
                           )}
                           <div className="min-w-0">
                             <div className="flex items-center gap-2 flex-wrap">
-                              <span className="text-sm font-semibold text-white/85">{check.name}</span>
+                              <span className="analyzer-check-name">{check.name}</span>
                               {check.isManual && (
-                                <span className="rounded bg-amber-500/20 px-1.5 py-0.5 text-[9px] font-bold text-amber-300">Manual Check</span>
+                                <span className="admin-badge badge-warning">Manual Check</span>
                               )}
                               {(check.hasDetails || check.metaTags?.length > 0) && (
                                 <button
@@ -512,17 +502,17 @@ export default function OnPageAnalyzer() {
                                     e.stopPropagation();
                                     toggleDetails(section.id, i);
                                   }}
-                                  className="rounded-md bg-brand-500/10 px-2 py-0.5 text-[10px] font-bold text-brand-300 ring-1 ring-brand-500/20 hover:bg-brand-500/20"
+                                  className="analyzer-details-toggle"
                                 >
                                   {openDetails[`${section.id}-${i}`] ? "Hide Details" : "Show Details"}
                                 </button>
                               )}
                             </div>
-                            <p className="mt-0.5 text-[11px] text-white/35">{check.desc}</p>
+                            <p className="analyzer-check-desc">{check.desc}</p>
                             {check.detail && (
-                              <div className="mt-1.5 flex items-center gap-1.5 rounded-lg bg-white/[0.03] px-2.5 py-1.5">
-                                <Info className="h-3 w-3 flex-shrink-0 text-white/25" />
-                                <span className="text-[11px] text-white/50">{check.detail}</span>
+                              <div className="analyzer-check-detail">
+                                <Info className="h-3 w-3 flex-shrink-0" />
+                                <span>{check.detail}</span>
                               </div>
                             )}
                             {openDetails[`${section.id}-${i}`] && (
@@ -531,10 +521,8 @@ export default function OnPageAnalyzer() {
                           </div>
                         </div>
                         <span
-                          className={`flex-shrink-0 rounded-lg px-2.5 py-1 text-[11px] font-bold ${
-                            check.status === "pass"
-                              ? "bg-emerald-500/10 text-emerald-300 ring-1 ring-emerald-500/20"
-                              : "bg-rose-500/10 text-rose-300 ring-1 ring-rose-500/20"
+                          className={`admin-badge analyzer-status ${
+                            check.status === "pass" ? "badge-professional" : "badge-error"
                           }`}
                         >
                           {check.status === "pass" ? "Pass" : "Fail"}
@@ -599,11 +587,11 @@ function DetailsPanel({ check }) {
   );
 }
 
-function SummaryCard({ value, label, color, bg }) {
+function SummaryCard({ value, label, color, bg, tone = "neutral" }) {
   return (
-    <div className={`rounded-xl border ${bg} p-3 text-center`}>
-      <div className={`font-display text-2xl font-black ${color}`}>{value}</div>
-      <div className="text-[10px] text-white/35">{label}</div>
+    <div className={`analyzer-summary-card analyzer-summary-${tone}`}>
+      <div className="analyzer-summary-label">{label}</div>
+      <div className="analyzer-summary-value">{value}</div>
     </div>
   );
 }

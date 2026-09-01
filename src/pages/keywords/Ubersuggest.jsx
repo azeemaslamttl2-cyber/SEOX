@@ -140,7 +140,7 @@ export default function Ubersuggest() {
   }
 
   return (
-    <div className="ubersuggest-page mx-auto max-w-[1100px] space-y-5">
+    <div className="ubersuggest-page space-y-5">
       <div className="flex flex-col items-center py-6">
         <div className="flex items-center gap-2 rounded-full bg-gradient-to-r from-orange-500 to-rose-500 px-5 py-2">
           <Search className="h-4 w-4 text-white" />

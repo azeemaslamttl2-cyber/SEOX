@@ -103,7 +103,17 @@
 /* ==================================================================
    BASE & TYPOGRAPHY
    ================================================================== */
-html,
+/* The root MUST stay at 16px: it defines what 1rem means. Setting it to
+   14px (as this rule previously did) silently rescaled every rem value
+   in the product — and Tailwind's whole type scale with it — to 87.5%
+   of its intended size. `text-sm` rendered at 12.25px instead of 14px,
+   and the banner headings at 21px instead of 24px.
+
+   Default body text is still 14px; it is just expressed on body, which
+   sets inherited size without redefining the rem unit. */
+html {
+  font-size: 16px;
+}
 body {
   background: var(--surface);
   color: var(--text-primary);
@@ -7448,9 +7458,12 @@ aside.w3c-card {
    sat at 50% opacity on a gradient, which read as washed-out rather
    than disabled.
    ================================================================== */
-.bing-connect-page {
+/* Retained as an alias; the page roots now use .bulk-page. */
+.bing-connect-page,
+.bulk-page {
   background: transparent;
   min-height: 0;
+  width: 100%;
 }
 .bing-connect-hero {
   background-color: var(--surface);
@@ -7611,8 +7624,12 @@ aside.w3c-card {
   padding: 40px 28px !important;
   width: 100%;
 }
-/* Bing stacks a page header above its card — same column, same width. */
-.bing-connect-page > div {
+/* Bing stacks a page header above its card — same column, same width.
+
+   Scoped to .connect-column, NOT to the page root: the same root also
+   renders the loaded sites grid, and capping its first child would have
+   squeezed that data into 560px. */
+.connect-column {
   margin-left: auto;
   margin-right: auto;
   max-width: 560px;
@@ -7665,4 +7682,848 @@ aside.w3c-card {
   .bing-connect-card,
   .yandex-connect-card { padding: 28px 20px !important; }
   .bing-connect-hero { padding: 20px !important; }
+}
+
+/* ==================================================================
+   ON-PAGE ANALYZER — banner matching /tech-seo/crawl
+
+   Was a centre-aligned hero on `bg-ink-800` with two blurred blobs and
+   a dot-grid overlay, a red→amber gradient tile, and three inputs fused
+   into one strip by `gap-px` hairlines — so the URL, path and keyword
+   read as a single control rather than three fields.
+   ================================================================== */
+.analyzer-hero {
+  background-color: var(--surface);
+  background-image:
+    radial-gradient(120% 110% at 100% 0%, rgba(223, 60, 39, 0.055) 0%, transparent 55%),
+    radial-gradient(90% 110% at 100% 100%, rgba(45, 43, 111, 0.04) 0%, transparent 60%);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-xs);
+  padding: 24px 26px;
+}
+.analyzer-title {
+  align-items: center;
+  display: flex;
+  gap: 12px;
+  min-width: 0;
+}
+.analyzer-title > svg {
+  box-sizing: content-box;
+  height: 20px;
+  width: 20px;
+  padding: 10px;
+  border-radius: var(--radius-lg);
+  background: var(--brand-red-subtle);
+  border: 1px solid var(--brand-red-border);
+  color: var(--brand-red) !important;
+  flex: 0 0 auto;
+}
+.analyzer-hero h1 {
+  color: var(--brand-blue);
+  font-size: 1.5rem;
+  font-weight: 700;
+  letter-spacing: -0.018em;
+  line-height: 2rem;
+}
+.analyzer-description {
+  color: var(--text-secondary);
+  font-size: 0.875rem;
+  line-height: 1.375rem;
+  margin-top: 4px;
+  max-width: 68ch;
+}
+
+/* Three separate fields in a well, as on the crawl page. */
+.analyzer-input-panel {
+  background: var(--surface-sunken);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  display: grid;
+  gap: 10px;
+  grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr) minmax(0, 1fr);
+  margin-top: 20px;
+  padding: 14px;
+}
+.analyzer-field {
+  align-items: center;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  display: flex;
+  gap: 8px;
+  min-height: var(--control-h-lg);
+  min-width: 0;
+  padding: 0 12px;
+  transition: border-color var(--dur) ease, box-shadow var(--dur) ease;
+}
+.analyzer-field > svg { color: var(--text-muted) !important; flex: 0 0 auto; }
+.analyzer-field:focus-within {
+  border-color: var(--brand-red);
+  box-shadow: 0 0 0 3px rgba(223, 60, 39, 0.12);
+}
+.analyzer-input {
+  background: transparent;
+  border: 0;
+  color: var(--text-primary) !important;
+  flex: 1;
+  font-size: 13px;
+  min-width: 0;
+  outline: none;
+  width: 100%;
+}
+.analyzer-input::placeholder { color: var(--text-disabled) !important; }
+
+/* Actions align left with the title, not centred. */
+.analyzer-actions {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 14px;
+}
+.analyzer-analyze-button {
+  min-height: var(--control-h-lg);
+  padding: 0 18px;
+}
+.analyzer-secondary-button {
+  background: var(--surface) !important;
+  border: 1px solid var(--border) !important;
+  color: var(--text-secondary) !important;
+  --btn-fg: var(--text-secondary);
+  min-height: var(--control-h-lg);
+  padding: 0 16px;
+}
+.analyzer-secondary-button:hover:not(:disabled) {
+  background: var(--surface-sunken) !important;
+  border-color: var(--border-strong) !important;
+  color: var(--text-primary) !important;
+}
+/* One footer row: the source link reads left, the actions sit right —
+   the same meta-left / action-right pairing used on the Speed page. */
+.analyzer-footer {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: space-between;
+  margin-top: 14px;
+}
+.analyzer-source-row { margin-top: 0; }
+.analyzer-footer .analyzer-actions { margin-top: 0; }
+
+@media (max-width: 640px) {
+  .analyzer-footer { flex-direction: column-reverse; align-items: stretch; }
+  .analyzer-footer .analyzer-actions > .ui-button { flex: 1; }
+}
+
+@media (max-width: 900px) {
+  .analyzer-input-panel { grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-width: 640px) {
+  .analyzer-hero { padding: 20px; }
+}
+
+/* ==================================================================
+   ON-PAGE ANALYZER — RESULTS
+
+   The score card put the ring and the four tiles at opposite edges of a
+   now-full-width card, leaving a large hole between them. The tiles
+   themselves were 10px-labelled chips with tinted borders, and "Show
+   Details" was a solid brand pill sitting right beside the check name —
+   louder than the thing it belonged to.
+   ================================================================== */
+.analyzer-score-row {
+  align-items: center;
+  display: grid;
+  gap: 28px;
+  grid-template-columns: auto minmax(0, 1fr);
+}
+.analyzer-summary-grid {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+.analyzer-summary-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  min-width: 0;
+  padding: 14px 16px;
+  text-align: left;
+  transition: border-color var(--dur) var(--ease), box-shadow var(--dur) var(--ease);
+}
+.analyzer-summary-card:hover { border-color: var(--border-strong); box-shadow: var(--shadow-xs); }
+.analyzer-summary-label {
+  color: var(--text-muted);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  line-height: 1.3;
+  text-transform: uppercase;
+}
+.analyzer-summary-value {
+  color: var(--text-primary);
+  font-size: 1.5rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+  margin-top: 6px;
+}
+.analyzer-summary-success .analyzer-summary-value { color: var(--success-text); }
+.analyzer-summary-danger  .analyzer-summary-value { color: var(--error-text); }
+.analyzer-summary-warning .analyzer-summary-value { color: var(--warning-text); }
+
+/* --- Section rows -------------------------------------------------- */
+.analyzer-section-icon {
+  align-items: center;
+  background: var(--brand-red-subtle) !important;
+  border: 1px solid var(--brand-red-border);
+  border-radius: var(--radius-md) !important;
+  color: var(--brand-red) !important;
+  display: flex;
+  flex: 0 0 auto;
+  height: 34px;
+  justify-content: center;
+  width: 34px;
+}
+.analyzer-section-title {
+  color: var(--brand-blue) !important;
+  font-size: 0.875rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+/* --- Check rows ---------------------------------------------------- */
+.analyzer-check-name {
+  color: var(--text-primary) !important;
+  font-size: 0.8125rem;
+  font-weight: 600;
+}
+.analyzer-check-desc {
+  color: var(--text-secondary) !important;
+  font-size: 12px;
+  margin-top: 2px;
+}
+.analyzer-check-detail {
+  align-items: center;
+  background: var(--surface-sunken);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  color: var(--text-secondary);
+  display: inline-flex;
+  font-size: 11px;
+  gap: 6px;
+  margin-top: 8px;
+  padding: 5px 9px;
+}
+.analyzer-check-detail svg { color: var(--text-muted); }
+
+/* A secondary disclosure, not a call to action. */
+.analyzer-details-toggle {
+  background: var(--surface-sunken) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: var(--radius-xs) !important;
+  color: var(--text-secondary) !important;
+  --btn-fg: var(--text-secondary);
+  font-size: 10px !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.02em;
+  min-height: 20px;
+  padding: 0 7px !important;
+}
+.analyzer-details-toggle:hover:not(:disabled) {
+  background: var(--surface-muted) !important;
+  border-color: var(--border-strong) !important;
+  color: var(--text-primary) !important;
+  --btn-fg: var(--text-primary);
+}
+.analyzer-status {
+  flex-shrink: 0;
+  font-size: 11px !important;
+  letter-spacing: 0.02em;
+}
+
+@media (max-width: 1024px) {
+  .analyzer-score-row { grid-template-columns: minmax(0, 1fr); justify-items: center; }
+  .analyzer-summary-grid { width: 100%; }
+}
+@media (max-width: 640px) {
+  .analyzer-summary-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+/* ==================================================================
+   SIDEBAR CTA — SECOND PLACEMENT
+
+   The On-Page and Off-Page navs put their CTA as a sibling of <nav>
+   with `rounded-xl`, not inside it with `rounded-2xl` like the TechSeo,
+   GSC and GEO navs. The earlier rule only matched the nav-child form,
+   so these two kept a 5%-red panel and an "Open Auditor" button in
+   `bg-brand-500/20 text-brand-300` — dark red ink on a near-transparent
+   red fill, over navy. Both placements are handled together now.
+   ================================================================== */
+.app-sidebar > div[class*="rounded-xl"][class*="border-brand"],
+.app-sidebar nav > div[class*="rounded-2xl"][class*="border"] {
+  background: rgba(255, 255, 255, 0.07) !important;
+  background-image: none !important;
+  border: 1px solid rgba(255, 255, 255, 0.14) !important;
+  border-radius: var(--radius-lg) !important;
+  padding: 14px 12px !important;
+  text-align: left !important;
+}
+/* Heading carries the weight; the supporting line recedes. */
+.app-sidebar > div[class*="rounded-xl"][class*="border-brand"] > p:first-child {
+  color: #ffffff !important;
+  font-size: 12px !important;
+  font-weight: 600 !important;
+}
+.app-sidebar > div[class*="rounded-xl"][class*="border-brand"] > p:nth-child(2) {
+  color: rgba(255, 255, 255, 0.62) !important;
+  font-size: 11px !important;
+  margin-top: 4px !important;
+}
+/* A real action: solid brand red on the navy panel. */
+.app-sidebar > div[class*="rounded-xl"][class*="border-brand"] a {
+  align-items: center;
+  background: var(--brand-red) !important;
+  border: 1px solid var(--brand-red) !important;
+  border-radius: var(--radius-md) !important;
+  color: #ffffff !important;
+  display: inline-flex;
+  font-size: 11px !important;
+  font-weight: 600 !important;
+  justify-content: center;
+  margin-top: 10px !important;
+  min-height: 30px;
+  padding: 0 12px !important;
+  width: 100%;
+}
+.app-sidebar > div[class*="rounded-xl"][class*="border-brand"] a:hover {
+  background: var(--brand-red-hover) !important;
+  border-color: var(--brand-red-hover) !important;
+  color: #ffffff !important;
+}
+
+/* ==================================================================
+   EXPIRED DOMAIN FINDER
+
+   Built on a separate emerald palette over `bg-[#0d1117]` cards. The
+   "Windows" download button was solid emerald — the loudest control on
+   a page whose actual job is "Start Checking" — and the tips accordion
+   header rendered as a full-width red slab because its bare button fell
+   through to the primary bucket.
+   ================================================================== */
+.edf-hero {
+  background-color: var(--surface);
+  background-image:
+    radial-gradient(120% 110% at 100% 0%, rgba(223, 60, 39, 0.055) 0%, transparent 55%),
+    radial-gradient(90% 110% at 100% 100%, rgba(45, 43, 111, 0.04) 0%, transparent 60%);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-xs);
+  padding: 22px 24px;
+}
+.edf-tile {
+  align-items: center;
+  background: var(--brand-red-subtle);
+  border: 1px solid var(--brand-red-border);
+  border-radius: var(--radius-lg);
+  color: var(--brand-red) !important;
+  display: inline-flex;
+  flex: 0 0 auto;
+  height: 42px;
+  justify-content: center;
+  width: 42px;
+}
+.edf-title {
+  color: var(--brand-blue) !important;
+  font-size: 1.25rem;
+  font-weight: 700;
+  letter-spacing: -0.015em;
+}
+.edf-description { color: var(--text-secondary) !important; font-size: 0.875rem; margin-top: 2px; }
+.edf-promo {
+  align-items: center;
+  color: var(--text-muted) !important;
+  display: flex;
+  font-size: 11px;
+  gap: 5px;
+  margin-top: 6px;
+}
+.edf-promo svg { color: var(--brand-red) !important; }
+/* Neither platform download is the page's primary action. */
+.edf-platform-button {
+  background: var(--surface) !important;
+  border: 1px solid var(--border) !important;
+  color: var(--text-secondary) !important;
+  --btn-fg: var(--text-secondary);
+  min-height: var(--control-h-sm);
+  padding: 0 14px !important;
+}
+.edf-platform-button:hover:not(:disabled) {
+  background: var(--surface-sunken) !important;
+  border-color: var(--border-strong) !important;
+  color: var(--text-primary) !important;
+}
+
+/* --- Steps --------------------------------------------------------- */
+.edf-steps {
+  align-items: center;
+  display: flex;
+  gap: 12px;
+  padding: 0 4px;
+}
+.edf-steps > div[class*="h-px"] { background: var(--border) !important; }
+
+/* --- Workspace ----------------------------------------------------- */
+.edf-workspace {
+  background: var(--surface) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: var(--radius-xl) !important;
+  box-shadow: var(--shadow-xs);
+  overflow: hidden;
+}
+.edf-toolbar {
+  align-items: center;
+  border-bottom: 1px solid var(--border-subtle);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: space-between;
+  padding: 12px 18px;
+}
+.edf-toolbar-icon { color: var(--brand-red) !important; }
+.edf-toolbar-title {
+  color: var(--brand-blue) !important;
+  font-size: 0.875rem;
+  font-weight: 700;
+}
+.edf-toolbar > div > div[class*="w-px"] { background: var(--border) !important; }
+.edf-toolbar-action {
+  align-items: center;
+  background: transparent !important;
+  border: 0 !important;
+  color: var(--text-secondary) !important;
+  --btn-fg: var(--text-secondary);
+  display: inline-flex;
+  font-size: 12px;
+  font-weight: 500;
+  gap: 6px;
+  padding: 0 !important;
+}
+.edf-toolbar-action:hover:not(:disabled) {
+  background: transparent !important;
+  color: var(--brand-red-hover) !important;
+  --btn-fg: var(--brand-red-hover);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.edf-clear-button {
+  background: var(--surface) !important;
+  border: 1px solid var(--border) !important;
+  color: var(--text-secondary) !important;
+  --btn-fg: var(--text-secondary);
+  font-size: 12px;
+  min-height: var(--control-h-sm);
+  padding: 0 12px !important;
+}
+.edf-clear-button:hover:not(:disabled) {
+  background: var(--error-bg) !important;
+  border-color: var(--error-border) !important;
+  color: var(--error-text) !important;
+  --btn-fg: var(--error-text);
+}
+.edf-start-button {
+  font-size: 12px;
+  min-height: var(--control-h-sm);
+  padding: 0 14px !important;
+}
+
+/* --- Tips accordion ------------------------------------------------ */
+.edf-tips-icon { color: var(--warning-text) !important; }
+.edf-tips-title {
+  color: var(--brand-blue) !important;
+  font-size: 0.875rem;
+  font-weight: 700;
+}
+
+/* ==================================================================
+   EXPIRED DOMAIN FINDER — TIPS
+
+   The accordion header is a bare <button> with no background class, so
+   it fell through to the default primary bucket and painted the whole
+   bar brand red — with a navy title on top of it. Styling only the
+   label (as the previous pass did) does not help: the button itself has
+   to declare its own surface.
+   ================================================================== */
+.edf-tips {
+  background: var(--surface) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: var(--radius-xl) !important;
+  box-shadow: var(--shadow-xs);
+  overflow: hidden;
+}
+.edf-tips-header {
+  align-items: center;
+  background: transparent !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  color: var(--text-primary) !important;
+  --btn-fg: var(--text-primary);
+  display: flex;
+  justify-content: space-between;
+  padding: 14px 18px !important;
+  text-align: left;
+  width: 100%;
+}
+.edf-tips-header:hover:not(:disabled) {
+  background: var(--surface-sunken) !important;
+  color: var(--text-primary) !important;
+}
+.edf-tips-chevron { color: var(--text-muted) !important; }
+
+.edf-tips-grid {
+  border-top: 1px solid var(--border-subtle);
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  padding: 16px 18px 18px;
+}
+.edf-tip-card {
+  background: var(--surface-sunken);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  min-width: 0;
+  padding: 14px 16px;
+}
+.edf-tip-icon {
+  align-items: center;
+  background: var(--surface) !important;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md) !important;
+  color: var(--text-secondary) !important;
+  display: flex;
+  flex: 0 0 auto;
+  height: 30px;
+  justify-content: center;
+  margin-top: 1px;
+  width: 30px;
+}
+.edf-tip-title {
+  color: var(--text-primary) !important;
+  font-size: 0.8125rem;
+  font-weight: 600;
+}
+.edf-tip-desc {
+  color: var(--text-secondary) !important;
+  font-size: 12px;
+  line-height: 1.45;
+  margin-top: 3px;
+}
+
+@media (max-width: 900px) {
+  .edf-tips-grid { grid-template-columns: minmax(0, 1fr); }
+}
+
+/* ==================================================================
+   EXPIRED DOMAIN FINDER — WORKSPACE PANES
+
+   Both panes were `bg-[#010409]` (near-black). The compat layer remaps
+   that to the sunken tone, so they rendered as two large empty grey
+   rectangles — which is why the block read as broken rather than empty.
+   The placeholder and empty-state copy also sat at 12-20% opacity,
+   values chosen against near-black, so they were nearly invisible.
+   ================================================================== */
+.edf-split {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+.edf-pane { min-width: 0; padding: 16px 18px; }
+.edf-pane-left { border-right: 1px solid var(--border-subtle); }
+
+/* Input: a real field, with a legible placeholder. */
+.edf-textarea {
+  background: var(--surface) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: var(--radius-lg) !important;
+  color: var(--text-primary) !important;
+  font-family: var(--font-mono, ui-monospace, monospace);
+  font-size: 13px;
+  line-height: 1.6;
+  padding: 12px 14px !important;
+  resize: none;
+  transition: border-color var(--dur) ease, box-shadow var(--dur) ease;
+  width: 100%;
+}
+.edf-textarea::placeholder { color: var(--text-disabled) !important; }
+.edf-textarea:focus {
+  border-color: var(--brand-red) !important;
+  box-shadow: 0 0 0 3px rgba(223, 60, 39, 0.12) !important;
+  outline: none;
+}
+
+.edf-dropzone {
+  align-items: center;
+  background: var(--surface-sunken);
+  border: 1px dashed var(--border-strong);
+  border-radius: var(--radius-lg);
+  color: var(--text-secondary);
+  display: flex;
+  font-size: 12px;
+  gap: 8px;
+  justify-content: center;
+  margin-top: 12px;
+  padding: 14px;
+  transition: border-color var(--dur) ease, background-color var(--dur) ease;
+}
+.edf-dropzone:hover {
+  background: var(--brand-red-subtle);
+  border-color: var(--brand-red-border);
+}
+.edf-dropzone svg { color: var(--text-muted); }
+
+/* Results: a surface, not a void. */
+.edf-results {
+  background: var(--surface-sunken) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: var(--radius-lg) !important;
+  min-height: 340px;
+  overflow: hidden;
+}
+.edf-export-button {
+  background: var(--surface) !important;
+  border: 1px solid var(--border) !important;
+  color: var(--text-secondary) !important;
+  --btn-fg: var(--text-secondary);
+  font-size: 11px;
+  min-height: 26px;
+  padding: 0 9px !important;
+}
+.edf-export-button:hover:not(:disabled) {
+  background: var(--surface-sunken) !important;
+  border-color: var(--border-strong) !important;
+  color: var(--text-primary) !important;
+}
+
+.edf-empty { min-height: 340px; padding: 32px 24px; }
+.edf-empty-icon {
+  align-items: center;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-pill);
+  color: var(--text-muted) !important;
+  display: inline-flex;
+  height: 44px;
+  justify-content: center;
+  margin-bottom: 12px;
+  width: 44px;
+}
+.edf-empty-title {
+  color: var(--text-primary) !important;
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+.edf-empty-body {
+  color: var(--text-muted) !important;
+  font-size: 12px;
+  line-height: 1.45;
+  margin-top: 4px;
+  max-width: 30ch;
+  text-align: center;
+}
+
+@media (max-width: 1024px) {
+  .edf-split { grid-template-columns: minmax(0, 1fr); }
+  .edf-pane-left { border-right: 0; border-bottom: 1px solid var(--border-subtle); }
+}
+
+/* ==================================================================
+   SHARED: a disabled action should read as inert, not as a faded
+   primary. `disabled:opacity-40` on a filled button produces a washed
+   pink slab that still looks clickable — the Export Clean button on the
+   Backlink Cleaner was the clearest example.
+   ================================================================== */
+.edf-export-primary {
+  min-height: var(--control-h);
+  padding: 0 14px !important;
+}
+.edf-export-primary:disabled,
+.edf-clear-button:disabled,
+.edf-start-button:disabled {
+  background: var(--surface-muted) !important;
+  border-color: var(--border) !important;
+  color: var(--text-disabled) !important;
+  --btn-fg: var(--text-disabled);
+  opacity: 1 !important;
+}
+
+/* ==================================================================
+   BACKLINK INDEXER
+
+   The header used a violet/indigo gradient with two blurred blobs, a
+   bare 32px violet bolt for the icon, and an amber "FAST INDEXING"
+   eyebrow above the title. The three stat tiles carried 9px labels in
+   three different accent colours, and the tab strip marked its active
+   item with solid violet.
+   ================================================================== */
+.bi-title-block { min-width: 0; }
+.bi-title-row {
+  align-items: center;
+  display: flex;
+  gap: 12px;
+  min-width: 0;
+}
+.bi-help { color: var(--text-disabled) !important; }
+
+.bi-stats {
+  display: flex;
+  flex-shrink: 0;
+  gap: 10px;
+}
+.bi-stat {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  min-width: 84px;
+  padding: 10px 14px;
+  text-align: left;
+}
+.bi-stat-label {
+  color: var(--text-muted);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+.bi-stat-value {
+  color: var(--text-primary);
+  font-size: 1.25rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+  margin-top: 4px;
+}
+.bi-stat-info .bi-stat-value    { color: var(--info-text); }
+.bi-stat-success .bi-stat-value { color: var(--success-text); }
+
+/* Tab strip: segmented control, not a violet fill. */
+.bi-tabs {
+  overflow-x: auto;
+  width: 100%;
+}
+.bi-tabs .admin-tab {
+  align-items: center;
+  display: inline-flex;
+  flex-shrink: 0;
+  gap: 7px;
+  font-size: 12px;
+  min-height: 32px;
+  padding: 0 14px !important;
+  white-space: nowrap;
+}
+.bi-tabs .admin-tab.active {
+  background: var(--surface) !important;
+  color: var(--brand-blue) !important;
+  --btn-fg: var(--brand-blue);
+  box-shadow: var(--shadow-xs) !important;
+}
+.bi-tabs .admin-tab:not(.active) {
+  background: transparent !important;
+  color: var(--text-secondary) !important;
+  --btn-fg: var(--text-secondary);
+}
+.bi-tabs .admin-tab:not(.active):hover {
+  background: rgba(255, 255, 255, 0.7) !important;
+  color: var(--text-primary) !important;
+  --btn-fg: var(--text-primary);
+}
+
+@media (max-width: 760px) {
+  .bi-stats { width: 100%; }
+  .bi-stat { flex: 1; }
+}
+
+/* ==================================================================
+   BACKLINK DIRECTORY
+
+   This header borrowed `dashboard-welcome`, whose rules are written
+   against the Dashboard's DOM: they indent `h1` and the first <p> by
+   60px to clear that page's brand tile. Anything else inside — here the
+   "Import Backlink Report" button — stayed flush, so the header read as
+   misaligned. It now uses the standard banner, with its own tile.
+
+   The progress figure was a text pill on a red panel; with real numbers
+   behind it (2 of 3,597) a bar communicates far more than the digits.
+   ================================================================== */
+.bd-title-row {
+  align-items: center;
+  display: flex;
+  gap: 12px;
+  min-width: 0;
+}
+.bd-actions {
+  display: flex;
+  flex-shrink: 0;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.bd-secondary-button {
+  background: var(--surface) !important;
+  border: 1px solid var(--border) !important;
+  color: var(--text-secondary) !important;
+  --btn-fg: var(--text-secondary);
+  min-height: var(--control-h);
+  padding: 0 14px !important;
+}
+.bd-secondary-button:hover:not(:disabled) {
+  background: var(--surface-sunken) !important;
+  border-color: var(--border-strong) !important;
+  color: var(--text-primary) !important;
+}
+
+.bd-progress {
+  align-items: center;
+  border-top: 1px solid var(--border-subtle);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 18px;
+  padding-top: 14px;
+}
+.bd-progress-label {
+  color: var(--text-muted);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.bd-progress-value {
+  color: var(--text-primary);
+  font-size: 13px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+.bd-progress-track {
+  background: var(--surface-muted);
+  border-radius: var(--radius-pill);
+  flex: 1 1 160px;
+  height: 6px;
+  min-width: 120px;
+  overflow: hidden;
+}
+.bd-progress-fill {
+  background: var(--brand-red);
+  border-radius: var(--radius-pill);
+  display: block;
+  height: 100%;
+  min-width: 2px;
+  transition: width var(--dur-slow, 240ms) var(--ease);
+}
+.bd-progress-pct {
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
 }

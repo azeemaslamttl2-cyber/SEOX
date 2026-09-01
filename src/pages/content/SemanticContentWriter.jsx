@@ -5396,7 +5396,7 @@ BEGIN WRITING THE ARTICLE NOW:`;
     const activeSteps = getActiveSteps();
 
     return (
-        <div className="semantic-writer-workspace mx-auto max-w-5xl space-y-6">
+        <div className="semantic-writer-workspace space-y-6">
             {/* Back Navigation Bar */}
             <div className="top-nav-bar flex items-center justify-between px-5 py-3 rounded-2xl">
                 <button
