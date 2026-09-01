@@ -20,13 +20,13 @@ async function projectApi(method, body, query, { preserveSession = false } = {})
   if (!response.ok) throw new Error(payload.error || `Project API returned HTTP ${response.status}`);
   return payload;
 }
-async function projectInfoApi(method, body, query) {
+async function projectInfoApi(method, body, query, { preserveSession = false } = {}) {
   const token = getSessionToken();
   const headers = new Headers(body ? { 'Content-Type': 'application/json' } : undefined);
   if (token) headers.set('Authorization', `Bearer ${token}`);
   const response = await fetch(projectInfoApiUrl(query), { method, headers, body: body ? JSON.stringify(body) : undefined });
   const payload = await response.json().catch(() => ({}));
-  if (response.status === 401) clearSession();
+  if (response.status === 401 && !preserveSession) clearSession();
   if (!response.ok) throw new Error(payload.error || `Project Info API returned HTTP ${response.status}`);
   return payload;
 }
@@ -38,8 +38,8 @@ export async function loadProjects(uid) {
 export function saveProjectWithMeta(uid, project, meta) { return !uid || !project?.id ? null : projectApi('POST', { action: 'saveProjectWithMeta', project, selectedProjectId: meta.selectedProjectId || project.id, deletedProjectIds: meta.deletedProjectIds }); }
 export function deleteProject(uid, projectId) { return !uid || !projectId ? undefined : projectApi('DELETE', { projectId }); }
 export function saveProjectMeta(uid, meta) { return !uid ? undefined : projectApi('POST', { action: 'saveMeta', ...meta }); }
-export async function loadToolResult(uid, params) { return !uid ? null : (await projectApi('GET', null, { action: 'toolResult', ...params })).result || null; }
-export function saveToolResult(uid, body) { return !uid ? undefined : projectApi('POST', { action: 'saveToolResult', ...body }); }
+export async function loadToolResult(uid, params) { return !uid ? null : (await projectApi('GET', null, { action: 'toolResult', ...params }, { preserveSession: true })).result || null; }
+export function saveToolResult(uid, body) { return !uid ? undefined : projectApi('POST', { action: 'saveToolResult', ...body }, undefined, { preserveSession: true }); }
 export function saveProjectData(uid, body) {
   return !uid
     ? undefined
@@ -53,7 +53,7 @@ export async function saveProjectDataObject(uid, { projectId, projectData }) {
     projectId,
     key: 'branded-keywords',
     value: projectData['branded-keywords'] || [],
-  });
+  }, undefined, { preserveSession: true });
   return payload;
 }
 export async function loadProjectInfo(uid, params) {

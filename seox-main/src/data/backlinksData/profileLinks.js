@@ -1,0 +1,21 @@
+export default {
+  category: "Profile Links",
+  desc: "High DA profile creation sites",
+  icon: "user",
+  totalLinks: 1200,
+  done: 1,
+  links: [
+    { name: "Gravatar", domain: "gravatar.com", tld: ".com", linkType: "Dofollow", traffic: "15M", dr: 92, status: "Done", favicon: "gv" },
+    { name: "About.me", domain: "about.me", tld: ".me", linkType: "Dofollow", traffic: "3M", dr: 88, status: "Mark Done", favicon: "am" },
+    { name: "Crunchbase", domain: "crunchbase.com", tld: ".com", linkType: "Dofollow", traffic: "10M", dr: 91, status: "Mark Done", favicon: "cb" },
+    { name: "Angel.co", domain: "angel.co", tld: ".co", linkType: "Dofollow", traffic: "5M", dr: 90, status: "Mark Done", favicon: "an" },
+    { name: "Slideshare", domain: "slideshare.net", tld: ".net", linkType: "Dofollow", traffic: "20M", dr: 94, status: "Mark Done", favicon: "ss" },
+    { name: "Issuu", domain: "issuu.com", tld: ".com", linkType: "Dofollow", traffic: "8M", dr: 92, status: "Mark Done", favicon: "is" },
+    { name: "HubPages", domain: "hubpages.com", tld: ".com", linkType: "Dofollow", traffic: "5M", dr: 85, status: "Mark Done", favicon: "hp" },
+    { name: "Livejournal", domain: "livejournal.com", tld: ".com", linkType: "Dofollow", traffic: "12M", dr: 91, status: "Mark Done", favicon: "lj" },
+    { name: "Weebly", domain: "weebly.com", tld: ".com", linkType: "Dofollow", traffic: "10M", dr: 93, status: "Mark Done", favicon: "wb" },
+    { name: "WordPress.com", domain: "wordpress.com", tld: ".com", linkType: "Nofollow", traffic: "50M", dr: 94, status: "Mark Done", favicon: "wp" },
+    { name: "Blogger", domain: "blogger.com", tld: ".com", linkType: "Nofollow", traffic: "30M", dr: 95, status: "Mark Done", favicon: "bl" },
+    { name: "Wix", domain: "wix.com", tld: ".com", linkType: "Nofollow", traffic: "40M", dr: 93, status: "Mark Done", favicon: "wx" },
+  ],
+};

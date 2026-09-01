@@ -10,6 +10,7 @@ import {
   Network,
   PenTool,
   ShieldCheck,
+  Eye,
 } from "lucide-react";
 
 const nav = [
@@ -25,6 +26,8 @@ const nav = [
   { label: "Skip Gram Words", to: "/content/skip-gram", icon: Network },
   { label: "Content Optimization", to: "/content/optimization", icon: PenTool },
   { label: "ChatGPT Watermark Remover", to: "/content/watermark-remover", icon: ShieldCheck },
+  { label: "Semantic Generator", to: "/content/semantic-generator", icon: Brain },
+  { label: "Content Analyzer", to: "/content/content-analyzer", icon: Eye },
 ];
 
 export default function ContentSecondaryNav() {

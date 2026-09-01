@@ -54,6 +54,7 @@ import EeatAudit from "./pages/techseo/EeatAudit.jsx";
 import RobotsAnalyzer from "./pages/techseo/RobotsAnalyzer.jsx";
 import CrawlOptimization from "./pages/techseo/CrawlOptimization.jsx";
 import SpeedOptimization from "./pages/techseo/SpeedOptimization.jsx";
+import W3CValidator from "./pages/techseo/W3CValidator.jsx";
 import GscAudit from "./pages/techseo/GscAudit.jsx";
 import BingWebmaster from "./pages/techseo/BingWebmaster.jsx";
 import BacklinksAudit from "./pages/techseo/BacklinksAudit.jsx";
@@ -143,6 +144,15 @@ const AIModelCompatibility = lazy(() => import("./semanticsx/components/AIModelC
 const BulkAnalysisPage = lazy(() => import("./semanticsx/components/BulkAnalysisPage.jsx"));
 const BingBulkAnalysisPage = lazy(() => import("./semanticsx/components/BingBulkAnalysisPage.jsx"));
 const YandexBulkAnalysisPage = lazy(() => import("./semanticsx/components/YandexBulkAnalysisPage.jsx"));
+const ScreamingFrogAnalyzer = lazy(() => import("./semanticsx/components/ScreamingFrogAnalyzer.jsx"));
+const AIBacklinkGenerator = lazy(() => import("./semanticsx/components/AIBacklinkGenerator.jsx"));
+const CsvGenerator = lazy(() => import("./semanticsx/components/CsvGenerator.jsx"));
+const SEOTools = lazy(() => import("./semanticsx/components/SEOTools.jsx"));
+const LeadFinderTool = lazy(() => import("./semanticsx/components/LeadFinderTool.jsx"));
+const LocalExpiredFinder = lazy(() => import("./semanticsx/components/LocalExpiredFinder.jsx"));
+const SemanticKeywordAnalyzer = lazy(() => import("./semanticsx/components/SemanticKeywordAnalyzer.jsx"));
+const CompetitorContentAnalyzer = lazy(() => import("./semanticsx/components/CompetitorContentAnalyzer.jsx"));
+const YoutubeSEOChecker = lazy(() => import("./semanticsx/components/YoutubeSEOChecker.jsx"));
 
 function RouteLoading() {
   return (
@@ -303,11 +313,13 @@ export default function App() {
               <Route path="/tech-seo/robots" element={<RobotsAnalyzer />} />
               <Route path="/tech-seo/crawl" element={<CrawlOptimization />} />
               <Route path="/tech-seo/speed" element={<SpeedOptimization />} />
+              <Route path="/tech-seo/w3c" element={<W3CValidator />} />
               <Route path="/tech-seo/gsc-audit" element={<GscAudit />} />
               <Route path="/tech-seo/bing" element={<BingWebmaster />} />
               <Route path="/tech-seo/backlinks" element={<BacklinksAudit />} />
               <Route path="/tech-seo/duplicate" element={<DuplicateChecker />} />
               <Route path="/tech-seo/plagiarism" element={<PlagiarismChecker />} />
+              <Route path="/tech-seo/screaming-frog" element={<ScreamingFrogAnalyzer />} />
               <Route path="/tech-seo" element={<Navigate to="/tech-seo/eeat" replace />} />
               <Route path="/tech-seo/*" element={<Navigate to="/tech-seo/eeat" replace />} />
             </Route>
@@ -337,6 +349,8 @@ export default function App() {
               <Route path="/off-page/backlink-cleaner" element={<BacklinkCleaner />} />
               <Route path="/off-page/backlink-indexer" element={<BacklinkIndexer />} />
               <Route path="/off-page/backlink-directory" element={<BacklinkDirectory />} />
+              <Route path="/off-page/ai-link-builder" element={<AIBacklinkGenerator />} />
+              <Route path="/off-page/csv-generator" element={<CsvGenerator />} />
               <Route path="/off-page" element={<Navigate to="/off-page/expired-domains" replace />} />
               <Route path="/off-page/*" element={<Navigate to="/off-page/expired-domains" replace />} />
             </Route>
@@ -384,6 +398,8 @@ export default function App() {
               <Route path="/content/skip-gram" element={<SkipGramWords />} />
               <Route path="/content/optimization" element={<ContentOptimization />} />
               <Route path="/content/watermark-remover" element={<ChatGPTWatermarkRemover />} />
+              <Route path="/content/semantic-generator" element={<SemanticKeywordAnalyzer />} />
+              <Route path="/content/content-analyzer" element={<CompetitorContentAnalyzer />} />
               <Route path="/content" element={<Navigate to="/content/outline" replace />} />
               <Route path="/content/*" element={<Navigate to="/content/outline" replace />} />
             </Route>
@@ -428,8 +444,8 @@ export default function App() {
             >
               <Route path="/local-seo/image-geo-tagger" element={<ImageGeoTagger />} />
               <Route path="/local-seo/local-image-geo-tagger" element={<Navigate to="/local-seo/image-geo-tagger" replace />} />
-              <Route path="/local-seo/rank-grid-pro" element={<RankGridPro />} />
-              <Route path="/local-seo" element={<Navigate to="/local-seo/image-geo-tagger" replace />} />
+              <Route path="/local-seo/rank-grid-pro" element={<RankGridPro />} />                <Route path="/local-seo/lead-finder" element={<LeadFinderTool />} />
+                <Route path="/local-seo/local-expired-finder" element={<LocalExpiredFinder />} />              <Route path="/local-seo" element={<Navigate to="/local-seo/image-geo-tagger" replace />} />
               <Route path="/local-seo/*" element={<Navigate to="/local-seo/image-geo-tagger" replace />} />
             </Route>
 
@@ -474,6 +490,19 @@ export default function App() {
               <Route path="/geo/ai-compatibility" element={<AIModelCompatibility />} />
               <Route path="/geo" element={<Navigate to="/geo/prompt-tracking" replace />} />
               <Route path="/geo/*" element={<Navigate to="/geo/prompt-tracking" replace />} />
+            </Route>
+
+            {/* YouTube SEO section */}
+            <Route
+              element={
+                <ProtectedRoute>
+                  <FeatureGroupLayout group="youtube" />
+                </ProtectedRoute>
+              }
+            >
+              <Route path="/youtube/seo-checker" element={<YoutubeSEOChecker />} />
+              <Route path="/youtube" element={<Navigate to="/youtube/seo-checker" replace />} />
+              <Route path="/youtube/*" element={<Navigate to="/youtube/seo-checker" replace />} />
             </Route>
 
             {/* Auth pages (split-screen brand layout) */}

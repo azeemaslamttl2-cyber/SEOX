@@ -5,6 +5,8 @@ import {
   Zap,
   BookOpen,
   Wrench,
+  Lightbulb,
+  Download,
 } from "lucide-react";
 
 const nav = [
@@ -15,6 +17,8 @@ const nav = [
       { label: "Backlink Cleaner", to: "/off-page/backlink-cleaner", icon: RefreshCw },
       { label: "Backlink Indexer", to: "/off-page/backlink-indexer", icon: Zap },
       { label: "Backlink Directory", to: "/off-page/backlink-directory", icon: BookOpen },
+      { label: "AI Link Builder", to: "/off-page/ai-link-builder", icon: Lightbulb },
+      { label: "CSV Generator", to: "/off-page/csv-generator", icon: Download },
     ],
   },
 ];

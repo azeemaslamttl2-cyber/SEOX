@@ -10,6 +10,7 @@ import {
   Copy,
   FileSearch,
   Brain,
+  FileStack,
 } from "lucide-react";
 
 const nav = [
@@ -21,6 +22,7 @@ const nav = [
       { label: "Robots.txt Analyzer", to: "/tech-seo/robots", icon: Bot },
       { label: "Crawl Optimization", to: "/tech-seo/crawl", icon: Zap },
       { label: "Speed Optimization", to: "/tech-seo/speed", icon: Gauge },
+      { label: "W3C Validation", to: "/tech-seo/w3c", icon: ShieldCheck },
     ],
   },
   {
@@ -36,6 +38,7 @@ const nav = [
       { label: "Backlinks Audit", to: "/tech-seo/backlinks", icon: Link2 },
       { label: "Duplicate Checker", to: "/tech-seo/duplicate", icon: Copy },
       { label: "Plagiarism Checker", to: "/tech-seo/plagiarism", icon: FileSearch },
+      { label: "Screaming Frog", to: "/tech-seo/screaming-frog", icon: FileStack },
     ],
   },
 ];

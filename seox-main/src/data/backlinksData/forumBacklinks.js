@@ -1,0 +1,21 @@
+export default {
+  category: "Forum Backlinks",
+  desc: "Forum posting sites",
+  icon: "messagesSquare",
+  totalLinks: 672,
+  done: 0,
+  links: [
+    { name: "Reddit", domain: "reddit.com", tld: ".com", linkType: "Nofollow", traffic: "1.2G", dr: 93, status: "Mark Done", favicon: "rd" },
+    { name: "Quora", domain: "quora.com", tld: ".com", linkType: "Nofollow", traffic: "200M", dr: 92, status: "Mark Done", favicon: "qu" },
+    { name: "Stack Overflow", domain: "stackoverflow.com", tld: ".com", linkType: "Nofollow", traffic: "100M", dr: 93, status: "Mark Done", favicon: "so" },
+    { name: "Hacker News", domain: "news.ycombinator.com", tld: ".com", linkType: "Nofollow", traffic: "10M", dr: 90, status: "Mark Done", favicon: "hn" },
+    { name: "Warrior Forum", domain: "warriorforum.com", tld: ".com", linkType: "Dofollow", traffic: "2M", dr: 78, status: "Mark Done", favicon: "wf" },
+    { name: "Digital Point", domain: "digitalpoint.com", tld: ".com", linkType: "Dofollow", traffic: "1M", dr: 75, status: "Mark Done", favicon: "dp" },
+    { name: "V7N", domain: "v7n.com", tld: ".com", linkType: "Dofollow", traffic: "200K", dr: 60, status: "Mark Done", favicon: "v7" },
+    { name: "BlackHatWorld", domain: "blackhatworld.com", tld: ".com", linkType: "Nofollow", traffic: "3M", dr: 76, status: "Mark Done", favicon: "bh" },
+    { name: "SEO Chat", domain: "seochat.com", tld: ".com", linkType: "Dofollow", traffic: "500K", dr: 65, status: "Mark Done", favicon: "sc" },
+    { name: "Indie Hackers", domain: "indiehackers.com", tld: ".com", linkType: "Dofollow", traffic: "1M", dr: 80, status: "Mark Done", favicon: "ih" },
+    { name: "GrowthHackers", domain: "growthhackers.com", tld: ".com", linkType: "Dofollow", traffic: "500K", dr: 75, status: "Mark Done", favicon: "gh" },
+    { name: "Dev.to", domain: "dev.to", tld: ".to", linkType: "Dofollow", traffic: "10M", dr: 88, status: "Mark Done", favicon: "dv" },
+  ],
+};
