@@ -8,6 +8,7 @@ import {
   readJson,
 } from "../_lib/http.js";
 import { processModulesSequentially, acquireProcessingLock, releaseProcessingLock } from "../_lib/module-processor.js";
+import { mergeW3CValidationReport } from "./tech-seo/w3c/validate.js";
 
 // Authentication helper for MySQL-backed auth
 const verifyUser = requireUser;
@@ -566,12 +567,15 @@ async function saveToolResult(userId, projectId, toolKey, data) {
   );
 
   const nextProjectData = mergeProjectDataWithToolResult(row?.project_data, toolKey, data.result);
+  const projectDataToSave = toolKey === "w3c-validation"
+    ? mergeW3CValidationReport(nextProjectData, data.result)
+    : nextProjectData;
 
   await update(
     `UPDATE user_projects
        SET project_data = ?, updated_at = NOW()
      WHERE user_id = ? AND project_id = ?`,
-    [JSON.stringify(nextProjectData), userId, projectId]
+    [JSON.stringify(projectDataToSave), userId, projectId]
   );
 
   return { success: true, projectId, toolKey, updatedAt: data.updated_at };
