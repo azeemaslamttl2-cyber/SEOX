@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { Folder, ChevronRight, ChevronDown, FileText, HelpCircle, Filter } from "lucide-react";
+import { ChevronDown, ChevronRight, FileText, Filter, Folder, FolderTree, HelpCircle } from "lucide-react";
 import { useAuditData } from "../../hooks/useAuditData.js";
 import { useCrawl } from "../../context/CrawlContext.jsx";
 
@@ -229,12 +229,15 @@ export default function StructureExplorer() {
   const hasData = pages.length > 0;
 
   return (
-    <div className="mx-auto max-w-6xl space-y-4">
-      <h1 className="flex items-center gap-2 font-display text-xl font-bold tracking-tight">
-        Structure explorer
-        <HelpCircle className="h-4 w-4 text-white/30" />
-        <span className="text-xs font-normal text-white/40 ml-1">How to use</span>
-      </h1>
+    <div className="space-y-4">
+      <div className="auditor-hero">
+        <h1 className="flex items-center gap-2 font-display text-xl font-bold tracking-tight">
+          <FolderTree className="h-5 w-5" />
+          Structure explorer
+          <HelpCircle className="h-4 w-4 text-white/30" />
+          <span className="text-xs font-normal text-white/40 ml-1">How to use</span>
+        </h1>
+      </div>
 
       {/* Tab bar */}
       <div className="flex flex-wrap items-center gap-1.5 rounded-2xl border border-white/10 bg-ink-800/60 p-1.5 backdrop-blur">

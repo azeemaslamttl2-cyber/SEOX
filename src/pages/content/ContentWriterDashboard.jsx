@@ -191,7 +191,7 @@ const ContentWriterDashboard = () => {
     }
 
     return (
-        <div className="mx-auto max-w-6xl space-y-6">
+        <div className="space-y-6">
             {/* ─────────── HERO: Split layout matching EeatAudit ─────────── */}
             <div className="eeat-hero relative overflow-hidden rounded-3xl border border-brand-600 bg-brand-500">
                 {/* Background texture */}

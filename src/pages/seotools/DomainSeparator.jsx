@@ -15,7 +15,7 @@ export default function DomainSeparator() {
   }
 
   return (
-    <div className="mx-auto max-w-6xl space-y-4">
+    <div className="space-y-4">
       <ToolHeader title="Domain Separator" Icon={Globe} gradient="from-slate-800 via-sky-800 to-blue-700" subtitle="Extract unique root domains from a list of URLs" />
 
       <div className="rounded-2xl border border-white/[0.08] bg-[#0d1117] p-5">

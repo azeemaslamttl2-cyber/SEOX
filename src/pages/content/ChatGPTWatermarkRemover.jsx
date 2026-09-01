@@ -23,7 +23,7 @@ export default function ChatGPTWatermarkRemover() {
   const featureIcons = { search: Search, sparkles: Sparkles, eye: Eye, minus: Minus };
 
   return (
-    <div className="mx-auto max-w-6xl space-y-5">
+    <div className="space-y-5">
       {/* Header */}
       <div className="text-center py-4">
         <div className="flex items-center justify-center gap-2 mb-3">

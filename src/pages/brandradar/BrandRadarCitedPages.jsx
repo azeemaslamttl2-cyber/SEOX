@@ -15,14 +15,19 @@ export default function BrandRadarCitedPages() {
     <section className="space-y-5 pb-16">
       <BrandRadarDataForSeoStatus loading={pagesState.loading} error={pagesState.error} data={pagesState.data} />
 
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h1 className="font-display text-xl font-bold tracking-tight">Cited Pages: {config.brand}</h1>
-          <p className="mt-0.5 text-xs text-white/40">Live DataForSEO LLM mentions top pages.</p>
-        </div>
-        <div className="flex items-center gap-2 rounded-lg border border-white/10 bg-white/[0.03] px-3 py-1.5 text-xs text-white/55">
-          {formatCompactNumber(pagesState.data?.total_count || pages.length)} results
-          <ChevronDown className="h-3 w-3 text-white/35" />
+      <div className="radar-page-hero">
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <div className="radar-page-title flex items-center gap-3">
+            <FileText className="h-5 w-5" />
+            <div>
+              <h1 className="font-display">Cited Pages: <span className="radar-brand">{config.brand}</span></h1>
+              <p className="radar-page-description">Live DataForSEO LLM mentions top pages.</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2 rounded-lg border border-white/10 bg-white/[0.03] px-3 py-1.5 text-xs text-white/55">
+            {formatCompactNumber(pagesState.data?.total_count || pages.length)} results
+            <ChevronDown className="h-3 w-3 text-white/35" />
+          </div>
         </div>
       </div>
 

@@ -73,68 +73,54 @@ export default function BrandRadar() {
   return (
     <section className="pb-16">
       {/* Hero section */}
-      <div className="relative overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br from-brand-500/[0.08] via-ink-800 to-ink-900 p-8 sm:p-12 text-center">
-        <div className="pointer-events-none absolute -right-20 -top-20 h-64 w-64 animate-float-slow rounded-full bg-brand-500/20 blur-3xl" />
-        <div className="pointer-events-none absolute -bottom-20 -left-16 h-64 w-64 animate-float rounded-full bg-amber-400/15 blur-3xl" />
-
-        <div className="relative">
-          {/* Badge */}
-          <div className="mx-auto mb-6 inline-flex items-center gap-2 rounded-full border border-brand-500/30 bg-brand-500/10 px-4 py-1.5 text-xs font-semibold uppercase tracking-wider text-brand-300">
-            <Radar className="h-3.5 w-3.5" />
-            Brand Intelligence Platform
-          </div>
-
-          <h1 className="font-display text-3xl font-bold tracking-tight sm:text-4xl md:text-5xl">
-            Brand Radar <span className="gradient-text">2.0</span>
-          </h1>
-          <p className="mx-auto mt-3 max-w-xl text-sm text-white/55 sm:text-base">
-            Explore what people and AI say about any brand, topic or niche.
-            Track your visibility across every AI platform in real time.
-          </p>
-
-          {/* Input bar */}
-          <form onSubmit={handleAnalyze} className="mx-auto mt-8 max-w-2xl">
-            <div className="relative">
-              <Globe className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-white/30" />
-              <input
-                type="text"
-                value={url}
-                onChange={(e) => setUrl(e.target.value)}
-                placeholder="e.g. nike.com"
-                className="h-14 w-full rounded-xl border border-white/15 bg-ink-800/80 pl-12 pr-36 text-sm text-white placeholder:text-white/30 backdrop-blur-md transition focus:border-brand-500/50 focus:outline-none focus:ring-2 focus:ring-brand-500/20"
-              />
-              <button
-                type="submit"
-                className="absolute right-2 top-1/2 -translate-y-1/2 inline-flex items-center gap-2 rounded-lg bg-gradient-to-r from-brand-500 to-brand-600 px-5 py-2.5 text-sm font-semibold text-white shadow-brand-glow transition-all hover:scale-[1.02] hover:shadow-[0_12px_36px_-8px_rgba(249,115,22,0.6)]"
-              >
-                <Search className="h-4 w-4" />
-                Analyze
-              </button>
-            </div>
-            <div className="mt-3">
-              <label className="flex items-center gap-2 rounded-xl border border-white/10 bg-ink-800/70 px-4 py-3">
-                <Users className="h-4 w-4 text-white/30" />
-                <input
-                  value={competitors}
-                  onChange={(e) => setCompetitors(e.target.value)}
-                  className="w-full bg-transparent text-xs text-white placeholder:text-white/25 focus:outline-none"
-                  placeholder="Competitors, comma separated"
-                />
-              </label>
-            </div>
-            <p className="mt-3 text-xs text-white/40">
-              or{" "}
-              <button
-                type="button"
-                className="text-brand-300 hover:underline"
-                onClick={() => navigate(`/brand-radar/overview?${buildBrandRadarSearch(readStoredBrandRadarConfig())}`)}
-              >
-                add your brand and competitors manually
-              </button>
+      {/* ─── Page header ─── */}
+      <div className="radar-hero">
+        <div className="radar-title flex items-center gap-3">
+          <Radar className="h-5 w-5" />
+          <div>
+            <h1 className="font-display">
+              Brand Radar <span className="radar-version">2.0</span>
+            </h1>
+            <p className="radar-description">
+              Explore what people and AI say about any brand, topic or niche. Track your visibility across every AI platform in real time.
             </p>
-          </form>
-
+          </div>
         </div>
+
+        {/* Analyse form */}
+        <form onSubmit={handleAnalyze} className="radar-form">
+          <div className="radar-field">
+            <Globe className="h-4 w-4" />
+            <input
+              type="text"
+              value={url}
+              onChange={(e) => setUrl(e.target.value)}
+              placeholder="e.g. nike.com"
+            />
+          </div>
+          <div className="radar-field">
+            <Users className="h-4 w-4" />
+            <input
+              value={competitors}
+              onChange={(e) => setCompetitors(e.target.value)}
+              placeholder="Competitors, comma separated"
+            />
+          </div>
+          <button type="submit" className="ui-button ui-button-primary radar-analyze-button">
+            <Search className="h-4 w-4" />
+            Analyze
+          </button>
+        </form>
+
+        <p className="radar-manual">
+          or{" "}
+          <button
+            type="button"
+            onClick={() => navigate(`/brand-radar/overview?${buildBrandRadarSearch(readStoredBrandRadarConfig())}`)}
+          >
+            add your brand and competitors manually
+          </button>
+        </p>
       </div>
 
       {/* Feature cards */}

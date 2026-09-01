@@ -121,7 +121,7 @@ export default function PromptTracking() {
   const [openSections, setOpenSections] = useState({ 0: true, 1: true });
 
   return (
-    <div className="mx-auto max-w-6xl space-y-6">
+    <div className="space-y-6">
 
       {/* Hero */}
       <div className="relative overflow-hidden rounded-3xl border border-white/[0.06] bg-ink-800">

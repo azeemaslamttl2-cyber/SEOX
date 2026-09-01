@@ -391,7 +391,7 @@ const SitemapGenerator = () => {
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 p-6">
-            <div className="max-w-5xl mx-auto">
+            <div className="">
                 {/* Header */}
                 <div className="text-center mb-8">
                     <div className="inline-flex items-center gap-3 bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 text-white px-6 py-3 rounded-full mb-4 shadow-lg">

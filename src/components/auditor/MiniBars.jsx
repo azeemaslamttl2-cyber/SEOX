@@ -18,10 +18,8 @@ export default function MiniBars({ values, labels, height = 80 }) {
           return (
             <div
               key={i}
-              className={`flex-1 rounded-sm bg-gradient-to-t transition-all ${
-                isLow
-                  ? "from-amber-500/40 to-amber-400"
-                  : "from-brand-500 to-amber-300"
+              className={`mini-bar flex-1 rounded-sm transition-all ${
+                isLow ? "mini-bar-low" : "mini-bar-high"
               }`}
               style={{ height: h }}
               title={`${v}`}

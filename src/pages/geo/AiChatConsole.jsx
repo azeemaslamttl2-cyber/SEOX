@@ -78,7 +78,7 @@ export default function AiChatConsole() {
   };
 
   return (
-    <div className="mx-auto max-w-5xl flex flex-col" style={{ height: "calc(100vh - 120px)" }}>
+    <div className="flex flex-col" style={{ height: "calc(100vh - 120px)" }}>
 
       {/* Header */}
       <div className="relative overflow-hidden rounded-2xl border border-white/[0.06] bg-ink-800 mb-4 flex-shrink-0">

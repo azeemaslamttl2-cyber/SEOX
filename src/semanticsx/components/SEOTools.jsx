@@ -1190,7 +1190,7 @@ const SEOTools = ({ defaultTab }) => {
     if (!activeTool) {
         return (
             <div className="tool-dark-surface min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-6">
-                <div className="max-w-6xl mx-auto">
+                <div className="">
                     <div className="bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 rounded-2xl p-8 text-white mb-8 shadow-xl">
                         <div className="flex items-center gap-4">
                             <div className="w-16 h-16 bg-white/20 rounded-2xl flex items-center justify-center backdrop-blur-sm"><Wrench className="w-8 h-8" /></div>

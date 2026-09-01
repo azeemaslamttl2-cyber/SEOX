@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Download, Eye, Search } from "lucide-react";
+import { Download, Eye, FileDown, Search } from "lucide-react";
 import { useAuditData } from "../../hooks/useAuditData.js";
 import { useCrawl } from "../../context/CrawlContext.jsx";
 import { downloadTextFile, rowsToCsv, slugForFilename } from "../../lib/auditorExport.js";
@@ -215,9 +215,10 @@ export default function BulkExport() {
   };
 
   return (
-    <div className="mx-auto max-w-6xl space-y-5">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="font-display text-xl font-bold tracking-tight">Bulk export</h1>
+    <div className="space-y-5">
+      <div className="auditor-hero flex flex-wrap items-center justify-between gap-3">
+        <h1 className="font-display text-xl font-bold tracking-tight">
+          <FileDown className="h-5 w-5" />Bulk export</h1>
         <div className="flex h-9 items-center gap-2 rounded-lg border border-white/10 bg-white/[0.04] px-3 text-sm">
           <Search className="h-4 w-4 text-white/40" />
           <input

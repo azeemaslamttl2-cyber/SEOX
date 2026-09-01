@@ -359,7 +359,7 @@ export default function CsvGenerator() {
 
     return (
         <div className="h-full bg-gradient-to-br from-slate-50 via-white to-blue-50/30 p-6 overflow-y-auto">
-            <div className="max-w-7xl mx-auto">
+            <div className="">
 
                 {notification && (
                     <div className="mb-4 inline-block animate-fade-in bg-green-100 text-green-700 border border-green-300 px-4 py-2 rounded-full text-sm font-medium">

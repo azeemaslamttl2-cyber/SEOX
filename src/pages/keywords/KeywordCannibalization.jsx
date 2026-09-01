@@ -117,7 +117,7 @@ export default function KeywordCannibalization() {
 
   if (!gsc.isSignedIn) {
     return (
-      <div className="mx-auto max-w-6xl space-y-5">
+      <div className="space-y-5">
         <Header />
         <div className="rounded-2xl border border-white/[0.08] bg-[#0d1117] p-8 text-center">
           <Globe className="mx-auto h-12 w-12 text-white/20" />

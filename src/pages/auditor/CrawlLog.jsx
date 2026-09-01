@@ -51,9 +51,9 @@ export default function CrawlLog() {
   }
 
   return (
-    <div className="mx-auto max-w-6xl space-y-5">
+    <div className="space-y-5">
       {/* Header */}
-      <div className="flex flex-wrap items-center justify-between gap-3">
+      <div className="auditor-hero flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-3">
           <h1 className="flex items-center gap-2 font-display text-xl font-bold tracking-tight">
             <Activity className="h-5 w-5 text-brand-400" />

@@ -377,7 +377,7 @@ For more information, visit the main website at ${extractedUrls[0]?.url || url}
             {/* Hero Section */}
             <div className="relative overflow-hidden">
                 <div className="absolute inset-0 bg-[url('data:image/svg+xml,...')] opacity-10"></div>
-                <div className="max-w-6xl mx-auto px-6 py-16 relative">
+                <div className="px-6 py-16 relative">
                     <div className="flex items-center gap-2 mb-4">
                         <span className="px-3 py-1 bg-purple-500/20 border border-purple-500/30 rounded-full text-purple-300 text-xs font-medium">
                             ✕ GEO SEO TOOL

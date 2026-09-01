@@ -6630,3 +6630,672 @@ aside.w3c-card {
   text-decoration: underline;
   text-underline-offset: 2px;
 }
+
+/* ==================================================================
+   BRAND RADAR — page header, following the dashboard
+
+   Was a centre-aligned marketing hero: an uppercase eyebrow pill, a
+   48px display title, two drifting blurred blobs, a 56px pill search
+   bar with a gradient button that scaled on hover, and an amber wash
+   that appears nowhere else in the product. On an application screen
+   that reads as a landing page, not a tool.
+   ================================================================== */
+.radar-hero {
+  background-color: var(--surface);
+  background-image:
+    radial-gradient(120% 110% at 100% 0%, rgba(223, 60, 39, 0.055) 0%, transparent 55%),
+    radial-gradient(90% 110% at 100% 100%, rgba(45, 43, 111, 0.04) 0%, transparent 60%);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-xs);
+  padding: 24px 26px;
+}
+.radar-title { min-width: 0; }
+.radar-title > svg {
+  box-sizing: content-box;
+  height: 20px;
+  width: 20px;
+  padding: 10px;
+  border-radius: var(--radius-lg);
+  background: var(--brand-red-subtle);
+  border: 1px solid var(--brand-red-border);
+  color: var(--brand-red);
+  flex: 0 0 auto;
+}
+.radar-hero h1 {
+  color: var(--brand-blue);
+  font-size: 1.25rem;
+  font-weight: 700;
+  letter-spacing: -0.015em;
+  line-height: 1.75rem;
+}
+/* The version keeps a brand accent — one red word, as on the dashboard
+   header — instead of an animated gradient fill. */
+.radar-version {
+  background: none !important;
+  -webkit-text-fill-color: currentColor;
+  color: var(--brand-red) !important;
+}
+.radar-description {
+  color: var(--text-secondary);
+  font-size: 0.8125rem;
+  line-height: 1.25rem;
+  margin-top: 3px;
+  max-width: 68ch;
+}
+
+/* Form sits on one line under a hairline, left-aligned. */
+.radar-form {
+  align-items: center;
+  border-top: 1px solid var(--border-subtle);
+  display: grid;
+  gap: 10px;
+  grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr) auto;
+  margin-top: 20px;
+  padding-top: 16px;
+}
+.radar-field {
+  align-items: center;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  display: flex;
+  gap: 8px;
+  min-height: var(--control-h-lg);
+  min-width: 0;
+  padding: 0 12px;
+  transition: border-color var(--dur) ease, box-shadow var(--dur) ease;
+}
+.radar-field > svg { color: var(--text-muted); flex: 0 0 auto; }
+.radar-field input {
+  background: transparent;
+  border: 0;
+  color: var(--text-primary) !important;
+  flex: 1;
+  font-size: 13px;
+  min-width: 0;
+  outline: none;
+}
+.radar-field input::placeholder { color: var(--text-disabled) !important; }
+.radar-field:focus-within {
+  border-color: var(--brand-red);
+  box-shadow: 0 0 0 3px rgba(223, 60, 39, 0.12);
+}
+.radar-analyze-button {
+  flex-shrink: 0;
+  min-height: var(--control-h-lg);
+  padding: 0 20px;
+}
+.radar-manual {
+  color: var(--text-muted);
+  font-size: 12px;
+  margin-top: 12px;
+}
+.radar-manual button {
+  background: transparent !important;
+  border: 0 !important;
+  color: var(--brand-red-hover) !important;
+  --btn-fg: var(--brand-red-hover);
+  font-weight: 500;
+  padding: 0 !important;
+}
+.radar-manual button:hover:not(:disabled) {
+  background: transparent !important;
+  color: var(--brand-red) !important;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+@media (max-width: 860px) {
+  .radar-form { grid-template-columns: minmax(0, 1fr); }
+  .radar-analyze-button { width: 100%; }
+}
+@media (max-width: 640px) {
+  .radar-hero { padding: 20px; }
+}
+
+/* ==================================================================
+   BANNER TYPE SCALE — REVISION
+
+   Heading 1.25rem -> 1.5rem, body 0.8125rem -> 0.875rem.
+
+   Applied to the whole banner family rather than Brand Radar alone:
+   these eleven headers were deliberately unified to one spec earlier,
+   and changing a single page would put it back out of step.
+   ================================================================== */
+:is(.eeat-hero, .semantic-hero, .robots-hero) h1,
+.crawl-hero .crawl-title span,
+.speed-hero .speed-title span,
+.w3c-hero h1,
+.gsc-audit-hero h1,
+.bing-hero h1,
+.backlinks-hero h1,
+.duplicate-hero h1,
+.plagiarism-hero h1,
+.sf-hero h1,
+.radar-hero h1 {
+  font-size: 1.5rem !important;
+  line-height: 2rem !important;
+  letter-spacing: -0.018em !important;
+}
+
+:is(.eeat-hero, .semantic-hero, .robots-hero) h1 + p,
+.crawl-hero .crawl-description,
+.speed-hero .speed-description,
+.speed-hero > p,
+.w3c-hero h1 + p,
+.gsc-audit-description,
+.bing-description,
+.backlinks-description,
+.duplicate-description,
+.plagiarism-description,
+.sf-description,
+.radar-description {
+  font-size: 0.875rem !important;
+  line-height: 1.375rem !important;
+  margin-top: 4px !important;
+}
+
+/* ==================================================================
+   BRAND MARK ON THE BANNERS
+   The same masked watermark the dashboard header uses: the white-logo
+   asset painted in brand navy at 6%, bleeding off the top-right.
+   ================================================================== */
+.radar-hero,
+.w3c-hero,
+.gsc-audit-hero,
+.bing-hero,
+.backlinks-hero,
+.duplicate-hero,
+.plagiarism-hero,
+.sf-hero,
+.crawl-hero,
+.speed-hero,
+:is(.eeat-hero, .semantic-hero, .robots-hero) {
+  position: relative;
+  overflow: hidden;
+}
+.radar-hero::after {
+  content: "";
+  position: absolute;
+  top: -28px;
+  right: 40px;
+  height: 150px;
+  width: 116px;
+  background: var(--brand-blue);
+  -webkit-mask: url("/white-logo.svg") center / contain no-repeat;
+  mask: url("/white-logo.svg") center / contain no-repeat;
+  opacity: 0.06;
+  pointer-events: none;
+}
+
+@media (max-width: 900px) {
+  .radar-hero::after { display: none; }
+}
+@media (max-width: 640px) {
+  :is(.eeat-hero, .semantic-hero, .robots-hero) h1,
+  .crawl-hero .crawl-title span,
+  .speed-hero .speed-title span,
+  .w3c-hero h1, .gsc-audit-hero h1, .bing-hero h1, .backlinks-hero h1,
+  .duplicate-hero h1, .plagiarism-hero h1, .sf-hero h1, .radar-hero h1 {
+    font-size: 1.25rem !important;
+    line-height: 1.75rem !important;
+  }
+}
+
+/* ==================================================================
+   SITE AUDITOR — page header + card system, following the dashboard
+
+   The Overview page had no header surface (a bare "Overview" heading on
+   the page ground), glassmorphic `bg-ink-800/60 backdrop-blur` cards
+   with a hover glow, tabs marked by an orange gradient underline, and
+   an amber trend chart. None of that exists elsewhere in the product.
+   ================================================================== */
+.auditor-hero {
+  background-color: var(--surface);
+  background-image:
+    radial-gradient(120% 110% at 100% 0%, rgba(223, 60, 39, 0.055) 0%, transparent 55%),
+    radial-gradient(90% 110% at 100% 100%, rgba(45, 43, 111, 0.04) 0%, transparent 60%);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-xs);
+  overflow: hidden;
+  padding: 24px 26px;
+  position: relative;
+}
+.auditor-title { min-width: 0; }
+.auditor-title > svg {
+  box-sizing: content-box;
+  height: 20px;
+  width: 20px;
+  padding: 10px;
+  border-radius: var(--radius-lg);
+  background: var(--brand-red-subtle);
+  border: 1px solid var(--brand-red-border);
+  color: var(--brand-red);
+  flex: 0 0 auto;
+}
+.auditor-hero h1 {
+  color: var(--brand-blue);
+  font-size: 1.5rem;
+  font-weight: 700;
+  letter-spacing: -0.018em;
+  line-height: 2rem;
+}
+.auditor-description {
+  color: var(--text-secondary);
+  font-size: 0.875rem;
+  line-height: 1.375rem;
+  margin-top: 4px;
+  max-width: 62ch;
+}
+.auditor-help-button {
+  align-items: center;
+  background: transparent !important;
+  border: 0 !important;
+  color: var(--text-muted) !important;
+  --btn-fg: var(--text-muted);
+  display: inline-flex;
+  font-size: 12px;
+  font-weight: 500;
+  gap: 5px;
+  padding: 0 8px !important;
+}
+.auditor-help-button:hover:not(:disabled) {
+  background: transparent !important;
+  color: var(--text-primary) !important;
+  --btn-fg: var(--text-primary);
+}
+.auditor-print-button {
+  background: var(--surface) !important;
+  border: 1px solid var(--border) !important;
+  color: var(--text-secondary) !important;
+  --btn-fg: var(--text-secondary);
+  min-height: var(--control-h);
+}
+.auditor-print-button:hover:not(:disabled) {
+  background: var(--surface-sunken) !important;
+  border-color: var(--border-strong) !important;
+  color: var(--text-primary) !important;
+}
+
+/* --- Cards --------------------------------------------------------- */
+.auditor-card {
+  background: var(--surface) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: var(--radius-xl) !important;
+  box-shadow: var(--shadow-xs);
+  backdrop-filter: none !important;
+  min-width: 0;
+  padding: 20px;
+  transition: border-color var(--dur) var(--ease), box-shadow var(--dur) var(--ease);
+}
+.auditor-card:hover { border-color: var(--border-strong) !important; box-shadow: var(--shadow-sm); }
+.auditor-card-flush { padding: 0; overflow: hidden; }
+.auditor-card-title {
+  color: var(--brand-blue);
+  font-size: 0.875rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+.auditor-card-hint { color: var(--text-disabled) !important; }
+.auditor-card-total {
+  color: var(--text-primary);
+  font-size: 0.875rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  margin-left: 4px;
+}
+
+/* --- Toolbar + tabs ------------------------------------------------ */
+.auditor-toolbar {
+  align-items: center;
+  border-bottom: 1px solid var(--border-subtle);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: space-between;
+  padding: 14px 18px;
+}
+.auditor-tabs { display: inline-flex; width: auto; }
+.auditor-toolbar-button {
+  background: var(--surface) !important;
+  border: 1px solid var(--border) !important;
+  color: var(--text-secondary) !important;
+  --btn-fg: var(--text-secondary);
+  font-size: 12px;
+  min-height: var(--control-h-sm);
+  padding: 0 12px !important;
+}
+.auditor-toolbar-button:hover:not(:disabled) {
+  background: var(--surface-sunken) !important;
+  border-color: var(--border-strong) !important;
+  color: var(--text-primary) !important;
+}
+
+/* --- Trend bars: brand, not amber --------------------------------- */
+.mini-bar-low  { background: var(--border-strong); }
+.mini-bar-high { background: var(--brand-red); }
+.mini-bar { transition: background-color var(--dur) ease; }
+
+@media (max-width: 640px) {
+  .auditor-hero { padding: 20px; }
+}
+
+/* ==================================================================
+   BRAND RADAR SUB-PAGES — page headers, following the dashboard
+
+   Overview, AI Visibility, AI Responses, Topics and Cited Pages all
+   opened with a bare <h1> and a 12px subtitle sitting directly on the
+   page ground, with a chip floated opposite. No surface, no icon, and
+   two of them used the animated .gradient-text fill on the brand name.
+   ================================================================== */
+.radar-page-hero {
+  background-color: var(--surface);
+  background-image:
+    radial-gradient(120% 110% at 100% 0%, rgba(223, 60, 39, 0.055) 0%, transparent 55%),
+    radial-gradient(90% 110% at 100% 100%, rgba(45, 43, 111, 0.04) 0%, transparent 60%);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-xs);
+  overflow: hidden;
+  padding: 24px 26px;
+  position: relative;
+}
+.radar-page-title { min-width: 0; }
+.radar-page-title > svg {
+  box-sizing: content-box;
+  height: 20px;
+  width: 20px;
+  padding: 10px;
+  border-radius: var(--radius-lg);
+  background: var(--brand-red-subtle);
+  border: 1px solid var(--brand-red-border);
+  color: var(--brand-red) !important;
+  flex: 0 0 auto;
+}
+.radar-page-hero h1 {
+  color: var(--brand-blue);
+  font-size: 1.5rem;
+  font-weight: 700;
+  letter-spacing: -0.018em;
+  line-height: 2rem;
+}
+/* Brand name accents in red — the same single-word accent the dashboard
+   header uses, replacing the animated gradient fill. */
+.radar-brand {
+  background: none !important;
+  -webkit-text-fill-color: currentColor;
+  color: var(--brand-red) !important;
+}
+.radar-page-description {
+  color: var(--text-secondary) !important;
+  font-size: 0.875rem !important;
+  line-height: 1.375rem;
+  margin-top: 4px !important;
+  max-width: 72ch;
+}
+
+/* The result-count / status chip opposite the title.
+
+   Four of the five pages write this as `flex items-center`, but the
+   Overview page uses a plain <div>. Setting `padding: 0` with a
+   min-height and no centring left that one's text sitting against the
+   top edge, so the chip has to centre its own content. */
+.radar-page-hero > div > div:last-child:not(.radar-page-title) {
+  align-items: center;
+  background: var(--surface-sunken) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: var(--radius-md) !important;
+  color: var(--text-secondary) !important;
+  display: inline-flex;
+  flex-shrink: 0;
+  font-size: 12px;
+  font-weight: 500;
+  gap: 6px;
+  line-height: 1;
+  min-height: var(--control-h-sm);
+  padding: 0 12px !important;
+  white-space: nowrap;
+}
+.radar-page-hero > div > div:last-child:not(.radar-page-title) svg {
+  color: var(--text-muted) !important;
+}
+
+/* Metric tab pills on AI Visibility become a segmented control. */
+.radar-page-hero [class*="rounded-full"][class*="bg-brand"],
+.radar-page-hero [class*="rounded-lg"][class*="bg-brand"] {
+  background: var(--brand-red) !important;
+  color: #ffffff !important;
+  --btn-fg: #ffffff;
+}
+
+@media (max-width: 640px) {
+  .radar-page-hero { padding: 20px; }
+}
+
+/* ==================================================================
+   BRAND RADAR METRIC TABS
+
+   Was a pill row where the active tab carried `bg-brand-500/20` and the
+   inactive ones carried no background at all — so the inactive tabs
+   fell through to the default primary bucket and every tab rendered
+   solid brand red. Nothing distinguished the selected metric.
+
+   Now the shared segmented control: one track, the active tab raised on
+   white, the rest quiet.
+   ================================================================== */
+.radar-tabs {
+  display: inline-flex;
+  flex-shrink: 0;
+  width: auto;
+}
+.radar-tabs .admin-tab {
+  font-size: 12px;
+  font-weight: 600;
+  min-height: 28px;
+  padding: 0 12px !important;
+  white-space: nowrap;
+}
+.radar-tabs .admin-tab.active {
+  background: var(--surface) !important;
+  color: var(--brand-blue) !important;
+  --btn-fg: var(--brand-blue);
+  box-shadow: var(--shadow-xs) !important;
+}
+.radar-tabs .admin-tab:not(.active) {
+  background: transparent !important;
+  border-color: transparent !important;
+  color: var(--text-secondary) !important;
+  --btn-fg: var(--text-secondary);
+}
+.radar-tabs .admin-tab:not(.active):hover {
+  background: rgba(255, 255, 255, 0.7) !important;
+  color: var(--text-primary) !important;
+  --btn-fg: var(--text-primary);
+}
+
+/* ==================================================================
+   AUDITOR SITE SWITCHER
+
+   Three separate rules were fighting over this menu:
+
+     · the row's select button carries no padding, background or radius,
+       so the link-shaped rule claimed it — red text, zero padding
+     · the delete button's `hover:bg-rose-500/15` matched the
+       destructive bucket, giving it a permanent red outline
+     · "Add website" carries `hover:bg-brand-500/10`, which matched the
+       primary bucket and painted the whole footer bar solid red
+
+   Each is a menu control, so they are all defined explicitly here and
+   the heuristics no longer apply.
+   ================================================================== */
+.site-menu {
+  background: var(--surface) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: var(--radius-xl) !important;
+  box-shadow: var(--shadow-overlay) !important;
+  overflow: hidden;
+  padding: 0 !important;
+}
+.site-menu-label {
+  background: var(--surface-sunken);
+  border-bottom: 1px solid var(--border-subtle) !important;
+  color: var(--text-muted) !important;
+  letter-spacing: 0.07em;
+}
+
+/* --- Rows ---------------------------------------------------------- */
+.site-menu-row {
+  border: 1px solid transparent;
+  border-radius: var(--radius-md) !important;
+}
+.site-menu-row:hover { background: var(--surface-sunken) !important; }
+.site-menu-row.is-active {
+  background: var(--brand-red-subtle) !important;
+  border-color: var(--brand-red-border);
+}
+
+/* The row's select button is a menu item, not a text link. */
+.site-menu-select {
+  background: transparent !important;
+  border: 0 !important;
+  color: var(--text-primary) !important;
+  --btn-fg: var(--text-primary);
+  font-weight: 500;
+  padding: 2px 0 !important;
+  text-decoration: none !important;
+}
+.site-menu-select:hover:not(:disabled) {
+  background: transparent !important;
+  color: var(--text-primary) !important;
+  text-decoration: none !important;
+}
+.site-menu-icon {
+  background: var(--surface-muted) !important;
+  border: 1px solid var(--border);
+  color: var(--text-secondary) !important;
+}
+.site-menu-row.is-active .site-menu-icon {
+  background: var(--surface) !important;
+  border-color: var(--brand-red-border);
+  color: var(--brand-red) !important;
+}
+.site-menu-url   { color: var(--text-muted) !important; }
+.site-menu-count { color: var(--text-muted) !important; font-variant-numeric: tabular-nums; }
+
+/* --- Delete: quiet until hovered, then destructive ----------------- */
+.site-menu-delete {
+  background: transparent !important;
+  border: 0 !important;
+  color: var(--text-disabled) !important;
+  --btn-fg: var(--text-disabled);
+  opacity: 0;
+  transition: opacity var(--dur) ease, background-color var(--dur) ease, color var(--dur) ease;
+}
+.site-menu-row:hover .site-menu-delete,
+.site-menu-delete:focus-visible { opacity: 1; }
+.site-menu-delete:hover:not(:disabled) {
+  background: var(--error-bg) !important;
+  border-color: transparent !important;
+  color: var(--error-text) !important;
+  --btn-fg: var(--error-text);
+}
+
+/* --- Footer action -------------------------------------------------- */
+.site-menu-add {
+  background: var(--surface-sunken) !important;
+  border-color: var(--border-subtle) !important;
+  color: var(--brand-red-hover) !important;
+  --btn-fg: var(--brand-red-hover);
+  min-height: 38px;
+}
+.site-menu-add:hover:not(:disabled) {
+  background: var(--brand-red-subtle) !important;
+  color: var(--brand-red-active) !important;
+  --btn-fg: var(--brand-red-active);
+}
+
+/* ==================================================================
+   AUDITOR — HEADERS ACROSS THE SECTION
+
+   The 16 report pages (via ReportShell) and the 8 explorer pages all
+   opened with a bare <h1> on the page ground, plus a tab row marked by
+   an orange→amber gradient underline. They now use the same banner and
+   segmented control as the Overview page.
+
+   The explorer headers keep their existing markup — the banner class is
+   applied to whichever element already wrapped the title — so their
+   badges, counts, search fields and status pills stay where they were.
+   ================================================================== */
+
+/* Any h1 inside an auditor banner, however the page nests it. */
+.auditor-hero h1 {
+  align-items: center;
+  color: var(--brand-blue) !important;
+  display: flex;
+  font-size: 1.5rem !important;
+  font-weight: 700 !important;
+  gap: 8px;
+  letter-spacing: -0.018em !important;
+  line-height: 2rem !important;
+}
+/* First icon in the title becomes the brand tile; any later icon (the
+   help glyph these pages tuck beside the text) stays a quiet hint. */
+.auditor-hero h1 > svg:first-child,
+.auditor-title > svg {
+  box-sizing: content-box;
+  height: 20px !important;
+  width: 20px !important;
+  padding: 10px;
+  margin-right: 4px;
+  border-radius: var(--radius-lg);
+  background: var(--brand-red-subtle);
+  border: 1px solid var(--brand-red-border);
+  color: var(--brand-red) !important;
+  flex: 0 0 auto;
+}
+.auditor-hero h1 > svg:not(:first-child) { color: var(--text-disabled) !important; }
+/* The inline "How to use" hint some pages tuck inside the h1. */
+.auditor-hero h1 > span:not([class*="rounded"]) {
+  color: var(--text-muted) !important;
+  font-size: 12px !important;
+  font-weight: 500 !important;
+  letter-spacing: 0;
+}
+.auditor-hero h1 button {
+  background: transparent !important;
+  border: 0 !important;
+  color: var(--text-disabled) !important;
+  --btn-fg: var(--text-disabled);
+  padding: 0 !important;
+}
+.auditor-hero h1 button:hover:not(:disabled) {
+  background: transparent !important;
+  color: var(--text-secondary) !important;
+  --btn-fg: var(--text-secondary);
+}
+
+/* Tab row sits under a hairline inside the banner. */
+.auditor-hero-tabs {
+  border-top: 1px solid var(--border-subtle);
+  margin-top: 18px;
+  padding-top: 14px;
+}
+
+/* Status/count chips the explorer headers carry beside the title. */
+.auditor-hero [class*="rounded-full"][class*="bg-rose-"],
+.auditor-hero [class*="rounded-full"][class*="bg-emerald-"],
+.auditor-hero [class*="rounded-full"][class*="bg-brand-"] {
+  border-radius: var(--radius-sm) !important;
+  font-size: 11px !important;
+  font-weight: 600 !important;
+  padding: 3px 9px !important;
+}
+
+/* Bars in the report cards follow the brand, not amber. */
+.auditor-bar { background: var(--brand-red); }
+
+@media (max-width: 640px) {
+  .auditor-hero h1 { font-size: 1.25rem !important; line-height: 1.75rem !important; }
+}

@@ -93,7 +93,7 @@ export default function SitemapGenerator() {
   }
 
   return (
-    <div className="mx-auto max-w-6xl space-y-4">
+    <div className="space-y-4">
       <ToolHeader title="Sitemap Generator" Icon={Map} gradient="from-slate-800 via-fuchsia-800 to-violet-700" subtitle="Crawl your website and generate a sitemap.xml automatically" />
 
       <div className="rounded-2xl border border-white/[0.08] bg-[#0d1117] p-5">

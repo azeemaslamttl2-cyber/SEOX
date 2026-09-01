@@ -193,7 +193,7 @@ const AIModelIndexChecker = () => {
             {/* Hero Section */}
             <div className="relative overflow-hidden">
                 <div className="absolute inset-0 bg-gradient-to-r from-blue-600/20 to-purple-600/20"></div>
-                <div className="max-w-6xl mx-auto px-6 py-16 relative">
+                <div className="px-6 py-16 relative">
                     <div className="grid lg:grid-cols-2 gap-12 items-center">
                         {/* Left - Info */}
                         <div>
@@ -269,7 +269,7 @@ const AIModelIndexChecker = () => {
 
             {/* Results Section */}
             {results.length > 0 && (
-                <div className="max-w-6xl mx-auto px-6 pb-24">
+                <div className="px-6 pb-24">
                     <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
                         <div className="p-6 border-b border-gray-100 flex items-center justify-between">
                             <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
@@ -373,7 +373,7 @@ const AIModelIndexChecker = () => {
 
             {/* Info Section */}
             {results.length === 0 && !isAnalyzing && (
-                <div className="max-w-6xl mx-auto px-6 pb-16">
+                <div className="px-6 pb-16">
                     <div className="bg-white/10 backdrop-blur-sm rounded-2xl border border-white/20 p-6">
                         <h3 className="text-lg font-semibold text-white mb-4">About AI Crawler Bots</h3>
                         <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">

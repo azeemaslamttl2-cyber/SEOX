@@ -1,39 +1,87 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { Download, HelpCircle } from "lucide-react";
+import {
+  Boxes,
+  Braces,
+  Copy,
+  Download,
+  ExternalLink,
+  FileBarChart,
+  FileText,
+  Gauge,
+  HelpCircle,
+  Image as ImageIcon,
+  Languages,
+  Link2,
+  Map as MapIcon,
+  Palette,
+  Search,
+  Share2,
+  Shuffle,
+  Type,
+} from "lucide-react";
 
-export default function ReportShell({ title, tabs = ["Overview", "Issues"], children }) {
+/* Each report gets an icon that matches what it actually reports on.
+   Keyed by title so the 15 report pages need no changes; a page can
+   still override by passing an `icon` prop. */
+const REPORT_ICONS = {
+  "Internal pages": FileText,
+  "External pages": ExternalLink,
+  Indexability: Search,
+  Links: Link2,
+  Redirects: Shuffle,
+  Content: Type,
+  "Social tags of indexable pages": Share2,
+  Duplicates: Copy,
+  Localization: Languages,
+  Performance: Gauge,
+  Images: ImageIcon,
+  JavaScript: Braces,
+  CSS: Palette,
+  Sitemaps: MapIcon,
+  Other: Boxes,
+};
+
+export default function ReportShell({ title, icon, tabs = ["Overview", "Issues"], children }) {
+  const Icon = icon || REPORT_ICONS[title] || FileBarChart;
   const [tab, setTab] = useState(tabs[0]);
   return (
-    <div className="mx-auto max-w-[1500px] space-y-5">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="flex items-center gap-2 font-display text-xl font-bold tracking-tight">
-          {title}
-          <button className="flex items-center gap-1 text-xs font-normal text-white/40 hover:text-white/70">
-            <HelpCircle className="h-3.5 w-3.5" />
-          </button>
-        </h1>
-        <button className="flex items-center gap-1.5 rounded-lg border border-white/10 bg-white/[0.04] px-3 py-1.5 text-xs text-white/80 hover:bg-white/[0.08]">
-          <Download className="h-3.5 w-3.5" /> Print to PDF
-        </button>
-      </div>
-
-      <div className="border-b border-white/10">
-        <div className="flex items-center gap-1">
-          {tabs.map((t) => (
-            <button
-              key={t}
-              onClick={() => setTab(t)}
-              className={`relative px-3 py-2 text-sm font-medium transition ${
-                tab === t ? "text-white" : "text-white/50 hover:text-white"
-              }`}
-            >
-              {t}
-              {tab === t && (
-                <span className="absolute inset-x-2 -bottom-px h-0.5 rounded-full bg-gradient-to-r from-brand-400 to-amber-400" />
-              )}
+    <div className="space-y-5">
+      <div className="auditor-hero">
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <div className="auditor-title flex items-center gap-3">
+            <Icon className="h-5 w-5" />
+            <div>
+              <h1 className="font-display">{title}</h1>
+              <p className="auditor-description">
+                Report data for the active crawl. Switch tabs to review issues.
+              </p>
+            </div>
+          </div>
+          <div className="flex flex-shrink-0 items-center gap-2">
+            <button type="button" className="auditor-help-button" title={`About ${title}`}>
+              <HelpCircle className="h-3.5 w-3.5" /> How to use
             </button>
-          ))}
+            <button type="button" onClick={() => window.print()} className="ui-button auditor-print-button">
+              <Download className="h-4 w-4" /> Print to PDF
+            </button>
+          </div>
+        </div>
+
+        <div className="auditor-hero-tabs">
+          <div className="admin-tabs radar-tabs">
+            {tabs.map((t) => (
+              <button
+                key={t}
+                type="button"
+                onClick={() => setTab(t)}
+                aria-pressed={tab === t}
+                className={`admin-tab ${tab === t ? "active" : ""}`}
+              >
+                {t}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 
@@ -54,7 +102,7 @@ export function StatCard({ label, value, change, sub, accent = "brand", to }) {
   return (
     <CardTag
       {...(to ? { to } : {})}
-      className={`group relative overflow-hidden rounded-2xl border border-white/10 bg-ink-800/60 p-4 backdrop-blur transition hover:border-white/15 ${
+      className={`auditor-card group relative overflow-hidden p-4 ${
         to ? "block cursor-pointer hover:bg-white/[0.03] focus:outline-none focus:ring-1 focus:ring-brand-400/50" : ""
       }`}
     >
@@ -77,7 +125,7 @@ export function StatCard({ label, value, change, sub, accent = "brand", to }) {
 
 export function ChartCard({ title, hint, children, className = "" }) {
   return (
-    <div className={`rounded-2xl border border-white/10 bg-ink-800/60 p-5 backdrop-blur ${className}`}>
+    <div className={`auditor-card ${className}`}>
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-1.5">
           <h3 className="text-sm font-semibold text-white">{title}</h3>
@@ -99,7 +147,7 @@ export function DepthBars({ title = "Distribution by depth level", values = [] }
             <span className="w-12 text-right text-xs text-white/50">depth {v.depth}</span>
             <div className="relative h-7 flex-1 overflow-hidden rounded-md bg-white/[0.04]">
               <div
-                className={`h-full rounded-md transition-all ${v.color || "bg-gradient-to-r from-brand-500 to-amber-400"}`}
+                className={`h-full rounded-md transition-all ${v.color || "auditor-bar"}`}
                 style={{ width: `${(v.value / max) * 100}%` }}
               />
             </div>
@@ -125,7 +173,7 @@ export function HBars({ rows, max }) {
           </div>
           <div className="relative h-3 overflow-hidden rounded-full bg-white/[0.04]">
             <div
-              className={`h-full rounded-full ${r.color || "bg-gradient-to-r from-brand-500 to-amber-400"}`}
+              className={`h-full rounded-full ${r.color || "auditor-bar"}`}
               style={{ width: `${(r.value / m) * 100}%` }}
             />
           </div>

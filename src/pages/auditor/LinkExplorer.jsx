@@ -1,6 +1,6 @@
 import { useEffect, useState, useMemo } from "react";
 import { useSearchParams } from "react-router-dom";
-import { ChevronDown, Search, Code2, Download, Columns3, Plus, HelpCircle, X } from "lucide-react";
+import { ChevronDown, Code2, Columns3, Download, HelpCircle, Link2, Plus, Search, X } from "lucide-react";
 import { useCrawl } from "../../context/CrawlContext.jsx";
 
 const FILTER_TABS = [
@@ -846,12 +846,15 @@ export default function LinkExplorer() {
   }, [stats?.perMinute]);
 
   return (
-    <div className="mx-auto max-w-6xl space-y-4">
-      <h1 className="flex items-center gap-2 font-display text-xl font-bold tracking-tight">
-        Link explorer
-        <HelpCircle className="h-4 w-4 text-white/30" />
-        <span className="text-xs font-normal text-white/40 ml-1">How to use</span>
-      </h1>
+    <div className="space-y-4">
+      <div className="auditor-hero">
+        <h1 className="flex items-center gap-2 font-display text-xl font-bold tracking-tight">
+          <Link2 className="h-5 w-5" />
+          Link explorer
+          <HelpCircle className="h-4 w-4 text-white/30" />
+          <span className="text-xs font-normal text-white/40 ml-1">How to use</span>
+        </h1>
+      </div>
 
       {/* Filter tabs + search */}
       <div className="relative z-[80] flex flex-wrap items-center gap-1.5 overflow-visible rounded-2xl border border-white/10 bg-ink-800/60 p-1.5 backdrop-blur">
