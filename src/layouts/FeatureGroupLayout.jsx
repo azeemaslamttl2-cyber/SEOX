@@ -8,8 +8,9 @@ import {
   Image,
   MapPin,
   Search,
-  Sparkles,
-} from "lucide-react";
+  Sparkles,  Users,
+  AlertCircle,
+  Youtube,} from "lucide-react";
 import IconRail from "../components/auditor/IconRail.jsx";
 import ProjectSelector from "../components/ProjectSelector.jsx";
 
@@ -60,6 +61,21 @@ const groups = {
         items: [
           { label: "Image Geo Tagger", to: "/local-seo/image-geo-tagger", icon: Image },
           { label: "Rank Grid Pro", to: "/local-seo/rank-grid-pro", icon: Grid3X3 },
+          { label: "Lead Finder", to: "/local-seo/lead-finder", icon: Users },
+          { label: "Expired Domain Finder", to: "/local-seo/local-expired-finder", icon: AlertCircle },
+        ],
+      },
+    ],
+  },
+  youtube: {
+    label: "YouTube SEO",
+    accent: "violet",
+    icon: Youtube,
+    sections: [
+      {
+        label: "Video Optimization",
+        items: [
+          { label: "SEO Checker", to: "/youtube/seo-checker", icon: Search },
         ],
       },
     ],

@@ -1,0 +1,23 @@
+# Copy this file to .dev.vars for `npm run cloudflare:dev`.
+# Never commit .dev.vars.
+
+DEEPSEEK_API_KEY=
+GOOGLE_PLACES_API_KEY=
+OPEN_PAGERANK_API_KEY=
+AHREFS_API_TOKEN=
+PAGESPEED_API_KEY=
+DATAFORSEO_LOGIN=
+DATAFORSEO_PASSWORD=
+
+# Google Search Console OAuth server credentials.
+GOOGLE_CLIENT_ID=
+GOOGLE_CLIENT_SECRET=
+
+# Paste the complete Firebase service-account JSON on one line.
+FIREBASE_PROJECT_ID=codestap-9a0b2
+FIREBASE_SERVICE_ACCOUNT_KEY={"type":"service_account","project_id":"codestap-9a0b2","private_key_id":"","private_key":"-----BEGIN PRIVATE KEY-----\n...\n-----END PRIVATE KEY-----\n","client_email":"","client_id":""}
+# Comma-separated Firebase user emails allowed to open /admin.
+ADMIN_EMAILS=
+
+STRIPE_SECRET_KEY=
+APP_URL=http://localhost:8788

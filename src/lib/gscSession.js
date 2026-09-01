@@ -62,7 +62,6 @@ export async function fetchServerGscSession(userId) {
   });
   const data = await response.json().catch(() => ({}));
 
-  if (response.status === 401) clearSession();
   if (!response.ok) {
     throw new Error(data?.error || `Failed to restore GSC session (${response.status})`);
   }

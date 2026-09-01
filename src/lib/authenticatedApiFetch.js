@@ -54,7 +54,6 @@ export function installAuthenticatedApiFetch() {
       const token = getSessionToken();
       if (token) {
         const response = await nativeFetch(input, mergeAuthHeader(init, token));
-        if (response.status === 401) clearInvalidSession();
         return response;
       }
     }
