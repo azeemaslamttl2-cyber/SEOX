@@ -75,6 +75,7 @@ export default function W3CValidator() {
     try {
       const url = new URL("/api/tech-seo/w3c/validate", window.location.origin);
       url.searchParams.set("url", projectUrl);
+      if (project?.id) url.searchParams.set("projectId", String(project.id));
 
       const response = await fetch(url.toString(), {
         headers: { Accept: "application/json" },

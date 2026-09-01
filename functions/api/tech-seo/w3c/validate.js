@@ -1,6 +1,7 @@
 import { parsePublicHttpUrl } from "../../../_lib/url-security.js";
 import { corsHeaders, errorResponse, jsonResponse } from "../../../_lib/http.js";
 import { requireUser } from "../../../_lib/auth-token.js";
+import { configureMysqlConnection, queryOne, update } from "../../../_lib/mysql.js";
 
 const W3C_VALIDATOR_URL = "https://validator.w3.org/nu/";
 const W3C_TIMEOUT_MS = 25000;
@@ -20,6 +21,59 @@ export function normalizeW3CInputUrl(value) {
 
 function normalizeSourceText(value) {
   return String(value || "").replace(/\s+/g, " ").trim();
+}
+
+export function mergeW3CValidationReport(existingProjectData, report) {
+  const base = existingProjectData && typeof existingProjectData === "object" && !Array.isArray(existingProjectData)
+    ? existingProjectData
+    : {};
+
+  const currentReport = base.w3_validation && typeof base.w3_validation === "object" && !Array.isArray(base.w3_validation)
+    ? base.w3_validation
+    : {};
+
+  const nextReport = report && typeof report === "object" && !Array.isArray(report)
+    ? report
+    : { report };
+
+  return {
+    ...base,
+    w3_validation: {
+      ...currentReport,
+      ...nextReport,
+    },
+  };
+}
+
+async function persistW3CValidationReport(env, userId, projectId, report) {
+  if (!env || !userId || !projectId) return null;
+  configureMysqlConnection(env);
+
+  const row = await queryOne(
+    `SELECT project_data FROM user_projects WHERE user_id = ? AND project_id = ? AND owner_uid = ? LIMIT 1`,
+    [userId, projectId, userId]
+  );
+
+  const parsedExistingData = row?.project_data && typeof row.project_data === "string"
+    ? (() => {
+        try {
+          return JSON.parse(row.project_data);
+        } catch {
+          return {};
+        }
+      })()
+    : (row?.project_data && typeof row.project_data === "object" ? row.project_data : {});
+
+  const merged = mergeW3CValidationReport(parsedExistingData, report);
+
+  await update(
+    `UPDATE user_projects
+       SET project_data = ?, updated_at = NOW()
+     WHERE user_id = ? AND project_id = ? AND owner_uid = ?`,
+    [JSON.stringify(merged), userId, projectId, userId]
+  );
+
+  return merged;
 }
 
 export function summarizeW3CResponse(payload = {}) {
@@ -105,26 +159,28 @@ export async function onRequest({ request, env }) {
   }
 
   try {
-    await requireUser(request, env);
+    const decoded = await requireUser(request, env);
     const url = new URL(request.url);
     const projectUrl = url.searchParams.get("url") || url.searchParams.get("projectUrl") || "";
+    const projectId = url.searchParams.get("projectId") || "";
     const targetUrl = normalizeW3CInputUrl(projectUrl);
     const payload = await validateWithW3C(targetUrl);
     const summary = summarizeW3CResponse(payload);
-
-    return jsonResponse(
-      {
-        success: true,
-        url: targetUrl.toString(),
-        validator: {
-          name: "W3C Nu Html Checker",
-          docs: "https://validator.w3.org/nu/about.html",
-        },
-        ...summary,
+    const result = {
+      success: true,
+      url: targetUrl.toString(),
+      validator: {
+        name: "W3C Nu Html Checker",
+        docs: "https://validator.w3.org/nu/about.html",
       },
-      200,
-      headers
-    );
+      ...summary,
+    };
+
+    if (projectId) {
+      await persistW3CValidationReport(env, decoded.uid, projectId, result);
+    }
+
+    return jsonResponse(result, 200, headers);
   } catch (error) {
     return errorResponse(error, headers);
   }
