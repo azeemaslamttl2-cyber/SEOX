@@ -105,17 +105,16 @@ export default function W3CValidator() {
   const statusIcon = statusMeta.Icon;
 
   return (
-    <div className="mx-auto max-w-7xl px-4 pb-12 pt-4 sm:px-6 lg:px-8">
-      <div className="rounded-[24px] border border-[#f0d7d4] bg-[#f7e9e7] p-5 shadow-[0_10px_30px_rgba(45,43,111,0.04)]">
+    <div className="mx-auto max-w-6xl">
+      {/* ─── Hero Header ─── */}
+      <div className="w3c-hero">
         <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
-          <div className="flex items-center gap-4">
-            <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-[#f7d7d5] ring-1 ring-[#e8bcbc]">
-              <ShieldCheck className="h-7 w-7 text-[#d84f45]" />
-            </div>
+          <div className="w3c-title flex items-center gap-3">
+            <ShieldCheck className="h-5 w-5" />
             <div>
-              <h1 className="font-display text-[2.1rem] font-black leading-none text-[#2d2b6f]">W3C Structure Validation</h1>
-              <p className="mt-2 max-w-2xl text-base text-[#4b4b73]">
-                Validate the selected project's HTML structure and review structural issues from the W3C Nu validator.
+              <h1 className="font-display">W3C Structure Validation</h1>
+              <p>
+                Validate the selected project&apos;s HTML structure and review structural issues from the W3C Nu validator.
               </p>
             </div>
           </div>
@@ -124,91 +123,98 @@ export default function W3CValidator() {
             type="button"
             onClick={runValidation}
             disabled={isValidating || !hasProject}
-            className="inline-flex items-center justify-center gap-3 rounded-[18px] bg-[#ea5b4a] px-6 py-4 text-base font-semibold text-white shadow-[0_10px_25px_rgba(234,91,74,0.25)] transition hover:-translate-y-0.5 hover:bg-[#dd4f42] disabled:cursor-not-allowed disabled:opacity-60"
+            className="ui-button ui-button-primary w3c-run-button"
           >
-            {isValidating ? <RefreshCw className="h-5 w-5 animate-spin" /> : <Globe className="h-5 w-5" />}
-            <span className="text-xl font-bold leading-none">
-              {isValidating ? "Validating..." : result.status === "idle" ? "Run Validation" : "Run Validation Again"}
-            </span>
+            {isValidating ? <RefreshCw className="h-4 w-4 animate-spin" /> : <Globe className="h-4 w-4" />}
+            {isValidating ? "Validating..." : result.status === "idle" ? "Run Validation" : "Run Validation Again"}
           </button>
         </div>
-      </div>
 
-      <div className="mt-6 rounded-[26px] border border-[#f0d7d4] bg-[#fdf7f8] p-5 shadow-[0_10px_30px_rgba(45,43,111,0.03)]">
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-          <div className="flex min-w-0 flex-1 items-center gap-3">
-            <Globe className="h-5 w-5 flex-shrink-0 text-[#d84f45]" />
-            <span className="flex-shrink-0 text-sm font-semibold uppercase tracking-[0.18em] text-[#544f88]">Project URL</span>
-            <span className="max-w-3xl truncate text-lg font-semibold text-[#2d2b6f]">{displayUrl}</span>
+        {/* Project + status meta row */}
+        <div className="w3c-meta">
+          <div className="flex min-w-0 flex-1 items-center gap-2.5">
+            <Globe className="h-4 w-4 flex-shrink-0" />
+            <span className="w3c-meta-label">Project URL</span>
+            <span className="w3c-meta-value truncate">{displayUrl}</span>
           </div>
-          <div className={`inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-bold shadow-sm ${statusMeta.className}`}>
-            <statusIcon className="h-4 w-4" />
+          <div className={`w3c-status ${statusMeta.className}`}>
+            <statusIcon className="h-3.5 w-3.5" />
             {statusMeta.label}
           </div>
         </div>
 
         {(!hasProject || !projectUrl) && (
-          <div className="mt-5 rounded-xl border border-amber-200 bg-amber-50 p-4 text-base text-amber-800">
+          <div className="app-alert app-alert-warning mt-4">
             Select a project in the navbar and make sure it has a valid website URL before running validation.
           </div>
         )}
 
         {(localError || persistenceError) && (
-          <div className="mt-4 rounded-xl border border-rose-200 bg-rose-50 p-3 text-sm text-rose-700">
+          <div className="app-alert app-alert-error mt-3">
             {localError || persistenceError}
           </div>
         )}
       </div>
 
-      <div className="mt-8 grid gap-5 md:grid-cols-4">
+      {/* ─── Summary metrics ─── */}
+      <div className="mt-5 grid grid-cols-2 gap-4 lg:grid-cols-4">
         <StatCard label="Status" value={statusMeta.label} tone={result.status === "valid" ? "success" : result.status === "issues" ? "danger" : result.status === "warning" ? "warning" : "neutral"} />
         <StatCard label="Errors" value={String(result.totalErrors || 0)} tone="danger" />
         <StatCard label="Warnings" value={String(result.totalWarnings || 0)} tone="warning" />
         <StatCard label="Info" value={String(totalInfoMessages || 0)} tone="neutral" />
       </div>
 
-      <div className="mt-8 grid gap-6 xl:grid-cols-[1fr_2.2fr]">
-        <aside className="flex min-h-[220px] flex-col justify-between rounded-[26px] border border-[#f0d7d4] bg-[#f9f4f5] p-5 shadow-[0_10px_30px_rgba(45,43,111,0.03)]">
-          <div>
-            <div className="text-[0.72rem] font-bold uppercase tracking-[0.2em] text-[#6f6b9c]">Validation</div>
-            <div className="mt-4 text-4xl font-black leading-none text-[#2d2b6f]" aria-label="validation date">
-              {result.generatedAt ? new Date(result.generatedAt).toLocaleString("en-US", { month: "short" }) : "Aug"}
-            </div>
-          </div>
-
-          <div className="mt-6 space-y-2">
-            <div className="text-3xl font-black leading-tight text-[#2d2b6f]">{result.generatedAt ? new Date(result.generatedAt).getDate() : "31"}</div>
-            <div className="text-xl font-bold uppercase tracking-[0.08em] text-[#2d2b6f]">Validation Summary</div>
-            <div className="text-sm font-medium text-[#5d5a86]">
-              {result.generatedAt ? new Date(result.generatedAt).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" }) : "5:20 PM"}
-            </div>
-          </div>
+      <div className="mt-5 grid gap-4 xl:grid-cols-[300px_1fr]">
+        {/* ─── Last run ─── */}
+        <aside className="w3c-card">
+          <div className="w3c-card-label">Validation</div>
+          <div className="w3c-runtime">{formatTimestamp(result.generatedAt)}</div>
+          <p className="w3c-card-note">
+            {result.validator?.name || "W3C Nu Html Checker"}
+          </p>
+          {result.validator?.docs && (
+            <a
+              className="w3c-card-link"
+              href={result.validator.docs}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              About this validator
+            </a>
+          )}
         </aside>
 
-        <div className="rounded-[26px] border border-[#f0d7d4] bg-[#fdf7f8] p-6 shadow-[0_10px_30px_rgba(45,43,111,0.03)]">
-          <div className="mb-5 flex items-center gap-3">
-            <AlertTriangle className="h-5 w-5 text-[#d84f45]" />
-            <h2 className="text-lg font-bold uppercase tracking-[0.14em] text-[#4a4777]">Issue Details</h2>
+        {/* ─── Issues ─── */}
+        <div className="w3c-card">
+          <div className="app-section-header">
+            <div className="admin-section-title">
+              <AlertTriangle className="h-4 w-4" />
+              Issue Details
+            </div>
+            <span className="w3c-card-label">
+              {Array.isArray(result.messages) ? result.messages.length : 0} total
+            </span>
           </div>
 
-          <div className="space-y-4">
+          <div className="space-y-3">
             {Array.isArray(result.messages) && result.messages.length > 0 ? (
               result.messages.map((item, index) => (
-                <div key={`${item.type}-${index}`} className="rounded-[18px] border border-[#f1dfdc] bg-white p-4 shadow-sm">
+                <div key={`${item.type}-${index}`} className="w3c-issue">
                   <div className="flex items-center justify-between gap-3">
-                    <span className={`rounded-full px-3 py-1 text-[10px] font-extrabold uppercase tracking-[0.14em] ${item.type === "error" ? "bg-rose-100 text-rose-700" : item.type === "warning" ? "bg-amber-100 text-amber-700" : "bg-sky-100 text-sky-700"}`}>
+                    <span className={`admin-badge ${item.type === "error" ? "badge-error" : item.type === "warning" ? "badge-warning" : "badge-info"}`}>
                       {item.type}
                     </span>
-                    {item.location && <span className="flex-shrink-0 text-sm text-[#6d6a95]">{item.location}</span>}
+                    {item.location && <span className="w3c-issue-location">{item.location}</span>}
                   </div>
-                  <p className="mt-3 text-lg font-medium text-[#2d2b6f]">{item.message || "No message available."}</p>
-                  {item.source && <pre className="mt-3 overflow-auto rounded-lg bg-[#f4f3f9] p-3 font-mono text-sm text-[#3d3b61]">{item.source}</pre>}
-                  {item.url && <p className="mt-3 break-all text-sm text-[#6d6a95]">Source: {item.url}</p>}
+                  <p className="w3c-issue-message">{item.message || "No message available."}</p>
+                  {item.source && <pre className="w3c-issue-source">{item.source}</pre>}
+                  {item.url && <p className="w3c-issue-url">Source: {item.url}</p>}
                 </div>
               ))
             ) : (
-              <div className="rounded-[18px] border border-dashed border-[#ebd5d0] bg-[#f9f4f5] p-6 text-lg text-[#4b4b73]">
-                No HTML validation issues were reported for this page.
+              <div className="app-empty-state">
+                <CheckCircle2 className="h-6 w-6" />
+                <p>No HTML validation issues were reported for this page.</p>
               </div>
             )}
           </div>
@@ -219,17 +225,10 @@ export default function W3CValidator() {
 }
 
 function StatCard({ label, value, tone = "neutral" }) {
-  const palette = {
-    neutral: "border-[#f0d7d4] bg-[#fdf7f8] text-[#2d2b6f]",
-    success: "border-emerald-200 bg-emerald-50 text-emerald-700",
-    warning: "border-amber-200 bg-amber-50 text-amber-700",
-    danger: "border-rose-200 bg-rose-50 text-rose-700",
-  };
-
   return (
-    <div className={`rounded-[26px] border p-6 shadow-[0_10px_30px_rgba(45,43,111,0.03)] ${palette[tone]}`}>
-      <div className="text-sm font-bold uppercase tracking-[0.18em] text-[#5a5789]">{label}</div>
-      <div className="mt-4 text-5xl font-black leading-none text-[#2d2b6f]">{value}</div>
+    <div className={`w3c-stat w3c-stat-${tone}`}>
+      <div className="w3c-stat-label">{label}</div>
+      <div className="w3c-stat-value">{value}</div>
     </div>
   );
 }
