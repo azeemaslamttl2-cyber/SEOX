@@ -1451,17 +1451,8 @@ button:disabled {
 .backlinks-analyze-button:hover:not(:disabled) {
   background: var(--brand-red-hover) !important;
 }
-.duplicate-hero-title,
 .duplicate-primary-button {
   background: var(--brand-blue) !important;
-  color: #ffffff !important;
-}
-.duplicate-hero-title {
-  border: 1px solid var(--brand-blue-hover);
-}
-.duplicate-hero-title .text-white,
-.duplicate-hero-title .text-white\/70,
-.duplicate-hero-title svg {
   color: #ffffff !important;
 }
 .duplicate-primary-button {
@@ -1509,17 +1500,8 @@ button:disabled {
   border-color: var(--brand-blue) !important;
   color: var(--brand-blue) !important;
 }
-.plagiarism-hero-title,
 .plagiarism-primary-button {
   background: var(--brand-blue) !important;
-  color: #ffffff !important;
-}
-.plagiarism-hero-title {
-  border: 1px solid var(--brand-blue-hover);
-}
-.plagiarism-hero-title .text-white,
-.plagiarism-hero-title svg,
-.plagiarism-primary-button svg {
   color: #ffffff !important;
 }
 .plagiarism-primary-button {
@@ -6122,4 +6104,529 @@ aside.w3c-card {
 @media (max-width: 640px) {
   .backlinks-hero, .backlinks-panel { padding: 20px; }
   .backlinks-export-button { width: 100%; }
+}
+
+/* ==================================================================
+   CONTENT DUPLICATE CHECKER — same banner pattern as the W3C page
+
+   Was a centred navy pill title with centred copy above a separate
+   controls card. The Scan action now sits in the banner, and the URL
+   and crawl-depth controls form the meta row beneath it.
+   ================================================================== */
+.duplicate-hero {
+  background-color: var(--surface) !important;
+  background-image:
+    radial-gradient(120% 110% at 100% 0%, rgba(223, 60, 39, 0.055) 0%, transparent 55%),
+    radial-gradient(90% 110% at 100% 100%, rgba(45, 43, 111, 0.04) 0%, transparent 60%) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: var(--radius-xl) !important;
+  box-shadow: var(--shadow-xs);
+  padding: 24px 26px !important;
+}
+.duplicate-title { min-width: 0; }
+.duplicate-title > svg {
+  box-sizing: content-box;
+  height: 20px;
+  width: 20px;
+  padding: 10px;
+  border-radius: var(--radius-lg);
+  background: var(--brand-red-subtle);
+  border: 1px solid var(--brand-red-border);
+  color: var(--brand-red) !important;
+  flex: 0 0 auto;
+}
+.duplicate-hero h1 {
+  color: var(--brand-blue) !important;
+  font-size: 1.25rem;
+  font-weight: 700;
+  letter-spacing: -0.015em;
+  line-height: 1.75rem;
+}
+.duplicate-description {
+  color: var(--text-secondary) !important;
+  font-size: 0.8125rem !important;
+  line-height: 1.25rem;
+  margin-top: 3px;
+  max-width: 62ch;
+  text-align: left !important;
+}
+.duplicate-scan-button {
+  flex-shrink: 0;
+  min-height: var(--control-h-lg);
+  padding: 0 18px;
+}
+
+/* Meta row: target URL + crawl depth. */
+.duplicate-meta {
+  align-items: center;
+  border-top: 1px solid var(--border-subtle);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 20px;
+  min-width: 0;
+  padding-top: 16px;
+}
+.duplicate-url-field {
+  align-items: center;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  display: flex;
+  flex: 1 1 260px;
+  gap: 8px;
+  min-height: var(--control-h);
+  min-width: 0;
+  padding: 0 12px;
+}
+.duplicate-url-field > svg { color: var(--text-muted); flex: 0 0 auto; }
+.duplicate-url-field input {
+  background: transparent;
+  border: 0;
+  color: var(--text-primary) !important;
+  font-size: 13px;
+  font-weight: 500;
+  min-width: 0;
+  outline: none;
+}
+.duplicate-maxpages {
+  align-items: center;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  display: inline-flex;
+  flex-shrink: 0;
+  gap: 8px;
+  min-height: var(--control-h);
+  padding: 0 12px;
+}
+.duplicate-maxpages > span {
+  color: var(--text-muted);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+.duplicate-maxpages input {
+  background: transparent;
+  border: 0;
+  color: var(--text-primary) !important;
+  font-size: 13px;
+  font-weight: 600;
+  outline: none;
+  width: 48px;
+}
+.duplicate-maxpages:focus-within,
+.duplicate-url-field:focus-within {
+  border-color: var(--brand-red);
+  box-shadow: 0 0 0 3px rgba(223, 60, 39, 0.12);
+}
+
+/* Crawl progress uses the informational tone, not violet. */
+.duplicate-progress {
+  background: var(--info-bg);
+  border: 1px solid var(--info-border);
+  border-radius: var(--radius-lg);
+  color: var(--info-text);
+  font-size: 12px;
+  font-weight: 500;
+  margin-top: 14px;
+  padding: 10px 14px;
+}
+.duplicate-progress-url {
+  color: var(--text-secondary);
+  font-size: 11px;
+  margin-top: 4px;
+}
+
+@media (max-width: 640px) {
+  .duplicate-hero { padding: 20px !important; }
+  .duplicate-scan-button { width: 100%; }
+}
+
+/* ==================================================================
+   PLAGIARISM CHECKER — same banner pattern as the W3C page
+
+   Was a centred navy pill, centred copy, a floating mode toggle and a
+   dark ink-800 card with centre-aligned actions. Everything above the
+   results now lives on one banner surface, left-aligned.
+   ================================================================== */
+.plagiarism-hero {
+  background-color: var(--surface) !important;
+  background-image:
+    radial-gradient(120% 110% at 100% 0%, rgba(223, 60, 39, 0.055) 0%, transparent 55%),
+    radial-gradient(90% 110% at 100% 100%, rgba(45, 43, 111, 0.04) 0%, transparent 60%) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: var(--radius-xl) !important;
+  box-shadow: var(--shadow-xs);
+  padding: 24px 26px !important;
+}
+.plagiarism-title { min-width: 0; }
+.plagiarism-title > svg {
+  box-sizing: content-box;
+  height: 20px;
+  width: 20px;
+  padding: 10px;
+  border-radius: var(--radius-lg);
+  background: var(--brand-red-subtle);
+  border: 1px solid var(--brand-red-border);
+  color: var(--brand-red) !important;
+  flex: 0 0 auto;
+}
+.plagiarism-hero h1 {
+  color: var(--brand-blue) !important;
+  font-size: 1.25rem;
+  font-weight: 700;
+  letter-spacing: -0.015em;
+  line-height: 1.75rem;
+}
+.plagiarism-description {
+  color: var(--text-secondary) !important;
+  font-size: 0.8125rem !important;
+  line-height: 1.25rem;
+  margin-top: 3px;
+  max-width: 62ch;
+  text-align: left !important;
+}
+.plagiarism-actions {
+  display: flex;
+  flex-shrink: 0;
+  gap: 8px;
+}
+.plagiarism-scan-button {
+  min-height: var(--control-h-lg);
+  padding: 0 18px;
+}
+.plagiarism-download-button {
+  background: var(--surface) !important;
+  border: 1px solid var(--border) !important;
+  color: var(--text-secondary) !important;
+  --btn-fg: var(--text-secondary);
+  min-height: var(--control-h-lg);
+  padding: 0 16px;
+}
+.plagiarism-download-button:hover:not(:disabled) {
+  background: var(--surface-sunken) !important;
+  border-color: var(--border-strong) !important;
+  color: var(--text-primary) !important;
+}
+
+/* Source block: mode toggle + the matching input, under a hairline. */
+.plagiarism-source {
+  border-top: 1px solid var(--border-subtle);
+  margin-top: 20px;
+  padding-top: 16px;
+}
+.plagiarism-modes {
+  display: inline-flex;
+  margin-bottom: 12px;
+  width: auto;
+}
+/* The toggle is a segmented control, so the tabs lose their own chrome. */
+.plagiarism-modes .plagiarism-mode-tab {
+  border: 0 !important;
+  border-radius: var(--radius-sm) !important;
+  box-shadow: none !important;
+  font-size: 13px;
+  font-weight: 600;
+  min-height: 30px;
+  padding: 0 14px !important;
+}
+.plagiarism-modes .plagiarism-mode-tab-active {
+  background: var(--surface) !important;
+  color: var(--brand-blue) !important;
+  --btn-fg: var(--brand-blue);
+  box-shadow: var(--shadow-xs) !important;
+}
+.plagiarism-modes .plagiarism-mode-tab-inactive {
+  background: transparent !important;
+  color: var(--text-secondary) !important;
+  --btn-fg: var(--text-secondary);
+}
+.plagiarism-modes .plagiarism-mode-tab-inactive:hover {
+  background: rgba(255, 255, 255, 0.7) !important;
+  color: var(--text-primary) !important;
+  --btn-fg: var(--text-primary);
+}
+
+.plagiarism-url-field {
+  align-items: center;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  display: flex;
+  gap: 8px;
+  min-height: var(--control-h-lg);
+  min-width: 0;
+  padding: 0 12px;
+}
+.plagiarism-url-field > svg { color: var(--text-muted); flex: 0 0 auto; }
+.plagiarism-url-field input {
+  background: transparent;
+  border: 0;
+  color: var(--text-primary) !important;
+  font-size: 13px;
+  font-weight: 500;
+  min-width: 0;
+  outline: none;
+}
+.plagiarism-textarea {
+  background: var(--surface) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: var(--radius-md) !important;
+  color: var(--text-primary) !important;
+  font-size: 13px;
+  line-height: 1.5;
+  padding: 12px 14px !important;
+  resize: vertical;
+  width: 100%;
+}
+.plagiarism-textarea::placeholder { color: var(--text-disabled) !important; }
+.plagiarism-url-field:focus-within,
+.plagiarism-textarea:focus {
+  border-color: var(--brand-red) !important;
+  box-shadow: 0 0 0 3px rgba(223, 60, 39, 0.12) !important;
+  outline: none;
+}
+.plagiarism-progress {
+  color: var(--info-text);
+  font-size: 12px;
+  font-weight: 500;
+  margin-top: 12px;
+}
+
+@media (max-width: 640px) {
+  .plagiarism-hero { padding: 20px !important; }
+  .plagiarism-actions { width: 100%; }
+  .plagiarism-actions > .ui-button { flex: 1; }
+}
+
+/* ==================================================================
+   SCREAMING FROG ANALYZER — same banner pattern as the W3C page
+
+   This screen shipped with an entirely separate visual language: a
+   full-bleed emerald/teal gradient header, a mint page gradient, and
+   glassmorphic `bg-white/80 backdrop-blur-xl` cards. It also set
+   `h-screen overflow-y-auto` on its root, creating a second scroll
+   container inside the app shell — which is why its header ran edge to
+   edge while every other page sat in the content column.
+   ================================================================== */
+.sf-hero {
+  background-color: var(--surface);
+  background-image:
+    radial-gradient(120% 110% at 100% 0%, rgba(223, 60, 39, 0.055) 0%, transparent 55%),
+    radial-gradient(90% 110% at 100% 100%, rgba(45, 43, 111, 0.04) 0%, transparent 60%);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-xs);
+  padding: 24px 26px;
+}
+.sf-title { min-width: 0; }
+.sf-title > svg {
+  box-sizing: content-box;
+  height: 20px;
+  width: 20px;
+  padding: 10px;
+  border-radius: var(--radius-lg);
+  background: var(--brand-red-subtle);
+  border: 1px solid var(--brand-red-border);
+  color: var(--brand-red);
+  flex: 0 0 auto;
+}
+.sf-hero h1 {
+  color: var(--brand-blue);
+  font-size: 1.25rem;
+  font-weight: 700;
+  letter-spacing: -0.015em;
+  line-height: 1.75rem;
+}
+.sf-description {
+  color: var(--text-secondary);
+  font-size: 0.8125rem;
+  line-height: 1.25rem;
+  margin-top: 3px;
+  max-width: 62ch;
+}
+
+/* --- Cards --------------------------------------------------------- */
+.sf-card {
+  background: var(--surface) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: var(--radius-xl) !important;
+  box-shadow: var(--shadow-xs) !important;
+  backdrop-filter: none !important;
+  padding: 20px;
+}
+.sf-card-header {
+  background: transparent !important;
+  border: 0 !important;
+  border-radius: var(--radius-md) !important;
+  color: inherit !important;
+  --btn-fg: var(--text-primary);
+  gap: 12px;
+  padding: 0 !important;
+  text-align: left;
+}
+.sf-card-header:hover:not(:disabled) {
+  background: transparent !important;
+}
+.sf-tile {
+  align-items: center;
+  background: var(--brand-red-subtle) !important;
+  border: 1px solid var(--brand-red-border);
+  border-radius: var(--radius-lg) !important;
+  box-shadow: none !important;
+  color: var(--brand-red) !important;
+  display: flex;
+  flex: 0 0 auto;
+  height: 40px;
+  justify-content: center;
+  width: 40px;
+}
+.sf-tile svg { height: 18px; width: 18px; }
+.sf-card-title {
+  color: var(--brand-blue) !important;
+  font-size: 0.9375rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+.sf-card-note { color: var(--text-muted) !important; font-size: 12px; margin-top: 2px; }
+.sf-chevron {
+  align-items: center;
+  background: var(--surface-muted) !important;
+  border-radius: var(--radius-md);
+  color: var(--text-secondary);
+  display: flex;
+  height: 28px;
+  justify-content: center;
+  width: 28px;
+}
+
+/* --- Dropzone ------------------------------------------------------ */
+.sf-dropzone {
+  background: var(--surface-sunken);
+  border: 1px dashed var(--border-strong);
+  border-radius: var(--radius-lg);
+  cursor: pointer;
+  padding: 32px 24px;
+  text-align: center;
+  transition: border-color var(--dur) ease, background-color var(--dur) ease;
+}
+.sf-dropzone:hover {
+  background: var(--brand-red-subtle);
+  border-color: var(--brand-red-border);
+}
+.sf-dropzone-icon {
+  align-items: center;
+  background: var(--brand-red-subtle);
+  border: 1px solid var(--brand-red-border);
+  border-radius: var(--radius-lg);
+  color: var(--brand-red);
+  display: flex;
+  height: 44px;
+  justify-content: center;
+  margin: 0 auto 14px;
+  width: 44px;
+}
+.sf-dropzone-title {
+  color: var(--text-primary);
+  font-size: 0.875rem;
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+.sf-dropzone p:not(.sf-dropzone-title) {
+  color: var(--text-muted) !important;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+@media (max-width: 640px) {
+  .sf-hero, .sf-card { padding: 20px; }
+}
+
+/* ==================================================================
+   ACCENT TEXT ON THE DARK NAVIGATION CHROME
+
+   The pale-accent correction remaps `text-<hue>-100..400` to a dark
+   semantic ink so those classes stay readable on white. Inside the navy
+   sidebar that inverts the problem: the sidebar CTA's title is
+   `text-blue-300`, which resolved to #175cd3 on #2d2b6f — about 2.05:1.
+
+   Body copy and links in the sidebar were unaffected because
+   `.app-sidebar p` and `.app-sidebar nav a` already override at higher
+   specificity; the CTA title is a bare <div>, so nothing caught it.
+   Accent text on the dark chrome is restored to light here.
+   ================================================================== */
+.app-sidebar [class*="text-white-"],
+.app-sidebar [class*="text-brand-"],
+.app-sidebar [class*="text-rose-"],
+.app-sidebar [class*="text-red-"],
+.app-sidebar [class*="text-emerald-"],
+.app-sidebar [class*="text-green-"],
+.app-sidebar [class*="text-amber-"],
+.app-sidebar [class*="text-yellow-"],
+.app-sidebar [class*="text-orange-"],
+.app-sidebar [class*="text-blue-"],
+.app-sidebar [class*="text-sky-"],
+.app-sidebar [class*="text-cyan-"],
+.app-sidebar [class*="text-teal-"],
+.app-sidebar [class*="text-indigo-"],
+.app-sidebar [class*="text-violet-"],
+.app-sidebar [class*="text-purple-"],
+.app-sidebar [class*="text-fuchsia-"],
+.app-sidebar [class*="text-pink-"],
+.app-sidebar [class*="text-lime-"],
+.app-icon-rail [class*="text-white-"],
+.app-icon-rail [class*="text-brand-"],
+.app-icon-rail [class*="text-rose-"],
+.app-icon-rail [class*="text-red-"],
+.app-icon-rail [class*="text-emerald-"],
+.app-icon-rail [class*="text-green-"],
+.app-icon-rail [class*="text-amber-"],
+.app-icon-rail [class*="text-yellow-"],
+.app-icon-rail [class*="text-orange-"],
+.app-icon-rail [class*="text-blue-"],
+.app-icon-rail [class*="text-sky-"],
+.app-icon-rail [class*="text-cyan-"],
+.app-icon-rail [class*="text-teal-"],
+.app-icon-rail [class*="text-indigo-"],
+.app-icon-rail [class*="text-violet-"],
+.app-icon-rail [class*="text-purple-"],
+.app-icon-rail [class*="text-fuchsia-"],
+.app-icon-rail [class*="text-pink-"],
+.app-icon-rail [class*="text-lime-"] {
+  color: rgba(255, 255, 255, 0.92) !important;
+}
+
+/* --- Sidebar CTA box ---------------------------------------------- */
+.app-sidebar nav > div[class*="rounded-2xl"][class*="border"] {
+  background: rgba(255, 255, 255, 0.07) !important;
+  background-image: none !important;
+  border-color: rgba(255, 255, 255, 0.14) !important;
+  border-radius: var(--radius-lg) !important;
+  padding: 12px !important;
+}
+/* Title carries the weight and full white; body recedes. */
+.app-sidebar nav > div[class*="rounded-2xl"] > div:first-child {
+  color: #ffffff !important;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+}
+.app-sidebar nav > div[class*="rounded-2xl"] > div:first-child svg {
+  color: var(--brand-red) !important;
+}
+.app-sidebar nav > div[class*="rounded-2xl"] p {
+  color: rgba(255, 255, 255, 0.62) !important;
+  margin-top: 5px !important;
+}
+.app-sidebar nav > div[class*="rounded-2xl"] a {
+  color: #ffffff !important;
+  font-weight: 600;
+  margin-top: 10px !important;
+}
+.app-sidebar nav > div[class*="rounded-2xl"] a:hover {
+  background: transparent !important;
+  text-decoration: underline;
+  text-underline-offset: 2px;
 }
