@@ -7,6 +7,7 @@ import {
   normalizeW3CInputUrl,
   summarizeW3CResponse,
 } from "./validate.js";
+import { onRequest as nestedRouteOnRequest } from "./validate/index.js";
 
 test("normalizeW3CInputUrl accepts a normal public URL and rejects malformed or private values", () => {
   assert.equal(normalizeW3CInputUrl("example.com").toString(), "https://example.com/");
@@ -83,4 +84,15 @@ test("buildW3CApiResult wraps the report in the application JSON response shape"
   assert.equal(result.data.errors, 0);
   assert.equal(result.data.warnings, 0);
   assert.deepEqual(result.data.messages, []);
+});
+
+test("nested validate route alias exposes the same handler for production path matching", async () => {
+  const response = await nestedRouteOnRequest({
+    request: new Request("https://example.com/api/tech-seo/w3c/validate?url=https://example.com"),
+    env: { AUTH_JWT_SECRET: "12345678901234567890123456789012" },
+  });
+
+  assert.equal(response.status, 401);
+  const payload = await response.json();
+  assert.match(payload.error || "", /Unauthorized|Invalid or expired session/i);
 });
