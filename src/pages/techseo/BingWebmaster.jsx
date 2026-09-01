@@ -313,22 +313,29 @@ export default function BingWebmaster() {
 
   return (
     <div className="mx-auto max-w-6xl">
-      <div className="flex items-center justify-center gap-3">
-        <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-brand-500/20 ring-1 ring-brand-500/30">
-          <BarChart3 className="h-6 w-6 text-brand-400" />
-        </div>
-        <div>
-          <div className="flex items-center gap-2">
-            <h1 className="font-display text-2xl font-black text-white">Bing Webmaster Audit</h1>
-            <HelpCircle className="h-4 w-4 text-white/25" />
+      {/* ─── Hero Header ─── */}
+      <div className="bing-hero">
+        <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
+          <div className="bing-title flex items-center gap-3">
+            <BarChart3 className="h-5 w-5" />
+            <div>
+              <div className="flex items-center gap-2">
+                <h1 className="font-display">Bing Webmaster Audit</h1>
+                <HelpCircle className="bing-help h-4 w-4" />
+              </div>
+              <p className="bing-description">Connect Bing Webmaster Tools to analyze query, page, and CTR opportunities.</p>
+            </div>
           </div>
-          <p className="text-sm text-white/40">Connect Bing Webmaster Tools to analyze query, page, and CTR opportunities.</p>
-        </div>
-      </div>
 
-      <div className="mt-8 rounded-3xl border border-white/[0.06] bg-ink-800 p-6">
-        <div className="grid gap-3 lg:grid-cols-[1.4fr_1fr_auto]">
-          <div className="flex items-center gap-2 rounded-xl border border-white/[0.08] bg-ink-900/80 px-4 py-3">
+          <button onClick={fetchSites} disabled={loading} className="ui-button ui-button-primary bing-connect-button">
+            {loading ? "Connecting..." : "Connect Bing"}
+          </button>
+        </div>
+
+        {/* Credentials + property meta row */}
+        <div className="bing-meta">
+          <div className="bing-key-field">
+            <Key className="h-4 w-4" />
             <Key className="h-4 w-4 text-brand-400/70" />
             <input
               type={showKey ? "text" : "password"}
@@ -337,37 +344,38 @@ export default function BingWebmaster() {
               placeholder="Enter your Bing Webmaster API key"
               className="flex-1 bg-transparent text-sm text-white placeholder:text-white/25 focus:outline-none"
             />
-            <button onClick={() => setShowKey(!showKey)} className="text-white/30 hover:text-white/60">
+            <button onClick={() => setShowKey(!showKey)} className="bing-key-toggle" aria-label={showKey ? "Hide API key" : "Show API key"}>
               {showKey ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
             </button>
           </div>
-          <div className="truncate rounded-xl border border-white/10 bg-ink-900 px-4 py-3 text-sm text-white/70">
-            {selectedSite || displayUrl}
-          </div>
-          <button onClick={fetchSites} disabled={loading} className="bing-primary-button rounded-xl px-5 py-3 text-sm font-bold text-white shadow-lg transition disabled:opacity-60">
-            {loading ? "Connecting..." : "Connect Bing"}
-          </button>
+          <span className="bing-site truncate">{selectedSite || displayUrl}</span>
         </div>
 
-        <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
-          <p className="text-xs text-white/40">
-            API key path: <span className="text-brand-300">Bing Webmaster Tools - Settings - API Access</span>
+        <div className="bing-actions">
+          <p className="bing-hint">
+            API key path: <span>Bing Webmaster Tools - Settings - API Access</span>
           </p>
-          <div className="flex items-center gap-2">
-            <button onClick={analyze} disabled={loading} className="bing-primary-button flex items-center gap-1.5 rounded-lg px-4 py-2 text-xs font-bold text-white disabled:opacity-60">
+          <div className="flex flex-wrap items-center gap-2">
+            <button onClick={analyze} disabled={loading} className="ui-button bing-analyze-button">
               <RefreshCw className={`h-3.5 w-3.5 ${loading ? "animate-spin" : ""}`} /> Analyze Site
             </button>
-            <button onClick={downloadReport} disabled={!performanceData} className="flex items-center gap-1.5 rounded-lg border border-white/10 bg-white/[0.03] px-4 py-2 text-xs font-bold text-white/70 disabled:opacity-40">
+            <button onClick={downloadReport} disabled={!performanceData} className="ui-button bing-secondary-button">
               <Download className="h-3.5 w-3.5" /> Download CSV
             </button>
-            <button onClick={clearConnection} className="rounded-lg border border-white/10 px-3 py-2 text-xs text-white/45 hover:bg-white/[0.04]">Clear</button>
+            <button onClick={clearConnection} className="ui-button bing-secondary-button">Clear</button>
           </div>
         </div>
 
-        {(error || persistenceError) && <p className="mt-3 flex items-center gap-2 text-xs font-semibold text-rose-300"><AlertTriangle className="h-3.5 w-3.5" /> {error || persistenceError}</p>}
+        {(error || persistenceError) && (
+          <div className="app-alert app-alert-error mt-3">
+            <AlertTriangle className="h-4 w-4 flex-shrink-0" /> {error || persistenceError}
+          </div>
+        )}
+      </div>
 
-        <div className="mt-6 border-t border-white/[0.06] pt-5">
-          <h3 className="text-sm font-bold text-white/70">How to get your API key:</h3>
+      {/* ─── Setup guide ─── */}
+      <div className="bing-guide">
+          <h3 className="bing-guide-title">How to get your API key:</h3>
           <ol className="mt-3 space-y-2.5">
             {API_KEY_STEPS.map((step, i) => (
               <li key={i} className="flex items-start gap-3">
@@ -382,7 +390,6 @@ export default function BingWebmaster() {
               </li>
             ))}
           </ol>
-        </div>
       </div>
 
       {performanceData && (

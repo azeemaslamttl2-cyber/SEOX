@@ -477,48 +477,48 @@ export default function GscAudit() {
 
   return (
     <div className="mx-auto max-w-6xl">
-      <div className="gsc-audit-title-row flex justify-start">
-        <div className="gsc-audit-title rounded-xl bg-brand-500 px-6 py-2.5 shadow-lg shadow-brand-500/20">
-          <div className="flex items-center gap-2 text-white">
+      {/* ─── Hero Header ─── */}
+      <div className="gsc-audit-hero">
+        <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
+          <div className="gsc-audit-title flex items-center gap-3">
             <BarChart3 className="h-5 w-5" />
-            <span className="font-display text-lg font-bold">GSC Audit</span>
+            <div>
+              <h1 className="font-display">GSC Audit</h1>
+              <p className="gsc-audit-description">
+                Analyze Search Console performance, page opportunities, and traffic movement from live GSC data.
+              </p>
+            </div>
           </div>
-        </div>
-      </div>
-      <p className="gsc-audit-description mt-3 text-left text-sm text-white/45">
-        Analyze Search Console performance, page opportunities, and traffic movement from live GSC data.
-      </p>
 
-      <div className="gsc-audit-controls mt-6 rounded-2xl border border-white/[0.06] bg-white/[0.02] p-5">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <div className="flex items-center gap-2">
-            <span className="gsc-audit-site max-w-[260px] truncate rounded-lg border border-white/10 bg-ink-900 px-3 py-2 text-xs text-white/70">
-              {selectedSite || displayUrl}
-            </span>
-            <select value={dateRange} onChange={(e) => setDateRange(e.target.value)} className="gsc-audit-range rounded-lg border border-white/10 bg-ink-900 px-3 py-2 text-xs text-white/70 focus:outline-none">
+          <button onClick={downloadReport} className="ui-button ui-button-primary gsc-audit-download">
+            <Download className="h-4 w-4" /> Download Report
+          </button>
+        </div>
+
+        {/* Site + range + status meta row */}
+        <div className="gsc-audit-meta">
+          <div className="flex min-w-0 flex-1 items-center gap-2.5">
+            <Globe className="h-4 w-4 flex-shrink-0" />
+            <span className="gsc-audit-meta-label">Property</span>
+            <span className="gsc-audit-site truncate">{selectedSite || d.selectedSite || displayUrl}</span>
+          </div>
+          <div className="flex flex-shrink-0 items-center gap-2">
+            <select value={dateRange} onChange={(e) => setDateRange(e.target.value)} className="gsc-audit-range">
               {RANGE_OPTIONS.map((days) => <option key={days} value={days}>Last {days} days</option>)}
             </select>
-          </div>
-          <div className="flex items-center gap-2">
-            <button onClick={downloadReport} className="ui-button gsc-audit-download">
-              <Download className="h-3.5 w-3.5" /> Download Report
-            </button>
+            <span className="gsc-audit-status">
+              <Calendar className="h-3.5 w-3.5" /> {d.dateLabel}
+            </span>
           </div>
         </div>
-        {loading && <p className="mt-3 text-xs text-white/40 animate-pulse">Fetching live data from Google Search Console…</p>}
-        {(error || persistenceError) && <p className="mt-3 text-xs font-semibold text-rose-300">{error || persistenceError}</p>}
+
+        {loading && <p className="gsc-audit-note">Fetching live data from Google Search Console…</p>}
+        {(error || persistenceError) && (
+          <div className="app-alert app-alert-error mt-3">{error || persistenceError}</div>
+        )}
       </div>
 
-      <div className="mt-4 flex items-center justify-between">
-        <span className="gsc-audit-status flex items-center gap-2 rounded-full bg-emerald-500/15 px-4 py-1.5 text-xs font-bold text-emerald-300">
-          <Calendar className="h-3.5 w-3.5" /> {d.dateLabel}
-        </span>
-        <span className="gsc-audit-current-site flex items-center gap-2 rounded-lg border border-white/10 bg-ink-900/60 px-3 py-1.5 text-xs text-white/60">
-          <Globe className="h-3.5 w-3.5" /> {selectedSite || d.selectedSite}
-        </span>
-      </div>
-
-      <div className="mt-4 grid grid-cols-4 overflow-hidden rounded-2xl">
+      <div className="mt-5 grid grid-cols-2 gap-4 lg:grid-cols-4">
         <MetricCard value={d.metrics.clicks} label="Total Clicks" color="metric-clicks" />
         <MetricCard value={d.metrics.impressions} label="Total Impressions" color="metric-impressions" />
         <MetricCard value={d.metrics.ctr} label="Average CTR" color="metric-ctr" />
@@ -581,9 +581,9 @@ function linePath(rows, key, maxValue, chartW, chartH) {
 
 function MetricCard({ value, label, color }) {
   return (
-    <div className={`gsc-audit-metric ${color} px-5 py-4 text-center`}>
-      <div className="font-display text-2xl font-black">{value}</div>
-      <div className="text-[11px]">{label}</div>
+    <div className={`gsc-audit-metric ${color}`}>
+      <div className="gsc-audit-metric-label">{label}</div>
+      <div className="gsc-audit-metric-value">{value}</div>
     </div>
   );
 }
