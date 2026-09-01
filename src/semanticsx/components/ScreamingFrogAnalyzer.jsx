@@ -1162,50 +1162,48 @@ const ScreamingFrogAnalyzer = () => {
     };
 
     return (
-        <div className="h-screen overflow-y-auto bg-gradient-to-br from-slate-50 to-emerald-50">
-            {/* Header */}
-            <div className="bg-gradient-to-r from-emerald-600 to-teal-600 text-white">
-                <div className="max-w-7xl mx-auto px-4 py-8">
-                    <div className="flex items-center gap-3 mb-2">
-                        <div className="p-2 bg-white/20 rounded-lg">
-                            <FileSearch className="w-6 h-6" />
-                        </div>
-                        <h1 className="text-3xl font-bold">Screaming Frog Analyzer</h1>
+        <div className="mx-auto max-w-6xl">
+            {/* ─── Hero Header ─── */}
+            <div className="sf-hero">
+                <div className="sf-title flex items-center gap-3">
+                    <FileSearch className="w-5 h-5" />
+                    <div>
+                        <h1 className="font-display">Screaming Frog Analyzer</h1>
+                        <p className="sf-description">
+                            Upload your Screaming Frog CSV exports to analyze SEO issues and generate a comprehensive audit report.
+                        </p>
                     </div>
-                    <p className="text-emerald-100 max-w-2xl">
-                        Upload your Screaming Frog CSV exports to analyze SEO issues and generate a comprehensive audit report.
-                    </p>
                 </div>
             </div>
 
-            <div className="max-w-7xl mx-auto px-4 py-8">
+            <div className="mt-5">
                 {/* Upload Section - Collapsible after analysis */}
-                <div className={`bg-white/80 backdrop-blur-xl rounded-2xl shadow-lg border border-white/50 mb-8 overflow-hidden transition-all duration-300 ${analysisResults && !showUploadSection ? 'p-0' : 'p-6'}`}>
+                <div className={`sf-card mb-5 overflow-hidden ${analysisResults && !showUploadSection ? 'p-0' : ''}`}>
                     {/* Collapsible Header */}
                     <button
                         onClick={() => setShowUploadSection(!showUploadSection)}
-                        className={`w-full flex items-center justify-between ${analysisResults ? 'cursor-pointer hover:bg-gray-50/50' : 'cursor-default'} ${analysisResults && !showUploadSection ? 'p-4' : ''} transition-colors rounded-xl`}
+                        className={`sf-card-header w-full flex items-center justify-between ${analysisResults ? 'cursor-pointer' : 'cursor-default'}`}
                     >
                         <div className="flex items-center gap-3">
-                            <div className="p-2 bg-gradient-to-br from-emerald-500 to-teal-500 rounded-xl text-white shadow-lg shadow-emerald-500/25">
+                            <div className="sf-tile">
                                 <Upload className="w-5 h-5" />
                             </div>
                             <div className="text-left">
-                                <h2 className="text-lg font-semibold text-gray-800">Upload CSV Files</h2>
+                                <h2 className="sf-card-title">Upload CSV Files</h2>
                                 {analysisResults && !showUploadSection && fileCount > 0 && (
-                                    <p className="text-sm text-gray-500">{fileCount} file(s) uploaded • Click to expand</p>
+                                    <p className="sf-card-note">{fileCount} file(s) uploaded • Click to expand</p>
                                 )}
                             </div>
                         </div>
                         {analysisResults && (
                             <div className="flex items-center gap-2">
                                 {fileCount > 0 && !showUploadSection && (
-                                    <span className="px-2.5 py-1 bg-emerald-100 text-emerald-700 text-xs font-semibold rounded-full">
+                                    <span className="admin-badge badge-professional">
                                         {fileCount} files
                                     </span>
                                 )}
-                                <div className={`p-2 rounded-lg ${showUploadSection ? 'bg-emerald-100' : 'bg-gray-100'} transition-colors`}>
-                                    {showUploadSection ? <ChevronUp className="w-5 h-5 text-emerald-600" /> : <ChevronDown className="w-5 h-5 text-gray-400" />}
+                                <div className="sf-chevron">
+                                    {showUploadSection ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
                                 </div>
                             </div>
                         )}
@@ -1215,7 +1213,7 @@ const ScreamingFrogAnalyzer = () => {
                     {(showUploadSection || !analysisResults) && (
                         <div className={`${analysisResults ? 'mt-4 pt-4 border-t border-gray-100' : 'mt-4'}`}>
                             <div
-                                className="border-2 border-dashed border-gray-300 rounded-xl p-8 text-center hover:border-emerald-400 hover:bg-emerald-50/50 transition-all cursor-pointer bg-gradient-to-br from-gray-50/50 to-emerald-50/30"
+                                className="sf-dropzone"
                                 onDrop={handleDrop}
                                 onDragOver={handleDragOver}
                                 onClick={() => document.getElementById('csv-upload').click()}
@@ -1228,10 +1226,10 @@ const ScreamingFrogAnalyzer = () => {
                                     onChange={handleFileUpload}
                                     className="hidden"
                                 />
-                                <div className="w-16 h-16 mx-auto mb-4 bg-gradient-to-br from-emerald-100 to-teal-100 rounded-2xl flex items-center justify-center">
-                                    <Upload className="w-8 h-8 text-emerald-600" />
+                                <div className="sf-dropzone-icon">
+                                    <Upload className="w-6 h-6" />
                                 </div>
-                                <p className="text-gray-700 font-medium mb-2">Drag & drop CSV files here, or click to browse</p>
+                                <p className="sf-dropzone-title">Drag &amp; drop CSV files here, or click to browse</p>
                                 <p className="text-sm text-gray-400 mb-1">
                                     <span className="font-medium">Required files:</span> issues_overview_report.csv, internal_html.csv, external_html.csv
                                 </p>
@@ -1583,13 +1581,15 @@ const ScreamingFrogAnalyzer = () => {
 
                 {/* Empty State */}
                 {fileCount === 0 && (
-                    <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-12 text-center">
-                        <FileSearch className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-                        <h3 className="text-xl font-semibold text-gray-800 mb-2">No Files Uploaded</h3>
-                        <p className="text-gray-500 max-w-md mx-auto">
-                            Upload your Screaming Frog CSV exports to begin the analysis.
-                            You can upload multiple files at once.
-                        </p>
+                    <div className="sf-card">
+                        <div className="app-empty-state">
+                            <FileSearch className="h-7 w-7" />
+                            <h3 className="sf-card-title">No Files Uploaded</h3>
+                            <p>
+                                Upload your Screaming Frog CSV exports to begin the analysis.
+                                You can upload multiple files at once.
+                            </p>
+                        </div>
                     </div>
                 )}
             </div>

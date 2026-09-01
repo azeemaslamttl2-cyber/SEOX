@@ -120,22 +120,36 @@ export default function BacklinksAudit() {
 
   return (
     <div className="mx-auto max-w-6xl">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-rose-500/20 ring-1 ring-rose-500/30">
-            <Link2 className="h-5 w-5 text-rose-400" />
+      {/* ─── Hero Header ─── */}
+      <div className="backlinks-hero">
+        <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
+          <div className="backlinks-title flex items-center gap-3">
+            <Link2 className="h-5 w-5" />
+            <div>
+              <h1 className="font-display">Backlinks Audit</h1>
+              <p className="backlinks-description">Upload Semrush, Ahrefs, or simple backlink CSV/TSV files and generate disavow candidates.</p>
+            </div>
           </div>
-          <div>
-            <h1 className="font-display text-xl font-black text-white">Backlinks Audit</h1>
-            <p className="text-xs text-white/40">Upload Semrush, Ahrefs, or simple backlink CSV/TSV files and generate disavow candidates.</p>
+          <button onClick={exportDisavow} className="ui-button ui-button-primary backlinks-export-button">
+            <Download className="h-4 w-4" /> Export Disavow (.txt)
+          </button>
+        </div>
+
+        {/* Source + target meta row */}
+        <div className="backlinks-meta">
+          <div className="flex min-w-0 flex-1 items-center gap-2.5">
+            <span className="backlinks-meta-label">Target</span>
+            <span className="backlinks-meta-value truncate">{displayUrl}</span>
+          </div>
+          <div className="flex flex-shrink-0 flex-wrap items-center gap-2">
+            <span className="backlinks-meta-label">File</span>
+            <span className="backlinks-meta-file truncate">{fileName}</span>
+            <span className="admin-badge badge-warning">{csvFormat.toUpperCase()} Format</span>
           </div>
         </div>
-        <button onClick={exportDisavow} className="backlinks-export-button flex items-center gap-1.5 rounded-lg px-4 py-2 text-xs font-bold text-white shadow transition">
-          <Download className="h-3.5 w-3.5" /> Export Disavow (.txt)
-        </button>
       </div>
 
-      <div className="mt-6 grid grid-cols-7 gap-2">
+      <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-7">
         <StatPill value={formatNumber(stats.total)} label="Total Links" color="text-blue-400" />
         <StatPill value={stats.spammy} label="Spammy TLDs" color="text-amber-400" />
         <StatPill value={stats.foreign} label="Foreign Lang." color="text-rose-400" />
@@ -145,24 +159,15 @@ export default function BacklinksAudit() {
         <StatPill value={stats.clean} label="Clean" color="text-emerald-400" />
       </div>
 
-      <div className="mt-5 rounded-2xl border border-white/[0.06] bg-white/[0.02] p-4">
+      <div className="backlinks-panel mt-5">
         <div className="flex flex-wrap items-center gap-3">
-          <label className="backlinks-primary-button flex cursor-pointer items-center gap-1.5 rounded-lg px-3 py-1.5 text-[10px] font-bold text-white">
-            <Upload className="h-3 w-3" /> Upload CSV/TSV
+          <label className="backlinks-upload">
+            <Upload className="h-3.5 w-3.5" /> Upload CSV/TSV
             <input type="file" accept=".csv,.tsv,.txt" className="hidden" onChange={(e) => handleFileUpload(e.target.files?.[0])} />
           </label>
-          <div className="flex items-center gap-2 rounded-lg border border-white/10 bg-ink-900/60 px-3 py-1.5">
-            <span className="text-[10px] text-white/35">File:</span>
-            <span className="max-w-[260px] truncate text-[11px] text-white/60">{fileName}</span>
-          </div>
-          <div className="flex items-center gap-2 rounded-lg border border-white/10 bg-ink-900/60 px-3 py-1.5">
-            <span className="text-[10px] text-white/35">Target:</span>
-            <span className="max-w-[260px] truncate text-[11px] text-white/60">{displayUrl}</span>
-          </div>
-          <span className="rounded-full bg-amber-500/15 px-2.5 py-0.5 text-[10px] font-bold text-amber-300">{csvFormat.toUpperCase()} Format</span>
           <FilterSelect value={filter} onChange={setFilter} />
-          <button onClick={clearAll} className="flex items-center gap-1 text-[10px] text-rose-300 hover:underline">
-            <RefreshCw className="h-3 w-3" /> Clear All
+          <button onClick={clearAll} className="backlinks-clear-button">
+            <RefreshCw className="h-3.5 w-3.5" /> Clear All
           </button>
         </div>
 
@@ -170,7 +175,7 @@ export default function BacklinksAudit() {
 
         <div className="mt-3 grid gap-3 lg:grid-cols-[1fr_1fr]">
           <div>
-            <label className="text-[11px] text-white/40">Update niche keywords (comma-separated)</label>
+            <label className="backlinks-field-label">Update niche keywords (comma-separated)</label>
             <input
               value={nicheKeywords}
               onChange={(e) => {
@@ -178,31 +183,31 @@ export default function BacklinksAudit() {
                 setNicheKeywords(nextValue);
                 void persistBacklinks(backlinks, fileName, csvFormat, nextValue, pasteInput, enabledChecks, filter);
               }}
-              className="mt-1 w-full rounded-lg border border-white/10 bg-ink-900/60 px-3 py-2 text-xs text-white/70 placeholder:text-white/25 focus:outline-none"
+              className="backlinks-input mt-1.5 w-full"
               placeholder="SEO, marketing, web design"
             />
           </div>
           <div>
-            <label className="text-[11px] text-white/40">Paste CSV/TSV export</label>
+            <label className="backlinks-field-label">Paste CSV/TSV export</label>
             <div className="mt-1 flex gap-2">
               <textarea value={pasteInput} onChange={(e) => {
                 const nextValue = e.target.value;
                 setPasteInput(nextValue);
                 void persistBacklinks(backlinks, fileName, csvFormat, nicheKeywords, nextValue, enabledChecks, filter);
-              }} rows={2} className="flex-1 rounded-lg border border-white/10 bg-ink-900/60 px-3 py-2 text-xs text-white/70 placeholder:text-white/25 focus:outline-none" placeholder="Domain,DR,Backlinks,Country..." />
-              <button onClick={() => loadText(pasteInput)} className="backlinks-analyze-button rounded-lg px-3 text-xs font-bold text-white">Analyze</button>
+              }} rows={2} className="backlinks-input flex-1" placeholder="Domain,DR,Backlinks,Country..." />
+              <button onClick={() => loadText(pasteInput)} className="ui-button backlinks-analyze-button">Analyze</button>
             </div>
           </div>
         </div>
 
         <div className="mt-3 flex flex-wrap gap-3">
           {Object.entries(enabledChecks).map(([key, value]) => (
-            <label key={key} className="flex items-center gap-1.5 text-[10px] text-white/45">
+            <label key={key} className="backlinks-check">
               <input type="checkbox" checked={value} onChange={(e) => {
                 const nextEnabledChecks = { ...enabledChecks, [key]: e.target.checked };
                 setEnabledChecks(nextEnabledChecks);
                 void persistBacklinks(backlinks, fileName, csvFormat, nicheKeywords, pasteInput, nextEnabledChecks, filter);
-              }} className="h-3 w-3 accent-brand-500" />
+              }} className="h-3.5 w-3.5" />
               {key.replace(/_/g, " ")}
             </label>
           ))}
@@ -283,9 +288,9 @@ function FilterSelect({ value, onChange }) {
 
 function StatPill({ value, label, color }) {
   return (
-    <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] py-3 text-center">
-      <div className={`font-display text-xl font-black ${color}`}>{value}</div>
-      <div className="text-[9px] text-white/35">{label}</div>
+    <div className="backlinks-stat">
+      <div className="backlinks-stat-label">{label}</div>
+      <div className={`backlinks-stat-value ${color}`}>{value}</div>
     </div>
   );
 }

@@ -247,43 +247,49 @@ export default function PlagiarismChecker() {
 
   return (
     <div className="mx-auto max-w-6xl">
-      <div className="flex justify-center">
-        <div className="plagiarism-hero-title rounded-full px-6 py-2.5 shadow-lg">
-          <div className="flex items-center gap-2 text-white">
+      {/* ─── Hero Header ─── */}
+      <div className="plagiarism-hero">
+        <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
+          <div className="plagiarism-title flex items-center gap-3">
             <ShieldCheck className="h-5 w-5" />
-            <span className="font-display text-lg font-bold">Plagiarism Checker</span>
+            <div>
+              <h1 className="font-display">Plagiarism Checker</h1>
+              <p className="plagiarism-description">
+                Search Google for exact-match phrases from a URL or pasted text using DataForSEO, with internal uniqueness checks included.
+              </p>
+            </div>
+          </div>
+          <div className="plagiarism-actions">
+            <button onClick={scan} disabled={loading || (mode === "url" && !hasProject)} className="ui-button ui-button-primary plagiarism-scan-button">
+              <Search className={`h-4 w-4 ${loading ? "animate-pulse" : ""}`} /> {loading ? "Scanning..." : "Scan Now"}
+            </button>
+            <button onClick={downloadReport} disabled={!result} className="ui-button plagiarism-download-button">
+              <Download className="h-4 w-4" /> Download
+            </button>
           </div>
         </div>
-      </div>
-      <p className="mx-auto mt-3 max-w-md text-center text-sm text-white/40">
-        Search Google for exact-match phrases from a URL or pasted text using DataForSEO, with internal uniqueness checks included.
-      </p>
 
-      <div className="mt-6 flex items-center justify-center gap-2">
-        <ModeButton active={mode === "url"} onClick={() => setMode("url")} icon={<Globe className="h-4 w-4" />}>URL</ModeButton>
-        <ModeButton active={mode === "text"} onClick={() => setMode("text")} icon={<FileText className="h-4 w-4" />}>Text</ModeButton>
-      </div>
-
-      <div className="mt-6 rounded-3xl border border-white/[0.06] bg-ink-800 p-8">
-        {mode === "url" ? (
-          <div className="flex items-center gap-2 rounded-xl border border-violet-500/30 bg-ink-900/80 px-4 py-3 ring-1 ring-violet-500/10">
-            <Globe className="h-4 w-4 text-violet-400/60" />
-            <input value={displayUrl} readOnly onKeyDown={(e) => e.key === "Enter" && scan()} className="flex-1 cursor-not-allowed bg-transparent text-sm text-white placeholder:text-white/30 focus:outline-none" placeholder="Select a website in the nav" />
+        {/* Source: URL or pasted text */}
+        <div className="plagiarism-source">
+          <div className="admin-tabs plagiarism-modes">
+            <ModeButton active={mode === "url"} onClick={() => setMode("url")} icon={<Globe className="h-4 w-4" />}>URL</ModeButton>
+            <ModeButton active={mode === "text"} onClick={() => setMode("text")} icon={<FileText className="h-4 w-4" />}>Text</ModeButton>
           </div>
-        ) : (
-          <textarea value={text} onChange={(e) => setText(e.target.value)} rows={8} className="w-full resize-none rounded-xl border border-white/[0.08] bg-ink-900/80 px-4 py-3 text-sm text-white placeholder:text-white/30 focus:outline-none" placeholder="Paste your text here to check for plagiarism..." />
+
+          {mode === "url" ? (
+            <div className="plagiarism-url-field">
+              <Globe className="h-4 w-4" />
+              <input value={displayUrl} readOnly onKeyDown={(e) => e.key === "Enter" && scan()} className="flex-1 cursor-not-allowed" placeholder="Select a website in the nav" />
+            </div>
+          ) : (
+            <textarea value={text} onChange={(e) => setText(e.target.value)} rows={8} className="plagiarism-textarea" placeholder="Paste your text here to check for plagiarism..." />
+          )}
+        </div>
+
+        {progress && <p className="plagiarism-progress">{progress}</p>}
+        {(error || persistenceError) && (
+          <div className="app-alert app-alert-error mt-3">{error || persistenceError}</div>
         )}
-
-        <div className="mt-5 flex justify-center gap-3">
-          <button onClick={scan} disabled={loading || (mode === "url" && !hasProject)} className="plagiarism-primary-button flex items-center gap-2 rounded-xl px-8 py-3 text-sm font-bold text-white shadow-lg transition disabled:opacity-60">
-            <Search className={`h-4 w-4 ${loading ? "animate-pulse" : ""}`} /> {loading ? "Scanning..." : "Scan Now"}
-          </button>
-          <button onClick={downloadReport} disabled={!result} className="flex items-center gap-2 rounded-xl border border-white/10 bg-white/[0.03] px-5 py-3 text-sm font-bold text-white/60 disabled:opacity-40">
-            <Download className="h-4 w-4" /> Download
-          </button>
-        </div>
-        {progress && <p className="mt-3 text-center text-xs text-violet-300">{progress}</p>}
-        {(error || persistenceError) && <p className="mt-3 text-center text-xs font-semibold text-rose-300">{error || persistenceError}</p>}
       </div>
 
       {result.status !== "idle" && (

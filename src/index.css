@@ -1451,17 +1451,8 @@ button:disabled {
 .backlinks-analyze-button:hover:not(:disabled) {
   background: var(--brand-red-hover) !important;
 }
-.duplicate-hero-title,
 .duplicate-primary-button {
   background: var(--brand-blue) !important;
-  color: #ffffff !important;
-}
-.duplicate-hero-title {
-  border: 1px solid var(--brand-blue-hover);
-}
-.duplicate-hero-title .text-white,
-.duplicate-hero-title .text-white\/70,
-.duplicate-hero-title svg {
   color: #ffffff !important;
 }
 .duplicate-primary-button {
@@ -1509,17 +1500,8 @@ button:disabled {
   border-color: var(--brand-blue) !important;
   color: var(--brand-blue) !important;
 }
-.plagiarism-hero-title,
 .plagiarism-primary-button {
   background: var(--brand-blue) !important;
-  color: #ffffff !important;
-}
-.plagiarism-hero-title {
-  border: 1px solid var(--brand-blue-hover);
-}
-.plagiarism-hero-title .text-white,
-.plagiarism-hero-title svg,
-.plagiarism-primary-button svg {
   color: #ffffff !important;
 }
 .plagiarism-primary-button {
@@ -5202,4 +5184,1449 @@ button:where([class*="bg-brand-5"]):hover svg {
 @media (max-width: 640px) {
   .crawl-hero { padding: 20px !important; }
   .crawl-hero .crawl-actions { flex-wrap: wrap; }
+}
+
+/* ==================================================================
+   TOOL BANNER — ONE SPEC FOR ALL FIVE HEADERS
+
+   The five tech-SEO banners had drifted apart:
+
+     icon      40px tinted tile | 48px white tile | bare inline svg
+     title     text-2xl black   | text-xl bold    | text-lg bold
+     subtitle  text-xs /40      | text-sm white   | text-sm secondary
+     padding   p-6 lg:p-8 inner + hero padding (doubled) | p-6 | 24/26
+
+   One spec now drives all of them: 42px brand tile, 20px/700 navy
+   title, 13px secondary subtitle, 24/26 padding, 12px icon gap.
+   ================================================================== */
+
+/* --- Padding: heroes with an inner wrapper were padded twice. ------ */
+:is(.eeat-hero, .semantic-hero) > div[class*="z-10"] {
+  padding: 0 !important;
+  gap: 20px !important;
+}
+:is(.eeat-hero, .semantic-hero, .robots-hero, .crawl-hero, .speed-hero) {
+  padding: 24px 26px !important;
+}
+
+/* --- Icon tile: existing wrappers normalised to one size/tint. ----- */
+:is(.eeat-hero, .semantic-hero) [class*="h-10"][class*="w-10"][class*="rounded"],
+.robots-hero [class*="h-12"][class*="w-12"][class*="rounded"] {
+  height: 42px !important;
+  width: 42px !important;
+  flex: 0 0 42px;
+  border-radius: var(--radius-lg) !important;
+  background: var(--brand-red-subtle) !important;
+  border: 1px solid var(--brand-red-border) !important;
+  box-shadow: none !important;
+  --tw-ring-color: transparent !important;
+}
+:is(.eeat-hero, .semantic-hero) [class*="h-10"][class*="w-10"][class*="rounded"] svg,
+.robots-hero [class*="h-12"][class*="w-12"][class*="rounded"] svg {
+  height: 20px !important;
+  width: 20px !important;
+  color: var(--brand-red) !important;
+}
+
+/* Crawl and Speed have a bare icon with no wrapper, so the svg itself
+   becomes the tile — same 42px box, no markup change needed. */
+.crawl-hero .crawl-title > div > svg:first-child,
+.speed-hero .speed-title > div > svg:first-child {
+  box-sizing: content-box;
+  height: 20px !important;
+  width: 20px !important;
+  padding: 10px;
+  border-radius: var(--radius-lg);
+  background: var(--brand-red-subtle);
+  border: 1px solid var(--brand-red-border);
+  color: var(--brand-red) !important;
+}
+.crawl-hero .crawl-title > div,
+.speed-hero .speed-title > div {
+  gap: 12px !important;
+}
+
+/* --- Title ------------------------------------------------------- */
+:is(.eeat-hero, .semantic-hero, .robots-hero) h1,
+.crawl-hero .crawl-title span,
+.speed-hero .speed-title span {
+  color: var(--brand-blue) !important;
+  font-size: 1.25rem !important;
+  font-weight: 700 !important;
+  letter-spacing: -0.015em !important;
+  line-height: 1.75rem !important;
+}
+
+/* --- Subtitle ---------------------------------------------------- */
+:is(.eeat-hero, .semantic-hero, .robots-hero) h1 + p,
+.crawl-hero .crawl-description,
+.speed-hero .speed-description,
+.speed-hero > p {
+  color: var(--text-secondary) !important;
+  font-size: 0.8125rem !important;
+  font-weight: 400 !important;
+  line-height: 1.25rem !important;
+  margin-top: 3px !important;
+  text-align: left !important;
+}
+/* Crawl/Speed put the description outside the title block, so it needs
+   the same left offset as the copy that sits beside the tile. */
+.crawl-hero .crawl-description,
+.speed-hero .speed-description,
+.speed-hero > p {
+  margin-top: 12px !important;
+}
+
+/* --- Action rows ------------------------------------------------- */
+:is(.eeat-hero, .semantic-hero, .robots-hero, .crawl-hero, .speed-hero) .ui-button {
+  min-height: 38px;
+  font-size: 13px;
+}
+.crawl-hero .crawl-actions,
+.robots-hero > div[class*="mt-4"] {
+  margin-top: 16px !important;
+}
+.crawl-hero .crawl-input-panel,
+.speed-hero .speed-input-panel {
+  margin-top: 16px !important;
+}
+
+/* ==================================================================
+   W3C STRUCTURE VALIDATION
+
+   Rebuilt on the dashboard's language. The page previously used a
+   blush palette (#f7e9e7 / #fdf7f8 / #f9f4f5), off-scale radii
+   (18/24/26px), custom drop shadows and text-[2.1rem] font-black
+   headings — none of which existed anywhere else in the product.
+   ================================================================== */
+.w3c-hero {
+  background-color: var(--surface);
+  background-image:
+    radial-gradient(120% 110% at 100% 0%, rgba(223, 60, 39, 0.055) 0%, transparent 55%),
+    radial-gradient(90% 110% at 100% 100%, rgba(45, 43, 111, 0.04) 0%, transparent 60%);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-xs);
+  padding: 24px 26px;
+}
+
+/* Title block matches the other tool banners exactly. */
+.w3c-title > svg {
+  box-sizing: content-box;
+  height: 20px;
+  width: 20px;
+  padding: 10px;
+  border-radius: var(--radius-lg);
+  background: var(--brand-red-subtle);
+  border: 1px solid var(--brand-red-border);
+  color: var(--brand-red);
+  flex: 0 0 auto;
+}
+.w3c-hero h1 {
+  color: var(--brand-blue);
+  font-size: 1.25rem;
+  font-weight: 700;
+  letter-spacing: -0.015em;
+  line-height: 1.75rem;
+}
+.w3c-hero h1 + p {
+  color: var(--text-secondary);
+  font-size: 0.8125rem;
+  line-height: 1.25rem;
+  margin-top: 3px;
+  max-width: 62ch;
+}
+.w3c-run-button {
+  flex-shrink: 0;
+  min-height: var(--control-h-lg);
+  padding: 0 18px;
+}
+
+/* Meta row sits under a hairline, as on the dashboard header. */
+.w3c-meta {
+  align-items: center;
+  border-top: 1px solid var(--border-subtle);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 20px;
+  padding-top: 16px;
+}
+.w3c-meta > div > svg { color: var(--text-muted); }
+.w3c-meta-label {
+  color: var(--text-muted);
+  flex-shrink: 0;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.w3c-meta-value {
+  color: var(--text-primary);
+  font-size: 13px;
+  font-weight: 600;
+}
+.w3c-status {
+  align-items: center;
+  border-radius: var(--radius-sm);
+  display: inline-flex;
+  flex-shrink: 0;
+  font-size: 11px;
+  font-weight: 600;
+  gap: 6px;
+  letter-spacing: 0.03em;
+  padding: 4px 10px;
+  box-shadow: none !important;
+}
+
+/* --- Metric tiles ------------------------------------------------- */
+.w3c-stat {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-xs);
+  padding: 18px 20px;
+  transition: border-color var(--dur) var(--ease), box-shadow var(--dur) var(--ease);
+}
+.w3c-stat:hover {
+  border-color: var(--border-strong);
+  box-shadow: var(--shadow-sm);
+}
+.w3c-stat-label {
+  color: var(--text-muted);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.w3c-stat-value {
+  color: var(--text-primary);
+  font-size: 1.75rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+  margin-top: 8px;
+  font-variant-numeric: tabular-nums;
+}
+/* Tone lives in the number, not a full-card wash — one accent per tile. */
+.w3c-stat-success .w3c-stat-value { color: var(--success-text); }
+.w3c-stat-warning .w3c-stat-value { color: var(--warning-text); }
+.w3c-stat-danger  .w3c-stat-value { color: var(--error-text); }
+
+/* --- Cards -------------------------------------------------------- */
+.w3c-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-xs);
+  padding: 20px;
+}
+.w3c-card-label {
+  color: var(--text-muted);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.w3c-runtime {
+  color: var(--text-primary);
+  font-size: 1.125rem;
+  font-weight: 700;
+  letter-spacing: -0.015em;
+  margin-top: 10px;
+}
+.w3c-card-note {
+  color: var(--text-secondary);
+  font-size: 13px;
+  margin-top: 6px;
+}
+.w3c-card-link {
+  color: var(--brand-red-hover);
+  display: inline-block;
+  font-size: 12px;
+  font-weight: 500;
+  margin-top: 12px;
+}
+.w3c-card-link:hover { text-decoration: underline; text-underline-offset: 2px; }
+
+/* --- Issue rows --------------------------------------------------- */
+.w3c-issue {
+  background: var(--surface-sunken);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 14px 16px;
+}
+.w3c-issue-location {
+  color: var(--text-muted);
+  flex-shrink: 0;
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+.w3c-issue-message {
+  color: var(--text-primary);
+  font-size: 13px;
+  line-height: 1.45;
+  margin-top: 10px;
+}
+.w3c-issue-source {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text-secondary);
+  font-family: var(--font-mono, ui-monospace, monospace);
+  font-size: 12px;
+  margin-top: 10px;
+  overflow: auto;
+  padding: 10px 12px;
+}
+.w3c-issue-url {
+  color: var(--text-muted);
+  font-size: 12px;
+  margin-top: 8px;
+  overflow-wrap: anywhere;
+}
+
+/* Semantic badge tones used by the issue list. */
+.badge-error   { background: var(--error-bg);   border-color: var(--error-border);   color: var(--error-text); }
+.badge-warning { background: var(--warning-bg); border-color: var(--warning-border); color: var(--warning-text); }
+.badge-info    { background: var(--info-bg);    border-color: var(--info-border);    color: var(--info-text); }
+
+@media (max-width: 640px) {
+  .w3c-hero { padding: 20px; }
+  .w3c-run-button { width: 100%; }
+}
+
+/* ==================================================================
+   W3C — OVERFLOW CONTAINMENT
+
+   Grid items default to `min-width: auto`, meaning a track will grow to
+   fit its widest content rather than letting that content scroll. The
+   source snippets are long unbroken lines, so the issues column pushed
+   the whole page wider than the viewport once results loaded.
+
+   `min-width: 0` lets the track hold its 1fr share and hands the
+   overflow to the <pre>, which already scrolls on its own.
+   ================================================================== */
+.w3c-card,
+.w3c-issue {
+  min-width: 0;
+}
+/* The summary card sizes to its content instead of stretching to match
+   a long issues list beside it. */
+aside.w3c-card {
+  align-self: start;
+}
+.w3c-issue-source {
+  max-width: 100%;
+  overflow-x: auto;
+  white-space: pre;
+}
+.w3c-issue-message,
+.w3c-issue-url {
+  overflow-wrap: anywhere;
+}
+/* Long URLs in the meta row truncate rather than widen the banner. */
+.w3c-meta,
+.w3c-meta > div {
+  min-width: 0;
+}
+
+/* Same containment for the metric row on narrow screens. */
+.w3c-stat {
+  min-width: 0;
+}
+.w3c-stat-value {
+  overflow-wrap: anywhere;
+}
+
+/* ==================================================================
+   GRID / FLEX OVERFLOW SAFETY (app screens)
+
+   The same trap exists on 13 other screens that put a <pre> block, a
+   table or a long URL inside a grid or flex track: the track's default
+   `min-width: auto` lets that content dictate the track width, so the
+   page grows sideways instead of the block scrolling.
+
+   Applied only to direct children of a track, so ordinary content is
+   unaffected — it changes what a track is ALLOWED to shrink to, not
+   how anything is laid out.
+   ================================================================== */
+.app-main [class*="grid-cols-"] > *,
+.app-main [class*="flex-1"] {
+  min-width: 0;
+}
+
+/* Preformatted blocks scroll within their own box rather than widening
+   whatever contains them. */
+.app-main pre {
+  max-width: 100%;
+  overflow-x: auto;
+}
+
+/* ==================================================================
+   GSC AUDIT — same banner pattern as the W3C page
+
+   Was a solid red pill title, loose description, a separate controls
+   card, a second row holding a status pill and a duplicate site chip,
+   then four metric tiles fused into one seamless block.
+   ================================================================== */
+.gsc-audit-hero {
+  background-color: var(--surface);
+  background-image:
+    radial-gradient(120% 110% at 100% 0%, rgba(223, 60, 39, 0.055) 0%, transparent 55%),
+    radial-gradient(90% 110% at 100% 100%, rgba(45, 43, 111, 0.04) 0%, transparent 60%);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-xs);
+  padding: 24px 26px;
+}
+.gsc-audit-title {
+  min-width: 0;
+}
+.gsc-audit-title > svg {
+  box-sizing: content-box;
+  height: 20px;
+  width: 20px;
+  padding: 10px;
+  border-radius: var(--radius-lg);
+  background: var(--brand-red-subtle);
+  border: 1px solid var(--brand-red-border);
+  color: var(--brand-red) !important;
+  flex: 0 0 auto;
+}
+.gsc-audit-hero h1 {
+  color: var(--brand-blue);
+  font-size: 1.25rem;
+  font-weight: 700;
+  letter-spacing: -0.015em;
+  line-height: 1.75rem;
+}
+.gsc-audit-description {
+  color: var(--text-secondary) !important;
+  font-size: 0.8125rem !important;
+  font-weight: 400;
+  line-height: 1.25rem;
+  margin-top: 3px !important;
+  max-width: 62ch;
+  text-align: left !important;
+}
+.gsc-audit-download {
+  flex-shrink: 0;
+  min-height: var(--control-h-lg);
+  padding: 0 18px;
+}
+
+/* Meta row under a hairline, as on the W3C page. */
+.gsc-audit-meta {
+  align-items: center;
+  border-top: 1px solid var(--border-subtle);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 20px;
+  min-width: 0;
+  padding-top: 16px;
+}
+.gsc-audit-meta > div > svg { color: var(--text-muted); }
+.gsc-audit-meta-label {
+  color: var(--text-muted);
+  flex-shrink: 0;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.gsc-audit-site {
+  background: transparent !important;
+  border: 0 !important;
+  color: var(--text-primary) !important;
+  font-size: 13px !important;
+  font-weight: 600;
+  padding: 0 !important;
+}
+.gsc-audit-range {
+  background: var(--surface) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: var(--radius-md) !important;
+  color: var(--text-secondary) !important;
+  font-size: 12px;
+  font-weight: 500;
+  min-height: var(--control-h-sm);
+  padding: 0 10px !important;
+}
+.gsc-audit-range:hover { border-color: var(--border-strong) !important; }
+.gsc-audit-status {
+  align-items: center;
+  background: var(--success-bg) !important;
+  border: 1px solid var(--success-border) !important;
+  border-radius: var(--radius-sm) !important;
+  color: var(--success-text) !important;
+  display: inline-flex;
+  font-size: 11px !important;
+  font-weight: 600 !important;
+  gap: 6px;
+  letter-spacing: 0.03em;
+  padding: 4px 10px !important;
+}
+.gsc-audit-note {
+  color: var(--text-muted);
+  font-size: 12px;
+  margin-top: 12px;
+}
+
+/* --- Metric tiles: separate cards, tone in the number ------------- */
+.gsc-audit-metric {
+  background: var(--surface) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: var(--radius-xl) !important;
+  box-shadow: var(--shadow-xs);
+  min-width: 0;
+  padding: 18px 20px !important;
+  text-align: left !important;
+  transition: border-color var(--dur) var(--ease), box-shadow var(--dur) var(--ease);
+}
+.gsc-audit-metric:hover {
+  border-color: var(--border-strong) !important;
+  box-shadow: var(--shadow-sm);
+}
+.gsc-audit-metric-label {
+  color: var(--text-muted) !important;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.gsc-audit-metric-value {
+  color: var(--text-primary);
+  font-size: 1.75rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+  margin-top: 8px;
+  overflow-wrap: anywhere;
+}
+.gsc-audit-metric.metric-clicks      .gsc-audit-metric-value { color: var(--info-text); }
+.gsc-audit-metric.metric-impressions .gsc-audit-metric-value { color: var(--brand-blue); }
+.gsc-audit-metric.metric-ctr         .gsc-audit-metric-value { color: var(--success-text); }
+.gsc-audit-metric.metric-position    .gsc-audit-metric-value { color: var(--warning-text); }
+
+@media (max-width: 640px) {
+  .gsc-audit-hero { padding: 20px; }
+  .gsc-audit-download { width: 100%; }
+}
+
+/* ==================================================================
+   BING WEBMASTER AUDIT — same banner pattern as the W3C page
+
+   The title block floated centred above everything, outside any
+   surface, and the card below carried two competing red buttons
+   ("Connect Bing" and "Analyze Site") plus a dark ink-800 panel left
+   over from the old theme.
+   ================================================================== */
+.bing-hero {
+  background-color: var(--surface);
+  background-image:
+    radial-gradient(120% 110% at 100% 0%, rgba(223, 60, 39, 0.055) 0%, transparent 55%),
+    radial-gradient(90% 110% at 100% 100%, rgba(45, 43, 111, 0.04) 0%, transparent 60%);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-xs);
+  padding: 24px 26px;
+}
+.bing-title { min-width: 0; }
+.bing-title > svg {
+  box-sizing: content-box;
+  height: 20px;
+  width: 20px;
+  padding: 10px;
+  border-radius: var(--radius-lg);
+  background: var(--brand-red-subtle);
+  border: 1px solid var(--brand-red-border);
+  color: var(--brand-red) !important;
+  flex: 0 0 auto;
+}
+.bing-hero h1 {
+  color: var(--brand-blue);
+  font-size: 1.25rem;
+  font-weight: 700;
+  letter-spacing: -0.015em;
+  line-height: 1.75rem;
+}
+.bing-help { color: var(--text-disabled) !important; }
+.bing-description {
+  color: var(--text-secondary) !important;
+  font-size: 0.8125rem;
+  line-height: 1.25rem;
+  margin-top: 3px;
+  max-width: 62ch;
+}
+.bing-connect-button {
+  flex-shrink: 0;
+  min-height: var(--control-h-lg);
+  padding: 0 18px;
+}
+
+/* Credentials row under a hairline, matching the W3C meta row. */
+.bing-meta {
+  align-items: center;
+  border-top: 1px solid var(--border-subtle);
+  display: grid;
+  gap: 12px;
+  grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr);
+  margin-top: 20px;
+  padding-top: 16px;
+}
+.bing-key-field {
+  align-items: center;
+  background: var(--surface) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: var(--radius-md) !important;
+  display: flex;
+  gap: 8px;
+  min-height: var(--control-h);
+  min-width: 0;
+  padding: 0 12px !important;
+  transition: border-color var(--dur) ease, box-shadow var(--dur) ease;
+}
+.bing-key-field:focus-within {
+  border-color: var(--brand-red) !important;
+  box-shadow: 0 0 0 3px rgba(223, 60, 39, 0.12);
+}
+.bing-key-field > svg { color: var(--text-muted) !important; flex: 0 0 auto; }
+.bing-key-field input {
+  background: transparent;
+  border: 0;
+  color: var(--text-primary) !important;
+  flex: 1;
+  font-size: 13px;
+  min-width: 0;
+  outline: none;
+}
+.bing-key-field input::placeholder { color: var(--text-disabled) !important; }
+.bing-key-toggle {
+  background: transparent !important;
+  border: 0 !important;
+  color: var(--text-muted) !important;
+  --btn-fg: var(--text-muted);
+  flex: 0 0 auto;
+  padding: 0 !important;
+}
+.bing-key-toggle:hover:not(:disabled) {
+  background: transparent !important;
+  color: var(--text-primary) !important;
+  --btn-fg: var(--text-primary);
+}
+.bing-site {
+  align-items: center;
+  background: var(--surface-sunken);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  color: var(--text-secondary);
+  display: flex;
+  font-size: 13px;
+  font-weight: 500;
+  min-height: var(--control-h);
+  min-width: 0;
+  padding: 0 12px;
+}
+
+/* Action row: Analyze is the primary; export and clear recede. */
+.bing-actions {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: space-between;
+  margin-top: 14px;
+}
+.bing-hint {
+  color: var(--text-muted);
+  font-size: 12px;
+}
+.bing-hint span { color: var(--text-secondary); font-weight: 500; }
+.bing-analyze-button {
+  background: var(--brand-red) !important;
+  border: 1px solid var(--brand-red) !important;
+  color: #ffffff !important;
+  --btn-fg: #ffffff;
+  min-height: var(--control-h-sm);
+}
+.bing-analyze-button:hover:not(:disabled) {
+  background: var(--brand-red-hover) !important;
+  border-color: var(--brand-red-hover) !important;
+}
+.bing-secondary-button {
+  background: var(--surface) !important;
+  border: 1px solid var(--border) !important;
+  color: var(--text-secondary) !important;
+  --btn-fg: var(--text-secondary);
+  min-height: var(--control-h-sm);
+}
+.bing-secondary-button:hover:not(:disabled) {
+  background: var(--surface-sunken) !important;
+  border-color: var(--border-strong) !important;
+  color: var(--text-primary) !important;
+}
+
+/* --- Setup guide, now its own card ------------------------------- */
+.bing-guide {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-xs);
+  margin-top: 20px;
+  padding: 20px 26px 22px;
+}
+.bing-guide-title {
+  color: var(--brand-blue);
+  font-size: 13px;
+  font-weight: 700;
+}
+.bing-guide li > span:first-child {
+  background: var(--brand-red-subtle) !important;
+  border: 1px solid var(--brand-red-border);
+  color: var(--brand-red-hover) !important;
+  height: 20px;
+  width: 20px;
+  font-size: 10px;
+  font-weight: 600;
+}
+.bing-guide li > span:last-child { color: var(--text-secondary) !important; font-size: 13px; }
+.bing-guide a { color: var(--brand-red-hover) !important; font-weight: 500; }
+
+@media (max-width: 860px) {
+  .bing-meta { grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-width: 640px) {
+  .bing-hero, .bing-guide { padding: 20px; }
+  .bing-connect-button { width: 100%; }
+}
+
+/* ==================================================================
+   BACKLINKS AUDIT — same banner pattern as the W3C page
+
+   The title floated on the page ground with no surface, seven metric
+   tiles were fixed at grid-cols-7 (unreadable below ~1100px, 9px
+   labels), and the controls card mixed file state, filters, inputs and
+   toggles into one undifferentiated row.
+   ================================================================== */
+.backlinks-hero {
+  background-color: var(--surface);
+  background-image:
+    radial-gradient(120% 110% at 100% 0%, rgba(223, 60, 39, 0.055) 0%, transparent 55%),
+    radial-gradient(90% 110% at 100% 100%, rgba(45, 43, 111, 0.04) 0%, transparent 60%);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-xs);
+  padding: 24px 26px;
+}
+.backlinks-title { min-width: 0; }
+.backlinks-title > svg {
+  box-sizing: content-box;
+  height: 20px;
+  width: 20px;
+  padding: 10px;
+  border-radius: var(--radius-lg);
+  background: var(--brand-red-subtle);
+  border: 1px solid var(--brand-red-border);
+  color: var(--brand-red) !important;
+  flex: 0 0 auto;
+}
+.backlinks-hero h1 {
+  color: var(--brand-blue);
+  font-size: 1.25rem;
+  font-weight: 700;
+  letter-spacing: -0.015em;
+  line-height: 1.75rem;
+}
+.backlinks-description {
+  color: var(--text-secondary) !important;
+  font-size: 0.8125rem !important;
+  line-height: 1.25rem;
+  margin-top: 3px;
+  max-width: 62ch;
+}
+.backlinks-export-button {
+  flex-shrink: 0;
+  min-height: var(--control-h-lg);
+  padding: 0 18px;
+}
+.backlinks-meta {
+  align-items: center;
+  border-top: 1px solid var(--border-subtle);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 20px;
+  min-width: 0;
+  padding-top: 16px;
+}
+.backlinks-meta-label {
+  color: var(--text-muted);
+  flex-shrink: 0;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.backlinks-meta-value { color: var(--text-primary); font-size: 13px; font-weight: 600; }
+.backlinks-meta-file  { color: var(--text-secondary); font-size: 13px; max-width: 240px; }
+
+/* --- Metric tiles: readable at every width ------------------------ */
+.backlinks-stat {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-xs);
+  min-width: 0;
+  padding: 14px 16px;
+  text-align: left;
+  transition: border-color var(--dur) var(--ease), box-shadow var(--dur) var(--ease);
+}
+.backlinks-stat:hover { border-color: var(--border-strong); box-shadow: var(--shadow-sm); }
+.backlinks-stat-label {
+  color: var(--text-muted);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  line-height: 1.3;
+  text-transform: uppercase;
+}
+.backlinks-stat-value {
+  font-size: 1.5rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+  margin-top: 6px;
+}
+
+/* --- Controls panel ----------------------------------------------- */
+.backlinks-panel {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-xs);
+  padding: 18px 20px;
+}
+.backlinks-upload {
+  align-items: center;
+  background: var(--brand-red) !important;
+  border: 1px solid var(--brand-red);
+  border-radius: var(--radius-md);
+  color: #ffffff !important;
+  cursor: pointer;
+  display: inline-flex;
+  font-size: 13px;
+  font-weight: 600;
+  gap: 8px;
+  min-height: var(--control-h);
+  padding: 0 14px;
+  transition: background-color var(--dur) ease;
+}
+.backlinks-upload:hover { background: var(--brand-red-hover) !important; }
+.backlinks-clear-button {
+  align-items: center;
+  background: var(--surface) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: var(--radius-md) !important;
+  color: var(--text-secondary) !important;
+  --btn-fg: var(--text-secondary);
+  display: inline-flex;
+  font-size: 12px;
+  font-weight: 500;
+  gap: 6px;
+  min-height: var(--control-h-sm);
+  padding: 0 12px !important;
+}
+.backlinks-clear-button:hover:not(:disabled) {
+  background: var(--error-bg) !important;
+  border-color: var(--error-border) !important;
+  color: var(--error-text) !important;
+  --btn-fg: var(--error-text);
+}
+.backlinks-field-label {
+  color: var(--text-secondary);
+  display: block;
+  font-size: 12px;
+  font-weight: 500;
+}
+.backlinks-input {
+  background: var(--surface) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: var(--radius-md) !important;
+  color: var(--text-primary) !important;
+  font-size: 13px;
+  min-height: var(--control-h);
+  padding: 8px 12px !important;
+}
+.backlinks-input:hover { border-color: var(--border-strong) !important; }
+.backlinks-input:focus {
+  border-color: var(--brand-red) !important;
+  box-shadow: 0 0 0 3px rgba(223, 60, 39, 0.12) !important;
+  outline: none;
+}
+.backlinks-input::placeholder { color: var(--text-disabled) !important; }
+.backlinks-analyze-button {
+  background: var(--brand-red) !important;
+  border: 1px solid var(--brand-red) !important;
+  color: #ffffff !important;
+  --btn-fg: #ffffff;
+  flex-shrink: 0;
+  min-height: var(--control-h);
+  padding: 0 16px !important;
+}
+.backlinks-analyze-button:hover:not(:disabled) {
+  background: var(--brand-red-hover) !important;
+  border-color: var(--brand-red-hover) !important;
+}
+
+/* Check toggles read as a filter group, not loose text. */
+.backlinks-check {
+  align-items: center;
+  background: var(--surface-sunken);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text-secondary);
+  cursor: pointer;
+  display: inline-flex;
+  font-size: 12px;
+  font-weight: 500;
+  gap: 7px;
+  padding: 5px 10px;
+  text-transform: capitalize;
+  transition: border-color var(--dur) ease, background-color var(--dur) ease;
+}
+.backlinks-check:hover { border-color: var(--border-strong); background: var(--surface-muted); }
+.backlinks-check input { accent-color: var(--brand-red); }
+
+@media (max-width: 640px) {
+  .backlinks-hero, .backlinks-panel { padding: 20px; }
+  .backlinks-export-button { width: 100%; }
+}
+
+/* ==================================================================
+   CONTENT DUPLICATE CHECKER — same banner pattern as the W3C page
+
+   Was a centred navy pill title with centred copy above a separate
+   controls card. The Scan action now sits in the banner, and the URL
+   and crawl-depth controls form the meta row beneath it.
+   ================================================================== */
+.duplicate-hero {
+  background-color: var(--surface) !important;
+  background-image:
+    radial-gradient(120% 110% at 100% 0%, rgba(223, 60, 39, 0.055) 0%, transparent 55%),
+    radial-gradient(90% 110% at 100% 100%, rgba(45, 43, 111, 0.04) 0%, transparent 60%) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: var(--radius-xl) !important;
+  box-shadow: var(--shadow-xs);
+  padding: 24px 26px !important;
+}
+.duplicate-title { min-width: 0; }
+.duplicate-title > svg {
+  box-sizing: content-box;
+  height: 20px;
+  width: 20px;
+  padding: 10px;
+  border-radius: var(--radius-lg);
+  background: var(--brand-red-subtle);
+  border: 1px solid var(--brand-red-border);
+  color: var(--brand-red) !important;
+  flex: 0 0 auto;
+}
+.duplicate-hero h1 {
+  color: var(--brand-blue) !important;
+  font-size: 1.25rem;
+  font-weight: 700;
+  letter-spacing: -0.015em;
+  line-height: 1.75rem;
+}
+.duplicate-description {
+  color: var(--text-secondary) !important;
+  font-size: 0.8125rem !important;
+  line-height: 1.25rem;
+  margin-top: 3px;
+  max-width: 62ch;
+  text-align: left !important;
+}
+.duplicate-scan-button {
+  flex-shrink: 0;
+  min-height: var(--control-h-lg);
+  padding: 0 18px;
+}
+
+/* Meta row: target URL + crawl depth. */
+.duplicate-meta {
+  align-items: center;
+  border-top: 1px solid var(--border-subtle);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 20px;
+  min-width: 0;
+  padding-top: 16px;
+}
+.duplicate-url-field {
+  align-items: center;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  display: flex;
+  flex: 1 1 260px;
+  gap: 8px;
+  min-height: var(--control-h);
+  min-width: 0;
+  padding: 0 12px;
+}
+.duplicate-url-field > svg { color: var(--text-muted); flex: 0 0 auto; }
+.duplicate-url-field input {
+  background: transparent;
+  border: 0;
+  color: var(--text-primary) !important;
+  font-size: 13px;
+  font-weight: 500;
+  min-width: 0;
+  outline: none;
+}
+.duplicate-maxpages {
+  align-items: center;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  display: inline-flex;
+  flex-shrink: 0;
+  gap: 8px;
+  min-height: var(--control-h);
+  padding: 0 12px;
+}
+.duplicate-maxpages > span {
+  color: var(--text-muted);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+.duplicate-maxpages input {
+  background: transparent;
+  border: 0;
+  color: var(--text-primary) !important;
+  font-size: 13px;
+  font-weight: 600;
+  outline: none;
+  width: 48px;
+}
+.duplicate-maxpages:focus-within,
+.duplicate-url-field:focus-within {
+  border-color: var(--brand-red);
+  box-shadow: 0 0 0 3px rgba(223, 60, 39, 0.12);
+}
+
+/* Crawl progress uses the informational tone, not violet. */
+.duplicate-progress {
+  background: var(--info-bg);
+  border: 1px solid var(--info-border);
+  border-radius: var(--radius-lg);
+  color: var(--info-text);
+  font-size: 12px;
+  font-weight: 500;
+  margin-top: 14px;
+  padding: 10px 14px;
+}
+.duplicate-progress-url {
+  color: var(--text-secondary);
+  font-size: 11px;
+  margin-top: 4px;
+}
+
+@media (max-width: 640px) {
+  .duplicate-hero { padding: 20px !important; }
+  .duplicate-scan-button { width: 100%; }
+}
+
+/* ==================================================================
+   PLAGIARISM CHECKER — same banner pattern as the W3C page
+
+   Was a centred navy pill, centred copy, a floating mode toggle and a
+   dark ink-800 card with centre-aligned actions. Everything above the
+   results now lives on one banner surface, left-aligned.
+   ================================================================== */
+.plagiarism-hero {
+  background-color: var(--surface) !important;
+  background-image:
+    radial-gradient(120% 110% at 100% 0%, rgba(223, 60, 39, 0.055) 0%, transparent 55%),
+    radial-gradient(90% 110% at 100% 100%, rgba(45, 43, 111, 0.04) 0%, transparent 60%) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: var(--radius-xl) !important;
+  box-shadow: var(--shadow-xs);
+  padding: 24px 26px !important;
+}
+.plagiarism-title { min-width: 0; }
+.plagiarism-title > svg {
+  box-sizing: content-box;
+  height: 20px;
+  width: 20px;
+  padding: 10px;
+  border-radius: var(--radius-lg);
+  background: var(--brand-red-subtle);
+  border: 1px solid var(--brand-red-border);
+  color: var(--brand-red) !important;
+  flex: 0 0 auto;
+}
+.plagiarism-hero h1 {
+  color: var(--brand-blue) !important;
+  font-size: 1.25rem;
+  font-weight: 700;
+  letter-spacing: -0.015em;
+  line-height: 1.75rem;
+}
+.plagiarism-description {
+  color: var(--text-secondary) !important;
+  font-size: 0.8125rem !important;
+  line-height: 1.25rem;
+  margin-top: 3px;
+  max-width: 62ch;
+  text-align: left !important;
+}
+.plagiarism-actions {
+  display: flex;
+  flex-shrink: 0;
+  gap: 8px;
+}
+.plagiarism-scan-button {
+  min-height: var(--control-h-lg);
+  padding: 0 18px;
+}
+.plagiarism-download-button {
+  background: var(--surface) !important;
+  border: 1px solid var(--border) !important;
+  color: var(--text-secondary) !important;
+  --btn-fg: var(--text-secondary);
+  min-height: var(--control-h-lg);
+  padding: 0 16px;
+}
+.plagiarism-download-button:hover:not(:disabled) {
+  background: var(--surface-sunken) !important;
+  border-color: var(--border-strong) !important;
+  color: var(--text-primary) !important;
+}
+
+/* Source block: mode toggle + the matching input, under a hairline. */
+.plagiarism-source {
+  border-top: 1px solid var(--border-subtle);
+  margin-top: 20px;
+  padding-top: 16px;
+}
+.plagiarism-modes {
+  display: inline-flex;
+  margin-bottom: 12px;
+  width: auto;
+}
+/* The toggle is a segmented control, so the tabs lose their own chrome. */
+.plagiarism-modes .plagiarism-mode-tab {
+  border: 0 !important;
+  border-radius: var(--radius-sm) !important;
+  box-shadow: none !important;
+  font-size: 13px;
+  font-weight: 600;
+  min-height: 30px;
+  padding: 0 14px !important;
+}
+.plagiarism-modes .plagiarism-mode-tab-active {
+  background: var(--surface) !important;
+  color: var(--brand-blue) !important;
+  --btn-fg: var(--brand-blue);
+  box-shadow: var(--shadow-xs) !important;
+}
+.plagiarism-modes .plagiarism-mode-tab-inactive {
+  background: transparent !important;
+  color: var(--text-secondary) !important;
+  --btn-fg: var(--text-secondary);
+}
+.plagiarism-modes .plagiarism-mode-tab-inactive:hover {
+  background: rgba(255, 255, 255, 0.7) !important;
+  color: var(--text-primary) !important;
+  --btn-fg: var(--text-primary);
+}
+
+.plagiarism-url-field {
+  align-items: center;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  display: flex;
+  gap: 8px;
+  min-height: var(--control-h-lg);
+  min-width: 0;
+  padding: 0 12px;
+}
+.plagiarism-url-field > svg { color: var(--text-muted); flex: 0 0 auto; }
+.plagiarism-url-field input {
+  background: transparent;
+  border: 0;
+  color: var(--text-primary) !important;
+  font-size: 13px;
+  font-weight: 500;
+  min-width: 0;
+  outline: none;
+}
+.plagiarism-textarea {
+  background: var(--surface) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: var(--radius-md) !important;
+  color: var(--text-primary) !important;
+  font-size: 13px;
+  line-height: 1.5;
+  padding: 12px 14px !important;
+  resize: vertical;
+  width: 100%;
+}
+.plagiarism-textarea::placeholder { color: var(--text-disabled) !important; }
+.plagiarism-url-field:focus-within,
+.plagiarism-textarea:focus {
+  border-color: var(--brand-red) !important;
+  box-shadow: 0 0 0 3px rgba(223, 60, 39, 0.12) !important;
+  outline: none;
+}
+.plagiarism-progress {
+  color: var(--info-text);
+  font-size: 12px;
+  font-weight: 500;
+  margin-top: 12px;
+}
+
+@media (max-width: 640px) {
+  .plagiarism-hero { padding: 20px !important; }
+  .plagiarism-actions { width: 100%; }
+  .plagiarism-actions > .ui-button { flex: 1; }
+}
+
+/* ==================================================================
+   SCREAMING FROG ANALYZER — same banner pattern as the W3C page
+
+   This screen shipped with an entirely separate visual language: a
+   full-bleed emerald/teal gradient header, a mint page gradient, and
+   glassmorphic `bg-white/80 backdrop-blur-xl` cards. It also set
+   `h-screen overflow-y-auto` on its root, creating a second scroll
+   container inside the app shell — which is why its header ran edge to
+   edge while every other page sat in the content column.
+   ================================================================== */
+.sf-hero {
+  background-color: var(--surface);
+  background-image:
+    radial-gradient(120% 110% at 100% 0%, rgba(223, 60, 39, 0.055) 0%, transparent 55%),
+    radial-gradient(90% 110% at 100% 100%, rgba(45, 43, 111, 0.04) 0%, transparent 60%);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-xs);
+  padding: 24px 26px;
+}
+.sf-title { min-width: 0; }
+.sf-title > svg {
+  box-sizing: content-box;
+  height: 20px;
+  width: 20px;
+  padding: 10px;
+  border-radius: var(--radius-lg);
+  background: var(--brand-red-subtle);
+  border: 1px solid var(--brand-red-border);
+  color: var(--brand-red);
+  flex: 0 0 auto;
+}
+.sf-hero h1 {
+  color: var(--brand-blue);
+  font-size: 1.25rem;
+  font-weight: 700;
+  letter-spacing: -0.015em;
+  line-height: 1.75rem;
+}
+.sf-description {
+  color: var(--text-secondary);
+  font-size: 0.8125rem;
+  line-height: 1.25rem;
+  margin-top: 3px;
+  max-width: 62ch;
+}
+
+/* --- Cards --------------------------------------------------------- */
+.sf-card {
+  background: var(--surface) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: var(--radius-xl) !important;
+  box-shadow: var(--shadow-xs) !important;
+  backdrop-filter: none !important;
+  padding: 20px;
+}
+.sf-card-header {
+  background: transparent !important;
+  border: 0 !important;
+  border-radius: var(--radius-md) !important;
+  color: inherit !important;
+  --btn-fg: var(--text-primary);
+  gap: 12px;
+  padding: 0 !important;
+  text-align: left;
+}
+.sf-card-header:hover:not(:disabled) {
+  background: transparent !important;
+}
+.sf-tile {
+  align-items: center;
+  background: var(--brand-red-subtle) !important;
+  border: 1px solid var(--brand-red-border);
+  border-radius: var(--radius-lg) !important;
+  box-shadow: none !important;
+  color: var(--brand-red) !important;
+  display: flex;
+  flex: 0 0 auto;
+  height: 40px;
+  justify-content: center;
+  width: 40px;
+}
+.sf-tile svg { height: 18px; width: 18px; }
+.sf-card-title {
+  color: var(--brand-blue) !important;
+  font-size: 0.9375rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+.sf-card-note { color: var(--text-muted) !important; font-size: 12px; margin-top: 2px; }
+.sf-chevron {
+  align-items: center;
+  background: var(--surface-muted) !important;
+  border-radius: var(--radius-md);
+  color: var(--text-secondary);
+  display: flex;
+  height: 28px;
+  justify-content: center;
+  width: 28px;
+}
+
+/* --- Dropzone ------------------------------------------------------ */
+.sf-dropzone {
+  background: var(--surface-sunken);
+  border: 1px dashed var(--border-strong);
+  border-radius: var(--radius-lg);
+  cursor: pointer;
+  padding: 32px 24px;
+  text-align: center;
+  transition: border-color var(--dur) ease, background-color var(--dur) ease;
+}
+.sf-dropzone:hover {
+  background: var(--brand-red-subtle);
+  border-color: var(--brand-red-border);
+}
+.sf-dropzone-icon {
+  align-items: center;
+  background: var(--brand-red-subtle);
+  border: 1px solid var(--brand-red-border);
+  border-radius: var(--radius-lg);
+  color: var(--brand-red);
+  display: flex;
+  height: 44px;
+  justify-content: center;
+  margin: 0 auto 14px;
+  width: 44px;
+}
+.sf-dropzone-title {
+  color: var(--text-primary);
+  font-size: 0.875rem;
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+.sf-dropzone p:not(.sf-dropzone-title) {
+  color: var(--text-muted) !important;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+@media (max-width: 640px) {
+  .sf-hero, .sf-card { padding: 20px; }
+}
+
+/* ==================================================================
+   ACCENT TEXT ON THE DARK NAVIGATION CHROME
+
+   The pale-accent correction remaps `text-<hue>-100..400` to a dark
+   semantic ink so those classes stay readable on white. Inside the navy
+   sidebar that inverts the problem: the sidebar CTA's title is
+   `text-blue-300`, which resolved to #175cd3 on #2d2b6f — about 2.05:1.
+
+   Body copy and links in the sidebar were unaffected because
+   `.app-sidebar p` and `.app-sidebar nav a` already override at higher
+   specificity; the CTA title is a bare <div>, so nothing caught it.
+   Accent text on the dark chrome is restored to light here.
+   ================================================================== */
+.app-sidebar [class*="text-white-"],
+.app-sidebar [class*="text-brand-"],
+.app-sidebar [class*="text-rose-"],
+.app-sidebar [class*="text-red-"],
+.app-sidebar [class*="text-emerald-"],
+.app-sidebar [class*="text-green-"],
+.app-sidebar [class*="text-amber-"],
+.app-sidebar [class*="text-yellow-"],
+.app-sidebar [class*="text-orange-"],
+.app-sidebar [class*="text-blue-"],
+.app-sidebar [class*="text-sky-"],
+.app-sidebar [class*="text-cyan-"],
+.app-sidebar [class*="text-teal-"],
+.app-sidebar [class*="text-indigo-"],
+.app-sidebar [class*="text-violet-"],
+.app-sidebar [class*="text-purple-"],
+.app-sidebar [class*="text-fuchsia-"],
+.app-sidebar [class*="text-pink-"],
+.app-sidebar [class*="text-lime-"],
+.app-icon-rail [class*="text-white-"],
+.app-icon-rail [class*="text-brand-"],
+.app-icon-rail [class*="text-rose-"],
+.app-icon-rail [class*="text-red-"],
+.app-icon-rail [class*="text-emerald-"],
+.app-icon-rail [class*="text-green-"],
+.app-icon-rail [class*="text-amber-"],
+.app-icon-rail [class*="text-yellow-"],
+.app-icon-rail [class*="text-orange-"],
+.app-icon-rail [class*="text-blue-"],
+.app-icon-rail [class*="text-sky-"],
+.app-icon-rail [class*="text-cyan-"],
+.app-icon-rail [class*="text-teal-"],
+.app-icon-rail [class*="text-indigo-"],
+.app-icon-rail [class*="text-violet-"],
+.app-icon-rail [class*="text-purple-"],
+.app-icon-rail [class*="text-fuchsia-"],
+.app-icon-rail [class*="text-pink-"],
+.app-icon-rail [class*="text-lime-"] {
+  color: rgba(255, 255, 255, 0.92) !important;
+}
+
+/* --- Sidebar CTA box ---------------------------------------------- */
+.app-sidebar nav > div[class*="rounded-2xl"][class*="border"] {
+  background: rgba(255, 255, 255, 0.07) !important;
+  background-image: none !important;
+  border-color: rgba(255, 255, 255, 0.14) !important;
+  border-radius: var(--radius-lg) !important;
+  padding: 12px !important;
+}
+/* Title carries the weight and full white; body recedes. */
+.app-sidebar nav > div[class*="rounded-2xl"] > div:first-child {
+  color: #ffffff !important;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+}
+.app-sidebar nav > div[class*="rounded-2xl"] > div:first-child svg {
+  color: var(--brand-red) !important;
+}
+.app-sidebar nav > div[class*="rounded-2xl"] p {
+  color: rgba(255, 255, 255, 0.62) !important;
+  margin-top: 5px !important;
+}
+.app-sidebar nav > div[class*="rounded-2xl"] a {
+  color: #ffffff !important;
+  font-weight: 600;
+  margin-top: 10px !important;
+}
+.app-sidebar nav > div[class*="rounded-2xl"] a:hover {
+  background: transparent !important;
+  text-decoration: underline;
+  text-underline-offset: 2px;
 }
