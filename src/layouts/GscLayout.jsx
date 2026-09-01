@@ -7,7 +7,7 @@ import { GscInsightsProvider } from "../context/GscInsightsContext.jsx";
 export default function GscLayout() {
   return (
     <GscInsightsProvider>
-      <div className="relative h-screen overflow-hidden bg-ink-900 text-white">
+      <div className="app-shell relative h-screen overflow-hidden bg-ink-900 text-white">
         <div className="flex h-full">
           <IconRail />
           <GscSecondaryNav />

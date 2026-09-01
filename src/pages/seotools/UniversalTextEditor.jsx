@@ -37,7 +37,7 @@ export default function UniversalTextEditor() {
   );
 
   return (
-    <div className="mx-auto max-w-[1000px] space-y-4">
+    <div className="mx-auto max-w-6xl space-y-4">
       <ToolHeader title="Universal Text Editor" Icon={Type} gradient="from-slate-800 via-violet-800 to-purple-700" subtitle="Powerful text transformations and cleanup" />
 
       <div className="rounded-2xl border border-white/[0.08] bg-[#0d1117] p-5">

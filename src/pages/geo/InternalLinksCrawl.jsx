@@ -44,7 +44,7 @@ export default function InternalLinksCrawl() {
   const [activeTab, setActiveTab] = useState("Link Structure");
 
   return (
-    <div className="mx-auto max-w-5xl space-y-6">
+    <div className="mx-auto max-w-6xl space-y-6">
 
       {/* Hero */}
       <div className="relative overflow-hidden rounded-3xl border border-white/[0.06] bg-ink-800">

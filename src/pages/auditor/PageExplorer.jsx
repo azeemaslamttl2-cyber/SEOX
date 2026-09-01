@@ -1161,7 +1161,7 @@ export default function PageExplorer() {
   ];
 
   return (
-    <div className="mx-auto max-w-[1500px] space-y-4">
+    <div className="mx-auto max-w-6xl space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h1 className="flex items-center gap-2 font-display text-xl font-bold tracking-tight">
           Page explorer

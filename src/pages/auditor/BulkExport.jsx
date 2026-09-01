@@ -215,7 +215,7 @@ export default function BulkExport() {
   };
 
   return (
-    <div className="mx-auto max-w-[1500px] space-y-5">
+    <div className="mx-auto max-w-6xl space-y-5">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h1 className="font-display text-xl font-bold tracking-tight">Bulk export</h1>
         <div className="flex h-9 items-center gap-2 rounded-lg border border-white/10 bg-white/[0.04] px-3 text-sm">

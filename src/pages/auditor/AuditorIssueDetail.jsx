@@ -42,7 +42,7 @@ export default function AuditorIssueDetail() {
   const missingAltIssue = data.slug === "missing-alt-text";
 
   return (
-    <div className="mx-auto max-w-[1500px] space-y-4">
+    <div className="mx-auto max-w-6xl space-y-4">
       {/* Breadcrumb header */}
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-2 text-sm">

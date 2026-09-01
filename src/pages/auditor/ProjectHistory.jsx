@@ -32,7 +32,7 @@ export default function ProjectHistory() {
     : [];
 
   return (
-    <div className="mx-auto max-w-[1500px] space-y-5">
+    <div className="mx-auto max-w-6xl space-y-5">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h1 className="font-display text-xl font-bold tracking-tight">Project history</h1>
         <div className="flex items-center gap-1.5 text-xs text-white/70">

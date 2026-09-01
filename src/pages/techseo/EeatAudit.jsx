@@ -273,18 +273,18 @@ function HeroGauge({ score, size = 140 }) {
       {/* Glow */}
       <div className="absolute inset-0 rounded-full bg-brand-500/20 blur-2xl" />
       <svg width={size} height={size} className="-rotate-90 relative z-10">
-        <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="#ffffff" strokeWidth="10" />
+        <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="#e2e5ee" strokeWidth="10" />
         <circle
           cx={size / 2}
           cy={size / 2}
           r={r}
           fill="none"
-          stroke="#ffffff"
+          stroke="url(#gaugeGrad)"
           strokeWidth="10"
           strokeLinecap="round"
           strokeDasharray={circ}
           strokeDashoffset={offset}
-          style={{ filter: "drop-shadow(0 0 8px rgba(255,255,255,0.5))" }}
+          style={{ transition: "stroke-dashoffset 700ms ease" }}
         />
         <defs>
           <linearGradient id="gaugeGrad" x1="0%" y1="0%" x2="100%" y2="0%">
@@ -750,7 +750,7 @@ export default function EeatAudit() {
   }
 
   return (
-    <div className="mx-auto max-w-5xl">
+    <div className="mx-auto max-w-6xl">
 
       {/* ─────────── HERO: Split layout ─────────── */}
       <div className="eeat-hero relative overflow-hidden rounded-3xl border border-brand-600 bg-brand-500">

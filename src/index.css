@@ -645,7 +645,14 @@ input[type="radio"]:disabled {
 [class*="text-zinc-"],
 [class*="text-neutral-"] { color: var(--text-secondary) !important; }
 [class*="border-white"] { border-color: var(--border) !important; }
-[class*="bg-white/"] { background-color: var(--surface-sunken) !important; }
+/* Only UNPREFIXED occurrences paint a background. An attribute selector
+   cannot read Tailwind's state prefixes, so `[class*="bg-white/"]` also
+   matched `hover:bg-white/[0.02]` and painted 358 elements permanently —
+   which is why every row of every table carried a tint. A prefixed class
+   always has ":" before "bg-"; an unprefixed one is either at the start
+   of the attribute or preceded by a space. */
+[class^="bg-white/"],
+[class*=" bg-white/"] { background-color: var(--surface-sunken) !important; }
 [class*="bg-[#0"], [class*="bg-[#1"] { background-color: var(--surface-sunken) !important; }
 [class*="shadow-black"] { --tw-shadow-color: rgba(23, 27, 43, 0.08) !important; }
 
@@ -1618,17 +1625,17 @@ button:disabled {
 */
 
 /* --- 1. Default: primary ---------------------------------------- */
-button:where(:not([class*="ui-button-"]):not([class*="btn-"])) {
+button:where(:not([class*="ui-button-"]):not([class*="btn-"]):not([class*="bg-["]):not([class~="bg-white"])) {
   background: var(--brand-red) !important;
   border-color: var(--brand-red) !important;
   color: #ffffff !important;
 }
-button:where(:not([class*="ui-button-"]):not([class*="btn-"])):hover:not(:disabled) {
+button:where(:not([class*="ui-button-"]):not([class*="btn-"]):not([class*="bg-["]):not([class~="bg-white"])):hover:not(:disabled) {
   background: var(--brand-red-hover) !important;
   border-color: var(--brand-red-hover) !important;
   color: #ffffff !important;
 }
-button:where(:not([class*="ui-button-"]):not([class*="btn-"])):active:not(:disabled) {
+button:where(:not([class*="ui-button-"]):not([class*="btn-"]):not([class*="bg-["]):not([class~="bg-white"])):active:not(:disabled) {
   background: var(--brand-red-active) !important;
   border-color: var(--brand-red-active) !important;
 }
@@ -1717,7 +1724,30 @@ button:where([class*="text-red-"]:not([class*="bg-"]):not([class*="ui-button-"])
 
 /* Icons and inline text inherit the resolved button colour. */
 button svg,
-button [class*="text-"] {
+button [class*="text-white"],
+button [class*="text-brand"],
+button [class*="text-rose"],
+button [class*="text-red"],
+button [class*="text-emerald"],
+button [class*="text-green"],
+button [class*="text-amber"],
+button [class*="text-yellow"],
+button [class*="text-orange"],
+button [class*="text-blue"],
+button [class*="text-sky"],
+button [class*="text-cyan"],
+button [class*="text-teal"],
+button [class*="text-indigo"],
+button [class*="text-violet"],
+button [class*="text-purple"],
+button [class*="text-fuchsia"],
+button [class*="text-pink"],
+button [class*="text-lime"],
+button [class*="text-slate"],
+button [class*="text-gray"],
+button [class*="text-zinc"],
+button [class*="text-neutral"],
+button [class*="text-stone"] {
   color: inherit !important;
 }
 
@@ -4421,7 +4451,7 @@ section[class*="bg-white/[0.0"][class*="rounded"][class*="border"] {
    ================================================================== */
 
 /* Generic buckets, mirroring the background cascade in source order. */
-button:where(:not([class*="ui-button-"]):not([class*="btn-"])) { --btn-fg: #ffffff; }
+button:where(:not([class*="ui-button-"]):not([class*="btn-"]):not([class*="bg-["]):not([class~="bg-white"])) { --btn-fg: #ffffff; }
 button:where([class*="bg-gradient-"]),
 button:where([class*="bg-brand-5"]),
 button:where([class*="bg-brand-6"]) { --btn-fg: #ffffff; }
@@ -4467,9 +4497,83 @@ button:where([class*="text-red-"]:not([class*="bg-"])) { --btn-fg: var(--error-t
 
 /* Apply it above the utilities. Buttons carrying no text-* utility are
    untouched and keep the colour their own rule set. */
-button[class*="text-"],
-button[class*="text-"] span,
-button[class*="text-"] svg,
+/* Matched on COLOUR utilities only. `[class*="text-"]` also matched
+   size and alignment utilities such as `text-sm` and `text-left`, so a
+   button with no colour class at all was still forced to --btn-fg —
+   which overrode named component rules like .duplicate-tab-inactive and
+   put white text on a light tab. */
+button[class*="text-white"]:not([class*="bg-["]):not([class~="bg-white"]),
+button[class*="text-brand"]:not([class*="bg-["]):not([class~="bg-white"]),
+button[class*="text-rose"]:not([class*="bg-["]):not([class~="bg-white"]),
+button[class*="text-red"]:not([class*="bg-["]):not([class~="bg-white"]),
+button[class*="text-emerald"]:not([class*="bg-["]):not([class~="bg-white"]),
+button[class*="text-green"]:not([class*="bg-["]):not([class~="bg-white"]),
+button[class*="text-amber"]:not([class*="bg-["]):not([class~="bg-white"]),
+button[class*="text-yellow"]:not([class*="bg-["]):not([class~="bg-white"]),
+button[class*="text-orange"]:not([class*="bg-["]):not([class~="bg-white"]),
+button[class*="text-blue"]:not([class*="bg-["]):not([class~="bg-white"]),
+button[class*="text-sky"]:not([class*="bg-["]):not([class~="bg-white"]),
+button[class*="text-cyan"]:not([class*="bg-["]):not([class~="bg-white"]),
+button[class*="text-teal"]:not([class*="bg-["]):not([class~="bg-white"]),
+button[class*="text-indigo"]:not([class*="bg-["]):not([class~="bg-white"]),
+button[class*="text-violet"]:not([class*="bg-["]):not([class~="bg-white"]),
+button[class*="text-purple"]:not([class*="bg-["]):not([class~="bg-white"]),
+button[class*="text-fuchsia"]:not([class*="bg-["]):not([class~="bg-white"]),
+button[class*="text-pink"]:not([class*="bg-["]):not([class~="bg-white"]),
+button[class*="text-lime"]:not([class*="bg-["]):not([class~="bg-white"]),
+button[class*="text-slate"]:not([class*="bg-["]):not([class~="bg-white"]),
+button[class*="text-gray"]:not([class*="bg-["]):not([class~="bg-white"]),
+button[class*="text-zinc"]:not([class*="bg-["]):not([class~="bg-white"]),
+button[class*="text-neutral"]:not([class*="bg-["]):not([class~="bg-white"]),
+button[class*="text-stone"]:not([class*="bg-["]):not([class~="bg-white"]),
+button[class*="text-white"]:not([class*="bg-["]):not([class~="bg-white"]) span,
+button[class*="text-brand"]:not([class*="bg-["]):not([class~="bg-white"]) span,
+button[class*="text-rose"]:not([class*="bg-["]):not([class~="bg-white"]) span,
+button[class*="text-red"]:not([class*="bg-["]):not([class~="bg-white"]) span,
+button[class*="text-emerald"]:not([class*="bg-["]):not([class~="bg-white"]) span,
+button[class*="text-green"]:not([class*="bg-["]):not([class~="bg-white"]) span,
+button[class*="text-amber"]:not([class*="bg-["]):not([class~="bg-white"]) span,
+button[class*="text-yellow"]:not([class*="bg-["]):not([class~="bg-white"]) span,
+button[class*="text-orange"]:not([class*="bg-["]):not([class~="bg-white"]) span,
+button[class*="text-blue"]:not([class*="bg-["]):not([class~="bg-white"]) span,
+button[class*="text-sky"]:not([class*="bg-["]):not([class~="bg-white"]) span,
+button[class*="text-cyan"]:not([class*="bg-["]):not([class~="bg-white"]) span,
+button[class*="text-teal"]:not([class*="bg-["]):not([class~="bg-white"]) span,
+button[class*="text-indigo"]:not([class*="bg-["]):not([class~="bg-white"]) span,
+button[class*="text-violet"]:not([class*="bg-["]):not([class~="bg-white"]) span,
+button[class*="text-purple"]:not([class*="bg-["]):not([class~="bg-white"]) span,
+button[class*="text-fuchsia"]:not([class*="bg-["]):not([class~="bg-white"]) span,
+button[class*="text-pink"]:not([class*="bg-["]):not([class~="bg-white"]) span,
+button[class*="text-lime"]:not([class*="bg-["]):not([class~="bg-white"]) span,
+button[class*="text-slate"]:not([class*="bg-["]):not([class~="bg-white"]) span,
+button[class*="text-gray"]:not([class*="bg-["]):not([class~="bg-white"]) span,
+button[class*="text-zinc"]:not([class*="bg-["]):not([class~="bg-white"]) span,
+button[class*="text-neutral"]:not([class*="bg-["]):not([class~="bg-white"]) span,
+button[class*="text-stone"]:not([class*="bg-["]):not([class~="bg-white"]) span,
+button[class*="text-white"]:not([class*="bg-["]):not([class~="bg-white"]) svg,
+button[class*="text-brand"]:not([class*="bg-["]):not([class~="bg-white"]) svg,
+button[class*="text-rose"]:not([class*="bg-["]):not([class~="bg-white"]) svg,
+button[class*="text-red"]:not([class*="bg-["]):not([class~="bg-white"]) svg,
+button[class*="text-emerald"]:not([class*="bg-["]):not([class~="bg-white"]) svg,
+button[class*="text-green"]:not([class*="bg-["]):not([class~="bg-white"]) svg,
+button[class*="text-amber"]:not([class*="bg-["]):not([class~="bg-white"]) svg,
+button[class*="text-yellow"]:not([class*="bg-["]):not([class~="bg-white"]) svg,
+button[class*="text-orange"]:not([class*="bg-["]):not([class~="bg-white"]) svg,
+button[class*="text-blue"]:not([class*="bg-["]):not([class~="bg-white"]) svg,
+button[class*="text-sky"]:not([class*="bg-["]):not([class~="bg-white"]) svg,
+button[class*="text-cyan"]:not([class*="bg-["]):not([class~="bg-white"]) svg,
+button[class*="text-teal"]:not([class*="bg-["]):not([class~="bg-white"]) svg,
+button[class*="text-indigo"]:not([class*="bg-["]):not([class~="bg-white"]) svg,
+button[class*="text-violet"]:not([class*="bg-["]):not([class~="bg-white"]) svg,
+button[class*="text-purple"]:not([class*="bg-["]):not([class~="bg-white"]) svg,
+button[class*="text-fuchsia"]:not([class*="bg-["]):not([class~="bg-white"]) svg,
+button[class*="text-pink"]:not([class*="bg-["]):not([class~="bg-white"]) svg,
+button[class*="text-lime"]:not([class*="bg-["]):not([class~="bg-white"]) svg,
+button[class*="text-slate"]:not([class*="bg-["]):not([class~="bg-white"]) svg,
+button[class*="text-gray"]:not([class*="bg-["]):not([class~="bg-white"]) svg,
+button[class*="text-zinc"]:not([class*="bg-["]):not([class~="bg-white"]) svg,
+button[class*="text-neutral"]:not([class*="bg-["]):not([class~="bg-white"]) svg,
+button[class*="text-stone"]:not([class*="bg-["]):not([class~="bg-white"]) svg,
 a[class*="text-"][class*="bg-brand-5"],
 a[class*="text-"][class*="bg-brand-6"] {
   color: var(--btn-fg, inherit) !important;
@@ -4680,4 +4784,422 @@ a[class*="text-"][class*="bg-brand-6"] {
 [class~="bg-brand-800"],
 [class~="bg-brand-900"] {
   color: #ffffff !important;
+}
+
+/* ==================================================================
+   GAUGE HALOS
+   Each score ring sits on a blurred colour disc (`bg-<hue>-500/20
+   blur-2xl`) that gave the arc a glow against the old near-black
+   background. On a white card it is just a coloured smudge behind the
+   ring, so the decorative discs are dropped. The rings themselves are
+   unaffected.
+   ================================================================== */
+div[class*="absolute"][class*="inset-0"][class*="rounded-full"][class*="blur-2xl"],
+div[class*="absolute"][class*="inset-0"][class*="rounded-full"][class*="blur-3xl"] {
+  display: none !important;
+}
+
+/* ==================================================================
+   STATE VARIANTS OF THE LEGACY WHITE UTILITIES
+
+   With the base rule scoped to unprefixed classes, the hover/focus
+   variants have to be re-expressed as actual states — which is what the
+   markup meant in the first place.
+   ================================================================== */
+[class*="hover:bg-white/"]:hover {
+  background-color: var(--surface-sunken) !important;
+}
+[class*="focus:bg-white/"]:focus,
+[class*="focus-within:bg-white/"]:focus-within {
+  background-color: var(--surface-sunken) !important;
+}
+/* Table rows keep a slightly stronger hover so they remain scannable. */
+tr[class*="hover:bg-white/"]:hover {
+  background-color: var(--surface-muted) !important;
+}
+
+/* `hover:text-white` resolves to plain #ffffff, which is invisible on a
+   light surface. It stays white only on the dark navigation chrome. */
+[class*="hover:text-white"]:hover {
+  color: var(--text-primary) !important;
+}
+.app-sidebar [class*="hover:text-white"]:hover,
+.app-icon-rail [class*="hover:text-white"]:hover,
+[class~="bg-brand-500"] [class*="hover:text-white"]:hover {
+  color: #ffffff !important;
+}
+
+/* ==================================================================
+   TABLE ROW BACKGROUNDS
+
+   Some tables zebra-stripe rows with an unprefixed `bg-white/[0.01]`.
+   Against the old near-black background that was a 1% lift — almost
+   imperceptible. The compat layer resolves it to --surface-sunken,
+   which on a white card is a heavy band, so the striping reads far
+   louder than intended.
+
+   Rows are transparent; hover is the only row feedback. Separation
+   comes from the row borders, which is the quieter, more modern
+   treatment for dense data.
+   ================================================================== */
+tbody tr[class*="bg-white/"],
+tbody tr[class*="bg-slate-"],
+tbody tr[class*="bg-gray-"],
+tbody tr[class*="bg-ink-"],
+tr[class*="odd:bg-"],
+tr[class*="even:bg-"] {
+  background-color: transparent !important;
+}
+/* Cells inherit the row, so a cell-level tint would reintroduce it. */
+tbody tr[class*="bg-white/"] > td {
+  background-color: transparent !important;
+}
+/* Hover stays, and still wins over the transparent base above. */
+tbody tr[class*="hover:bg-white/"]:hover,
+tbody tr[class*="hover:bg-white/"]:hover > td {
+  background-color: var(--surface-muted) !important;
+}
+
+/* ==================================================================
+   ACCORDIONS / COLLAPSIBLE CARDS
+
+   These are ~60px list rows, and a 14px radius at that height reads as
+   a pill rather than a card. The accordion recipe across the product is
+   `overflow-hidden + rounded-2xl + border`, so the radius is tightened
+   at the recipe rather than page by page. Radius only — sizes,
+   spacing and behaviour are untouched.
+   ================================================================== */
+.app-shell [class*="overflow-hidden"][class*="rounded-2xl"][class*="border"],
+.app-shell [class*="overflow-hidden"][class*="rounded-3xl"][class*="border"],
+.crawl-section {
+  border-radius: var(--radius-lg) !important;
+}
+
+.crawl-section {
+  background: var(--surface) !important;
+  border-color: var(--border) !important;
+  box-shadow: var(--shadow-xs) !important;
+}
+.crawl-section:hover {
+  border-color: var(--border-strong) !important;
+}
+
+/* The header button fills the card, so its own radius must follow the
+   card's — otherwise the hover fill shows square corners inside the
+   rounded clip. */
+.crawl-section-button {
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0 !important;
+  color: var(--brand-blue) !important;
+  min-height: 52px;
+}
+.crawl-section-button:hover {
+  background: var(--surface-sunken) !important;
+}
+.crawl-section-button svg {
+  color: var(--text-muted) !important;
+  transition: transform var(--dur) var(--ease);
+}
+.crawl-section-icon {
+  background: var(--brand-blue-subtle) !important;
+  border: 1px solid var(--brand-blue-border) !important;
+  border-radius: var(--radius-sm) !important;
+  color: var(--brand-blue) !important;
+  font-size: 11px;
+  letter-spacing: 0.01em;
+}
+
+/* ==================================================================
+   LINK-SHAPED BUTTONS
+
+   A <button> used as an inline text link ("View Page Source (387.9 KB)")
+   carries no background and no padding. The default bucket paints every
+   background-less button brand red, which turns those into cramped red
+   pills with text jammed against the edges.
+
+   Two signals identify them, and neither can be a filled control:
+     1. `hover:underline`            — explicit link intent  (18)
+     2. no padding, box or radius    — nothing to fill       (178)
+
+   Padding utilities are matched space-anchored, since a bare
+   `[class*="p-"]` would also match `gap-2`.
+   ================================================================== */
+button:where([class*="hover:underline"]:not([class*="bg-"])),
+/* NOTE: this must stay on ONE line. A newline or space between two
+   :not() groups is a descendant combinator, not a compound — written
+   multi-line it matched almost every button in the app and turned their
+   labels brand red. */
+button:where(:not([class*="bg-"]):not([class^="px-"]):not([class*=" px-"]):not([class^="py-"]):not([class*=" py-"]):not([class^="p-"]):not([class*=" p-"]):not([class^="h-"]):not([class*=" h-"]):not([class^="w-"]):not([class*=" w-"]):not([class*="rounded"]):not([class*="ui-button"]):not([class*="btn-"])) {
+  background: transparent !important;
+  border-color: transparent !important;
+  box-shadow: none !important;
+  color: var(--brand-red-hover) !important;
+  --btn-fg: var(--brand-red-hover);
+  font-weight: 500;
+  padding: 0;
+}
+button:where([class*="hover:underline"]:not([class*="bg-"])):hover:not(:disabled) {
+  background: transparent !important;
+  color: var(--brand-red) !important;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+/* The two named source links keep their own rule so intent stays legible
+   in the stylesheet. The previous colour (#a5b4fc) sat near 2:1 on white. */
+.crawl-source-button,
+.on-page-analyzer .analyzer-source-button,
+.analyzer-source-button {
+  background: transparent !important;
+  border-color: transparent !important;
+  box-shadow: none !important;
+  color: var(--brand-red-hover) !important;
+  --btn-fg: var(--brand-red-hover);
+  font-weight: 500;
+  padding: 0 !important;
+}
+.crawl-source-button:hover:not(:disabled),
+.on-page-analyzer .analyzer-source-button:hover:not(:disabled),
+.analyzer-source-button:hover:not(:disabled) {
+  background: transparent !important;
+  color: var(--brand-red) !important;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+/* ==================================================================
+   HIGH-OPACITY WHITE SURFACES
+   `bg-white/95` and friends are meant to be effectively white. The
+   compat layer resolved every `bg-white/*` to the sunken tone, which
+   made dropdown panels read grey against the white cards behind them.
+   ================================================================== */
+[class*="bg-white/8"],
+[class*="bg-white/9"] {
+  background-color: var(--surface) !important;
+}
+
+/* ==================================================================
+   PROJECT SELECTOR (header dropdown)
+   ================================================================== */
+.project-menu {
+  background: var(--surface) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: var(--radius-xl) !important;
+  box-shadow: var(--shadow-overlay) !important;
+  backdrop-filter: none !important;
+  padding: 6px !important;
+}
+.project-menu-label {
+  color: var(--text-muted) !important;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  padding: 8px 10px 6px !important;
+}
+.project-menu-item {
+  border-radius: var(--radius-sm) !important;
+  min-height: 36px;
+  font-weight: 500;
+}
+.project-menu-footer {
+  border-top: 1px solid var(--border-subtle) !important;
+  margin-top: 4px !important;
+  padding-top: 4px !important;
+}
+
+/* ==================================================================
+   HOVER FOREGROUND ON BUTTONS
+
+   `hover:text-white` was remapped to primary ink so it would not turn
+   invisible on light surfaces. That is right for links and plain text,
+   but wrong for a button: 116 buttons carry it, and the ones the
+   default bucket paints brand red ended up with dark navy text on a red
+   fill on hover — the label effectively disappeared.
+
+   A button's hover colour comes from --btn-fg, the same value bound to
+   its background, so the two can never disagree in either state. The
+   fallback keeps the light-surface behaviour for anything unbucketed.
+   ================================================================== */
+button[class*="hover:text-white"]:hover,
+button[class*="hover:text-white"]:hover svg,
+button[class*="hover:text-white"]:hover span {
+  color: var(--btn-fg, var(--text-primary)) !important;
+}
+
+/* Filled buttons keep a white label in every state, including hover and
+   active — belt and braces for the gradient/brand buckets. */
+button:where([class*="bg-gradient-"]):hover,
+button:where([class*="bg-gradient-"]):active,
+button:where([class*="bg-brand-5"]):hover,
+button:where([class*="bg-brand-6"]):hover,
+button:where([class*="bg-gradient-"]):hover svg,
+button:where([class*="bg-brand-5"]):hover svg {
+  color: #ffffff !important;
+}
+
+/* Tabs publish their own --btn-fg so the binding agrees with the
+   background their named rule sets. */
+.duplicate-tab-active { --btn-fg: #ffffff; }
+.duplicate-tab-inactive { --btn-fg: var(--text-secondary); }
+.duplicate-tab-inactive:hover { --btn-fg: var(--brand-blue); }
+.plagiarism-mode-tab { --btn-fg: var(--text-secondary); }
+
+/* ==================================================================
+   COLLAPSIBLE CARD BORDERS
+
+   The pattern is a bordered, rounded, overflow-hidden card whose open
+   body carries its own `border-t`:
+
+     div.overflow-hidden.rounded-2xl.border      <- card border, 1px
+       button                                     <- header
+       div.border-t                               <- divider, 1px
+
+   Two 1px lines then meet inside a clipped rounded box. Because
+   `overflow-hidden` clips children to the padding box at the INNER
+   radius (outer radius minus border width), the divider's ends run into
+   that curve and the card border sits directly beside it — which reads
+   as a doubled or overlapping rule.
+
+   The divider becomes an inset box-shadow instead of a border. It is
+   painted inside the element's own box, so it never shares an edge with
+   the card border and cannot interact with the clip.
+   ================================================================== */
+.app-shell [class*="overflow-hidden"][class*="rounded"][class*="border"] > [class*="border-t"] {
+  border-top: 0 !important;
+  box-shadow: inset 0 1px 0 var(--border-subtle);
+}
+
+/* Card border stays a single hairline, and the header contributes none. */
+.app-shell [class*="overflow-hidden"][class*="rounded"][class*="border"] {
+  border-width: 1px !important;
+  border-color: var(--border) !important;
+}
+.app-shell [class*="overflow-hidden"][class*="rounded"][class*="border"] > button {
+  border: 0 !important;
+  border-radius: 0 !important;
+}
+
+/* Grid strips split by cell borders double up on every internal seam;
+   collapse them to one line per seam. */
+.app-shell [class*="grid-cols-"][class*="overflow-hidden"][class*="rounded"] > * {
+  border-left-width: 0 !important;
+  border-top-width: 0 !important;
+}
+
+/* ==================================================================
+   CRAWL OPTIMIZATION — HEADER AS A BANNER
+
+   Was a centred navy pill, centred copy and a centred action row, all
+   loose siblings above a separate input card. It now uses the same
+   banner shape as the Speed page: one surface holding the title, the
+   description, the actions and the URL field.
+   ================================================================== */
+.crawl-hero {
+  background-color: var(--surface) !important;
+  background-image:
+    radial-gradient(120% 110% at 100% 0%, rgba(223, 60, 39, 0.055) 0%, transparent 55%),
+    radial-gradient(90% 110% at 100% 100%, rgba(45, 43, 111, 0.04) 0%, transparent 60%) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: var(--radius-xl) !important;
+  box-shadow: var(--shadow-xs);
+  color: var(--text-primary) !important;
+  padding: 24px 26px !important;
+}
+
+/* Title loses the gradient pill and reads as a heading, with the icon
+   carrying the brand accent — matching every other tool header. */
+.crawl-hero .crawl-title {
+  background: transparent !important;
+  box-shadow: none !important;
+  border-radius: 0 !important;
+  padding: 0 !important;
+}
+.crawl-hero .crawl-title span {
+  color: var(--brand-blue) !important;
+  font-size: 1.125rem;
+  font-weight: 700;
+  letter-spacing: -0.015em;
+}
+.crawl-hero .crawl-title svg {
+  color: var(--brand-red) !important;
+}
+.crawl-hero .crawl-description {
+  color: var(--text-secondary) !important;
+  font-size: 0.875rem;
+  font-weight: 400;
+  margin-top: 6px !important;
+  text-align: left !important;
+}
+.crawl-hero .crawl-meta {
+  color: var(--text-muted) !important;
+  font-weight: 500;
+}
+
+/* Actions: the page's main action is Analyze, in the field below, so
+   these two recede to secondary rather than competing with it. */
+.crawl-hero .crawl-secondary-button,
+.crawl-hero .crawl-primary-button {
+  background: var(--surface) !important;
+  border: 1px solid var(--border) !important;
+  color: var(--text-secondary) !important;
+  box-shadow: none !important;
+}
+.crawl-hero .crawl-secondary-button:hover:not(:disabled),
+.crawl-hero .crawl-primary-button:hover:not(:disabled) {
+  background: var(--surface-sunken) !important;
+  border-color: var(--border-strong) !important;
+  color: var(--text-primary) !important;
+  box-shadow: none !important;
+}
+.crawl-hero .crawl-secondary-button,
+.crawl-hero .crawl-primary-button { --btn-fg: var(--text-secondary); }
+
+/* Analyze stays the one red action on the banner. */
+.crawl-analyze-button {
+  background: var(--brand-red) !important;
+  border: 1px solid var(--brand-red) !important;
+  color: #ffffff !important;
+  --btn-fg: #ffffff;
+  box-shadow: var(--shadow-xs) !important;
+  min-height: var(--control-h-lg);
+}
+.crawl-analyze-button:hover:not(:disabled) {
+  background: var(--brand-red-hover) !important;
+  border-color: var(--brand-red-hover) !important;
+  box-shadow: var(--shadow-sm) !important;
+}
+
+/* Input panel becomes a well inside the banner, not a card on a card. */
+.crawl-hero .crawl-input-panel {
+  background: var(--surface-sunken) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: var(--radius-lg) !important;
+  box-shadow: none !important;
+  padding: 16px !important;
+}
+.crawl-hero .crawl-url-field {
+  background: var(--surface) !important;
+  border-color: var(--border) !important;
+  border-radius: var(--radius-md) !important;
+  min-height: var(--control-h-lg);
+  transition: border-color var(--dur) ease, box-shadow var(--dur) ease;
+}
+.crawl-hero .crawl-url-field:focus-within {
+  border-color: var(--brand-red) !important;
+  box-shadow: 0 0 0 3px rgba(223, 60, 39, 0.12);
+}
+.crawl-hero .crawl-url-field svg {
+  color: var(--text-muted) !important;
+}
+.crawl-hero .crawl-url-field input {
+  color: var(--text-primary) !important;
+  font-weight: 500;
+}
+.crawl-hero .crawl-input-panel .ui-button {
+  min-height: var(--control-h-lg);
+  border-radius: var(--radius-md) !important;
+}
+
+@media (max-width: 640px) {
+  .crawl-hero { padding: 20px !important; }
+  .crawl-hero .crawl-actions { flex-wrap: wrap; }
 }

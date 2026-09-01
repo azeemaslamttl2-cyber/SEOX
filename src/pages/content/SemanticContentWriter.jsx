@@ -5308,7 +5308,7 @@ BEGIN WRITING THE ARTICLE NOW:`;
     // If no mode selected, show mode selector (new article screen)
     if (!writerMode) {
         return (
-            <div className="mx-auto max-w-5xl space-y-6">
+            <div className="mx-auto max-w-6xl space-y-6">
                 {/* Back Navigation Bar */}
                 <div className="flex items-center justify-between px-5 py-3 rounded-2xl border border-white/10 bg-slate-900/90 shadow-sm">
                     <button

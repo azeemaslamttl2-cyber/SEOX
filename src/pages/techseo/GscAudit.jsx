@@ -476,7 +476,7 @@ export default function GscAudit() {
   }
 
   return (
-    <div className="mx-auto max-w-5xl">
+    <div className="mx-auto max-w-6xl">
       <div className="gsc-audit-title-row flex justify-start">
         <div className="gsc-audit-title rounded-xl bg-brand-500 px-6 py-2.5 shadow-lg shadow-brand-500/20">
           <div className="flex items-center gap-2 text-white">

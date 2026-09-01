@@ -26,7 +26,7 @@ function HeroGauge({ count, loading }) {
             cy="64"
             r="54"
             fill="none"
-            stroke="#ffffff"
+            stroke="#e2e5ee"
             strokeWidth="10"
           />
           <circle
@@ -34,14 +34,13 @@ function HeroGauge({ count, loading }) {
             cy="64"
             r="54"
             fill="none"
-            stroke="#ffffff"
+            stroke="#df3c27"
             strokeWidth="10"
             strokeLinecap="round"
             strokeDasharray={2 * Math.PI * 54}
             strokeDashoffset={2 * Math.PI * 54 * (1 - Math.min(count, 30) / 30)}
             style={{
-              filter: "drop-shadow(0 0 8px rgba(255,255,255,0.5))",
-              transition: "stroke-dashoffset 0.5s ease",
+              transition: "stroke-dashoffset 700ms ease",
             }}
           />
         </svg>
@@ -152,7 +151,7 @@ export default function OutlineCreator() {
   const subHeadingsCount = results ? results.filter((r) => r.tag !== "h1").length : 0;
 
   return (
-    <div className="mx-auto max-w-5xl space-y-6">
+    <div className="mx-auto max-w-6xl space-y-6">
       {/* ─────────── HERO: Split layout matching EeatAudit ─────────── */}
       <div className="eeat-hero relative overflow-hidden rounded-3xl border border-brand-600 bg-brand-500">
         {/* Background texture */}

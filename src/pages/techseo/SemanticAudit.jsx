@@ -75,12 +75,12 @@ function ScoreGauge({ score, label, size = 120, color = "brand" }) {
       <div className="relative" style={{ width: size, height: size }}>
         <div className={`absolute inset-0 rounded-full ${c.glow} blur-2xl`} />
         <svg width={size} height={size} className="-rotate-90 relative z-10">
-          <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="#ffffff" strokeWidth="8" />
+          <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="#e2e5ee" strokeWidth="8" />
           <circle
             cx={size / 2} cy={size / 2} r={r} fill="none"
-            stroke="#ffffff" strokeWidth="8" strokeLinecap="round"
+            stroke={c.stroke} strokeWidth="8" strokeLinecap="round"
             strokeDasharray={circ} strokeDashoffset={offset}
-            style={{ filter: "drop-shadow(0 0 6px rgba(99,102,241,0.4))" }}
+            style={{ transition: "stroke-dashoffset 700ms ease" }}
           />
           <defs>
             <linearGradient id="gaugeGradBrand" x1="0%" y1="0%" x2="100%" y2="0%">
