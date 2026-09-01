@@ -296,7 +296,7 @@ function PerformanceChart({ data, showClicks, showImpressions }) {
             y1={height - fraction * (height - 20)}
             x2={width}
             y2={height - fraction * (height - 20)}
-            stroke="rgba(255,255,255,0.05)"
+            stroke="#eef0f5"
           />
         ))}
 
@@ -328,7 +328,7 @@ function PerformanceChart({ data, showClicks, showImpressions }) {
                 key={row.date}
                 x={x(index)}
                 y={height + 18}
-                fill="rgba(255,255,255,0.32)"
+                fill="#727a94"
                 fontSize="10"
                 textAnchor="middle"
               >
@@ -426,7 +426,7 @@ function CtrByPositionChart({ data }) {
             y1={height - fraction * (height - 18)}
             x2={width}
             y2={height - fraction * (height - 18)}
-            stroke="rgba(255,255,255,0.05)"
+            stroke="#eef0f5"
           />
         ))}
         <polyline

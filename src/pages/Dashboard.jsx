@@ -44,7 +44,7 @@ function CircularProgress({ value = 0, size = 80, strokeWidth = 6, color = "#df3
         cy={size / 2}
         r={radius}
         fill="none"
-        stroke="rgba(255,255,255,0.06)"
+        stroke="#e2e5ee"
         strokeWidth={strokeWidth}
       />
       {/* Progress */}
@@ -274,7 +274,7 @@ export default function Dashboard() {
               type="button"
               onClick={rerun}
               disabled={!project || isRunning}
-              className="ui-button ui-button-secondary"
+              className="ui-button ui-button-primary"
             >
               <RefreshCw className={`h-3.5 w-3.5 ${isRunning ? "animate-spin" : ""}`} />
               Run checks

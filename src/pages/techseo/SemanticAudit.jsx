@@ -144,8 +144,15 @@ function Section({ id, icon: Icon, title, description, children, defaultOpen = t
 }
 
 /* ── Keyword Cloud ── */
-function KeywordCloud({ keywords }) {
+function KeywordCloud({ keywords = [] }) {
   const colors = ["text-cyan-300", "text-blue-300", "text-violet-300", "text-emerald-300", "text-amber-300", "text-pink-300", "text-sky-300", "text-indigo-300", "text-teal-300", "text-orange-300"];
+  if (!keywords.length) {
+    return (
+      <div className="app-empty-state">
+        <p>No keyword cloud data for this page yet.</p>
+      </div>
+    );
+  }
   return (
     <div className="flex flex-wrap items-center justify-center gap-3 py-4">
       {keywords.map((kw, i) => (
@@ -162,8 +169,17 @@ function KeywordCloud({ keywords }) {
 }
 
 /* ── Mini Pie Chart (SVG) ── */
-function PieChart({ data, size = 180 }) {
+function PieChart({ data = [], size = 180 }) {
   const total = data.reduce((sum, d) => sum + d.percent, 0);
+  // With no data every slice angle is NaN, so nothing but the centre
+  // circle used to paint — which read as a solid dark disc.
+  if (!data.length || total <= 0) {
+    return (
+      <div className="app-empty-state" style={{ minHeight: size }}>
+        <p>No occurrence data for this page yet.</p>
+      </div>
+    );
+  }
   let cumulative = 0;
   const slices = data.map((d) => {
     const start = cumulative;
@@ -188,9 +204,9 @@ function PieChart({ data, size = 180 }) {
     <div className="flex flex-col items-center gap-3">
       <svg width={size} height={size}>
         {slices.map((s, i) => (
-          <path key={i} d={describeArc(cx, cy, r, s.startAngle, s.endAngle)} fill={s.color} stroke="rgba(0,0,0,0.3)" strokeWidth="1" />
+          <path key={i} d={describeArc(cx, cy, r, s.startAngle, s.endAngle)} fill={s.color} stroke="#ffffff" strokeWidth="2" />
         ))}
-        <circle cx={cx} cy={cy} r={r * 0.5} fill="#0d1117" />
+        <circle cx={cx} cy={cy} r={r * 0.5} fill="#ffffff" />
       </svg>
       <div className="flex flex-wrap justify-center gap-x-4 gap-y-1">
         {data.map((d, i) => (

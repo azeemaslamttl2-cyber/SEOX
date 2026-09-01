@@ -21,13 +21,7 @@ const sideNavItems = [
 
 export default function AdminLayout() {
   return (
-    <div className="relative min-h-screen overflow-x-clip bg-ink-900 text-white">
-      {/* Ambient glow */}
-      <div className="pointer-events-none fixed inset-0 -z-10">
-        <div className="absolute -top-40 left-1/3 h-[600px] w-[700px] rounded-full bg-brand-500/[0.06] blur-[160px]" />
-        <div className="absolute bottom-0 right-1/4 h-[500px] w-[500px] rounded-full bg-amber-500/[0.04] blur-[160px]" />
-      </div>
-
+    <div className="app-shell relative min-h-screen overflow-x-clip bg-ink-900 text-white">
       <div className="flex">
         {/* Sidebar */}
         <aside className="app-sidebar sticky top-0 hidden h-screen w-[220px] flex-shrink-0 overflow-y-auto border-r border-white/10 bg-ink-900/60 px-3 py-5 md:block no-scrollbar">
@@ -74,7 +68,7 @@ export default function AdminLayout() {
         {/* Main content */}
         <div className="flex min-w-0 flex-1 flex-col">
           {/* Top bar */}
-          <header className="sticky top-0 z-20 flex h-12 items-center border-b border-white/10 bg-ink-900/80 px-5 backdrop-blur-md">
+          <header className="app-topbar sticky top-0 z-20 flex h-12 items-center border-b border-white/10 bg-ink-900/80 px-5 backdrop-blur-md">
             <Link
               to="/dashboard"
               className="flex items-center gap-2 text-sm text-white/50 transition hover:text-white"
@@ -85,7 +79,7 @@ export default function AdminLayout() {
           </header>
 
           {/* Page content */}
-          <main className="min-w-0 flex-1 px-5 pb-12 pt-6 lg:px-8">
+          <main className="app-main min-w-0 flex-1 px-5 pb-12 pt-6 lg:px-8">
             <Outlet />
           </main>
         </div>

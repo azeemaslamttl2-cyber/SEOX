@@ -74,7 +74,7 @@ function CompArc({ value, percentile, size = 80 }) {
   return (
     <div className="relative flex flex-col items-center" style={{ width: size, height: size }}>
       <svg width={size} height={size} className="-rotate-90">
-        <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="5" />
+        <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="#e2e5ee" strokeWidth="5" />
         <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="#7c3aed" strokeWidth="5" strokeLinecap="round" strokeDasharray={circ} strokeDashoffset={offset} />
       </svg>
       <span className="absolute inset-0 flex items-center justify-center font-display text-sm font-black text-white">{value}</span>

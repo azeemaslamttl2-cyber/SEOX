@@ -19,6 +19,7 @@ export function getPool(env = connectionEnv) {
       user: env.MYSQL_USER,
       password: env.MYSQL_PASSWORD,
       database: env.MYSQL_DATABASE,
+      charset: 'utf8mb4_general_ci',
       waitForConnections: true,
       connectionLimit: 10,
       queueLimit: 0

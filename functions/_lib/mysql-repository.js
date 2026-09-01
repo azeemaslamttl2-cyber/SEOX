@@ -19,6 +19,7 @@ function connectionConfig(env = process.env) {
     user: env.MYSQL_USER || 'root',
     password: env.MYSQL_PASSWORD === '' ? undefined : env.MYSQL_PASSWORD || undefined,
     database: env.MYSQL_DATABASE || 'code_step_mysql_migration',
+    charset: 'utf8mb4_general_ci',
     waitForConnections: true,
     connectionLimit: 10,
     queueLimit: 0,

@@ -32,18 +32,12 @@ export default function DashboardLayout({ children }) {
   }, [eagerProjects.length, contextProjects.length]);
 
   return (
-    <div className="flex h-screen overflow-hidden bg-ink-900 text-white">
-      {/* Ambient glow */}
-      <div className="pointer-events-none fixed inset-0 -z-10">
-        <div className="absolute -top-40 left-1/3 h-[600px] w-[700px] rounded-full bg-brand-500/[0.06] blur-[160px]" />
-        <div className="absolute bottom-0 right-1/4 h-[500px] w-[500px] rounded-full bg-amber-500/[0.04] blur-[160px]" />
-      </div>
-
+    <div className="app-shell flex h-screen overflow-hidden bg-ink-900 text-white">
       <IconRail />
       <DashboardSidebar />
       <div className="flex flex-1 flex-col min-w-0 overflow-hidden">
         <DashboardTopBar projectsLoading={projectsLoading} />
-        <main className="flex-1 overflow-y-auto min-w-0 px-4 pb-8 pt-5 lg:px-8">
+        <main className="app-main flex-1 overflow-y-auto min-w-0 px-4 pb-10 pt-6 lg:px-8">
           {children || <Outlet />}
         </main>
       </div>
