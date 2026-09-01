@@ -41,7 +41,7 @@ function ScoreRing({ score, size = 160 }) {
     <div className="relative" style={{ width: size, height: size }}>
       <div className="absolute inset-0 rounded-full" style={{ boxShadow: `0 0 40px ${color}25` }} />
       <svg width={size} height={size} className="-rotate-90">
-        <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="rgba(255,255,255,0.05)" strokeWidth="12" />
+        <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="#e2e5ee" strokeWidth="12" />
         <circle
           cx={size / 2}
           cy={size / 2}

@@ -22,5 +22,17 @@ service-account.json
 *.njsproj
 *.sln
 *.sw?
+
+# Project-specific directories
 /Backlinksdata
 /semanticsx-fucntions
+
+# Local MySQL / Development files
+functions/_lib/mysql-repository.js
+functions/_lib/mysql.js
+functions/api/auth.js
+mysql_tables.sql
+mysql_tables_with_data.sql
+scripts/add-dummy-user.sql
+scripts/seed-login-user.mjs
+src/app/api/save-project.js

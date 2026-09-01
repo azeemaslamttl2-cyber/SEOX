@@ -68,7 +68,7 @@ export default function HealthGauge({ score = 94, grade = "Excellent" }) {
           <path
             d={path}
             fill="none"
-            stroke="rgba(255,255,255,0.06)"
+            stroke="#eef0f5"
             strokeWidth={thickness}
             strokeLinecap="round"
           />
@@ -87,14 +87,14 @@ export default function HealthGauge({ score = 94, grade = "Excellent" }) {
           {/* Needle (tapered triangle) */}
           <polygon
             points={`${bx1},${by1} ${bx2},${by2} ${tipX},${tipY}`}
-            fill="#ffffff"
-            stroke="rgba(0,0,0,0.45)"
+            fill="#1b1f33"
+            stroke="#ffffff"
             strokeWidth="0.5"
             className="transition-all duration-1000"
             style={{ transformOrigin: `${cx}px ${cy}px` }}
           />
           {/* Pivot dot */}
-          <circle cx={cx} cy={cy} r="7" fill="#0b0b10" stroke="#ffffff" strokeWidth="2.5" />
+          <circle cx={cx} cy={cy} r="7" fill="#1b1f33" stroke="#ffffff" strokeWidth="2.5" />
           <circle cx={cx} cy={cy} r="3" fill="#ffffff" />
 
           {/* Score label, centered above the pivot, inside the arc */}

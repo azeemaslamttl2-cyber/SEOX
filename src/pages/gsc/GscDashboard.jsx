@@ -330,7 +330,7 @@ function DualAxisChart({ data, showClicks, showImpressions }) {
             y1={padT + chartHeight - fraction * chartHeight}
             x2={width - padR}
             y2={padT + chartHeight - fraction * chartHeight}
-            stroke="rgba(255,255,255,0.05)"
+            stroke="#eef0f5"
           />
         ))}
 
@@ -364,7 +364,7 @@ function DualAxisChart({ data, showClicks, showImpressions }) {
                 x={xPos(originalIndex)}
                 y={height - 5}
                 textAnchor="middle"
-                fill="rgba(255,255,255,0.3)"
+                fill="#727a94"
                 fontSize="9"
               >
                 {formatDate(row.date)}

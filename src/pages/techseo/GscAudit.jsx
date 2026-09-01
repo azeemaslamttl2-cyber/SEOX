@@ -532,7 +532,7 @@ export default function GscAudit() {
         </div>
         <div className="overflow-x-auto">
           <svg viewBox={`0 0 ${chartW} ${chartH}`} className="w-full" style={{ minWidth: 500 }}>
-            {[0, 0.25, 0.5, 0.75, 1].map((f) => <line key={f} x1={0} y1={f * chartH} x2={chartW} y2={f * chartH} stroke="rgba(255,255,255,0.04)" />)}
+            {[0, 0.25, 0.5, 0.75, 1].map((f) => <line key={f} x1={0} y1={f * chartH} x2={chartW} y2={f * chartH} stroke="#eef0f5" />)}
             <path d={impressionsPath} fill="none" stroke="#a78bfa" strokeWidth="2" opacity="0.7" />
             <path d={clicksPath} fill="none" stroke="#60a5fa" strokeWidth="2.5" />
           </svg>

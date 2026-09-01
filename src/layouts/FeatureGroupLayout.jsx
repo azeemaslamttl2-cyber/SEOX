@@ -103,14 +103,10 @@ export default function FeatureGroupLayout({ group }) {
   const title = getTitle(config, pathname);
 
   return (
-    <div className="relative flex h-screen overflow-hidden bg-ink-900 text-white">
-      <div className="pointer-events-none fixed inset-0 -z-10">
-        <div className={`absolute -top-44 left-1/3 h-[560px] w-[680px] rounded-full ${accent.glow} blur-[150px]`} />
-      </div>
-
+    <div className="app-shell relative flex h-screen overflow-hidden bg-ink-900 text-white">
       <IconRail />
 
-      <aside className="sticky top-0 hidden h-screen w-[232px] flex-shrink-0 overflow-y-auto border-r border-white/10 bg-ink-900/60 px-3 py-5 md:block">
+      <aside className="app-sidebar sticky top-0 hidden h-screen w-[232px] flex-shrink-0 overflow-y-auto border-r border-white/10 bg-ink-900/60 px-3 py-5 md:block no-scrollbar">
         <nav className="space-y-5">
           {config.sections.map((section) => (
             <div key={section.label}>
@@ -160,7 +156,7 @@ export default function FeatureGroupLayout({ group }) {
       </aside>
 
       <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
-        <header className="sticky top-0 z-20 flex h-14 items-center justify-between gap-4 border-b border-white/10 bg-ink-900/80 px-4 backdrop-blur-md lg:px-6">
+        <header className="app-topbar sticky top-0 z-20 flex h-14 items-center justify-between gap-4 border-b border-white/10 bg-ink-900/80 px-4 backdrop-blur-md lg:px-6">
           <div className="flex items-center gap-3">
             <ProjectSelector />
             <div className="hidden items-center gap-2 text-sm lg:flex">
@@ -172,7 +168,7 @@ export default function FeatureGroupLayout({ group }) {
           </div>
         </header>
 
-        <main className="min-w-0 flex-1 overflow-y-auto px-4 py-6 lg:px-8">
+        <main className="app-main min-w-0 flex-1 overflow-y-auto px-4 py-6 lg:px-8">
           <Outlet />
         </main>
       </div>
