@@ -353,7 +353,7 @@ const SiteDetailView = ({ site, apiKey, onBack }) => {
     }, [detailData]);
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-slate-50 to-orange-50">
+        <div className="bing-connect-page">
             {/* Header */}
             <div className="bg-white border-b border-gray-100 sticky top-0 z-10">
                 <div className="px-4 sm:px-6 lg:px-8 py-4">
@@ -765,39 +765,39 @@ const BingBulkAnalysisPage = () => {
     // API Key Setup UI
     if (!isConfigured) {
         return (
-            <div className="min-h-screen bg-gradient-to-br from-slate-50 to-orange-50 p-6">
-                <div className="max-w-2xl mx-auto">
-                    <div className="mb-8">
-                        <div className="flex items-center gap-3 mb-2">
-                            <div className="p-2 bg-gradient-to-r from-orange-500 to-amber-500 rounded-xl">
-                                <BarChart3 className="w-6 h-6 text-white" />
+            <div className="bing-connect-page">
+                <div>
+                    <div className="bing-connect-hero">
+                        <div className="bing-connect-title">
+                            <BarChart3 className="h-5 w-5" />
+                            <div>
+                                <h1 className="font-display">Bing Bulk Analysis</h1>
+                                <p>Connect your Bing Webmaster Tools to analyze search performance</p>
                             </div>
-                            <h1 className="text-2xl font-bold text-gray-900">Bing Bulk Analysis</h1>
                         </div>
-                        <p className="text-gray-500">Connect your Bing Webmaster Tools to analyze search performance</p>
                     </div>
-                    <div className="bg-white rounded-2xl p-8 border border-gray-100 shadow-lg">
+                    <div className="bing-connect-card">
                         <div className="text-center mb-6">
-                            <div className="w-16 h-16 bg-orange-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                                <Key className="w-8 h-8 text-orange-600" />
-                            </div>
-                            <h2 className="text-xl font-bold text-gray-900 mb-2">Enter Your Bing API Key</h2>
-                            <p className="text-gray-500 text-sm">
-                                Get your API key from <a href="https://www.bing.com/webmasters/apikey" target="_blank" rel="noopener noreferrer" className="text-orange-600 hover:underline">Bing Webmaster Tools → Settings → API Access</a>
+                            <span className="bing-connect-tile">
+                                <Key className="h-5 w-5" />
+                            </span>
+                            <h2 className="bing-connect-heading font-display">Enter Your Bing API Key</h2>
+                            <p className="bing-connect-hint">
+                                Get your API key from <a href="https://www.bing.com/webmasters/apikey" target="_blank" rel="noopener noreferrer" className="bing-connect-link">Bing Webmaster Tools → Settings → API Access</a>
                             </p>
                         </div>
                         {error && (
-                            <div className="bg-red-50 border border-red-200 rounded-xl p-4 mb-6 flex items-center gap-3">
-                                <AlertCircle className="w-5 h-5 text-red-500" />
-                                <span className="text-red-700 text-sm">{error}</span>
+                            <div className="app-alert app-alert-error mb-5">
+                                <AlertCircle className="h-4 w-4 flex-shrink-0" />
+                                <span>{error}</span>
                             </div>
                         )}
                         <div className="space-y-4">
                             <input type="password" value={apiKey} onChange={(e) => setApiKey(e.target.value)}
                                 placeholder="Enter your Bing Webmaster API key"
-                                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-orange-500" />
+                                className="bing-connect-input" />
                             <button onClick={saveApiKey} disabled={!apiKey.trim()}
-                                className="w-full px-6 py-3 bg-gradient-to-r from-orange-500 to-amber-500 text-white rounded-xl font-semibold hover:from-orange-600 hover:to-amber-600 disabled:opacity-50 transition-all">
+                                className="ui-button ui-button-primary bing-connect-submit">
                                 Connect Bing Webmaster
                             </button>
                         </div>
@@ -809,7 +809,7 @@ const BingBulkAnalysisPage = () => {
 
     // Main Sites Grid
     return (
-        <div className="min-h-screen bg-gradient-to-br from-slate-50 to-orange-50">
+        <div className="bing-connect-page">
             {/* Header */}
             <div className="bg-white border-b border-gray-100">
                 <div className="px-4 sm:px-6 lg:px-8 py-6">

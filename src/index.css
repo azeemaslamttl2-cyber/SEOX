@@ -7299,3 +7299,370 @@ aside.w3c-card {
 @media (max-width: 640px) {
   .auditor-hero h1 { font-size: 1.25rem !important; line-height: 1.75rem !important; }
 }
+
+/* ==================================================================
+   GSC CONNECT / EMPTY STATE
+
+   Was a bare centred card — `py-24` of empty space around a faint 20%
+   globe, with the OAuth warning in a one-off amber pill. It is the only
+   thing on the page before you connect, so it carries the page's whole
+   first impression and should read like the banners elsewhere.
+   ================================================================== */
+.gsc-state {
+  background-color: var(--surface);
+  background-image:
+    radial-gradient(120% 110% at 100% 0%, rgba(223, 60, 39, 0.055) 0%, transparent 55%),
+    radial-gradient(90% 110% at 100% 100%, rgba(45, 43, 111, 0.04) 0%, transparent 60%);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-xs);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 56px 26px;
+  text-align: center;
+}
+.gsc-state.is-compact { padding: 32px 26px; }
+
+.gsc-state-tile {
+  align-items: center;
+  background: var(--brand-red-subtle);
+  border: 1px solid var(--brand-red-border);
+  border-radius: var(--radius-lg);
+  color: var(--brand-red);
+  display: inline-flex;
+  height: 42px;
+  justify-content: center;
+  width: 42px;
+}
+.gsc-state-title {
+  color: var(--brand-blue);
+  font-size: 1.25rem;
+  font-weight: 700;
+  letter-spacing: -0.015em;
+  line-height: 1.75rem;
+  margin-top: 16px;
+}
+.gsc-state-body {
+  color: var(--text-secondary);
+  font-size: 0.875rem;
+  line-height: 1.375rem;
+  margin-top: 6px;
+  max-width: 52ch;
+}
+.gsc-state-alert {
+  justify-content: center;
+  margin-top: 18px;
+  max-width: 52ch;
+  text-align: left;
+}
+.gsc-state-action {
+  margin-top: 20px;
+  min-height: var(--control-h-lg);
+  padding: 0 20px;
+}
+
+@media (max-width: 640px) {
+  .gsc-state { padding: 36px 20px; }
+  .gsc-state-action { width: 100%; }
+}
+
+/* ==================================================================
+   BULK ANALYSIS — CONNECT STATE
+
+   This screen set `min-h-screen bg-stone-950` on its own root, painting
+   a full black page inside the light app shell, with a #0d1117 card
+   floating in the middle of it. It now uses the same connect state as
+   /gsc, inside the normal content column.
+   ================================================================== */
+.gsc-connect-wrap {
+  display: flex;
+  justify-content: center;
+  padding: 32px 0;
+}
+.gsc-connect-wrap > .gsc-state {
+  max-width: 520px;
+  width: 100%;
+}
+.gsc-connect-button {
+  margin-top: 20px;
+  min-height: var(--control-h-lg);
+  padding: 0 20px;
+  width: 100%;
+}
+/* The inline Google mark inherits the button's foreground. */
+.gsc-connect-button svg { color: currentColor !important; }
+
+/* ==================================================================
+   BULK ANALYSIS PAGE SHELL
+
+   Three roots on this screen set `min-h-screen bg-stone-950` — the
+   loading state, the site-detail view and the main page — so each
+   painted a black viewport inside the light app shell. The compat layer
+   already remapped this file's `bg-[#0d1117]` cards, but `bg-stone-*`
+   was never covered, which is why the ground stayed black while the
+   cards on top of it were light.
+   ================================================================== */
+.bulk-page {
+  background: transparent;
+  min-height: 0;
+}
+.bulk-loading {
+  align-items: center;
+  color: var(--text-muted);
+  display: flex;
+  flex-direction: column;
+  font-size: 13px;
+  gap: 12px;
+  justify-content: center;
+  min-height: 320px;
+}
+.bulk-loading svg { color: var(--brand-red); }
+
+/* The stone palette is this file's own; the rest of the product never
+   used it, so it was missing from the light-theme compat layer. */
+[class*="bg-stone-9"],
+[class*="bg-stone-8"] {
+  background-color: var(--surface) !important;
+}
+[class*="bg-stone-7"],
+[class*="bg-stone-6"] {
+  background-color: var(--surface-sunken) !important;
+}
+[class*="text-stone-3"],
+[class*="text-stone-4"],
+[class*="text-stone-5"] {
+  color: var(--text-secondary) !important;
+}
+[class*="border-stone-"] {
+  border-color: var(--border) !important;
+}
+
+/* ==================================================================
+   BING BULK ANALYSIS — CONNECT STATE
+
+   Three roots on this screen set `min-h-screen bg-gradient-to-br
+   from-slate-50 to-orange-50`, painting a full-height orange wash over
+   the app shell. The card inside used an orange/amber accent — a hue
+   the product does not otherwise use — and its disabled submit button
+   sat at 50% opacity on a gradient, which read as washed-out rather
+   than disabled.
+   ================================================================== */
+.bing-connect-page {
+  background: transparent;
+  min-height: 0;
+}
+.bing-connect-hero {
+  background-color: var(--surface);
+  background-image:
+    radial-gradient(120% 110% at 100% 0%, rgba(223, 60, 39, 0.055) 0%, transparent 55%),
+    radial-gradient(90% 110% at 100% 100%, rgba(45, 43, 111, 0.04) 0%, transparent 60%);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-xs);
+  margin-bottom: 20px;
+  padding: 24px 26px;
+}
+.bing-connect-title {
+  align-items: center;
+  display: flex;
+  gap: 12px;
+  min-width: 0;
+}
+.bing-connect-title > svg {
+  box-sizing: content-box;
+  height: 20px;
+  width: 20px;
+  padding: 10px;
+  border-radius: var(--radius-lg);
+  background: var(--brand-red-subtle);
+  border: 1px solid var(--brand-red-border);
+  color: var(--brand-red);
+  flex: 0 0 auto;
+}
+.bing-connect-hero h1 {
+  color: var(--brand-blue);
+  font-size: 1.5rem;
+  font-weight: 700;
+  letter-spacing: -0.018em;
+  line-height: 2rem;
+}
+.bing-connect-hero p {
+  color: var(--text-secondary);
+  font-size: 0.875rem;
+  line-height: 1.375rem;
+  margin-top: 4px;
+}
+
+.bing-connect-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-xs);
+  max-width: 560px;
+  padding: 28px 26px;
+}
+.bing-connect-tile {
+  align-items: center;
+  background: var(--brand-red-subtle);
+  border: 1px solid var(--brand-red-border);
+  border-radius: var(--radius-lg);
+  color: var(--brand-red);
+  display: inline-flex;
+  height: 42px;
+  justify-content: center;
+  margin-bottom: 14px;
+  width: 42px;
+}
+.bing-connect-heading {
+  color: var(--brand-blue);
+  font-size: 1.125rem;
+  font-weight: 700;
+  letter-spacing: -0.015em;
+  margin-bottom: 6px;
+}
+.bing-connect-hint { color: var(--text-secondary); font-size: 13px; line-height: 1.4; }
+.bing-connect-link { color: var(--brand-red-hover) !important; font-weight: 500; }
+.bing-connect-link:hover { text-decoration: underline; text-underline-offset: 2px; }
+
+.bing-connect-input {
+  background: var(--surface) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: var(--radius-md) !important;
+  color: var(--text-primary) !important;
+  font-size: 13px;
+  min-height: var(--control-h-lg);
+  padding: 0 14px !important;
+  width: 100%;
+}
+.bing-connect-input::placeholder { color: var(--text-disabled) !important; }
+.bing-connect-input:focus {
+  border-color: var(--brand-red) !important;
+  box-shadow: 0 0 0 3px rgba(223, 60, 39, 0.12) !important;
+  outline: none;
+}
+.bing-connect-submit {
+  min-height: var(--control-h-lg);
+  width: 100%;
+}
+/* A disabled action reads as neutral, not as a faded primary. */
+.bing-connect-submit:disabled {
+  background: var(--surface-muted) !important;
+  border-color: var(--border) !important;
+  color: var(--text-disabled) !important;
+  --btn-fg: var(--text-disabled);
+  opacity: 1;
+}
+
+/* ==================================================================
+   YANDEX BULK ANALYSIS — CONNECT STATE
+   Same shape as the GSC and Bing connect screens. Four roots on this
+   screen set `min-h-screen bg-gradient-to-br from-slate-50 to-red-50`,
+   so the pink wash covered the app shell on every view, not just this
+   one. The provider mark is kept — it identifies the service you are
+   signing in to — but sits in the standard brand tile.
+   ================================================================== */
+.yandex-connect-wrap {
+  display: flex;
+  justify-content: center;
+  padding: 32px 0;
+}
+.yandex-connect-wrap > div {
+  max-width: 520px;
+}
+.yandex-connect-card {
+  padding: 36px 26px;
+}
+.yandex-connect-button {
+  margin-top: 20px;
+  min-height: var(--control-h-lg);
+  width: 100%;
+}
+.yandex-connect-button svg { color: currentColor !important; }
+.yandex-connect-note {
+  color: var(--text-muted);
+  font-size: 12px;
+  line-height: 1.4;
+  margin-top: 14px;
+  max-width: 46ch;
+  text-align: center;
+}
+
+/* ==================================================================
+   CONNECT SCREENS — ONE SPEC ACROSS THE GSC FAMILY
+
+   The four connect states had drifted into four different shapes:
+
+     /gsc                  full width, 56px padding, centred text
+     /bulk-analysis        520px centred, 56px padding
+     /yandex-bulk-analysis 520px centred, 36px padding
+     /bing-bulk-analysis   full-width header + 560px LEFT-aligned card
+
+   They are the same thing — one card, one action — so they now share
+   one column width, one padding and one alignment. A single-action
+   screen reads better in a measured column than stretched across a wide
+   monitor, so the column is capped rather than made full width.
+   ================================================================== */
+.gsc-state,
+.bing-connect-card {
+  margin-left: auto;
+  margin-right: auto;
+  max-width: 560px !important;
+  padding: 40px 28px !important;
+  width: 100%;
+}
+/* Bing stacks a page header above its card — same column, same width. */
+.bing-connect-page > div {
+  margin-left: auto;
+  margin-right: auto;
+  max-width: 560px;
+  width: 100%;
+}
+.bing-connect-hero {
+  margin-bottom: 16px;
+  padding: 24px 28px !important;
+  text-align: left;
+}
+.bing-connect-card {
+  text-align: center;
+}
+
+/* The wrappers only centre; the card owns its own width. */
+.gsc-connect-wrap,
+.yandex-connect-wrap {
+  padding: 24px 0;
+}
+.gsc-connect-wrap > .gsc-state,
+.yandex-connect-wrap > div {
+  max-width: 560px !important;
+}
+.yandex-connect-wrap > div { margin: 0 auto; width: 100%; }
+.yandex-connect-card { padding: 40px 28px !important; }
+
+/* Identical internal rhythm on all four. */
+.gsc-state-title,
+.bing-connect-heading {
+  font-size: 1.25rem !important;
+  line-height: 1.75rem !important;
+  margin-top: 16px;
+}
+.bing-connect-heading { margin-top: 14px; }
+.gsc-state-body,
+.bing-connect-hint {
+  font-size: 0.875rem !important;
+  line-height: 1.375rem !important;
+  margin-top: 6px;
+  max-width: 46ch;
+}
+.bing-connect-card .gsc-state-body,
+.bing-connect-card .bing-connect-hint {
+  margin-left: auto;
+  margin-right: auto;
+}
+
+@media (max-width: 640px) {
+  .gsc-state,
+  .bing-connect-card,
+  .yandex-connect-card { padding: 28px 20px !important; }
+  .bing-connect-hero { padding: 20px !important; }
+}
