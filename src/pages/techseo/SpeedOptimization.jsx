@@ -304,7 +304,7 @@ export default function SpeedOptimization() {
   }
 
   return (
-    <div className="mx-auto max-w-5xl">
+    <div className="mx-auto max-w-6xl">
       {/* ─── Hero Header ─── */}
         <div className="speed-hero rounded-3xl border border-brand-600 bg-brand-500 p-6 sm:p-8">
         <div className="speed-title-row flex items-center justify-start">
@@ -462,7 +462,7 @@ export default function SpeedOptimization() {
                         {check.status === "pass" ? "✓ Pass" : "✕ Fail"}
                       </span>
                     </div>
-                    {check.affected && (
+                    {check.affected > 0 && (
                       <button className="mt-1 ml-8 flex items-center gap-1 text-[11px] text-blue-300 hover:underline">
                         <ChevronDown className="h-3 w-3" /> Show {check.affected} affected resources
                       </button>

@@ -126,7 +126,7 @@ export default function RobotsGenerator() {
   );
 
   return (
-    <div className="mx-auto max-w-[1200px] space-y-4">
+    <div className="mx-auto max-w-6xl space-y-4">
       <ToolHeader title="Robots.txt Generator" Icon={FileCode2} gradient="from-slate-800 via-indigo-800 to-violet-700" subtitle="Create an optimized robots.txt file for your website" />
 
       <div className="grid gap-4 lg:grid-cols-[1fr_420px]">

@@ -207,7 +207,7 @@ export default function DuplicateChecker() {
   }
 
   return (
-    <div className="mx-auto max-w-5xl">
+    <div className="mx-auto max-w-6xl">
       <div className="flex justify-center">
         <div className="duplicate-hero-title rounded-full px-6 py-2.5 shadow-lg">
           <div className="flex items-center gap-2 text-white">

@@ -93,7 +93,7 @@ export default function AuditorOverview() {
   };
 
   return (
-    <div className="mx-auto max-w-[1500px] space-y-5">
+    <div className="mx-auto max-w-6xl space-y-5">
       {/* Page header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">

@@ -28,7 +28,7 @@ export default function BacklinkIndexer() {
   const tabIcons = [Send, Search, Key, Rss, Clock];
 
   return (
-    <div className="mx-auto max-w-5xl">
+    <div className="mx-auto max-w-6xl">
       {/* ─── Hero ─── */}
       <div className="relative overflow-hidden rounded-3xl border border-white/[0.06] bg-gradient-to-br from-ink-800 via-ink-800 to-indigo-950/40">
         <div className="pointer-events-none absolute inset-0">

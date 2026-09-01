@@ -229,7 +229,7 @@ export default function StructureExplorer() {
   const hasData = pages.length > 0;
 
   return (
-    <div className="mx-auto max-w-[1500px] space-y-4">
+    <div className="mx-auto max-w-6xl space-y-4">
       <h1 className="flex items-center gap-2 font-display text-xl font-bold tracking-tight">
         Structure explorer
         <HelpCircle className="h-4 w-4 text-white/30" />

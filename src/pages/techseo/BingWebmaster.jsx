@@ -312,7 +312,7 @@ export default function BingWebmaster() {
   }
 
   return (
-    <div className="mx-auto max-w-5xl">
+    <div className="mx-auto max-w-6xl">
       <div className="flex items-center justify-center gap-3">
         <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-brand-500/20 ring-1 ring-brand-500/30">
           <BarChart3 className="h-6 w-6 text-brand-400" />

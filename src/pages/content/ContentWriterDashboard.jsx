@@ -29,18 +29,18 @@ function HeroGauge({ count, loading }) {
             <div className="relative flex h-32 w-32 items-center justify-center">
                 <div className="absolute inset-0 rounded-full bg-brand-500/20 blur-2xl" />
                 <svg width="128" height="128" className="-rotate-90 relative z-10">
-                    <circle cx="64" cy="64" r="54" fill="none" stroke="#ffffff" strokeWidth="10" />
+                    <circle cx="64" cy="64" r="54" fill="none" stroke="#e2e5ee" strokeWidth="10" />
                     <circle
                         cx="64"
                         cy="64"
                         r="54"
                         fill="none"
-                        stroke="#ffffff"
+                        stroke="#df3c27"
                         strokeWidth="10"
                         strokeLinecap="round"
                         strokeDasharray={2 * Math.PI * 54}
                         strokeDashoffset={2 * Math.PI * 54 * (1 - Math.min(count, 20) / 20)}
-                        style={{ filter: "drop-shadow(0 0 8px rgba(255,255,255,0.5))", transition: "stroke-dashoffset 0.5s ease" }}
+                        style={{ transition: "stroke-dashoffset 700ms ease" }}
                     />
                 </svg>
                 <div className="absolute inset-0 z-20 flex flex-col items-center justify-center">
@@ -191,7 +191,7 @@ const ContentWriterDashboard = () => {
     }
 
     return (
-        <div className="mx-auto max-w-5xl space-y-6">
+        <div className="mx-auto max-w-6xl space-y-6">
             {/* ─────────── HERO: Split layout matching EeatAudit ─────────── */}
             <div className="eeat-hero relative overflow-hidden rounded-3xl border border-brand-600 bg-brand-500">
                 {/* Background texture */}

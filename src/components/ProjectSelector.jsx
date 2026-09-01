@@ -49,8 +49,8 @@ export default function ProjectSelector() {
       </button>
 
       {open && (
-        <div className="absolute left-0 top-full z-50 mt-2 w-72 overflow-hidden rounded-xl border border-[#f0dedb] bg-white/95 p-1.5 shadow-2xl backdrop-blur-2xl">
-          <div className="px-3 py-2 text-[11px] font-bold uppercase tracking-wider text-[#6a668c]">
+        <div role="menu" className="project-menu animate-scale-in absolute left-0 top-full z-50 mt-2 w-72 overflow-hidden rounded-xl border border-[#f0dedb] bg-white/95 p-1.5 shadow-2xl backdrop-blur-2xl">
+          <div className="project-menu-label px-3 py-2 text-[11px] font-bold uppercase tracking-wider text-[#6a668c]">
             Your Websites
           </div>
           <div className="max-h-56 overflow-y-auto no-scrollbar">
@@ -63,7 +63,7 @@ export default function ProjectSelector() {
                    selectProject(p.id);
                    setOpen(false);
                  }}
-                 className={`flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm transition ${
+                 className={`project-menu-item flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm transition ${
                    isSelected
                      ? "bg-[#fceae7] text-[#2d2b6f]"
                      : "text-[#3b3a5d] hover:bg-[#f7f4f5] hover:text-[#2d2b6f]"
@@ -79,11 +79,11 @@ export default function ProjectSelector() {
             })}
             {projects.length === 0 && <p className="px-3 py-4 text-sm text-[#6a668c]">No projects found.</p>}
           </div>
-          <div className="mt-1 border-t border-[#f3e5e4] pt-1">
+          <div className="project-menu-footer mt-1 border-t border-[#f3e5e4] pt-1">
             <Link
              to="/auditor/new?mode=checks"
              onClick={() => setOpen(false)}
-             className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-[#48507b] transition hover:bg-[#f9f5f5] hover:text-[#2d2b6f]"
+             className="project-menu-item flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-[#48507b] transition hover:bg-[#f9f5f5] hover:text-[#2d2b6f]"
             >
              <Plus className="h-4 w-4 text-[#ea5b4a]" />
              Add New Project

@@ -276,7 +276,7 @@ export default function RobotsAnalyzer() {
   const notFoundCount = d.checks.filter((c) => c.status === "notfound").length;
 
   return (
-    <div className="mx-auto max-w-5xl">
+    <div className="mx-auto max-w-6xl">
       {/* ─── Hero Header ─── */}
       <div className="robots-hero rounded-2xl border border-brand-600 bg-brand-500 p-6">
         <div className="flex items-center gap-3">

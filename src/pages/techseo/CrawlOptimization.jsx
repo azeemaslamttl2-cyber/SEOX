@@ -175,30 +175,32 @@ export default function CrawlOptimization() {
   }
 
   return (
-    <div className="mx-auto max-w-5xl">
-      <div className="flex items-center justify-center">
-        <div className="crawl-title rounded-xl bg-gradient-to-r from-violet-500 to-indigo-500 px-6 py-2 shadow-lg shadow-violet-500/30">
-          <div className="flex items-center gap-2 text-white">
-            <Zap className="h-5 w-5" />
-            <span className="font-display text-lg font-bold">Crawl Optimization Checker</span>
+    <div className="mx-auto max-w-6xl">
+      {/* ─── Hero Header ─── */}
+      <div className="crawl-hero rounded-3xl border border-brand-600 bg-brand-500 p-6 sm:p-8">
+        <div className="crawl-title-row flex items-center justify-start">
+          <div className="crawl-title">
+            <div className="flex items-center gap-2">
+              <Zap className="h-5 w-5" />
+              <span className="font-display text-lg font-bold text-white">Crawl Optimization Checker</span>
+            </div>
           </div>
         </div>
-      </div>
-      <p className="crawl-description mt-3 text-center text-sm text-white/50">
-        Analyze source code for unnecessary metadata, WordPress crawl bloat, feeds, redirects, and indexability issues.
-      </p>
+        <p className="crawl-description mt-3 text-sm text-white/50">
+          Analyze source code for unnecessary metadata, WordPress crawl bloat, feeds, redirects, and indexability issues.
+        </p>
 
-      <div className="mt-4 flex items-center justify-center gap-3">
-        <button onClick={downloadReport} className="ui-button crawl-secondary-button">
-          <Download className="h-3.5 w-3.5" /> Download Report
-        </button>
-        <button onClick={analyze} disabled={loading || !hasProject} className="ui-button crawl-primary-button">
-          <RefreshCw className={`h-3.5 w-3.5 ${loading ? "animate-spin" : ""}`} /> Re-analyze
-        </button>
-        <span className="crawl-meta flex items-center gap-1 text-xs text-white/40">
-          <Clock className="h-3 w-3" /> Live source fetch
-        </span>
-      </div>
+        <div className="crawl-actions mt-4 flex items-center gap-3">
+          <button onClick={downloadReport} className="ui-button crawl-secondary-button">
+            <Download className="h-3.5 w-3.5" /> Download Report
+          </button>
+          <button onClick={analyze} disabled={loading || !hasProject} className="ui-button crawl-primary-button">
+            <RefreshCw className={`h-3.5 w-3.5 ${loading ? "animate-spin" : ""}`} /> Re-analyze
+          </button>
+          <span className="crawl-meta flex items-center gap-1 text-xs text-white/40">
+            <Clock className="h-3 w-3" /> Live source fetch
+          </span>
+        </div>
 
       <div className="crawl-input-panel mt-6 rounded-2xl border border-white/10 bg-white/[0.02] p-5">
         <div className="flex items-center gap-2">
@@ -225,6 +227,7 @@ export default function CrawlOptimization() {
             {source || "Run an analysis to load the current page source."}
           </pre>
         )}
+      </div>
       </div>
 
       <div className="mt-6 rounded-2xl border border-white/10 bg-white/[0.02] p-5">

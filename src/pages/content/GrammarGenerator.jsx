@@ -72,7 +72,7 @@ export default function GrammarGenerator() {
     : 0;
 
   return (
-    <div className="mx-auto max-w-[1100px] space-y-6">
+    <div className="mx-auto max-w-6xl space-y-6">
       <div className="relative overflow-hidden rounded-[28px] border border-[#d9cac7] bg-[#E13A27] p-5 shadow-[0_12px_28px_-18px_rgba(225,58,39,0.9)] sm:p-6">
         <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_15%_20%,rgba(255,255,255,0.14),transparent_30%)]" />
         <div className="relative z-10 flex items-center gap-4">
