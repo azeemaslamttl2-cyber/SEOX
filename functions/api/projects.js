@@ -27,6 +27,8 @@ const TOOL_RESULT_KEYS = new Set([
   "speed_test",
   "sitemap",
   "llmsTxt",
+  "w3c",
+  "w3c-validation",
 ]);
 
 /**

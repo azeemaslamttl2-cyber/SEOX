@@ -7,6 +7,7 @@ import { onRequest as pagespeedOnRequest } from "./functions/api/pagespeed.js";
 import { onRequest as projectsOnRequest } from "./functions/api/projects.js";
 import { onRequest as projectDetailsOnRequest } from "./functions/api/project-details.js";
 import { onRequest as backlinksAnalyzeOnRequest } from "./functions/api/tech-seo/backlinks/analyze.js";
+import { onRequest as w3cValidateOnRequest } from "./functions/api/tech-seo/w3c/validate.js";
 import { onRequest as expiredDomainsCheckOnRequest } from "./functions/api/off-page/expired-domains/check.js";
 import { onRequest as backlinkCleanerOnRequest } from "./functions/api/off-page/backlink-cleaner.js";
 import { onRequest as backlinkIndexerOnRequest } from "./functions/api/off-page/backlink-indexer.js";
@@ -383,6 +384,18 @@ function backlinksAnalyzeApiPlugin() {
   };
 }
 
+function w3cValidationApiPlugin() {
+  return {
+    name: "seox-w3c-validation-api",
+    configureServer(server) {
+      registerW3CValidationMiddleware(server);
+    },
+    configurePreviewServer(server) {
+      registerW3CValidationMiddleware(server);
+    },
+  };
+}
+
 function expiredDomainsCheckApiPlugin() {
   return {
     name: "seox-expired-domains-check-api",
@@ -588,6 +601,21 @@ function registerBacklinksAnalyzeMiddleware(server) {
       sendJson(res, error?.status || 500, {
         success: false,
         error: error?.message || "Backlink analysis request failed.",
+      });
+    }
+  });
+}
+
+function registerW3CValidationMiddleware(server) {
+  server.middlewares.use("/api/tech-seo/w3c/validate", async (req, res) => {
+    try {
+      const request = await createWebRequest(req, "/api/tech-seo/w3c/validate");
+      const response = await w3cValidateOnRequest({ request, env: loadDevApiEnv() });
+      await sendWebResponse(res, response);
+    } catch (error) {
+      sendJson(res, error?.status || 500, {
+        success: false,
+        error: error?.message || "W3C validation request failed.",
       });
     }
   });
@@ -1067,7 +1095,7 @@ function sendJson(res, status, payload) {
 }
 
 export default defineConfig({
-  plugins: [react(), proxyApiPlugin(), deepseekApiPlugin(), fetchUrlMetaApiPlugin(), pagespeedApiPlugin(), webmasterApiPlugin(), autocompleteApiPlugin(), gscTokenApiPlugin(), projectsApiPlugin(), projectDetailsApiPlugin(), backlinksAnalyzeApiPlugin(), expiredDomainsCheckApiPlugin(), backlinkCleanerApiPlugin(), backlinkIndexerApiPlugin(), keywordResearchApiPlugin(), ubersuggestApiPlugin(), authApiPlugin(), crawlerApiPlugin()],
+  plugins: [react(), proxyApiPlugin(), deepseekApiPlugin(), fetchUrlMetaApiPlugin(), pagespeedApiPlugin(), webmasterApiPlugin(), autocompleteApiPlugin(), gscTokenApiPlugin(), projectsApiPlugin(), projectDetailsApiPlugin(), backlinksAnalyzeApiPlugin(), w3cValidationApiPlugin(), expiredDomainsCheckApiPlugin(), backlinkCleanerApiPlugin(), backlinkIndexerApiPlugin(), keywordResearchApiPlugin(), ubersuggestApiPlugin(), authApiPlugin(), crawlerApiPlugin()],
   server: {
     port: 3000,
     host: true,

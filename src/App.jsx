@@ -54,6 +54,7 @@ import EeatAudit from "./pages/techseo/EeatAudit.jsx";
 import RobotsAnalyzer from "./pages/techseo/RobotsAnalyzer.jsx";
 import CrawlOptimization from "./pages/techseo/CrawlOptimization.jsx";
 import SpeedOptimization from "./pages/techseo/SpeedOptimization.jsx";
+import W3CValidator from "./pages/techseo/W3CValidator.jsx";
 import GscAudit from "./pages/techseo/GscAudit.jsx";
 import BingWebmaster from "./pages/techseo/BingWebmaster.jsx";
 import BacklinksAudit from "./pages/techseo/BacklinksAudit.jsx";
@@ -303,6 +304,7 @@ export default function App() {
               <Route path="/tech-seo/robots" element={<RobotsAnalyzer />} />
               <Route path="/tech-seo/crawl" element={<CrawlOptimization />} />
               <Route path="/tech-seo/speed" element={<SpeedOptimization />} />
+              <Route path="/tech-seo/w3c" element={<W3CValidator />} />
               <Route path="/tech-seo/gsc-audit" element={<GscAudit />} />
               <Route path="/tech-seo/bing" element={<BingWebmaster />} />
               <Route path="/tech-seo/backlinks" element={<BacklinksAudit />} />

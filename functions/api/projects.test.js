@@ -385,6 +385,10 @@ test("all supported tool keys should be handled", () => {
     "backlinks",
     "plagiarism",
     "speed_test",
+    "sitemap",
+    "llmsTxt",
+    "w3c",
+    "w3c-validation",
   ];
 
   const userId = "user-tools";

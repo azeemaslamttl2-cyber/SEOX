@@ -21,6 +21,7 @@ const nav = [
       { label: "Robots.txt Analyzer", to: "/tech-seo/robots", icon: Bot },
       { label: "Crawl Optimization", to: "/tech-seo/crawl", icon: Zap },
       { label: "Speed Optimization", to: "/tech-seo/speed", icon: Gauge },
+      { label: "W3C Validation", to: "/tech-seo/w3c", icon: ShieldCheck },
     ],
   },
   {
