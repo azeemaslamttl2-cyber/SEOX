@@ -76,6 +76,26 @@ async function persistW3CValidationReport(env, userId, projectId, report) {
   return merged;
 }
 
+export function buildW3CApiResult(url, summary = {}) {
+  const safeSummary = summary && typeof summary === "object" ? summary : {};
+  return {
+    success: true,
+    data: {
+      url: String(url || safeSummary.url || ""),
+      status: safeSummary.status || "valid",
+      errors: Number(safeSummary.totalErrors || 0),
+      warnings: Number(safeSummary.totalWarnings || 0),
+      messages: Array.isArray(safeSummary.messages) ? safeSummary.messages : [],
+      validated_at: safeSummary.generatedAt || new Date().toISOString(),
+      validator: safeSummary.validator || {
+        name: "W3C Nu Html Checker",
+        docs: "https://validator.w3.org/nu/about.html",
+      },
+      totalMessages: Number(safeSummary.totalMessages || safeSummary.messages?.length || 0),
+    },
+  };
+}
+
 export function summarizeW3CResponse(payload = {}) {
   const messages = Array.isArray(payload?.messages) ? payload.messages : [];
   const entries = messages.map((item) => {

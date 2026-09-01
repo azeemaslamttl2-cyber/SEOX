@@ -55,6 +55,10 @@ export async function fetchUrlContent(url) {
  * @returns {string} Cleaned text content
  */
 export function extractMainContent(html) {
+    if (typeof DOMParser === 'undefined') {
+        return fallbackHtmlText(html);
+    }
+
     const parser = new DOMParser();
     const doc = parser.parseFromString(html, 'text/html');
 
@@ -84,6 +88,11 @@ export function extractMainContent(html) {
  * @returns {string} Page title
  */
 export function getPageTitle(html) {
+    if (typeof DOMParser === 'undefined') {
+        const match = String(html || '').match(/<title[^>]*>([\s\S]*?)<\/title>/i);
+        return match ? stripHtmlTags(match[1]).trim() : '';
+    }
+
     const parser = new DOMParser();
     const doc = parser.parseFromString(html, 'text/html');
     return doc.querySelector('title')?.textContent?.trim() || '';
@@ -118,4 +127,33 @@ export async function callAI({ prompt, systemInstruction, temperature = 0.3 }) {
     let text = data.text || '{}';
     text = text.replace(/```json/g, '').replace(/```/g, '').trim();
     return JSON.parse(text);
+}
+
+function fallbackHtmlText(html) {
+    const source = String(html || '');
+    const withoutScripts = source
+        .replace(/<script[\s\S]*?<\/script>/gi, ' ')
+        .replace(/<style[\s\S]*?<\/style>/gi, ' ')
+        .replace(/<noscript[\s\S]*?<\/noscript>/gi, ' ')
+        .replace(/<svg[\s\S]*?<\/svg>/gi, ' ');
+
+    const bodyMatch = withoutScripts.match(/<body[^>]*>([\s\S]*?)<\/body>/i);
+    const target = bodyMatch ? bodyMatch[1] : withoutScripts;
+
+    return stripHtmlTags(target)
+        .replace(/\s+/g, ' ')
+        .trim();
+}
+
+function stripHtmlTags(value) {
+    return String(value || '')
+        .replace(/<[^>]+>/g, ' ')
+        .replace(/&nbsp;/gi, ' ')
+        .replace(/&amp;/gi, '&')
+        .replace(/&lt;/gi, '<')
+        .replace(/&gt;/gi, '>')
+        .replace(/&#39;/gi, "'")
+        .replace(/&quot;/gi, '"')
+        .replace(/\s+/g, ' ')
+        .trim();
 }
