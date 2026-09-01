@@ -416,7 +416,7 @@ const SiteDetailView = ({ site, accessToken, yandexUserId, onBack }) => {
     const displayName = site.unicode_host_url || site.ascii_host_url || 'Unknown';
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-slate-50 to-red-50">
+        <div className="bing-connect-page">
             {/* Header */}
             <div className="bg-white border-b border-gray-100 sticky top-0 z-10">
                 <div className="px-4 sm:px-6 lg:px-8 py-4">
@@ -682,24 +682,24 @@ const SiteDetailView = ({ site, accessToken, yandexUserId, onBack }) => {
 // Yandex Connect Screen Component
 const YandexConnectScreen = ({ onConnect, isLoading }) => {
     return (
-        <div className="min-h-screen bg-gradient-to-br from-slate-50 to-red-50 flex items-center justify-center p-6">
-            <div className="max-w-md w-full">
-                <div className="bg-white rounded-3xl p-8 shadow-xl border border-gray-100">
+        <div className="yandex-connect-wrap">
+            <div className="w-full">
+                <div className="gsc-state yandex-connect-card">
                     <div className="text-center mb-8">
                         {/* Yandex Logo */}
-                        <div className="w-20 h-20 bg-gradient-to-br from-red-500 to-amber-500 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg">
-                            <svg className="w-12 h-12 text-white" viewBox="0 0 24 24" fill="currentColor">
+                        <div className="gsc-state-tile">
+                            <svg className="h-5 w-5" viewBox="0 0 24 24" fill="currentColor">
                                 <path d="M2 12C2 6.477 6.477 2 12 2s10 4.477 10 10-4.477 10-10 10S2 17.523 2 12zm11.5-7h-3v14h2v-6h.5l2.5 6h2.2l-2.7-6.2c1.5-.4 2.5-1.7 2.5-3.3 0-2.5-1.8-4.5-4-4.5zm-1 6V7h1c1.1 0 2 .9 2 2s-.9 2-2 2h-1z" />
                             </svg>
                         </div>
-                        <h1 className="text-2xl font-bold text-gray-900 mb-2">Connect Yandex Webmaster</h1>
-                        <p className="text-gray-500">Analyze your Yandex search performance across all your websites</p>
+                        <h1 className="gsc-state-title font-display">Connect Yandex Webmaster</h1>
+                        <p className="gsc-state-body">Analyze your Yandex search performance across all your websites</p>
                     </div>
 
                     <button
                         onClick={onConnect}
                         disabled={isLoading}
-                        className="w-full flex items-center justify-center gap-3 px-6 py-4 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-xl font-semibold hover:from-red-600 hover:to-red-700 disabled:opacity-50 transition-all cursor-pointer shadow-lg hover:shadow-xl"
+                        className="ui-button ui-button-primary yandex-connect-button"
                     >
                         {isLoading ? (
                             <Loader2 className="w-5 h-5 animate-spin" />
@@ -713,11 +713,9 @@ const YandexConnectScreen = ({ onConnect, isLoading }) => {
                         )}
                     </button>
 
-                    <div className="mt-6 text-center">
-                        <p className="text-sm text-gray-500">
-                            By connecting, you authorize access to your Yandex Webmaster data
-                        </p>
-                    </div>
+                    <p className="yandex-connect-note">
+                        By connecting, you authorize access to your Yandex Webmaster data
+                    </p>
                 </div>
             </div>
         </div>
@@ -1065,8 +1063,9 @@ const YandexBulkAnalysisPage = () => {
     // Loading state
     if (isCheckingAuth) {
         return (
-            <div className="min-h-screen bg-gradient-to-br from-slate-50 to-red-50 flex items-center justify-center">
-                <Loader2 className="w-8 h-8 text-red-500 animate-spin" />
+            <div className="bulk-loading">
+                <Loader2 className="h-7 w-7 animate-spin" />
+                <span>Loading Yandex Webmaster data…</span>
             </div>
         );
     }
@@ -1083,7 +1082,7 @@ const YandexBulkAnalysisPage = () => {
 
     // Main Sites Grid
     return (
-        <div className="min-h-screen bg-gradient-to-br from-slate-50 to-red-50">
+        <div className="bing-connect-page">
             {/* Header */}
             <div className="bg-white border-b border-gray-100">
                 <div className="px-4 sm:px-6 lg:px-8 py-6">
