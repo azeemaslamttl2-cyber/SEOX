@@ -208,42 +208,47 @@ export default function DuplicateChecker() {
 
   return (
     <div className="mx-auto max-w-6xl">
-      <div className="flex justify-center">
-        <div className="duplicate-hero-title rounded-full px-6 py-2.5 shadow-lg">
-          <div className="flex items-center gap-2 text-white">
+      {/* ─── Hero Header ─── */}
+      <div className="duplicate-hero">
+        <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
+          <div className="duplicate-title flex items-center gap-3">
             <Copy className="h-5 w-5" />
-            <span className="font-display text-lg font-bold">Content Duplicate Checker</span>
+            <div>
+              <h1 className="font-display">Content Duplicate Checker</h1>
+              <p className="duplicate-description">
+                Crawl your site and detect repeated sentences, paragraphs, and common text blocks across internal pages.
+              </p>
+            </div>
           </div>
-        </div>
-      </div>
-      <p className="mx-auto mt-3 max-w-lg text-center text-sm text-white/40">
-        Crawl your site and detect repeated sentences, paragraphs, and common text blocks across internal pages.
-      </p>
-
-      <div className="mt-6 rounded-2xl border border-white/[0.06] bg-white/[0.02] p-5">
-        <div className="flex flex-wrap items-center gap-3">
-          <div className="flex min-w-[260px] flex-1 items-center gap-2 rounded-xl border border-white/[0.08] bg-ink-900/80 px-4 py-2.5">
-            <Globe className="h-4 w-4 text-violet-400/60" />
-            <input value={displayUrl} readOnly onKeyDown={(e) => e.key === "Enter" && runScan()} className="flex-1 cursor-not-allowed bg-transparent text-sm text-white placeholder:text-white/25 focus:outline-none" placeholder="Select a website in the nav" />
-          </div>
-          <label className="flex items-center gap-1.5 rounded-lg border border-white/10 bg-ink-900/60 px-3 py-2">
-            <span className="text-[11px] text-white/40">Max Pages:</span>
-            <input type="number" min="2" max="100" value={maxPages} onChange={(e) => setMaxPages(e.target.value)} className="w-16 bg-transparent text-sm font-bold text-white/70 focus:outline-none" />
-          </label>
-          <button onClick={runScan} disabled={isWorking || !hasProject} className="duplicate-primary-button flex items-center gap-2 rounded-xl px-5 py-2.5 text-sm font-bold text-white shadow-lg transition disabled:opacity-60">
+          <button onClick={runScan} disabled={isWorking || !hasProject} className="ui-button ui-button-primary duplicate-scan-button">
             <Search className={`h-4 w-4 ${isWorking ? "animate-pulse" : ""}`} /> {isWorking ? "Scanning..." : "Scan Site"}
           </button>
         </div>
+
+        {/* Target + crawl depth meta row */}
+        <div className="duplicate-meta">
+          <div className="duplicate-url-field">
+            <Globe className="h-4 w-4" />
+            <input value={displayUrl} readOnly onKeyDown={(e) => e.key === "Enter" && runScan()} className="flex-1 cursor-not-allowed" placeholder="Select a website in the nav" />
+          </div>
+          <label className="duplicate-maxpages">
+            <span>Max Pages</span>
+            <input type="number" min="2" max="100" value={maxPages} onChange={(e) => setMaxPages(e.target.value)} />
+          </label>
+        </div>
+
         {isWorking && (
-          <div className="mt-4 rounded-xl border border-violet-500/20 bg-violet-500/10 px-4 py-3">
-            <div className="flex items-center justify-between text-xs text-violet-200">
+          <div className="duplicate-progress">
+            <div className="flex items-center justify-between">
               <span className="capitalize">{phase} {progress.total ? `${progress.current}/${progress.total}` : ""}</span>
-              <StopCircle className="h-3.5 w-3.5 text-violet-300" />
+              <StopCircle className="h-3.5 w-3.5" />
             </div>
-            <p className="mt-1 truncate text-[11px] text-white/35">{progress.currentUrl || "Preparing crawl..."}</p>
+            <p className="duplicate-progress-url truncate">{progress.currentUrl || "Preparing crawl..."}</p>
           </div>
         )}
-        {(error || persistenceError) && <p className="mt-3 text-xs font-semibold text-rose-300">{error || persistenceError}</p>}
+        {(error || persistenceError) && (
+          <div className="app-alert app-alert-error mt-3">{error || persistenceError}</div>
+        )}
       </div>
 
       <div className="mt-5 flex items-center justify-between">
