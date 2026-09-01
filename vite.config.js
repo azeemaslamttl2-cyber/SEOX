@@ -8,11 +8,13 @@ import { onRequest as projectsOnRequest } from "./functions/api/projects.js";
 import { onRequest as projectDetailsOnRequest } from "./functions/api/project-details.js";
 import { onRequest as backlinksAnalyzeOnRequest } from "./functions/api/tech-seo/backlinks/analyze.js";
 import { onRequest as w3cValidateOnRequest } from "./functions/api/tech-seo/w3c/validate.js";
+import { onRequest as adminW3cValidateOnRequest } from "./functions/api/tech-seo/w3c/admin-validation.js";
 import { onRequest as expiredDomainsCheckOnRequest } from "./functions/api/off-page/expired-domains/check.js";
 import { onRequest as backlinkCleanerOnRequest } from "./functions/api/off-page/backlink-cleaner.js";
 import { onRequest as backlinkIndexerOnRequest } from "./functions/api/off-page/backlink-indexer.js";
 import { onRequest as keywordResearchOnRequest } from "./functions/api/keywords/research.js";
 import { onRequest as ubersuggestOnRequest } from "./functions/api/keywords/ubersuggest.js";
+import { onRequest as contentOutlineOnRequest } from "./functions/api/content/outline.js";
 import { onRequestGet as authOnRequestGet, onRequestPost as authOnRequestPost } from "./functions/api/auth.js";
 import fetchUrlMetaHandler from "./functions/_handlers/fetch-url-meta.js";
 import webmasterApiHandler from "./functions/_handlers/webmaster-api.js";
@@ -389,9 +391,11 @@ function w3cValidationApiPlugin() {
     name: "seox-w3c-validation-api",
     configureServer(server) {
       registerW3CValidationMiddleware(server);
+      registerAdminW3CValidationMiddleware(server);
     },
     configurePreviewServer(server) {
       registerW3CValidationMiddleware(server);
+      registerAdminW3CValidationMiddleware(server);
     },
   };
 }
@@ -464,6 +468,18 @@ function authApiPlugin() {
     },
     configurePreviewServer(server) {
       registerAuthMiddleware(server);
+    },
+  };
+}
+
+function contentOutlineApiPlugin() {
+  return {
+    name: "seox-content-outline-api",
+    configureServer(server) {
+      registerContentOutlineMiddleware(server);
+    },
+    configurePreviewServer(server) {
+      registerContentOutlineMiddleware(server);
     },
   };
 }
@@ -621,6 +637,21 @@ function registerW3CValidationMiddleware(server) {
   });
 }
 
+function registerAdminW3CValidationMiddleware(server) {
+  server.middlewares.use("/api/tech-seo/w3c-validation", async (req, res) => {
+    try {
+      const request = await createWebRequest(req, "/api/tech-seo/w3c-validation");
+      const response = await adminW3cValidateOnRequest({ request, env: loadDevApiEnv() });
+      await sendWebResponse(res, response);
+    } catch (error) {
+      sendJson(res, error?.status || 500, {
+        success: false,
+        error: error?.message || "W3C validation request failed.",
+      });
+    }
+  });
+}
+
 function registerExpiredDomainsCheckMiddleware(server) {
   server.middlewares.use("/api/off-page/expired-domains/check", async (req, res) => {
     try {
@@ -707,6 +738,21 @@ function registerAuthMiddleware(server) {
       sendJson(res, error?.status || 500, {
         ok: false,
         error: error?.message || "Authentication request failed",
+      });
+    }
+  });
+}
+
+function registerContentOutlineMiddleware(server) {
+  server.middlewares.use("/api/content/outline", async (req, res) => {
+    try {
+      const request = await createWebRequest(req, "/api/content/outline");
+      const response = await contentOutlineOnRequest({ request, env: loadDevApiEnv() });
+      await sendWebResponse(res, response);
+    } catch (error) {
+      sendJson(res, error?.status || 500, {
+        success: false,
+        message: error?.message || "Outline generation request failed.",
       });
     }
   });
@@ -1095,7 +1141,7 @@ function sendJson(res, status, payload) {
 }
 
 export default defineConfig({
-  plugins: [react(), proxyApiPlugin(), deepseekApiPlugin(), fetchUrlMetaApiPlugin(), pagespeedApiPlugin(), webmasterApiPlugin(), autocompleteApiPlugin(), gscTokenApiPlugin(), projectsApiPlugin(), projectDetailsApiPlugin(), backlinksAnalyzeApiPlugin(), w3cValidationApiPlugin(), expiredDomainsCheckApiPlugin(), backlinkCleanerApiPlugin(), backlinkIndexerApiPlugin(), keywordResearchApiPlugin(), ubersuggestApiPlugin(), authApiPlugin(), crawlerApiPlugin()],
+  plugins: [react(), proxyApiPlugin(), deepseekApiPlugin(), fetchUrlMetaApiPlugin(), pagespeedApiPlugin(), webmasterApiPlugin(), autocompleteApiPlugin(), gscTokenApiPlugin(), projectsApiPlugin(), projectDetailsApiPlugin(), backlinksAnalyzeApiPlugin(), w3cValidationApiPlugin(), expiredDomainsCheckApiPlugin(), backlinkCleanerApiPlugin(), backlinkIndexerApiPlugin(), keywordResearchApiPlugin(), ubersuggestApiPlugin(), authApiPlugin(), contentOutlineApiPlugin(), crawlerApiPlugin()],
   server: {
     port: 3000,
     host: true,

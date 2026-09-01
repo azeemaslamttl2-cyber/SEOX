@@ -2,6 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 
 import {
+  buildW3CApiResult,
   mergeW3CValidationReport,
   normalizeW3CInputUrl,
   summarizeW3CResponse,
@@ -64,4 +65,22 @@ test("mergeW3CValidationReport handles empty or malformed existing data safely",
   assert.deepEqual(mergeW3CValidationReport("bad-data", { status: "warning" }), {
     w3_validation: { status: "warning" },
   });
+});
+
+test("buildW3CApiResult wraps the report in the application JSON response shape", () => {
+  const result = buildW3CApiResult("https://example.com/", {
+    status: "valid",
+    totalErrors: 0,
+    totalWarnings: 0,
+    totalMessages: 0,
+    messages: [],
+    generatedAt: "2026-09-01T00:00:00.000Z",
+  });
+
+  assert.equal(result.success, true);
+  assert.equal(result.data.url, "https://example.com/");
+  assert.equal(result.data.status, "valid");
+  assert.equal(result.data.errors, 0);
+  assert.equal(result.data.warnings, 0);
+  assert.deepEqual(result.data.messages, []);
 });
