@@ -82,33 +82,29 @@ export default function BacklinkCleaner() {
   return (
     <div className="">
       {/* ─── Hero Header ─── */}
-      <div className="relative overflow-hidden rounded-3xl border border-white/[0.06] bg-ink-800">
-        <div className="pointer-events-none absolute inset-0">
-          <div className="absolute -left-20 -top-20 h-60 w-60 rounded-full bg-emerald-500/[0.07] blur-[80px]" />
-          <div className="absolute -bottom-10 right-1/4 h-48 w-48 rounded-full bg-teal-500/[0.05] blur-[60px]" />
-        </div>
-        <div className="relative z-10 flex items-center justify-between p-6">
+      <div className="edf-hero">
+        <div className="flex flex-wrap items-center justify-between gap-4">
           <div className="flex items-center gap-3">
-            <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-emerald-500/20 ring-1 ring-emerald-500/30">
-              <RefreshCw className="h-5 w-5 text-emerald-400" />
-            </div>
+            <span className="edf-tile">
+              <RefreshCw className="h-5 w-5" />
+            </span>
             <div>
-              <h1 className="font-display text-xl font-black text-white">Backlink Cleaner</h1>
-              <p className="text-xs text-white/40">Upload competitor backlinks CSV · Advanced Analysis · AI Categorization</p>
+              <h1 className="edf-title font-display">Backlink Cleaner</h1>
+              <p className="edf-description">Upload competitor backlinks CSV · Advanced Analysis · AI Categorization</p>
             </div>
           </div>
           <div className="flex items-center gap-2">
             <button
               onClick={clearRows}
               disabled={!rows.length}
-              className="flex items-center gap-1.5 rounded-lg border border-white/10 bg-white/[0.04] px-4 py-2 text-xs font-semibold text-white/60 hover:bg-white/[0.07] disabled:cursor-not-allowed disabled:opacity-40"
+              className="ui-button edf-clear-button"
             >
               <Trash2 className="h-3.5 w-3.5" /> Clear
             </button>
             <button
               onClick={() => downloadRows("clean-backlinks.csv", rows.filter((row) => row.issues === "Clean"))}
               disabled={!stats.clean}
-              className="flex items-center gap-1.5 rounded-lg bg-emerald-500 px-4 py-2 text-xs font-bold text-white shadow transition hover:bg-emerald-400 disabled:cursor-not-allowed disabled:opacity-40"
+              className="ui-button ui-button-primary edf-export-primary"
             >
               <Download className="h-3.5 w-3.5" /> Export Clean ({stats.clean})
             </button>
@@ -146,14 +142,14 @@ export default function BacklinkCleaner() {
           <button
             onClick={analyzeRows}
             disabled={!rows.length}
-            className="flex items-center gap-1.5 rounded-lg bg-emerald-500 px-4 py-2 text-xs font-bold text-white shadow transition hover:bg-emerald-400 disabled:cursor-not-allowed disabled:opacity-40"
+            className="ui-button ui-button-primary edf-export-primary"
           >
             <Eye className="h-3.5 w-3.5" /> Extract Title/Meta/Status
           </button>
           <button
             onClick={analyzeRows}
             disabled={!rows.length}
-            className="flex items-center gap-1.5 rounded-lg border border-white/10 bg-white/[0.04] px-4 py-2 text-xs font-semibold text-white/60 hover:bg-white/[0.07] disabled:cursor-not-allowed disabled:opacity-40"
+            className="ui-button edf-clear-button"
           >
             <RefreshCw className="h-3.5 w-3.5" /> Re-analyze
           </button>

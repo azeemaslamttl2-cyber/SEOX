@@ -1,15 +1,6 @@
 import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import {
-  ChevronDown,
-  Eye,
-  Globe2,
-  Hash,
-  MousePointerClick,
-  Percent,
-  RefreshCw,
-  Search,
-} from "lucide-react";
+import { AlertTriangle, ChevronDown, Eye, Globe2, Hash, LogIn, MousePointerClick, Percent, RefreshCw, Search } from "lucide-react";
 import { useGscInsights } from "../../context/GscInsightsContext.jsx";
 
 function formatNum(n) {
@@ -466,24 +457,21 @@ function FilterDropdown({
 
 function FullPageState({ title, body, actionLabel, onAction, error, compact = false }) {
   return (
-    <div
-      className={`rounded-2xl border border-white/10 bg-white/[0.02] px-6 text-center ${
-        compact ? "py-12" : "py-24"
-      }`}
-    >
-      <Globe2 className="mx-auto h-10 w-10 text-white/20" />
-      <h2 className="mt-4 font-display text-lg font-bold text-white">{title}</h2>
-      <p className="mx-auto mt-2 max-w-xl text-sm text-white/50">{body}</p>
+    <div className={`gsc-state ${compact ? "is-compact" : ""}`}>
+      <span className="gsc-state-tile">
+        <Globe2 className="h-5 w-5" />
+      </span>
+      <h2 className="gsc-state-title font-display">{title}</h2>
+      <p className="gsc-state-body">{body}</p>
       {error && (
-        <p className="mx-auto mt-4 max-w-xl rounded-xl border border-amber-500/25 bg-amber-500/10 px-3 py-2 text-sm text-amber-100">
-          {error}
-        </p>
+        <div className="app-alert app-alert-warning gsc-state-alert">
+          <AlertTriangle className="h-4 w-4 flex-shrink-0" />
+          <span>{error}</span>
+        </div>
       )}
       {actionLabel && (
-        <button
-          onClick={onAction}
-          className="ui-button btn-primary mt-5"
-        >
+        <button type="button" onClick={onAction} className="ui-button ui-button-primary gsc-state-action">
+          <LogIn className="h-4 w-4" />
           {actionLabel}
         </button>
       )}

@@ -34,7 +34,8 @@ import {
     Maximize2,
     Star,
     Target
-} from 'lucide-react';
+,
+    Clock} from 'lucide-react';
 import { AreaChart, Area, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, LineChart, Line, ComposedChart, ReferenceLine } from 'recharts';
 import BulkAnalysisToggle from './BulkAnalysisToggle';
 import {
@@ -440,19 +441,19 @@ const GSCConnectScreen = ({ onConnect, isLoading }) => {
     }, []);
 
     return (
-        <div className="min-h-screen bg-stone-950 flex items-center justify-center p-6">
-            <div className="bg-[#0d1117] rounded-2xl shadow-xl border border-white/[0.08] max-w-md w-full p-8 text-center">
-                <div className="w-20 h-20 mx-auto mb-6 bg-gradient-to-br from-brand-500 to-amber-600 rounded-2xl flex items-center justify-center">
-                    <BarChart3 className="w-10 h-10 text-white" />
-                </div>
-                <h1 className="text-2xl font-bold text-white mb-3">Connect Google Search Console</h1>
-                <p className="text-stone-400 mb-8">
+        <div className="gsc-connect-wrap">
+            <div className="gsc-state">
+                <span className="gsc-state-tile">
+                    <BarChart3 className="h-5 w-5" />
+                </span>
+                <h1 className="gsc-state-title font-display">Connect Google Search Console</h1>
+                <p className="gsc-state-body">
                     Link your Google Search Console account to view analytics, impressions, clicks, and rankings for all your websites in one place.
                 </p>
                 <button
                     onClick={onConnect}
                     disabled={isLoading}
-                    className="w-full py-4 px-6 bg-gradient-to-r from-brand-600 to-brand-500 text-white rounded-xl font-semibold hover:from-brand-700 hover:to-brand-600 transition-all shadow-lg shadow-brand-500/20 flex items-center justify-center gap-3 disabled:opacity-50"
+                    className="ui-button ui-button-primary gsc-connect-button"
                 >
                     {isLoading ? (
                         <Loader2 className="w-5 h-5 animate-spin" />
@@ -469,9 +470,10 @@ const GSCConnectScreen = ({ onConnect, isLoading }) => {
                     )}
                 </button>
                 {showTip && (
-                    <p className="mt-4 text-sm text-amber-400 bg-amber-500/10 border border-amber-500/20 rounded-lg px-4 py-2 animate-pulse">
-                        ⏳ Please wait up to 5 seconds before clicking Connect
-                    </p>
+                    <div className="app-alert app-alert-warning gsc-state-alert">
+                        <Clock className="h-4 w-4 flex-shrink-0" />
+                        <span>Please wait up to 5 seconds before clicking Connect</span>
+                    </div>
                 )}
             </div>
         </div>
@@ -2067,8 +2069,9 @@ const BulkAnalysisPage = () => {
     // Loading state
     if (isCheckingAuth) {
         return (
-            <div className="min-h-screen bg-stone-950 flex items-center justify-center">
-                <Loader2 className="w-8 h-8 text-brand-500 animate-spin" />
+            <div className="bulk-loading">
+                <Loader2 className="h-7 w-7 animate-spin" />
+                <span>Loading Search Console data…</span>
             </div>
         );
     }
@@ -2081,7 +2084,7 @@ const BulkAnalysisPage = () => {
     // Show detail view if a site is selected
     if (selectedSite) {
         return (
-            <div className="min-h-screen bg-stone-950 p-6">
+            <div className="bulk-page">
                 <div className="">
                     <SiteDetailView site={selectedSite} getValidAccessToken={getValidAccessToken} onBack={handleBack} />
                 </div>
@@ -2090,7 +2093,7 @@ const BulkAnalysisPage = () => {
     }
 
     return (
-        <div className="min-h-screen bg-stone-950">
+        <div className="bulk-page">
             {/* Header */}
             <div className="bg-[#0d1117] border-b border-white/[0.08] sticky top-0 z-40">
                 <div className="px-6 py-4">

@@ -73,7 +73,7 @@ export default function ContentOptimization() {
   }
 
   return (
-    <div className="content-optimization-workspace mx-auto w-full max-w-[1380px] space-y-5 pb-6">
+    <div className="content-optimization-workspace w-full space-y-5 pb-6">
       {/* Hero Header */}
       <div className="optimization-hero relative overflow-hidden rounded-3xl p-6 sm:p-8 shadow-xl">
         <div className="pointer-events-none absolute inset-0">
