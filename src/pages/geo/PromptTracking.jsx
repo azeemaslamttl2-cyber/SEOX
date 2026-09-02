@@ -107,12 +107,14 @@ const mockResult = {
   ],
 };
 
+/* One model per column, so the hue is data — but the dark-theme values were
+   unreadable on a light surface. Same distinction, legible weights. */
 const llmColors = {
-  chatgpt: { bg: "bg-emerald-500/10", border: "border-emerald-500/20", text: "text-emerald-300", dot: "bg-emerald-400" },
-  gemini: { bg: "bg-blue-500/10", border: "border-blue-500/20", text: "text-blue-300", dot: "bg-blue-400" },
-  claude: { bg: "bg-amber-500/10", border: "border-amber-500/20", text: "text-amber-300", dot: "bg-amber-400" },
-  perplexity: { bg: "bg-violet-500/10", border: "border-violet-500/20", text: "text-violet-300", dot: "bg-violet-400" },
-  grok: { bg: "bg-rose-500/10", border: "border-rose-500/20", text: "text-rose-300", dot: "bg-rose-400" },
+  chatgpt: { bg: "bg-emerald-50", border: "border-emerald-200", text: "text-emerald-700", dot: "bg-emerald-500" },
+  gemini: { bg: "bg-blue-50", border: "border-blue-200", text: "text-blue-700", dot: "bg-blue-500" },
+  claude: { bg: "bg-amber-50", border: "border-amber-200", text: "text-amber-700", dot: "bg-amber-500" },
+  perplexity: { bg: "bg-violet-50", border: "border-violet-200", text: "text-violet-700", dot: "bg-violet-500" },
+  grok: { bg: "bg-rose-50", border: "border-rose-200", text: "text-rose-700", dot: "bg-rose-500" },
 };
 
 export default function PromptTracking() {
@@ -121,47 +123,42 @@ export default function PromptTracking() {
   const [openSections, setOpenSections] = useState({ 0: true, 1: true });
 
   return (
-    <div className="space-y-6">
+    <div className="ctool-page space-y-5">
 
       {/* Hero */}
-      <div className="relative overflow-hidden rounded-3xl border border-white/[0.06] bg-ink-800">
-        <div className="pointer-events-none absolute inset-0">
-          <div className="absolute -right-20 -top-20 h-80 w-80 rounded-full bg-emerald-500/[0.08] blur-[100px]" />
-          <div className="absolute -bottom-10 -left-10 h-60 w-60 rounded-full bg-cyan-500/[0.05] blur-[80px]" />
-          <div className="absolute inset-0 opacity-[0.03]" style={{ backgroundImage: "radial-gradient(circle at 1px 1px, white 1px, transparent 0)", backgroundSize: "24px 24px" }} />
-        </div>
-        <div className="relative z-10 p-6 lg:p-8">
+      <div className="ctool-hero geo-hero">
+        <div className="geo-hero-body">
           <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-500/20 ring-1 ring-emerald-500/30">
-              <Crosshair className="h-5 w-5 text-emerald-400" />
+            <div className="ctool-hero-icon">
+              <Crosshair className="h-5 w-5" />
             </div>
             <div>
-              <h1 className="font-display text-2xl font-black tracking-tight text-white">Prompt Tracking</h1>
-              <p className="text-xs text-white/40">Find and analyze all the prompts that you are ranking for</p>
+              <h1 className="ctool-title font-display">Prompt Tracking</h1>
+              <p className="ctool-help-text">Find and analyze all the prompts that you are ranking for</p>
             </div>
           </div>
 
           {/* Run Analysis */}
-          <div className="mt-6 rounded-2xl border border-white/[0.06] bg-ink-900/60 p-5">
-            <h3 className="text-sm font-bold text-white/70">Run analysis</h3>
-            <p className="mt-1 text-[11px] text-white/35">Project or website URL</p>
+          <div className="geo-well mt-6">
+            <h3 className="stool-title">Run analysis</h3>
+            <p className="ctool-help-text mt-1">Project or website URL</p>
             <div className="mt-3 flex items-center gap-2">
-              <div className="flex flex-1 items-center gap-2 rounded-xl border border-white/[0.08] bg-ink-900/80 px-4 py-2.5">
-                <Globe className="h-4 w-4 text-emerald-400/60" />
+              <div className="ctool-field flex-1">
+                <Globe className="h-4 w-4" />
                 <input
                   value={url} onChange={(e) => setUrl(e.target.value)}
-                  className="flex-1 bg-transparent text-sm text-white placeholder:text-white/25 focus:outline-none"
+                  className="stool-bare-input flex-1"
                   placeholder="https://example.com"
                 />
               </div>
               <button
                 onClick={() => setHasResult(true)}
-                className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-emerald-500 to-cyan-500 px-5 py-2.5 text-sm font-bold text-white shadow-lg shadow-emerald-500/25 transition hover:shadow-emerald-500/40"
+                className="ui-button ui-button-primary"
               >
                 <Search className="h-4 w-4" /> Scrape & predict prompts
               </button>
             </div>
-            <p className="mt-2 text-[11px] text-white/25">No saved projects found. Enter a page URL to analyze any public URL.</p>
+            <p className="ctool-help-text mt-2">No saved projects found. Enter a page URL to analyze any public URL.</p>
           </div>
         </div>
       </div>
@@ -169,33 +166,33 @@ export default function PromptTracking() {
       {hasResult && (
         <>
           {/* History */}
-          <div className="rounded-2xl border border-white/[0.06] bg-white/[0.015] p-5">
+          <div className="ctool-card">
             <div className="flex items-center justify-between">
-              <h2 className="font-display text-lg font-bold text-white/90">History</h2>
-              <button className="flex items-center gap-1.5 text-[12px] font-semibold text-emerald-400 hover:text-emerald-300">
+              <h2 className="geo-section-title font-display">History</h2>
+              <button className="schema-addlink">
                 <RefreshCw className="h-3.5 w-3.5" /> Refresh
               </button>
             </div>
 
-            <div className="mt-4 rounded-xl border border-white/[0.06] bg-ink-900/40 p-4">
+            <div className="geo-well mt-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <div className="text-sm font-semibold text-white/80">{mockResult.url}</div>
-                  <div className="text-[11px] text-white/35">{mockResult.siteName}</div>
+                  <div className="stool-strong">{mockResult.url}</div>
+                  <div className="ctool-help-text">{mockResult.siteName}</div>
                 </div>
-                <div className="flex items-center gap-1.5 text-[11px] text-white/30">
+                <div className="ctool-help-text flex items-center gap-1.5">
                   <Clock className="h-3 w-3" /> {mockResult.analyzedAt}
                 </div>
               </div>
 
               {/* Extracted Keywords */}
               <div className="mt-4">
-                <h4 className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-white/40">
+                <h4 className="stool-label flex items-center gap-1.5">
                   <Tag className="h-3 w-3" /> Extracted Keywords
                 </h4>
                 <div className="mt-2 flex flex-wrap gap-1.5">
                   {mockResult.extractedKeywords.map((kw, i) => (
-                    <span key={i} className="rounded-full border border-emerald-500/20 bg-emerald-500/5 px-2.5 py-1 text-[11px] font-medium text-emerald-300/80">
+                    <span key={i} className="ctool-chip">
                       {kw}
                     </span>
                   ))}
@@ -204,47 +201,47 @@ export default function PromptTracking() {
 
               {/* Page Text Sample */}
               <div className="mt-4">
-                <h4 className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-white/40">
+                <h4 className="stool-label flex items-center gap-1.5">
                   <FileText className="h-3 w-3" /> Page Text Sample (Stored)
                 </h4>
-                <div className="mt-2 max-h-[200px] overflow-y-auto rounded-lg border border-white/[0.04] bg-ink-900/60 p-3">
-                  <pre className="whitespace-pre-wrap text-[12px] leading-relaxed text-white/50 font-sans">{mockResult.pageTextSample}</pre>
+                <div className="geo-well geo-scroll mt-2 max-h-[200px] overflow-y-auto">
+                  <pre className="geo-sample">{mockResult.pageTextSample}</pre>
                 </div>
               </div>
             </div>
           </div>
 
           {/* Prompts by LLM */}
-          <div className="rounded-2xl border border-white/[0.06] bg-white/[0.015] p-5">
-            <div className="flex items-center gap-2 mb-5">
-              <Sparkles className="h-5 w-5 text-emerald-400" />
-              <h2 className="font-display text-lg font-bold text-white/90">Prompts by LLM</h2>
+          <div className="ctool-card">
+            <div className="flex items-center gap-2 mb-4">
+              <Sparkles className="h-5 w-5 ctool-accent" />
+              <h2 className="geo-section-title font-display">Prompts by LLM</h2>
             </div>
-            <p className="text-[12px] text-white/35 -mt-3 mb-5">Example user prompts per topic where this page might be relevant in each model.</p>
+            <p className="ctool-help-text -mt-3 mb-5">Example user prompts per topic where this page might be relevant in each model.</p>
 
             <div className="space-y-5">
               {mockResult.promptsByLlm.map((group, gi) => (
-                <div key={gi} className="rounded-xl border border-white/[0.06] bg-ink-900/30">
+                <div key={gi} className="geo-panel">
                   <button
                     onClick={() => setOpenSections((p) => ({ ...p, [gi]: !p[gi] }))}
-                    className="flex w-full items-center justify-between px-5 py-3 text-left transition hover:bg-white/[0.02]"
+                    className="geo-acc-head"
                   >
-                    <h3 className="text-sm font-bold text-emerald-300">{group.keyword}</h3>
-                    {openSections[gi] ? <ChevronUp className="h-4 w-4 text-white/25" /> : <ChevronDown className="h-4 w-4 text-white/25" />}
+                    <h3 className="geo-acc-title">{group.keyword}</h3>
+                    {openSections[gi] ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
                   </button>
                   {openSections[gi] && (
-                    <div className="grid grid-cols-5 gap-px border-t border-white/[0.04] bg-white/[0.02]">
+                    <div className="geo-llm-grid">
                       {Object.entries(group.prompts).map(([llm, prompts]) => {
                         const c = llmColors[llm];
                         return (
-                          <div key={llm} className="bg-ink-900/80 p-3">
+                          <div key={llm} className="geo-llm-col">
                             <div className="flex items-center gap-1.5 mb-2">
                               <span className={`h-2 w-2 rounded-full ${c.dot}`} />
                               <span className={`text-[11px] font-bold uppercase tracking-wider ${c.text}`}>{llm}</span>
                             </div>
                             <ul className="space-y-1.5">
                               {prompts.map((p, pi) => (
-                                <li key={pi} className="text-[11px] leading-relaxed text-white/50 hover:text-white/70 transition cursor-default">
+                                <li key={pi} className="geo-prompt">
                                   {p}
                                 </li>
                               ))}

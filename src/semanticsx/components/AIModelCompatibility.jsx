@@ -6,12 +6,14 @@ import {
 
 // AI Models configuration
 const AI_MODELS = [
-    { id: 'chatgpt', name: 'ChatGPT', color: 'bg-green-500', bgLight: 'bg-green-50', textColor: 'text-green-600' },
-    { id: 'gemini', name: 'Gemini', color: 'bg-yellow-500', bgLight: 'bg-yellow-50', textColor: 'text-yellow-600' },
-    { id: 'mistral', name: 'Mistral', color: 'bg-purple-500', bgLight: 'bg-purple-50', textColor: 'text-purple-600' },
-    { id: 'cohere', name: 'Cohere', color: 'bg-yellow-500', bgLight: 'bg-yellow-50', textColor: 'text-yellow-600' },
-    { id: 'claude', name: 'Claude', color: 'bg-purple-500', bgLight: 'bg-purple-50', textColor: 'text-purple-600' },
-    { id: 'llama', name: 'Llama', color: 'bg-blue-500', bgLight: 'bg-blue-50', textColor: 'text-blue-600' }
+    /* The six models used three repeated hues as decoration behind an
+       initial, not as data — the name is already on the card. */
+    { id: 'chatgpt', name: 'ChatGPT', color: 'amc-avatar', bgLight: '', textColor: '' },
+    { id: 'gemini', name: 'Gemini', color: 'amc-avatar', bgLight: '', textColor: '' },
+    { id: 'mistral', name: 'Mistral', color: 'amc-avatar', bgLight: '', textColor: '' },
+    { id: 'cohere', name: 'Cohere', color: 'amc-avatar', bgLight: '', textColor: '' },
+    { id: 'claude', name: 'Claude', color: 'amc-avatar', bgLight: '', textColor: '' },
+    { id: 'llama', name: 'Llama', color: 'amc-avatar', bgLight: '', textColor: '' }
 ];
 
 // Compatibility check categories per model - Research-backed criteria
@@ -70,9 +72,9 @@ const AIModelCompatibility = () => {
 
     // Get status badge based on score
     const getStatusBadge = (score) => {
-        if (score >= 61) return { text: 'Good', color: 'bg-green-500' };
-        if (score >= 31) return { text: 'Fair', color: 'bg-yellow-500' };
-        return { text: 'Needs Work', color: 'bg-red-500' };
+        if (score >= 61) return { text: 'Good', color: 'app-badge-success' };
+        if (score >= 31) return { text: 'Fair', color: 'app-badge-warning' };
+        return { text: 'Needs Work', color: 'app-badge-danger' };
     };
 
     // Analyze URL
@@ -297,53 +299,53 @@ Return JSON format:
     };
 
     return (
-        <div className="bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900 pb-12">
+        <div className="ctool-page space-y-5">
             {/* Hero Section */}
-            <div className="relative overflow-hidden">
-                <div className="px-6 py-16">
-                    <div className="grid lg:grid-cols-2 gap-12 items-center">
-                        {/* Left - Info */}
-                        <div>
-                            <div className="flex items-center gap-2 mb-4">
-                                <span className="px-3 py-1 bg-blue-500/20 border border-blue-500/30 rounded-full text-blue-300 text-xs font-medium">
-                                    ✕ AI COMPATIBILITY ANALYSIS
-                                </span>
-                            </div>
-                            <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">
-                                AI Model Compatibility
-                            </h1>
-                            <p className="text-lg text-gray-300 mb-6">
-                                Analyze your website's compatibility with major AI models including ChatGPT, Claude, Gemini,
-                                and Perplexity. Check content structure, accessibility, meta data optimization, and receive
-                                actionable recommendations to improve your site's AI model performance and understanding.
-                            </p>
-                            <div className="flex flex-wrap gap-2">
-                                <span className="px-3 py-1.5 bg-green-500 text-white text-sm font-medium rounded-lg">OpenAI</span>
-                                <span className="px-3 py-1.5 bg-purple-500 text-white text-sm font-medium rounded-lg">Claude</span>
-                                <span className="px-3 py-1.5 bg-yellow-500 text-white text-sm font-medium rounded-lg">Gemini</span>
-                                <span className="px-3 py-1.5 bg-orange-500 text-white text-sm font-medium rounded-lg">Perplexity</span>
-                            </div>
+            <div className="ctool-hero">
+                <div className="ctool-hero-row">
+                    <span className="ctool-hero-icon">
+                        <Sparkles className="w-5 h-5" />
+                    </span>
+                    <div className="min-w-0">
+                        <div className="flex items-center gap-2 mb-1">
+                            <span className="app-badge app-badge-brand">AI COMPATIBILITY ANALYSIS</span>
                         </div>
+                        <h1 className="ctool-title font-display">AI Model Compatibility</h1>
+                        <p className="ctool-subtitle">
+                            Analyze your website&apos;s compatibility with major AI models including ChatGPT, Claude, Gemini,
+                            and Perplexity. Check content structure, accessibility, meta data optimization, and receive
+                            actionable recommendations to improve your site&apos;s AI model performance and understanding.
+                        </p>
+                    </div>
+                </div>
+                <div className="amc-models">
+                    {['OpenAI', 'Claude', 'Gemini', 'Perplexity'].map((m) => (
+                        <span key={m} className="ctool-chip">{m}</span>
+                    ))}
+                </div>
+            </div>
 
-                        {/* Right - Input Card */}
-                        <div className="bg-white rounded-2xl shadow-2xl p-6">
-                            <h3 className="font-semibold text-gray-900 mb-1">Check URL Compatibility</h3>
-                            <p className="text-sm text-gray-500 mb-4">Enter URL to Analyze</p>
+            <div className="ctool-card">
+                <div>
+                    <div>
+                        <div>
+                            <h3 className="schema-card-title mb-1">Check URL Compatibility</h3>
+                            <p className="ctool-help-text mb-4">Enter URL to Analyze</p>
 
                             <input
                                 type="text"
                                 value={url}
                                 onChange={(e) => setUrl(e.target.value)}
                                 placeholder="Type to search your URLs..."
-                                className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition mb-2"
+                                className="schema-input schema-input-lg mb-2"
                             />
 
-                            <p className="text-xs text-gray-400 mb-4">
+                            <p className="ctool-help-text mb-4">
                                 Enter a URL from your website to analyze compatibility with major AI models like ChatGPT, Claude, Gemini, and Perplexity.
                             </p>
 
                             {error && (
-                                <div className="flex items-center gap-2 text-red-600 text-sm bg-red-50 px-4 py-3 rounded-lg mb-4">
+                                <div className="app-alert app-alert-error mb-4">
                                     <AlertCircle className="w-4 h-4" />
                                     {error}
                                 </div>
@@ -352,7 +354,7 @@ Return JSON format:
                             <button
                                 onClick={handleAnalyze}
                                 disabled={isAnalyzing || !url.trim()}
-                                className="w-full py-3.5 bg-purple-600 hover:bg-purple-700 disabled:bg-gray-300 text-white rounded-xl font-semibold transition-all flex items-center justify-center gap-2"
+                                className="ui-button ui-button-primary w-full"
                             >
                                 {isAnalyzing ? (
                                     <>
@@ -373,83 +375,83 @@ Return JSON format:
 
             {/* Info Section - Only show when no results */}
             {!results && (
-                <div className="px-6">
+                <div className="space-y-5">
                     {/* AI Models We Analyze */}
-                    <div className="mb-12">
-                        <h2 className="text-2xl font-bold text-white mb-6 flex items-center gap-3">
-                            <BarChart3 className="w-6 h-6 text-purple-400" />
+                    <div className="ctool-card">
+                        <h2 className="geo-section-title font-display mb-4 flex items-center gap-3">
+                            <BarChart3 className="w-5 h-5 ctool-accent" />
                             AI Models We Analyze
                         </h2>
-                        <div className="grid md:grid-cols-3 lg:grid-cols-6 gap-4">
+                        <div className="amc-model-grid">
                             {AI_MODELS.map(model => (
-                                <div key={model.id} className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/20 text-center hover:bg-white/15 transition">
-                                    <div className={`w-12 h-12 ${model.color} rounded-full flex items-center justify-center mx-auto mb-3`}>
-                                        <span className="text-white font-bold text-lg">{model.name.charAt(0)}</span>
+                                <div key={model.id} className="amc-bot-card text-center">
+                                    <div className="amc-avatar amc-avatar-lg mx-auto mb-3">
+                                        {model.name.charAt(0)}
                                     </div>
-                                    <h4 className="font-semibold text-white">{model.name}</h4>
-                                    <p className="text-xs text-gray-400 mt-1">5 research-backed checks</p>
+                                    <h4 className="amc-bot-title">{model.name}</h4>
+                                    <p className="amc-bot-desc mt-1">5 research-backed checks</p>
                                 </div>
                             ))}
                         </div>
                     </div>
 
                     {/* What We Analyze - Research-backed */}
-                    <div className="mb-12">
-                        <h2 className="text-2xl font-bold text-white mb-6 flex items-center gap-3">
-                            <Settings className="w-6 h-6 text-blue-400" />
+                    <div className="ctool-card">
+                        <h2 className="geo-section-title font-display mb-4 flex items-center gap-3">
+                            <Settings className="w-5 h-5 ctool-accent" />
                             What We Analyze (Research-Backed Criteria)
                         </h2>
-                        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
-                            <div className="bg-white/10 backdrop-blur-sm rounded-xl p-5 border border-white/20">
-                                <div className="w-10 h-10 bg-green-500/20 rounded-lg flex items-center justify-center mb-3">
-                                    <CheckCircle className="w-5 h-5 text-green-400" />
+                        <div className="amc-bot-grid">
+                            <div className="amc-bot-card">
+                                <div className="amc-bot-tile mb-3">
+                                    <CheckCircle className="w-5 h-5" />
                                 </div>
-                                <h4 className="font-semibold text-white mb-2">E-E-A-T Signals</h4>
-                                <p className="text-sm text-gray-400">Experience, Expertise, Authoritativeness, and Trustworthiness markers that AI models prioritize for reliable information.</p>
+                                <h4 className="amc-bot-title">E-E-A-T Signals</h4>
+                                <p className="amc-bot-desc">Experience, Expertise, Authoritativeness, and Trustworthiness markers that AI models prioritize for reliable information.</p>
                             </div>
-                            <div className="bg-white/10 backdrop-blur-sm rounded-xl p-5 border border-white/20">
-                                <div className="w-10 h-10 bg-blue-500/20 rounded-lg flex items-center justify-center mb-3">
-                                    <Globe className="w-5 h-5 text-blue-400" />
+                            <div className="amc-bot-card">
+                                <div className="amc-bot-tile mb-3">
+                                    <Globe className="w-5 h-5" />
                                 </div>
-                                <h4 className="font-semibold text-white mb-2">Semantic Structure</h4>
-                                <p className="text-sm text-gray-400">Content hierarchy, heading structure, FAQ sections, and bullet points that help AI parse and understand content.</p>
+                                <h4 className="amc-bot-title">Semantic Structure</h4>
+                                <p className="amc-bot-desc">Content hierarchy, heading structure, FAQ sections, and bullet points that help AI parse and understand content.</p>
                             </div>
-                            <div className="bg-white/10 backdrop-blur-sm rounded-xl p-5 border border-white/20">
-                                <div className="w-10 h-10 bg-purple-500/20 rounded-lg flex items-center justify-center mb-3">
-                                    <Settings className="w-5 h-5 text-purple-400" />
+                            <div className="amc-bot-card">
+                                <div className="amc-bot-tile mb-3">
+                                    <Settings className="w-5 h-5" />
                                 </div>
-                                <h4 className="font-semibold text-white mb-2">Safety & Ethics</h4>
-                                <p className="text-sm text-gray-400">Content moderation compliance, ethical standards, and harm prevention that AI safety systems evaluate.</p>
+                                <h4 className="amc-bot-title">Safety & Ethics</h4>
+                                <p className="amc-bot-desc">Content moderation compliance, ethical standards, and harm prevention that AI safety systems evaluate.</p>
                             </div>
-                            <div className="bg-white/10 backdrop-blur-sm rounded-xl p-5 border border-white/20">
-                                <div className="w-10 h-10 bg-yellow-500/20 rounded-lg flex items-center justify-center mb-3">
-                                    <Sparkles className="w-5 h-5 text-yellow-400" />
+                            <div className="amc-bot-card">
+                                <div className="amc-bot-tile mb-3">
+                                    <Sparkles className="w-5 h-5" />
                                 </div>
-                                <h4 className="font-semibold text-white mb-2">Embedding Quality</h4>
-                                <p className="text-sm text-gray-400">Vectorization suitability, semantic clarity, and document chunking for AI retrieval and similarity matching.</p>
+                                <h4 className="amc-bot-title">Embedding Quality</h4>
+                                <p className="amc-bot-desc">Vectorization suitability, semantic clarity, and document chunking for AI retrieval and similarity matching.</p>
                             </div>
                         </div>
                     </div>
 
                     {/* Why AI Compatibility Matters - Research-backed */}
-                    <div className="bg-white/5 backdrop-blur-sm rounded-2xl border border-white/10 p-8">
-                        <h2 className="text-2xl font-bold text-white mb-4">Why AI Compatibility Matters</h2>
-                        <div className="grid md:grid-cols-3 gap-6">
-                            <div>
-                                <h4 className="font-semibold text-purple-400 mb-2">🔍 AI Search Visibility</h4>
-                                <p className="text-sm text-gray-400">
+                    <div className="ctool-card">
+                        <h2 className="geo-section-title font-display mb-4">Why AI Compatibility Matters</h2>
+                        <div className="grid gap-4 md:grid-cols-3">
+                            <div className="amc-bot-card">
+                                <h4 className="amc-bot-title">AI Search Visibility</h4>
+                                <p className="amc-bot-desc">
                                     LLMs semantically process language to understand meaning and context. Well-structured content with E-E-A-T signals ranks higher in AI-powered search results.
                                 </p>
                             </div>
-                            <div>
-                                <h4 className="font-semibold text-blue-400 mb-2">📚 Training Data Inclusion</h4>
-                                <p className="text-sm text-gray-400">
+                            <div className="amc-bot-card">
+                                <h4 className="amc-bot-title">Training Data Inclusion</h4>
+                                <p className="amc-bot-desc">
                                     AI models like Llama filter training data based on quality, safety, and structure. Content meeting these criteria has higher inclusion probability.
                                 </p>
                             </div>
-                            <div>
-                                <h4 className="font-semibold text-green-400 mb-2">💬 Conversational AI Answers</h4>
-                                <p className="text-sm text-gray-400">
+                            <div className="amc-bot-card">
+                                <h4 className="amc-bot-title">Conversational AI Answers</h4>
+                                <p className="amc-bot-desc">
                                     ChatGPT, Claude, and Gemini prioritize clear, factual content with proper citations when generating answers. Optimized content appears more frequently.
                                 </p>
                             </div>
@@ -460,7 +462,7 @@ Return JSON format:
 
             {/* Results Section */}
             {results && (
-                <div className="px-6">
+                <div>
                     {/* Overall Score Card */}
                     <div className="bg-white rounded-2xl shadow-xl p-8 mb-8">
                         <div className="flex items-center gap-6">
@@ -485,12 +487,12 @@ Return JSON format:
 
                             <div className="flex-1">
                                 <div className="flex items-center gap-2 mb-1">
-                                    <BarChart3 className="w-5 h-5 text-gray-400" />
+                                    <BarChart3 className="w-5 h-5 text-content-muted" />
                                     <h2 className="text-xl font-bold text-gray-900">Analysis Complete</h2>
                                 </div>
-                                <p className="text-blue-600 text-sm mb-2">{results.url}</p>
+                                <p className="ctool-help-text mb-2">{results.url}</p>
                                 <p className="text-gray-500 text-sm">Overall compatibility score across all AI models</p>
-                                <span className={`inline-block mt-2 px-3 py-1 ${getStatusBadge(getOverallScore()).color} text-white text-xs font-medium rounded-full`}>
+                                <span className={`app-badge ${getStatusBadge(getOverallScore()).color} mt-2`}>
                                     {getStatusBadge(getOverallScore()).text}
                                 </span>
                             </div>
@@ -511,22 +513,22 @@ Return JSON format:
 
                                 return (
                                     <div key={model.id} className="bg-white rounded-xl shadow-lg p-6">
-                                        <h4 className="font-semibold text-gray-900 mb-3">{model.name}</h4>
+                                        <h4 className="amc-bot-name mb-3">{model.name}</h4>
                                         <div className="text-4xl font-bold mb-2" style={{ color: score >= 61 ? '#22c55e' : score >= 31 ? '#eab308' : '#ef4444' }}>
                                             {score}%
                                         </div>
-                                        <span className={`inline-block px-2.5 py-1 ${status.color} text-white text-xs font-medium rounded-full mb-4`}>
+                                        <span className={`app-badge ${status.color} mb-4`}>
                                             {status.text}
                                         </span>
                                         <div className="w-full h-2 bg-gray-100 rounded-full overflow-hidden mb-3">
                                             <div
-                                                className={`h-full rounded-full ${score >= 61 ? 'bg-green-500' : score >= 31 ? 'bg-yellow-500' : 'bg-red-500'}`}
+                                                className={`amc-bar ${score >= 61 ? 'is-good' : score >= 31 ? 'is-fair' : 'is-poor'}`}
                                                 style={{ width: `${score}%` }}
                                             />
                                         </div>
                                         <button
                                             onClick={() => toggleModel(model.id)}
-                                            className="flex items-center gap-1 text-sm text-purple-600 hover:text-purple-700"
+                                            className="schema-addlink"
                                         >
                                             <Settings className="w-4 h-4" />
                                             View Details
@@ -540,62 +542,62 @@ Return JSON format:
                     {/* Detailed Compatibility Checks */}
                     <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
                         <div className="p-6 border-b border-gray-100 flex items-center justify-between">
-                            <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-                                <Settings className="w-5 h-5 text-purple-600" />
+                            <h3 className="text-lg amc-bot-name flex items-center gap-2">
+                                <Settings className="w-5 h-5 ctool-accent" />
                                 Detailed Compatibility Checks
                             </h3>
                             <div className="flex gap-1">
                                 <button
                                     onClick={() => setFilter('all')}
-                                    className={`px-3 py-1.5 text-sm font-medium rounded-lg transition ${filter === 'all' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}
+                                    className={`ui-button ctool-pill ${filter === 'all' ? 'active' : ''}`}
                                 >
                                     All
                                 </button>
                                 <button
                                     onClick={() => setFilter('passed')}
-                                    className={`px-3 py-1.5 text-sm font-medium rounded-lg transition ${filter === 'passed' ? 'bg-green-600 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}
+                                    className={`ui-button ctool-pill ${filter === 'passed' ? 'active' : ''}`}
                                 >
                                     Passed
                                 </button>
                                 <button
                                     onClick={() => setFilter('failed')}
-                                    className={`px-3 py-1.5 text-sm font-medium rounded-lg transition ${filter === 'failed' ? 'bg-red-600 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}
+                                    className={`ui-button ctool-pill ${filter === 'failed' ? 'active' : ''}`}
                                 >
                                     Failed
                                 </button>
                             </div>
                         </div>
 
-                        <div className="divide-y divide-gray-100">
+                        <div className="amc-acc">
                             {AI_MODELS.map(model => {
                                 const counts = getCheckCounts(model.id);
                                 const filteredChecks = getFilteredChecks(model.id);
                                 const isExpanded = expandedModels[model.id] !== false; // Default expanded
 
                                 return (
-                                    <div key={model.id} className="p-6">
+                                    <div key={model.id} className="amc-acc-item">
                                         <button
                                             onClick={() => toggleModel(model.id)}
-                                            className="w-full flex items-center justify-between mb-4"
+                                            className="amc-acc-head"
                                         >
                                             <div className="flex items-center gap-3">
-                                                <div className={`w-8 h-8 ${model.color} rounded-full flex items-center justify-center text-white text-xs font-bold`}>
+                                                <div className="amc-avatar">
                                                     {model.name.substring(0, 2).toUpperCase()}
                                                 </div>
-                                                <span className="font-semibold text-gray-900">{model.name} Analysis</span>
+                                                <span className="amc-bot-name">{model.name} Analysis</span>
                                             </div>
-                                            {isExpanded ? <ChevronUp className="w-5 h-5 text-gray-400" /> : <ChevronDown className="w-5 h-5 text-gray-400" />}
+                                            {isExpanded ? <ChevronUp className="w-5 h-5 text-content-muted" /> : <ChevronDown className="w-5 h-5 text-content-muted" />}
                                         </button>
 
                                         {isExpanded && (
                                             <>
                                                 {/* Passed/Failed Summary */}
                                                 <div className="grid grid-cols-2 gap-4 mb-6">
-                                                    <div className="bg-green-50 rounded-xl p-4 text-center border border-green-100">
-                                                        <div className="text-3xl font-bold text-green-600">{counts.passed}</div>
-                                                        <div className="text-sm text-green-600">Passed</div>
+                                                    <div className="amc-tally is-pass">
+                                                        <div className="amc-count is-pass">{counts.passed}</div>
+                                                        <div className="amc-count-label is-pass">Passed</div>
                                                     </div>
-                                                    <div className="bg-red-50 rounded-xl p-4 text-center border border-red-100">
+                                                    <div className="amc-tally is-fail">
                                                         <div className="text-3xl font-bold text-red-600">{counts.failed}</div>
                                                         <div className="text-sm text-red-600">Failed</div>
                                                     </div>
@@ -610,16 +612,16 @@ Return JSON format:
                                                         return (
                                                             <div
                                                                 key={cat.id}
-                                                                className={`p-4 rounded-xl border-l-4 ${isPassed ? 'bg-green-50 border-green-500' : 'bg-red-50 border-red-500'}`}
+                                                                className={`amc-check ${isPassed ? 'is-pass' : 'is-fail'}`}
                                                             >
                                                                 <div className="flex items-start gap-3">
                                                                     {isPassed ? (
-                                                                        <CheckCircle className="w-5 h-5 text-green-600 mt-0.5 flex-shrink-0" />
+                                                                        <CheckCircle className="w-5 h-5 amc-icon-pass mt-0.5 flex-shrink-0" />
                                                                     ) : (
                                                                         <XCircle className="w-5 h-5 text-red-600 mt-0.5 flex-shrink-0" />
                                                                     )}
                                                                     <div>
-                                                                        <h5 className="font-semibold text-gray-900">{cat.name}</h5>
+                                                                        <h5 className="amc-bot-name">{cat.name}</h5>
                                                                         <p className="text-sm text-gray-600 mt-1">{check?.reason || cat.description}</p>
                                                                     </div>
                                                                 </div>

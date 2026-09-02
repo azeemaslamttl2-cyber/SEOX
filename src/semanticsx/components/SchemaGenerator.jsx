@@ -916,27 +916,20 @@ Key points about Dubai's alcohol regulations:
 
     // Reusable Quick Fill Section component - Enhanced Design
     const renderQuickFillSection = (schemaType) => (
-        <div className="mb-6 rounded-2xl overflow-hidden border border-white/[0.08] shadow-xl bg-[#0d1117]">
+        <div className="schema-quickfill mb-6">
             {/* Gradient Header with Tabs */}
-            <div className="p-4" style={{ background: 'linear-gradient(to right, #b45309, #d97706, #f59e0b)', minHeight: '60px' }}>
+            <div className="schema-quickfill-head">
                 <div className="flex items-center gap-3">
                     <button
                         onClick={() => setQuickFillTab('url')}
-                        className={`px-4 py-2 rounded-lg text-sm font-semibold flex items-center gap-2 transition-all ${quickFillTab === 'url'
-                            ? 'bg-white/20 text-white shadow-lg backdrop-blur-sm'
-                            : 'bg-white/10 text-white/70 hover:bg-white/20 border border-white/20'
-                            }`}
+                        className={`ui-button ctool-seg-btn ${quickFillTab === 'url' ? 'active' : ''}`}
                     >
                         <Globe className="w-4 h-4" />
                         URL
                     </button>
                     <button
                         onClick={() => setQuickFillTab('text')}
-                        className={`px-4 py-2 rounded-lg text-sm font-semibold flex items-center gap-2 transition-all ${quickFillTab === 'text'
-                            ? 'bg-white/20 text-white shadow-lg backdrop-blur-sm'
-                            : 'hover:opacity-80'
-                            }`}
-                        style={quickFillTab !== 'text' ? { backgroundColor: 'rgba(255,255,255,0.1)', color: '#ffffff' } : { backgroundColor: 'rgba(255,255,255,0.2)', color: '#ffffff' }}
+                        className={`ui-button ctool-seg-btn ${quickFillTab === 'text' ? 'active' : ''}`}
                     >
                         <FileText className="w-4 h-4" />
                         Text
@@ -944,7 +937,7 @@ Key points about Dubai's alcohol regulations:
                     <div className="flex-1"></div>
                     <button
                         onClick={() => fillExampleData(schemaType)}
-                        className="px-4 py-2 text-sm font-semibold bg-brand-500/15 text-brand-300 rounded-lg hover:bg-brand-500/25 flex items-center gap-2 transition-all"
+                        className="ui-button ctool-tool-btn"
                     >
                         <Wand2 className="w-4 h-4" />
                         Fill Example
@@ -953,57 +946,55 @@ Key points about Dubai's alcohol regulations:
             </div>
 
             {/* Content Area */}
-            <div className="p-6">
+            <div className="schema-quickfill-body">
                 {quickFillTab === 'url' ? (
                     <div className="space-y-4">
                         <div className="flex items-center justify-between">
-                            <h3 className="text-sm font-semibold text-white/60 flex items-center gap-2">
-                                <Globe className="w-4 h-4 text-brand-400" />
+                            <h3 className="schema-card-title flex items-center gap-2">
+                                <Globe className="w-4 h-4 ctool-accent" />
                                 Source URL
                             </h3>
                         </div>
                         <div className="flex gap-3">
                             <div className="flex-1 relative">
-                                <Globe className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30" />
+                                <Globe className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 sres-search-icon" />
                                 <input
                                     type="url"
                                     value={importUrl}
                                     onChange={(e) => setImportUrl(e.target.value)}
                                     placeholder="https://example.com/article"
-                                    className="w-full pl-11 pr-4 py-3.5 text-sm border border-white/[0.08] rounded-xl focus:ring-2 focus:ring-purple-500/20 focus:border-purple-400 bg-white/[0.03]/50"
+                                    className="schema-input schema-input-lg pl-11"
                                 />
                             </div>
                             <button
                                 onClick={() => importFromUrl(schemaType)}
                                 disabled={!importUrl.trim() || isImporting}
-                                className="px-6 py-3.5 text-sm font-semibold rounded-xl flex items-center gap-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed text-white shadow-lg hover:shadow-xl hover:scale-[1.02]"
-                                style={{ background: 'linear-gradient(to right, #7c3aed, #ec4899)' }}
+                                className="ui-button ui-button-primary"
                             >
                                 {isImporting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
                                 Extract
                             </button>
                         </div>
-                        <p className="text-xs text-white/30">
+                        <p className="schema-hint">
                             AI will automatically extract relevant information from the URL and fill the form fields.
                         </p>
                     </div>
                 ) : (
                     <div className="space-y-4">
-                        <h3 className="text-sm font-semibold text-white/60 flex items-center gap-2">
-                            <FileText className="w-4 h-4 text-brand-400" />
+                        <h3 className="schema-card-title flex items-center gap-2">
+                            <FileText className="w-4 h-4 ctool-accent" />
                             Paste Content
                         </h3>
                         <textarea
                             value={importText}
                             onChange={(e) => setImportText(e.target.value)}
                             placeholder="Paste your article content here to extract entities..."
-                            className="w-full p-4 border border-white/[0.08] rounded-xl h-40 text-sm focus:ring-2 focus:ring-purple-500/20 focus:border-purple-400 bg-white/[0.03]/50 resize-none"
+                            className="schema-input h-40 resize-none"
                         />
                         <button
                             onClick={() => importFromText(schemaType)}
                             disabled={!importText.trim() || isImporting}
-                            className="w-full py-3.5 text-sm font-semibold rounded-xl flex items-center justify-center gap-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed text-white shadow-lg hover:shadow-xl hover:scale-[1.01]"
-                            style={{ background: 'linear-gradient(to right, #7c3aed, #ec4899)' }}
+                            className="ui-button ui-button-primary w-full"
                         >
                             {isImporting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
                             Extract Entities
@@ -2361,7 +2352,7 @@ Return ONLY valid JSON-LD, no markdown or explanation.`
         <div className="space-y-4">
             {renderQuickFillSection('entity', 'from-brand-500/[0.04] to-transparent', 'border-white/[0.08]')}
             <div>
-                <label className="block text-sm font-semibold text-white/60 mb-2">
+                <label className="schema-label">
                     Article URL (Canonical) *
                 </label>
                 <input
@@ -2369,12 +2360,12 @@ Return ONLY valid JSON-LD, no markdown or explanation.`
                     value={articleUrl}
                     onChange={(e) => setArticleUrl(e.target.value)}
                     placeholder="https://example.com/your-article"
-                    className="w-full px-4 py-3 border border-white/[0.08] rounded-xl bg-[#010409] text-white/70 placeholder:text-white/20 focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500/40 text-sm"
+                    className="schema-input schema-input-lg"
                 />
-                <p className="text-xs text-white/30 mt-1">The canonical URL of your article (domain is extracted automatically)</p>
+                <p className="schema-hint">The canonical URL of your article (domain is extracted automatically)</p>
             </div>
             <div>
-                <label className="block text-sm font-semibold text-white/60 mb-2">
+                <label className="schema-label">
                     Article Description
                 </label>
                 <input
@@ -2382,12 +2373,12 @@ Return ONLY valid JSON-LD, no markdown or explanation.`
                     value={articleDescription}
                     onChange={(e) => setArticleDescription(e.target.value)}
                     placeholder="Brief description of your article for rich results"
-                    className="w-full px-4 py-3 border border-white/[0.08] rounded-xl bg-[#010409] text-white/70 placeholder:text-white/20 focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500/40 text-sm"
+                    className="schema-input schema-input-lg"
                 />
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                    <label className="block text-sm font-semibold text-white/60 mb-2">
+                    <label className="schema-label">
                         Featured Image URL
                     </label>
                     <input
@@ -2395,11 +2386,11 @@ Return ONLY valid JSON-LD, no markdown or explanation.`
                         value={articleImage}
                         onChange={(e) => setArticleImage(e.target.value)}
                         placeholder="https://example.com/image.jpg"
-                        className="w-full px-4 py-3 border border-white/[0.08] rounded-xl bg-[#010409] text-white/70 placeholder:text-white/20 focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500/40 text-sm"
+                        className="schema-input schema-input-lg"
                     />
                 </div>
                 <div>
-                    <label className="block text-sm font-semibold text-white/60 mb-2">
+                    <label className="schema-label">
                         Logo URL
                     </label>
                     <input
@@ -2407,13 +2398,13 @@ Return ONLY valid JSON-LD, no markdown or explanation.`
                         value={entityLogoUrl}
                         onChange={(e) => setEntityLogoUrl(e.target.value)}
                         placeholder="https://example.com/logo.png"
-                        className="w-full px-4 py-3 border border-white/[0.08] rounded-xl bg-[#010409] text-white/70 placeholder:text-white/20 focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500/40 text-sm"
+                        className="schema-input schema-input-lg"
                     />
                 </div>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
-                    <label className="block text-sm font-semibold text-white/60 mb-2">
+                    <label className="schema-label">
                         Author Page URL
                     </label>
                     <input
@@ -2421,29 +2412,29 @@ Return ONLY valid JSON-LD, no markdown or explanation.`
                         value={entityAuthorUrl}
                         onChange={(e) => setEntityAuthorUrl(e.target.value)}
                         placeholder="https://example.com/about"
-                        className="w-full px-4 py-3 border border-white/[0.08] rounded-xl bg-[#010409] text-white/70 placeholder:text-white/20 focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500/40 text-sm"
+                        className="schema-input schema-input-lg"
                     />
                 </div>
                 <div>
-                    <label className="block text-sm font-semibold text-white/60 mb-2">
+                    <label className="schema-label">
                         Date Published
                     </label>
                     <input
                         type="date"
                         value={entityDatePublished}
                         onChange={(e) => setEntityDatePublished(e.target.value)}
-                        className="w-full px-4 py-3 border border-white/[0.08] rounded-xl bg-[#010409] text-white/70 placeholder:text-white/20 focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500/40 text-sm"
+                        className="schema-input schema-input-lg"
                     />
                 </div>
                 <div>
-                    <label className="block text-sm font-semibold text-white/60 mb-2">
+                    <label className="schema-label">
                         Date Modified
                     </label>
                     <input
                         type="date"
                         value={entityDateModified}
                         onChange={(e) => setEntityDateModified(e.target.value)}
-                        className="w-full px-4 py-3 border border-white/[0.08] rounded-xl bg-[#010409] text-white/70 placeholder:text-white/20 focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500/40 text-sm"
+                        className="schema-input schema-input-lg"
                     />
                 </div>
             </div>
@@ -2452,7 +2443,7 @@ Return ONLY valid JSON-LD, no markdown or explanation.`
                 <p className="text-xs font-semibold text-brand-300 mb-3">⭐ Advanced EEAT (Optional)</p>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                        <label className="block text-sm font-semibold text-white/60 mb-2">
+                        <label className="schema-label">
                             Author Name
                         </label>
                         <input
@@ -2460,12 +2451,12 @@ Return ONLY valid JSON-LD, no markdown or explanation.`
                             value={entityAuthorName}
                             onChange={(e) => setEntityAuthorName(e.target.value)}
                             placeholder="John Smith"
-                            className="w-full px-4 py-3 border border-white/[0.08] rounded-xl bg-[#010409] text-white/70 placeholder:text-white/20 focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500/40 text-sm"
+                            className="schema-input schema-input-lg"
                         />
-                        <p className="text-xs text-white/30 mt-1">Creates Person author (stronger EEAT)</p>
+                        <p className="schema-hint">Creates Person author (stronger EEAT)</p>
                     </div>
                     <div>
-                        <label className="block text-sm font-semibold text-white/60 mb-2">
+                        <label className="schema-label">
                             Author Job Title
                         </label>
                         <input
@@ -2473,12 +2464,12 @@ Return ONLY valid JSON-LD, no markdown or explanation.`
                             value={entityAuthorJobTitle}
                             onChange={(e) => setEntityAuthorJobTitle(e.target.value)}
                             placeholder="Senior Construction Engineer"
-                            className="w-full px-4 py-3 border border-white/[0.08] rounded-xl bg-[#010409] text-white/70 placeholder:text-white/20 focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500/40 text-sm"
+                            className="schema-input schema-input-lg"
                         />
                     </div>
                 </div>
                 <div className="mt-4">
-                    <label className="block text-sm font-semibold text-white/60 mb-2">
+                    <label className="schema-label">
                         Social Links (comma-separated)
                     </label>
                     <input
@@ -2486,32 +2477,32 @@ Return ONLY valid JSON-LD, no markdown or explanation.`
                         value={entitySocialLinks}
                         onChange={(e) => setEntitySocialLinks(e.target.value)}
                         placeholder="https://linkedin.com/company/yourco, https://facebook.com/yourpage"
-                        className="w-full px-4 py-3 border border-white/[0.08] rounded-xl bg-[#010409] text-white/70 placeholder:text-white/20 focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500/40 text-sm"
+                        className="schema-input schema-input-lg"
                     />
-                    <p className="text-xs text-white/30 mt-1">Added to Organization sameAs for social proof</p>
+                    <p className="schema-hint">Added to Organization sameAs for social proof</p>
                 </div>
             </div>
             <div>
-                <label className="block text-sm font-semibold text-white/60 mb-2">
+                <label className="schema-label">
                     Paste Article Content
                 </label>
                 <textarea
                     value={entityArticle}
                     onChange={(e) => setEntityArticle(e.target.value)}
                     placeholder="Paste your article content here. AI will extract entities (people, organizations, places, concepts) and link them to authoritative sources like Wikipedia and Wikidata..."
-                    className="w-full h-48 p-4 border border-white/[0.08] rounded-xl bg-[#010409] text-white/70 placeholder:text-white/20 focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500/40 text-sm"
+                    className="schema-input h-48"
                 />
             </div>
             {/* Warning Banner */}
-            <div className="bg-amber-500/10 border border-white/[0.08] rounded-xl p-3 flex items-start gap-2">
-                <span className="text-amber-500 text-lg">⚠️</span>
-                <p className="text-xs text-amber-700">
+            <div className="schema-note flex items-start gap-2">
+                <span className="schema-note-text">⚠️</span>
+                <p className="schema-note-text">
                     <strong>Important:</strong> Always test the generated schema in{' '}
                     <a
                         href="https://validator.schema.org/"
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="text-amber-300 underline hover:text-amber-900"
+                        className="schema-note-link"
                     >
                         validator.schema.org
                     </a>
@@ -2521,7 +2512,7 @@ Return ONLY valid JSON-LD, no markdown or explanation.`
             <button
                 onClick={generateEntitySchema}
                 disabled={!entityArticle.trim() || isGenerating}
-                className="w-full py-3 bg-gradient-to-r from-brand-500 to-amber-600 text-white rounded-xl font-semibold disabled:opacity-50 flex items-center justify-center gap-2"
+                className="ui-button ui-button-primary w-full"
             >
                 {isGenerating ? <Loader2 className="w-5 h-5 animate-spin" /> : <Sparkles className="w-5 h-5" />}
                 {isGenerating ? 'Generating Entity Schema...' : 'Generate Entity Schema'}
@@ -2534,59 +2525,59 @@ Return ONLY valid JSON-LD, no markdown or explanation.`
             {renderQuickFillSection('localBusiness', 'from-brand-500/[0.04] to-transparent', 'border-white/[0.08]')}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                    <label className="block text-sm font-semibold text-white/60 mb-2">Business Name *</label>
+                    <label className="schema-label">Business Name *</label>
                     <input
                         type="text"
                         value={businessName}
                         onChange={(e) => setBusinessName(e.target.value)}
                         placeholder="e.g., Joe's Pizza"
-                        className="w-full px-4 py-3 border border-white/[0.08] rounded-xl focus:ring-2 focus:ring-blue-500/30"
+                        className="schema-input schema-input-lg"
                     />
                 </div>
                 <div>
-                    <label className="block text-sm font-semibold text-white/60 mb-2">Phone</label>
+                    <label className="schema-label">Phone</label>
                     <input
                         type="tel"
                         value={businessPhone}
                         onChange={(e) => setBusinessPhone(e.target.value)}
                         placeholder="+1 (555) 123-4567"
-                        className="w-full px-4 py-3 border border-white/[0.08] rounded-xl focus:ring-2 focus:ring-blue-500/30"
+                        className="schema-input schema-input-lg"
                     />
                 </div>
             </div>
             <div>
-                <label className="block text-sm font-semibold text-white/60 mb-2">Full Address</label>
+                <label className="schema-label">Full Address</label>
                 <input
                     type="text"
                     value={businessAddress}
                     onChange={(e) => setBusinessAddress(e.target.value)}
                     placeholder="123 Main St, New York, NY 10001, USA"
-                    className="w-full px-4 py-3 border border-white/[0.08] rounded-xl focus:ring-2 focus:ring-blue-500/30"
+                    className="schema-input schema-input-lg"
                 />
             </div>
             <div>
-                <label className="block text-sm font-semibold text-white/60 mb-2">Website URL</label>
+                <label className="schema-label">Website URL</label>
                 <input
                     type="url"
                     value={businessWebsite}
                     onChange={(e) => setBusinessWebsite(e.target.value)}
                     placeholder="https://www.example.com"
-                    className="w-full px-4 py-3 border border-white/[0.08] rounded-xl focus:ring-2 focus:ring-blue-500/30"
+                    className="schema-input schema-input-lg"
                 />
             </div>
             <div>
-                <label className="block text-sm font-semibold text-white/60 mb-2">Business Description</label>
+                <label className="schema-label">Business Description</label>
                 <textarea
                     value={businessDescription}
                     onChange={(e) => setBusinessDescription(e.target.value)}
                     placeholder="Describe what your business does..."
-                    className="w-full h-24 p-4 border border-white/[0.08] rounded-xl focus:ring-2 focus:ring-blue-500/30"
+                    className="schema-input h-24"
                 />
             </div>
             <button
                 onClick={generateLocalBusinessSchema}
                 disabled={!businessName.trim() || isGenerating}
-                className="w-full py-3 bg-gradient-to-r from-brand-500 to-amber-600 text-white rounded-xl font-semibold disabled:opacity-50 flex items-center justify-center gap-2"
+                className="ui-button ui-button-primary w-full"
             >
                 {isGenerating ? <Loader2 className="w-5 h-5 animate-spin" /> : <Building2 className="w-5 h-5" />}
                 {isGenerating ? 'Generating Schema...' : 'Generate with AI'}
@@ -2600,7 +2591,7 @@ Return ONLY valid JSON-LD, no markdown or explanation.`
             <div className="space-y-3">
                 {breadcrumbItems.map((item, idx) => (
                     <div key={idx} className="flex gap-3 items-center">
-                        <span className="w-8 h-8 bg-green-100 text-green-700 rounded-lg flex items-center justify-center text-sm font-bold">{idx + 1}</span>
+                        <span className="schema-index">{idx + 1}</span>
                         <input
                             type="text"
                             value={item.name}
@@ -2610,7 +2601,7 @@ Return ONLY valid JSON-LD, no markdown or explanation.`
                                 setBreadcrumbItems(newItems);
                             }}
                             placeholder="Page Name"
-                            className="flex-1 px-4 py-2.5 border border-white/[0.08] rounded-lg"
+                            className="schema-input flex-1"
                         />
                         <input
                             type="url"
@@ -2621,12 +2612,12 @@ Return ONLY valid JSON-LD, no markdown or explanation.`
                                 setBreadcrumbItems(newItems);
                             }}
                             placeholder="URL (optional for last item)"
-                            className="flex-1 px-4 py-2.5 border border-white/[0.08] rounded-lg"
+                            className="schema-input flex-1"
                         />
                         {breadcrumbItems.length > 1 && (
                             <button
                                 onClick={() => setBreadcrumbItems(breadcrumbItems.filter((_, i) => i !== idx))}
-                                className="p-2 text-red-500 hover:bg-red-500/10 rounded-lg"
+                                className="ui-button schema-remove"
                             >
                                 <Trash2 className="w-4 h-4" />
                             </button>
@@ -2636,13 +2627,13 @@ Return ONLY valid JSON-LD, no markdown or explanation.`
             </div>
             <button
                 onClick={() => setBreadcrumbItems([...breadcrumbItems, { name: '', url: '' }])}
-                className="flex items-center gap-2 text-green-600 font-medium"
+                className="schema-addlink"
             >
                 <Plus className="w-4 h-4" /> Add Breadcrumb Item
             </button>
             <button
                 onClick={generateBreadcrumbSchema}
-                className="w-full py-3 bg-gradient-to-r from-brand-500 to-amber-600 text-white rounded-xl font-semibold flex items-center justify-center gap-2"
+                className="ui-button ui-button-primary w-full"
             >
                 <List className="w-5 h-5" />
                 Generate Breadcrumb Schema
@@ -2665,7 +2656,7 @@ Return ONLY valid JSON-LD, no markdown or explanation.`
                                 setNavItems(newItems);
                             }}
                             placeholder="Menu Item Name"
-                            className="flex-1 px-4 py-2.5 border border-white/[0.08] rounded-lg"
+                            className="schema-input flex-1"
                         />
                         <input
                             type="url"
@@ -2676,12 +2667,12 @@ Return ONLY valid JSON-LD, no markdown or explanation.`
                                 setNavItems(newItems);
                             }}
                             placeholder="URL"
-                            className="flex-1 px-4 py-2.5 border border-white/[0.08] rounded-lg"
+                            className="schema-input flex-1"
                         />
                         {navItems.length > 1 && (
                             <button
                                 onClick={() => setNavItems(navItems.filter((_, i) => i !== idx))}
-                                className="p-2 text-red-500 hover:bg-red-500/10 rounded-lg"
+                                className="ui-button schema-remove"
                             >
                                 <Trash2 className="w-4 h-4" />
                             </button>
@@ -2691,13 +2682,13 @@ Return ONLY valid JSON-LD, no markdown or explanation.`
             </div>
             <button
                 onClick={() => setNavItems([...navItems, { name: '', url: '' }])}
-                className="flex items-center gap-2 text-amber-400 font-medium"
+                className="schema-note-title flex items-center gap-2"
             >
                 <Plus className="w-4 h-4" /> Add Navigation Item
             </button>
             <button
                 onClick={generateNavigationSchema}
-                className="w-full py-3 bg-gradient-to-r from-brand-500 to-amber-600 text-white rounded-xl font-semibold flex items-center justify-center gap-2"
+                className="ui-button ui-button-primary w-full"
             >
                 <Navigation className="w-5 h-5" />
                 Generate Navigation Schema
@@ -2712,11 +2703,11 @@ Return ONLY valid JSON-LD, no markdown or explanation.`
                 {faqItems.map((item, idx) => (
                     <div key={idx} className="p-4 bg-pink-50 rounded-xl border border-white/[0.08]">
                         <div className="flex justify-between items-start mb-3">
-                            <span className="text-sm font-bold text-pink-700">Q{idx + 1}</span>
+                            <span className="schema-index-label">Q{idx + 1}</span>
                             {faqItems.length > 1 && (
                                 <button
                                     onClick={() => setFaqItems(faqItems.filter((_, i) => i !== idx))}
-                                    className="p-1 text-red-500 hover:bg-red-100 rounded"
+                                    className="ui-button schema-remove"
                                 >
                                     <Trash2 className="w-4 h-4" />
                                 </button>
@@ -2748,13 +2739,13 @@ Return ONLY valid JSON-LD, no markdown or explanation.`
             </div>
             <button
                 onClick={() => setFaqItems([...faqItems, { question: '', answer: '' }])}
-                className="flex items-center gap-2 text-pink-600 font-medium"
+                className="schema-addlink"
             >
                 <Plus className="w-4 h-4" /> Add FAQ Item
             </button>
             <button
                 onClick={generateFAQSchema}
-                className="w-full py-3 bg-gradient-to-r from-brand-500 to-amber-600 text-white rounded-xl font-semibold flex items-center justify-center gap-2"
+                className="ui-button ui-button-primary w-full"
             >
                 <HelpCircle className="w-5 h-5" />
                 Generate FAQ Schema
@@ -2766,80 +2757,80 @@ Return ONLY valid JSON-LD, no markdown or explanation.`
         <div className="space-y-4">
             {renderQuickFillSection('article', 'from-brand-500/[0.04] to-transparent', 'border-white/[0.08]')}
             <div>
-                <label className="block text-sm font-semibold text-white/60 mb-2">Article Title *</label>
+                <label className="schema-label">Article Title *</label>
                 <input
                     type="text"
                     value={articleTitle}
                     onChange={(e) => setArticleTitle(e.target.value)}
                     placeholder="The Complete Guide to SEO"
-                    className="w-full px-4 py-3 border border-white/[0.08] rounded-xl"
+                    className="schema-input schema-input-lg"
                 />
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                    <label className="block text-sm font-semibold text-white/60 mb-2">Author Name</label>
+                    <label className="schema-label">Author Name</label>
                     <input
                         type="text"
                         value={articleAuthor}
                         onChange={(e) => setArticleAuthor(e.target.value)}
                         placeholder="John Doe"
-                        className="w-full px-4 py-3 border border-white/[0.08] rounded-xl"
+                        className="schema-input schema-input-lg"
                     />
                 </div>
                 <div>
-                    <label className="block text-sm font-semibold text-white/60 mb-2">Article URL</label>
+                    <label className="schema-label">Article URL</label>
                     <input
                         type="url"
                         value={articleUrl}
                         onChange={(e) => setArticleUrl(e.target.value)}
                         placeholder="https://example.com/article"
-                        className="w-full px-4 py-3 border border-white/[0.08] rounded-xl"
+                        className="schema-input schema-input-lg"
                     />
                 </div>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                    <label className="block text-sm font-semibold text-white/60 mb-2">Date Published</label>
+                    <label className="schema-label">Date Published</label>
                     <input
                         type="date"
                         value={articleDatePublished}
                         onChange={(e) => setArticleDatePublished(e.target.value)}
-                        className="w-full px-4 py-3 border border-white/[0.08] rounded-xl"
+                        className="schema-input schema-input-lg"
                     />
                 </div>
                 <div>
-                    <label className="block text-sm font-semibold text-white/60 mb-2">Date Modified</label>
+                    <label className="schema-label">Date Modified</label>
                     <input
                         type="date"
                         value={articleDateModified}
                         onChange={(e) => setArticleDateModified(e.target.value)}
-                        className="w-full px-4 py-3 border border-white/[0.08] rounded-xl"
+                        className="schema-input schema-input-lg"
                     />
                 </div>
             </div>
             <div>
-                <label className="block text-sm font-semibold text-white/60 mb-2">Featured Image URL</label>
+                <label className="schema-label">Featured Image URL</label>
                 <input
                     type="url"
                     value={articleImage}
                     onChange={(e) => setArticleImage(e.target.value)}
                     placeholder="https://example.com/image.jpg"
-                    className="w-full px-4 py-3 border border-white/[0.08] rounded-xl"
+                    className="schema-input schema-input-lg"
                 />
             </div>
             <div>
-                <label className="block text-sm font-semibold text-white/60 mb-2">Description</label>
+                <label className="schema-label">Description</label>
                 <textarea
                     value={articleDescription}
                     onChange={(e) => setArticleDescription(e.target.value)}
                     placeholder="Brief description of the article..."
-                    className="w-full h-20 p-4 border border-white/[0.08] rounded-xl"
+                    className="schema-input h-20"
                 />
             </div>
             <button
                 onClick={generateArticleSchema}
                 disabled={!articleTitle.trim()}
-                className="w-full py-3 bg-gradient-to-r from-brand-500 to-amber-600 text-white rounded-xl font-semibold disabled:opacity-50 flex items-center justify-center gap-2"
+                className="ui-button ui-button-primary w-full"
             >
                 <FileText className="w-5 h-5" />
                 Generate Article Schema
@@ -2852,43 +2843,43 @@ Return ONLY valid JSON-LD, no markdown or explanation.`
             {renderQuickFillSection('product', 'from-brand-500/[0.04] to-transparent', 'border-white/[0.08]')}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                    <label className="block text-sm font-semibold text-white/60 mb-2">Product Name *</label>
+                    <label className="schema-label">Product Name *</label>
                     <input
                         type="text"
                         value={productName}
                         onChange={(e) => setProductName(e.target.value)}
                         placeholder="iPhone 15 Pro"
-                        className="w-full px-4 py-3 border border-white/[0.08] rounded-xl"
+                        className="schema-input schema-input-lg"
                     />
                 </div>
                 <div>
-                    <label className="block text-sm font-semibold text-white/60 mb-2">Brand</label>
+                    <label className="schema-label">Brand</label>
                     <input
                         type="text"
                         value={productBrand}
                         onChange={(e) => setProductBrand(e.target.value)}
                         placeholder="Apple"
-                        className="w-full px-4 py-3 border border-white/[0.08] rounded-xl"
+                        className="schema-input schema-input-lg"
                     />
                 </div>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
-                    <label className="block text-sm font-semibold text-white/60 mb-2">Price</label>
+                    <label className="schema-label">Price</label>
                     <input
                         type="number"
                         value={productPrice}
                         onChange={(e) => setProductPrice(e.target.value)}
                         placeholder="999.00"
-                        className="w-full px-4 py-3 border border-white/[0.08] rounded-xl"
+                        className="schema-input schema-input-lg"
                     />
                 </div>
                 <div>
-                    <label className="block text-sm font-semibold text-white/60 mb-2">Currency</label>
+                    <label className="schema-label">Currency</label>
                     <select
                         value={productCurrency}
                         onChange={(e) => setProductCurrency(e.target.value)}
-                        className="w-full px-4 py-3 border border-white/[0.08] rounded-xl bg-white"
+                        className="schema-input schema-input-lg bg-white"
                     >
                         <option value="USD">USD</option>
                         <option value="EUR">EUR</option>
@@ -2897,11 +2888,11 @@ Return ONLY valid JSON-LD, no markdown or explanation.`
                     </select>
                 </div>
                 <div>
-                    <label className="block text-sm font-semibold text-white/60 mb-2">Availability</label>
+                    <label className="schema-label">Availability</label>
                     <select
                         value={productAvailability}
                         onChange={(e) => setProductAvailability(e.target.value)}
-                        className="w-full px-4 py-3 border border-white/[0.08] rounded-xl bg-white"
+                        className="schema-input schema-input-lg bg-white"
                     >
                         <option value="InStock">In Stock</option>
                         <option value="OutOfStock">Out of Stock</option>
@@ -2911,28 +2902,28 @@ Return ONLY valid JSON-LD, no markdown or explanation.`
                 </div>
             </div>
             <div>
-                <label className="block text-sm font-semibold text-white/60 mb-2">Product Image URL</label>
+                <label className="schema-label">Product Image URL</label>
                 <input
                     type="url"
                     value={productImage}
                     onChange={(e) => setProductImage(e.target.value)}
                     placeholder="https://example.com/product.jpg"
-                    className="w-full px-4 py-3 border border-white/[0.08] rounded-xl"
+                    className="schema-input schema-input-lg"
                 />
             </div>
             <div>
-                <label className="block text-sm font-semibold text-white/60 mb-2">Description</label>
+                <label className="schema-label">Description</label>
                 <textarea
                     value={productDescription}
                     onChange={(e) => setProductDescription(e.target.value)}
                     placeholder="Product description..."
-                    className="w-full h-20 p-4 border border-white/[0.08] rounded-xl"
+                    className="schema-input h-20"
                 />
             </div>
             <button
                 onClick={generateProductSchema}
                 disabled={!productName.trim()}
-                className="w-full py-3 bg-gradient-to-r from-brand-500 to-amber-600 text-white rounded-xl font-semibold disabled:opacity-50 flex items-center justify-center gap-2"
+                className="ui-button ui-button-primary w-full"
             >
                 <ShoppingBag className="w-5 h-5" />
                 Generate Product Schema
@@ -2945,47 +2936,47 @@ Return ONLY valid JSON-LD, no markdown or explanation.`
             {renderQuickFillSection('organization', 'from-slate-50 to-gray-100', 'border-white/[0.08]')}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                    <label className="block text-sm font-semibold text-white/60 mb-2">Organization Name *</label>
+                    <label className="schema-label">Organization Name *</label>
                     <input
                         type="text"
                         value={orgName}
                         onChange={(e) => setOrgName(e.target.value)}
                         placeholder="Acme Corporation"
-                        className="w-full px-4 py-3 border border-white/[0.08] rounded-xl"
+                        className="schema-input schema-input-lg"
                     />
                 </div>
                 <div>
-                    <label className="block text-sm font-semibold text-white/60 mb-2">Website URL</label>
+                    <label className="schema-label">Website URL</label>
                     <input
                         type="url"
                         value={orgUrl}
                         onChange={(e) => setOrgUrl(e.target.value)}
                         placeholder="https://acme.com"
-                        className="w-full px-4 py-3 border border-white/[0.08] rounded-xl"
+                        className="schema-input schema-input-lg"
                     />
                 </div>
             </div>
             <div>
-                <label className="block text-sm font-semibold text-white/60 mb-2">Logo URL</label>
+                <label className="schema-label">Logo URL</label>
                 <input
                     type="url"
                     value={orgLogo}
                     onChange={(e) => setOrgLogo(e.target.value)}
                     placeholder="https://acme.com/logo.png"
-                    className="w-full px-4 py-3 border border-white/[0.08] rounded-xl"
+                    className="schema-input schema-input-lg"
                 />
             </div>
             <div>
-                <label className="block text-sm font-semibold text-white/60 mb-2">Description</label>
+                <label className="schema-label">Description</label>
                 <textarea
                     value={orgDescription}
                     onChange={(e) => setOrgDescription(e.target.value)}
                     placeholder="Organization description..."
-                    className="w-full h-20 p-4 border border-white/[0.08] rounded-xl"
+                    className="schema-input h-20"
                 />
             </div>
             <div>
-                <label className="block text-sm font-semibold text-white/60 mb-2">Social Profiles (sameAs)</label>
+                <label className="schema-label">Social Profiles (sameAs)</label>
                 {orgSameAs.map((url, idx) => (
                     <div key={idx} className="flex gap-2 mb-2">
                         <input
@@ -2997,12 +2988,12 @@ Return ONLY valid JSON-LD, no markdown or explanation.`
                                 setOrgSameAs(newUrls);
                             }}
                             placeholder="https://linkedin.com/company/..."
-                            className="flex-1 px-4 py-2.5 border border-white/[0.08] rounded-lg"
+                            className="schema-input flex-1"
                         />
                         {orgSameAs.length > 1 && (
                             <button
                                 onClick={() => setOrgSameAs(orgSameAs.filter((_, i) => i !== idx))}
-                                className="p-2 text-red-500"
+                                className="ui-button schema-remove"
                             >
                                 <Trash2 className="w-4 h-4" />
                             </button>
@@ -3011,7 +3002,7 @@ Return ONLY valid JSON-LD, no markdown or explanation.`
                 ))}
                 <button
                     onClick={() => setOrgSameAs([...orgSameAs, ''])}
-                    className="flex items-center gap-2 text-white/50 text-sm"
+                    className="schema-addlink"
                 >
                     <Plus className="w-4 h-4" /> Add Social Profile
                 </button>
@@ -3019,7 +3010,7 @@ Return ONLY valid JSON-LD, no markdown or explanation.`
             <button
                 onClick={generateOrganizationSchema}
                 disabled={!orgName.trim()}
-                className="w-full py-3 bg-gradient-to-r from-brand-500 to-amber-600 text-white rounded-xl font-semibold disabled:opacity-50 flex items-center justify-center gap-2"
+                className="ui-button ui-button-primary w-full"
             >
                 <Building className="w-5 h-5" />
                 Generate Organization Schema
@@ -3032,50 +3023,50 @@ Return ONLY valid JSON-LD, no markdown or explanation.`
             {renderQuickFillSection('person', 'from-brand-500/[0.04] to-transparent', 'border-white/[0.08]')}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                    <label className="block text-sm font-semibold text-white/60 mb-2">Full Name *</label>
+                    <label className="schema-label">Full Name *</label>
                     <input
                         type="text"
                         value={personName}
                         onChange={(e) => setPersonName(e.target.value)}
                         placeholder="John Doe"
-                        className="w-full px-4 py-3 border border-white/[0.08] rounded-xl"
+                        className="schema-input schema-input-lg"
                     />
                 </div>
                 <div>
-                    <label className="block text-sm font-semibold text-white/60 mb-2">Job Title</label>
+                    <label className="schema-label">Job Title</label>
                     <input
                         type="text"
                         value={personJobTitle}
                         onChange={(e) => setPersonJobTitle(e.target.value)}
                         placeholder="SEO Specialist"
-                        className="w-full px-4 py-3 border border-white/[0.08] rounded-xl"
+                        className="schema-input schema-input-lg"
                     />
                 </div>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                    <label className="block text-sm font-semibold text-white/60 mb-2">Profile URL</label>
+                    <label className="schema-label">Profile URL</label>
                     <input
                         type="url"
                         value={personUrl}
                         onChange={(e) => setPersonUrl(e.target.value)}
                         placeholder="https://example.com/about"
-                        className="w-full px-4 py-3 border border-white/[0.08] rounded-xl"
+                        className="schema-input schema-input-lg"
                     />
                 </div>
                 <div>
-                    <label className="block text-sm font-semibold text-white/60 mb-2">Photo URL</label>
+                    <label className="schema-label">Photo URL</label>
                     <input
                         type="url"
                         value={personImage}
                         onChange={(e) => setPersonImage(e.target.value)}
                         placeholder="https://example.com/photo.jpg"
-                        className="w-full px-4 py-3 border border-white/[0.08] rounded-xl"
+                        className="schema-input schema-input-lg"
                     />
                 </div>
             </div>
             <div>
-                <label className="block text-sm font-semibold text-white/60 mb-2">Social Profiles (sameAs)</label>
+                <label className="schema-label">Social Profiles (sameAs)</label>
                 {personSameAs.map((url, idx) => (
                     <div key={idx} className="flex gap-2 mb-2">
                         <input
@@ -3087,12 +3078,12 @@ Return ONLY valid JSON-LD, no markdown or explanation.`
                                 setPersonSameAs(newUrls);
                             }}
                             placeholder="https://linkedin.com/in/..."
-                            className="flex-1 px-4 py-2.5 border border-white/[0.08] rounded-lg"
+                            className="schema-input flex-1"
                         />
                         {personSameAs.length > 1 && (
                             <button
                                 onClick={() => setPersonSameAs(personSameAs.filter((_, i) => i !== idx))}
-                                className="p-2 text-red-500"
+                                className="ui-button schema-remove"
                             >
                                 <Trash2 className="w-4 h-4" />
                             </button>
@@ -3101,7 +3092,7 @@ Return ONLY valid JSON-LD, no markdown or explanation.`
                 ))}
                 <button
                     onClick={() => setPersonSameAs([...personSameAs, ''])}
-                    className="flex items-center gap-2 text-violet-600 text-sm"
+                    className="schema-addlink"
                 >
                     <Plus className="w-4 h-4" /> Add Social Profile
                 </button>
@@ -3109,7 +3100,7 @@ Return ONLY valid JSON-LD, no markdown or explanation.`
             <button
                 onClick={generatePersonSchema}
                 disabled={!personName.trim()}
-                className="w-full py-3 bg-gradient-to-r from-brand-500 to-amber-600 text-white rounded-xl font-semibold disabled:opacity-50 flex items-center justify-center gap-2"
+                className="ui-button ui-button-primary w-full"
             >
                 <User className="w-5 h-5" />
                 Generate Person Schema
@@ -3122,19 +3113,19 @@ Return ONLY valid JSON-LD, no markdown or explanation.`
         <div className="space-y-4">
             {renderQuickFillSection('itemList', 'from-brand-500/[0.04] to-transparent', 'border-white/[0.08]')}
             <div>
-                <label className="block text-sm font-semibold text-white/60 mb-2">List Title (Optional)</label>
+                <label className="schema-label">List Title (Optional)</label>
                 <input
                     type="text"
                     value={listName}
                     onChange={(e) => setListName(e.target.value)}
                     placeholder="e.g., Top 10 SEO Tools"
-                    className="w-full px-4 py-3 border border-white/[0.08] rounded-xl"
+                    className="schema-input schema-input-lg"
                 />
             </div>
             <div className="space-y-3">
                 {listItems.map((item, idx) => (
                     <div key={idx} className="flex gap-3 items-center">
-                        <span className="w-8 h-8 bg-sky-100 text-sky-700 rounded-lg flex items-center justify-center text-sm font-bold">{idx + 1}</span>
+                        <span className="schema-index">{idx + 1}</span>
                         <input
                             type="text"
                             value={item.name}
@@ -3144,7 +3135,7 @@ Return ONLY valid JSON-LD, no markdown or explanation.`
                                 setListItems(newItems);
                             }}
                             placeholder="Item Name"
-                            className="flex-1 px-4 py-2.5 border border-white/[0.08] rounded-lg"
+                            className="schema-input flex-1"
                         />
                         <input
                             type="url"
@@ -3155,12 +3146,12 @@ Return ONLY valid JSON-LD, no markdown or explanation.`
                                 setListItems(newItems);
                             }}
                             placeholder="URL (optional)"
-                            className="flex-1 px-4 py-2.5 border border-white/[0.08] rounded-lg"
+                            className="schema-input flex-1"
                         />
                         {listItems.length > 1 && (
                             <button
                                 onClick={() => setListItems(listItems.filter((_, i) => i !== idx))}
-                                className="p-2 text-red-500 hover:bg-red-500/10 rounded-lg"
+                                className="ui-button schema-remove"
                             >
                                 <Trash2 className="w-4 h-4" />
                             </button>
@@ -3170,13 +3161,13 @@ Return ONLY valid JSON-LD, no markdown or explanation.`
             </div>
             <button
                 onClick={() => setListItems([...listItems, { name: '', url: '', position: listItems.length + 1 }])}
-                className="flex items-center gap-2 text-sky-600 font-medium"
+                className="schema-addlink"
             >
                 <Plus className="w-4 h-4" /> Add List Item
             </button>
             <button
                 onClick={generateItemListSchema}
-                className="w-full py-3 bg-gradient-to-r from-brand-500 to-amber-600 text-white rounded-xl font-semibold flex items-center justify-center gap-2"
+                className="ui-button ui-button-primary w-full"
             >
                 <LayoutList className="w-5 h-5" />
                 Generate List Schema
@@ -3189,27 +3180,27 @@ Return ONLY valid JSON-LD, no markdown or explanation.`
         <div className="space-y-4">
             {renderQuickFillSection('aboutPage', 'from-brand-500/[0.04] to-transparent', 'border-white/[0.08]')}
             <div>
-                <label className="block text-sm font-semibold text-white/60 mb-2">Organization Name *</label>
+                <label className="schema-label">Organization Name *</label>
                 <input
                     type="text"
                     value={aboutOrgName}
                     onChange={(e) => setAboutOrgName(e.target.value)}
                     placeholder="Your Company Name"
-                    className="w-full px-4 py-3 border border-white/[0.08] rounded-xl"
+                    className="schema-input schema-input-lg"
                 />
             </div>
             <div>
-                <label className="block text-sm font-semibold text-white/60 mb-2">About Page URL</label>
+                <label className="schema-label">About Page URL</label>
                 <input
                     type="url"
                     value={aboutUrl}
                     onChange={(e) => setAboutUrl(e.target.value)}
                     placeholder="https://example.com/about"
-                    className="w-full px-4 py-3 border border-white/[0.08] rounded-xl"
+                    className="schema-input schema-input-lg"
                 />
             </div>
             <div>
-                <label className="block text-sm font-semibold text-white/60 mb-2">Description</label>
+                <label className="schema-label">Description</label>
                 <textarea
                     value={aboutDescription}
                     onChange={(e) => setAboutDescription(e.target.value)}
@@ -3219,27 +3210,27 @@ Return ONLY valid JSON-LD, no markdown or explanation.`
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                    <label className="block text-sm font-semibold text-white/60 mb-2">Founding Date</label>
+                    <label className="schema-label">Founding Date</label>
                     <input
                         type="date"
                         value={aboutFoundingDate}
                         onChange={(e) => setAboutFoundingDate(e.target.value)}
-                        className="w-full px-4 py-3 border border-white/[0.08] rounded-xl"
+                        className="schema-input schema-input-lg"
                     />
                 </div>
                 <div>
-                    <label className="block text-sm font-semibold text-white/60 mb-2">Image URL</label>
+                    <label className="schema-label">Image URL</label>
                     <input
                         type="url"
                         value={aboutImage}
                         onChange={(e) => setAboutImage(e.target.value)}
                         placeholder="https://example.com/team.jpg"
-                        className="w-full px-4 py-3 border border-white/[0.08] rounded-xl"
+                        className="schema-input schema-input-lg"
                     />
                 </div>
             </div>
             <div>
-                <label className="block text-sm font-semibold text-white/60 mb-2">Founders</label>
+                <label className="schema-label">Founders</label>
                 {aboutFounders.map((founder, idx) => (
                     <div key={idx} className="flex gap-2 mb-2">
                         <input
@@ -3251,12 +3242,12 @@ Return ONLY valid JSON-LD, no markdown or explanation.`
                                 setAboutFounders(newFounders);
                             }}
                             placeholder="Founder Name"
-                            className="flex-1 px-4 py-2.5 border border-white/[0.08] rounded-lg"
+                            className="schema-input flex-1"
                         />
                         {aboutFounders.length > 1 && (
                             <button
                                 onClick={() => setAboutFounders(aboutFounders.filter((_, i) => i !== idx))}
-                                className="p-2 text-red-500"
+                                className="ui-button schema-remove"
                             >
                                 <Trash2 className="w-4 h-4" />
                             </button>
@@ -3265,7 +3256,7 @@ Return ONLY valid JSON-LD, no markdown or explanation.`
                 ))}
                 <button
                     onClick={() => setAboutFounders([...aboutFounders, ''])}
-                    className="flex items-center gap-2 text-emerald-600 text-sm"
+                    className="schema-note-link"
                 >
                     <Plus className="w-4 h-4" /> Add Founder
                 </button>
@@ -3273,7 +3264,7 @@ Return ONLY valid JSON-LD, no markdown or explanation.`
             <button
                 onClick={generateAboutPageSchema}
                 disabled={!aboutOrgName.trim()}
-                className="w-full py-3 bg-gradient-to-r from-brand-500 to-amber-600 text-white rounded-xl font-semibold disabled:opacity-50 flex items-center justify-center gap-2"
+                className="ui-button ui-button-primary w-full"
             >
                 <Info className="w-5 h-5" />
                 Generate About Us Schema
@@ -3286,81 +3277,81 @@ Return ONLY valid JSON-LD, no markdown or explanation.`
         <div className="space-y-4">
             {renderQuickFillSection('contactPage', 'from-brand-500/[0.04] to-transparent', 'border-white/[0.08]')}
             <div>
-                <label className="block text-sm font-semibold text-white/60 mb-2">Organization Name *</label>
+                <label className="schema-label">Organization Name *</label>
                 <input
                     type="text"
                     value={contactOrgName}
                     onChange={(e) => setContactOrgName(e.target.value)}
                     placeholder="Your Company Name"
-                    className="w-full px-4 py-3 border border-white/[0.08] rounded-xl"
+                    className="schema-input schema-input-lg"
                 />
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                    <label className="block text-sm font-semibold text-white/60 mb-2">Email</label>
+                    <label className="schema-label">Email</label>
                     <input
                         type="email"
                         value={contactEmail}
                         onChange={(e) => setContactEmail(e.target.value)}
                         placeholder="contact@example.com"
-                        className="w-full px-4 py-3 border border-white/[0.08] rounded-xl"
+                        className="schema-input schema-input-lg"
                     />
                 </div>
                 <div>
-                    <label className="block text-sm font-semibold text-white/60 mb-2">Phone</label>
+                    <label className="schema-label">Phone</label>
                     <input
                         type="tel"
                         value={contactPhone}
                         onChange={(e) => setContactPhone(e.target.value)}
                         placeholder="+1 (555) 123-4567"
-                        className="w-full px-4 py-3 border border-white/[0.08] rounded-xl"
+                        className="schema-input schema-input-lg"
                     />
                 </div>
             </div>
             <div>
-                <label className="block text-sm font-semibold text-white/60 mb-2">Address</label>
+                <label className="schema-label">Address</label>
                 <input
                     type="text"
                     value={contactAddress}
                     onChange={(e) => setContactAddress(e.target.value)}
                     placeholder="123 Main St, New York, NY 10001"
-                    className="w-full px-4 py-3 border border-white/[0.08] rounded-xl"
+                    className="schema-input schema-input-lg"
                 />
             </div>
             <div>
-                <label className="block text-sm font-semibold text-white/60 mb-2">Contact Page URL</label>
+                <label className="schema-label">Contact Page URL</label>
                 <input
                     type="url"
                     value={contactUrl}
                     onChange={(e) => setContactUrl(e.target.value)}
                     placeholder="https://example.com/contact"
-                    className="w-full px-4 py-3 border border-white/[0.08] rounded-xl"
+                    className="schema-input schema-input-lg"
                 />
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                    <label className="block text-sm font-semibold text-white/60 mb-2">Business Hours Start</label>
+                    <label className="schema-label">Business Hours Start</label>
                     <input
                         type="time"
                         value={contactHoursStart}
                         onChange={(e) => setContactHoursStart(e.target.value)}
-                        className="w-full px-4 py-3 border border-white/[0.08] rounded-xl"
+                        className="schema-input schema-input-lg"
                     />
                 </div>
                 <div>
-                    <label className="block text-sm font-semibold text-white/60 mb-2">Business Hours End</label>
+                    <label className="schema-label">Business Hours End</label>
                     <input
                         type="time"
                         value={contactHoursEnd}
                         onChange={(e) => setContactHoursEnd(e.target.value)}
-                        className="w-full px-4 py-3 border border-white/[0.08] rounded-xl"
+                        className="schema-input schema-input-lg"
                     />
                 </div>
             </div>
             <button
                 onClick={generateContactPageSchema}
                 disabled={!contactOrgName.trim()}
-                className="w-full py-3 bg-gradient-to-r from-brand-500 to-amber-600 text-white rounded-xl font-semibold disabled:opacity-50 flex items-center justify-center gap-2"
+                className="ui-button ui-button-primary w-full"
             >
                 <Phone className="w-5 h-5" />
                 Generate Contact Us Schema
@@ -3374,148 +3365,148 @@ Return ONLY valid JSON-LD, no markdown or explanation.`
             {/* Required Fields */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                    <label className="block text-sm font-semibold text-white/60 mb-2">Author Page URL *</label>
+                    <label className="schema-label">Author Page URL *</label>
                     <input
                         type="url"
                         value={authorProfileUrl}
                         onChange={(e) => setAuthorProfileUrl(e.target.value)}
                         placeholder="https://example.com/author/john-doe"
-                        className="w-full px-4 py-3 border border-white/[0.08] rounded-xl"
+                        className="schema-input schema-input-lg"
                     />
                 </div>
                 <div>
-                    <label className="block text-sm font-semibold text-white/60 mb-2">Author Name *</label>
+                    <label className="schema-label">Author Name *</label>
                     <input
                         type="text"
                         value={authorName}
                         onChange={(e) => setAuthorName(e.target.value)}
                         placeholder="John Doe"
-                        className="w-full px-4 py-3 border border-white/[0.08] rounded-xl"
+                        className="schema-input schema-input-lg"
                     />
                 </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                    <label className="block text-sm font-semibold text-white/60 mb-2">Job Title</label>
+                    <label className="schema-label">Job Title</label>
                     <input
                         type="text"
                         value={authorJobTitle}
                         onChange={(e) => setAuthorJobTitle(e.target.value)}
                         placeholder="Senior Writer"
-                        className="w-full px-4 py-3 border border-white/[0.08] rounded-xl"
+                        className="schema-input schema-input-lg"
                     />
                 </div>
                 <div>
-                    <label className="block text-sm font-semibold text-white/60 mb-2">Email</label>
+                    <label className="schema-label">Email</label>
                     <input
                         type="email"
                         value={authorEmail}
                         onChange={(e) => setAuthorEmail(e.target.value)}
                         placeholder="john@example.com"
-                        className="w-full px-4 py-3 border border-white/[0.08] rounded-xl"
+                        className="schema-input schema-input-lg"
                     />
                 </div>
             </div>
 
             <div>
-                <label className="block text-sm font-semibold text-white/60 mb-2">Author Bio/Description</label>
+                <label className="schema-label">Author Bio/Description</label>
                 <textarea
                     value={authorDescription}
                     onChange={(e) => setAuthorDescription(e.target.value)}
                     placeholder="Brief description of the author's background and expertise..."
-                    className="w-full h-20 p-4 border border-white/[0.08] rounded-xl"
+                    className="schema-input h-20"
                 />
             </div>
 
             <div>
-                <label className="block text-sm font-semibold text-white/60 mb-2">Author Photo URL</label>
+                <label className="schema-label">Author Photo URL</label>
                 <input
                     type="url"
                     value={authorImage}
                     onChange={(e) => setAuthorImage(e.target.value)}
                     placeholder="https://example.com/images/author.jpg"
-                    className="w-full px-4 py-3 border border-white/[0.08] rounded-xl"
+                    className="schema-input schema-input-lg"
                 />
             </div>
 
             {/* Organization */}
-            <div className="border-t pt-4 mt-4">
-                <h4 className="font-semibold text-white/80 mb-3">Organization Details</h4>
+            <div className="border-t border-line pt-4 mt-4">
+                <h4 className="schema-note-title">Organization Details</h4>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                        <label className="block text-sm font-semibold text-white/60 mb-2">Organization Name</label>
+                        <label className="schema-label">Organization Name</label>
                         <input
                             type="text"
                             value={authorOrgName}
                             onChange={(e) => setAuthorOrgName(e.target.value)}
                             placeholder="Example Company"
-                            className="w-full px-4 py-3 border border-white/[0.08] rounded-xl"
+                            className="schema-input schema-input-lg"
                         />
                     </div>
                     <div>
-                        <label className="block text-sm font-semibold text-white/60 mb-2">Organization URL</label>
+                        <label className="schema-label">Organization URL</label>
                         <input
                             type="url"
                             value={authorOrgUrl}
                             onChange={(e) => setAuthorOrgUrl(e.target.value)}
                             placeholder="https://example.com"
-                            className="w-full px-4 py-3 border border-white/[0.08] rounded-xl"
+                            className="schema-input schema-input-lg"
                         />
                     </div>
                 </div>
                 <div className="mt-3">
-                    <label className="block text-sm font-semibold text-white/60 mb-2">Organization Logo URL</label>
+                    <label className="schema-label">Organization Logo URL</label>
                     <input
                         type="url"
                         value={authorOrgLogo}
                         onChange={(e) => setAuthorOrgLogo(e.target.value)}
                         placeholder="https://example.com/logo.png"
-                        className="w-full px-4 py-3 border border-white/[0.08] rounded-xl"
+                        className="schema-input schema-input-lg"
                     />
                 </div>
             </div>
 
             {/* Credentials */}
-            <div className="border-t pt-4 mt-4">
-                <h4 className="font-semibold text-white/80 mb-3">Credentials & Education</h4>
+            <div className="border-t border-line pt-4 mt-4">
+                <h4 className="schema-note-title">Credentials & Education</h4>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                        <label className="block text-sm font-semibold text-white/60 mb-2">Alumni Of (School)</label>
+                        <label className="schema-label">Alumni Of (School)</label>
                         <input
                             type="text"
                             value={authorAlumniOf}
                             onChange={(e) => setAuthorAlumniOf(e.target.value)}
                             placeholder="Stanford University"
-                            className="w-full px-4 py-3 border border-white/[0.08] rounded-xl"
+                            className="schema-input schema-input-lg"
                         />
                     </div>
                     <div>
-                        <label className="block text-sm font-semibold text-white/60 mb-2">Credential/Degree</label>
+                        <label className="schema-label">Credential/Degree</label>
                         <input
                             type="text"
                             value={authorCredential}
                             onChange={(e) => setAuthorCredential(e.target.value)}
                             placeholder="BS in Computer Science"
-                            className="w-full px-4 py-3 border border-white/[0.08] rounded-xl"
+                            className="schema-input schema-input-lg"
                         />
                     </div>
                 </div>
                 <div className="mt-3">
-                    <label className="block text-sm font-semibold text-white/60 mb-2">Award/Certification</label>
+                    <label className="schema-label">Award/Certification</label>
                     <input
                         type="text"
                         value={authorAward}
                         onChange={(e) => setAuthorAward(e.target.value)}
                         placeholder="Google Certified IT Expert"
-                        className="w-full px-4 py-3 border border-white/[0.08] rounded-xl"
+                        className="schema-input schema-input-lg"
                     />
                 </div>
             </div>
 
             {/* Skills */}
-            <div className="border-t pt-4 mt-4">
-                <h4 className="font-semibold text-white/80 mb-3">Skills</h4>
+            <div className="border-t border-line pt-4 mt-4">
+                <h4 className="schema-note-title">Skills</h4>
                 {authorSkills.map((skill, idx) => (
                     <div key={idx} className="flex gap-2 mb-2">
                         <input
@@ -3527,12 +3518,12 @@ Return ONLY valid JSON-LD, no markdown or explanation.`
                                 setAuthorSkills(newSkills);
                             }}
                             placeholder="Article Writing"
-                            className="flex-1 px-4 py-2 border border-white/[0.08] rounded-lg"
+                            className="schema-input flex-1"
                         />
                         {authorSkills.length > 1 && (
                             <button
                                 onClick={() => setAuthorSkills(authorSkills.filter((_, i) => i !== idx))}
-                                className="p-2 text-red-500 hover:bg-red-500/10 rounded-lg"
+                                className="ui-button schema-remove"
                             >
                                 <Trash2 className="w-4 h-4" />
                             </button>
@@ -3541,15 +3532,15 @@ Return ONLY valid JSON-LD, no markdown or explanation.`
                 ))}
                 <button
                     onClick={() => setAuthorSkills([...authorSkills, ''])}
-                    className="text-sm text-indigo-400 hover:text-indigo-300 flex items-center gap-1"
+                    className="schema-note-link"
                 >
                     <Plus className="w-4 h-4" /> Add Skill
                 </button>
             </div>
 
             {/* Knows About */}
-            <div className="border-t pt-4 mt-4">
-                <h4 className="font-semibold text-white/80 mb-3">Expertise Topics (knowsAbout)</h4>
+            <div className="border-t border-line pt-4 mt-4">
+                <h4 className="schema-note-title">Expertise Topics (knowsAbout)</h4>
                 {authorKnowsAbout.map((topic, idx) => (
                     <div key={idx} className="flex gap-2 mb-2">
                         <input
@@ -3561,12 +3552,12 @@ Return ONLY valid JSON-LD, no markdown or explanation.`
                                 setAuthorKnowsAbout(newTopics);
                             }}
                             placeholder="SEO, Computer Hardware"
-                            className="flex-1 px-4 py-2 border border-white/[0.08] rounded-lg"
+                            className="schema-input flex-1"
                         />
                         {authorKnowsAbout.length > 1 && (
                             <button
                                 onClick={() => setAuthorKnowsAbout(authorKnowsAbout.filter((_, i) => i !== idx))}
-                                className="p-2 text-red-500 hover:bg-red-500/10 rounded-lg"
+                                className="ui-button schema-remove"
                             >
                                 <Trash2 className="w-4 h-4" />
                             </button>
@@ -3575,15 +3566,15 @@ Return ONLY valid JSON-LD, no markdown or explanation.`
                 ))}
                 <button
                     onClick={() => setAuthorKnowsAbout([...authorKnowsAbout, ''])}
-                    className="text-sm text-indigo-400 hover:text-indigo-300 flex items-center gap-1"
+                    className="schema-note-link"
                 >
                     <Plus className="w-4 h-4" /> Add Topic
                 </button>
             </div>
 
             {/* Social Links */}
-            <div className="border-t pt-4 mt-4">
-                <h4 className="font-semibold text-white/80 mb-3">Social Links (sameAs)</h4>
+            <div className="border-t border-line pt-4 mt-4">
+                <h4 className="schema-note-title">Social Links (sameAs)</h4>
                 {authorSameAs.map((link, idx) => (
                     <div key={idx} className="flex gap-2 mb-2">
                         <input
@@ -3595,12 +3586,12 @@ Return ONLY valid JSON-LD, no markdown or explanation.`
                                 setAuthorSameAs(newLinks);
                             }}
                             placeholder="https://twitter.com/username"
-                            className="flex-1 px-4 py-2 border border-white/[0.08] rounded-lg"
+                            className="schema-input flex-1"
                         />
                         {authorSameAs.length > 1 && (
                             <button
                                 onClick={() => setAuthorSameAs(authorSameAs.filter((_, i) => i !== idx))}
-                                className="p-2 text-red-500 hover:bg-red-500/10 rounded-lg"
+                                className="ui-button schema-remove"
                             >
                                 <Trash2 className="w-4 h-4" />
                             </button>
@@ -3609,66 +3600,66 @@ Return ONLY valid JSON-LD, no markdown or explanation.`
                 ))}
                 <button
                     onClick={() => setAuthorSameAs([...authorSameAs, ''])}
-                    className="text-sm text-indigo-400 hover:text-indigo-300 flex items-center gap-1"
+                    className="schema-note-link"
                 >
                     <Plus className="w-4 h-4" /> Add Social Link
                 </button>
             </div>
 
             {/* Work Location */}
-            <div className="border-t pt-4 mt-4">
-                <h4 className="font-semibold text-white/80 mb-3">Work Location (Optional)</h4>
+            <div className="border-t border-line pt-4 mt-4">
+                <h4 className="schema-note-title">Work Location (Optional)</h4>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                        <label className="block text-sm font-semibold text-white/60 mb-2">Street Address</label>
+                        <label className="schema-label">Street Address</label>
                         <input
                             type="text"
                             value={authorStreet}
                             onChange={(e) => setAuthorStreet(e.target.value)}
                             placeholder="123 Main St"
-                            className="w-full px-4 py-3 border border-white/[0.08] rounded-xl"
+                            className="schema-input schema-input-lg"
                         />
                     </div>
                     <div>
-                        <label className="block text-sm font-semibold text-white/60 mb-2">City</label>
+                        <label className="schema-label">City</label>
                         <input
                             type="text"
                             value={authorCity}
                             onChange={(e) => setAuthorCity(e.target.value)}
                             placeholder="New York"
-                            className="w-full px-4 py-3 border border-white/[0.08] rounded-xl"
+                            className="schema-input schema-input-lg"
                         />
                     </div>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-3">
                     <div>
-                        <label className="block text-sm font-semibold text-white/60 mb-2">Region/State</label>
+                        <label className="schema-label">Region/State</label>
                         <input
                             type="text"
                             value={authorRegion}
                             onChange={(e) => setAuthorRegion(e.target.value)}
                             placeholder="NY"
-                            className="w-full px-4 py-3 border border-white/[0.08] rounded-xl"
+                            className="schema-input schema-input-lg"
                         />
                     </div>
                     <div>
-                        <label className="block text-sm font-semibold text-white/60 mb-2">Postal Code</label>
+                        <label className="schema-label">Postal Code</label>
                         <input
                             type="text"
                             value={authorPostalCode}
                             onChange={(e) => setAuthorPostalCode(e.target.value)}
                             placeholder="10001"
-                            className="w-full px-4 py-3 border border-white/[0.08] rounded-xl"
+                            className="schema-input schema-input-lg"
                         />
                     </div>
                     <div>
-                        <label className="block text-sm font-semibold text-white/60 mb-2">Country</label>
+                        <label className="schema-label">Country</label>
                         <input
                             type="text"
                             value={authorCountry}
                             onChange={(e) => setAuthorCountry(e.target.value)}
                             placeholder="United States"
-                            className="w-full px-4 py-3 border border-white/[0.08] rounded-xl"
+                            className="schema-input schema-input-lg"
                         />
                     </div>
                 </div>
@@ -3677,7 +3668,7 @@ Return ONLY valid JSON-LD, no markdown or explanation.`
             <button
                 onClick={generateAuthorPageSchema}
                 disabled={!authorName.trim() || !authorProfileUrl.trim()}
-                className="w-full py-3 bg-gradient-to-r from-amber-500 to-yellow-500 text-white rounded-xl font-semibold disabled:opacity-50 flex items-center justify-center gap-2"
+                className="ui-button ui-button-primary w-full"
             >
                 <UserCircle2 className="w-5 h-5" />
                 Generate Author Page Schema
@@ -3691,12 +3682,12 @@ Return ONLY valid JSON-LD, no markdown or explanation.`
             {renderQuickFillSection('event', 'from-brand-500/[0.04] to-transparent', 'border-white/[0.08]')}
             <div className="grid grid-cols-2 gap-4">
                 <div>
-                    <label className="block text-sm font-semibold text-white/60 mb-2">Event Name *</label>
-                    <input type="text" value={eventName} onChange={(e) => setEventName(e.target.value)} placeholder="Summer Music Festival" className="w-full px-4 py-2 border border-white/[0.08] rounded-lg" />
+                    <label className="schema-label">Event Name *</label>
+                    <input type="text" value={eventName} onChange={(e) => setEventName(e.target.value)} placeholder="Summer Music Festival" className="schema-input" />
                 </div>
                 <div>
-                    <label className="block text-sm font-semibold text-white/60 mb-2">Event Type</label>
-                    <select value={eventType} onChange={(e) => setEventType(e.target.value)} className="w-full px-4 py-2 border border-white/[0.08] rounded-lg">
+                    <label className="schema-label">Event Type</label>
+                    <select value={eventType} onChange={(e) => setEventType(e.target.value)} className="schema-input">
                         <option value="Event">Event</option>
                         <option value="BusinessEvent">Business Event</option>
                         <option value="MusicEvent">Music Event</option>
@@ -3711,69 +3702,69 @@ Return ONLY valid JSON-LD, no markdown or explanation.`
             </div>
             <div className="grid grid-cols-2 gap-4">
                 <div>
-                    <label className="block text-sm font-semibold text-white/60 mb-2">Start Date/Time *</label>
-                    <input type="datetime-local" value={eventStartDate} onChange={(e) => setEventStartDate(e.target.value)} className="w-full px-4 py-2 border border-white/[0.08] rounded-lg" />
+                    <label className="schema-label">Start Date/Time *</label>
+                    <input type="datetime-local" value={eventStartDate} onChange={(e) => setEventStartDate(e.target.value)} className="schema-input" />
                 </div>
                 <div>
-                    <label className="block text-sm font-semibold text-white/60 mb-2">End Date/Time</label>
-                    <input type="datetime-local" value={eventEndDate} onChange={(e) => setEventEndDate(e.target.value)} className="w-full px-4 py-2 border border-white/[0.08] rounded-lg" />
+                    <label className="schema-label">End Date/Time</label>
+                    <input type="datetime-local" value={eventEndDate} onChange={(e) => setEventEndDate(e.target.value)} className="schema-input" />
                 </div>
             </div>
             <div className="grid grid-cols-2 gap-4">
                 <div>
-                    <label className="block text-sm font-semibold text-white/60 mb-2">Location Name *</label>
-                    <input type="text" value={eventLocationName} onChange={(e) => setEventLocationName(e.target.value)} placeholder="Convention Center" className="w-full px-4 py-2 border border-white/[0.08] rounded-lg" />
+                    <label className="schema-label">Location Name *</label>
+                    <input type="text" value={eventLocationName} onChange={(e) => setEventLocationName(e.target.value)} placeholder="Convention Center" className="schema-input" />
                 </div>
                 <div>
-                    <label className="block text-sm font-semibold text-white/60 mb-2">Location Address</label>
-                    <input type="text" value={eventLocationAddress} onChange={(e) => setEventLocationAddress(e.target.value)} placeholder="123 Main St, City, State" className="w-full px-4 py-2 border border-white/[0.08] rounded-lg" />
+                    <label className="schema-label">Location Address</label>
+                    <input type="text" value={eventLocationAddress} onChange={(e) => setEventLocationAddress(e.target.value)} placeholder="123 Main St, City, State" className="schema-input" />
                 </div>
             </div>
             <div>
-                <label className="block text-sm font-semibold text-white/60 mb-2">Description</label>
-                <textarea value={eventDescription} onChange={(e) => setEventDescription(e.target.value)} placeholder="Event description..." className="w-full px-4 py-2 border border-white/[0.08] rounded-lg h-24" />
+                <label className="schema-label">Description</label>
+                <textarea value={eventDescription} onChange={(e) => setEventDescription(e.target.value)} placeholder="Event description..." className="schema-input h-24" />
             </div>
             <div className="grid grid-cols-2 gap-4">
                 <div>
-                    <label className="block text-sm font-semibold text-white/60 mb-2">Event URL</label>
-                    <input type="url" value={eventUrl} onChange={(e) => setEventUrl(e.target.value)} placeholder="https://..." className="w-full px-4 py-2 border border-white/[0.08] rounded-lg" />
+                    <label className="schema-label">Event URL</label>
+                    <input type="url" value={eventUrl} onChange={(e) => setEventUrl(e.target.value)} placeholder="https://..." className="schema-input" />
                 </div>
                 <div>
-                    <label className="block text-sm font-semibold text-white/60 mb-2">Event Image URL</label>
-                    <input type="url" value={eventImage} onChange={(e) => setEventImage(e.target.value)} placeholder="https://..." className="w-full px-4 py-2 border border-white/[0.08] rounded-lg" />
+                    <label className="schema-label">Event Image URL</label>
+                    <input type="url" value={eventImage} onChange={(e) => setEventImage(e.target.value)} placeholder="https://..." className="schema-input" />
                 </div>
             </div>
             <div>
-                <label className="block text-sm font-semibold text-white/60 mb-2">Organizer Name</label>
-                <input type="text" value={eventOrganizer} onChange={(e) => setEventOrganizer(e.target.value)} placeholder="Acme Events LLC" className="w-full px-4 py-2 border border-white/[0.08] rounded-lg" />
+                <label className="schema-label">Organizer Name</label>
+                <input type="text" value={eventOrganizer} onChange={(e) => setEventOrganizer(e.target.value)} placeholder="Acme Events LLC" className="schema-input" />
             </div>
             <div>
-                <label className="block text-sm font-semibold text-white/60 mb-2">Performers</label>
+                <label className="schema-label">Performers</label>
                 {eventPerformers.map((performer, i) => (
                     <div key={i} className="flex gap-2 mb-2">
-                        <input type="text" value={performer} onChange={(e) => { const n = [...eventPerformers]; n[i] = e.target.value; setEventPerformers(n); }} placeholder="Performer name" className="flex-1 px-4 py-2 border border-white/[0.08] rounded-lg" />
-                        {eventPerformers.length > 1 && <button onClick={() => setEventPerformers(eventPerformers.filter((_, idx) => idx !== i))} className="p-2 text-red-500 hover:bg-red-500/10 rounded-lg"><Trash2 className="w-5 h-5" /></button>}
+                        <input type="text" value={performer} onChange={(e) => { const n = [...eventPerformers]; n[i] = e.target.value; setEventPerformers(n); }} placeholder="Performer name" className="schema-input flex-1" />
+                        {eventPerformers.length > 1 && <button onClick={() => setEventPerformers(eventPerformers.filter((_, idx) => idx !== i))} className="ui-button schema-remove"><Trash2 className="w-5 h-5" /></button>}
                     </div>
                 ))}
-                <button onClick={() => setEventPerformers([...eventPerformers, ''])} className="text-rose-400 hover:text-rose-400 text-sm font-medium flex items-center gap-1"><Plus className="w-4 h-4" /> Add Performer</button>
+                <button onClick={() => setEventPerformers([...eventPerformers, ''])} className="schema-addlink"><Plus className="w-4 h-4" /> Add Performer</button>
             </div>
             <div className="grid grid-cols-3 gap-4">
                 <div>
-                    <label className="block text-sm font-semibold text-white/60 mb-2">Ticket Price</label>
-                    <input type="number" value={eventTicketPrice} onChange={(e) => setEventTicketPrice(e.target.value)} placeholder="50" className="w-full px-4 py-2 border border-white/[0.08] rounded-lg" />
+                    <label className="schema-label">Ticket Price</label>
+                    <input type="number" value={eventTicketPrice} onChange={(e) => setEventTicketPrice(e.target.value)} placeholder="50" className="schema-input" />
                 </div>
                 <div>
-                    <label className="block text-sm font-semibold text-white/60 mb-2">Currency</label>
-                    <select value={eventTicketCurrency} onChange={(e) => setEventTicketCurrency(e.target.value)} className="w-full px-4 py-2 border border-white/[0.08] rounded-lg">
+                    <label className="schema-label">Currency</label>
+                    <select value={eventTicketCurrency} onChange={(e) => setEventTicketCurrency(e.target.value)} className="schema-input">
                         <option value="USD">USD</option><option value="EUR">EUR</option><option value="GBP">GBP</option><option value="CAD">CAD</option><option value="AUD">AUD</option>
                     </select>
                 </div>
                 <div>
-                    <label className="block text-sm font-semibold text-white/60 mb-2">Ticket URL</label>
-                    <input type="url" value={eventTicketUrl} onChange={(e) => setEventTicketUrl(e.target.value)} placeholder="https://..." className="w-full px-4 py-2 border border-white/[0.08] rounded-lg" />
+                    <label className="schema-label">Ticket URL</label>
+                    <input type="url" value={eventTicketUrl} onChange={(e) => setEventTicketUrl(e.target.value)} placeholder="https://..." className="schema-input" />
                 </div>
             </div>
-            <button onClick={generateEventSchema} disabled={!eventName.trim()} className="w-full py-3 bg-gradient-to-r from-brand-500 to-amber-600 text-white rounded-xl font-semibold disabled:opacity-50 flex items-center justify-center gap-2">
+            <button onClick={generateEventSchema} disabled={!eventName.trim()} className="ui-button ui-button-primary w-full">
                 <Calendar className="w-5 h-5" /> Generate Event Schema
             </button>
         </div>
@@ -3784,79 +3775,79 @@ Return ONLY valid JSON-LD, no markdown or explanation.`
         <div className="space-y-6">
             {renderQuickFillSection('advancedOrg', 'from-blue-500/10 to-indigo-500/10', 'border-white/[0.08]')}
             {/* Basic Info */}
-            <div className="p-4 bg-blue-500/10 rounded-xl border border-blue-500/20">
-                <h4 className="font-semibold text-blue-300 mb-3">Basic Information</h4>
+            <div className="schema-note">
+                <h4 className="schema-note-title">Basic Information</h4>
                 <div className="grid grid-cols-2 gap-4">
-                    <div><label className="block text-sm font-semibold text-white/60 mb-1">Organization Name *</label><input type="text" value={advOrgName} onChange={(e) => setAdvOrgName(e.target.value)} placeholder="Acme Corporation" className="w-full px-3 py-2 border border-white/[0.08] rounded-lg text-sm" /></div>
-                    <div><label className="block text-sm font-semibold text-white/60 mb-1">Legal Name</label><input type="text" value={advOrgLegalName} onChange={(e) => setAdvOrgLegalName(e.target.value)} placeholder="Acme Corp LLC" className="w-full px-3 py-2 border border-white/[0.08] rounded-lg text-sm" /></div>
+                    <div><label className="schema-label">Organization Name *</label><input type="text" value={advOrgName} onChange={(e) => setAdvOrgName(e.target.value)} placeholder="Acme Corporation" className="schema-input" /></div>
+                    <div><label className="schema-label">Legal Name</label><input type="text" value={advOrgLegalName} onChange={(e) => setAdvOrgLegalName(e.target.value)} placeholder="Acme Corp LLC" className="schema-input" /></div>
                 </div>
                 <div className="grid grid-cols-2 gap-4 mt-3">
-                    <div><label className="block text-sm font-semibold text-white/60 mb-1">Alternate Name</label><input type="text" value={advOrgAlternateName} onChange={(e) => setAdvOrgAlternateName(e.target.value)} className="w-full px-3 py-2 border border-white/[0.08] rounded-lg text-sm" /></div>
-                    <div><label className="block text-sm font-semibold text-white/60 mb-1">Website URL *</label><input type="url" value={advOrgUrl} onChange={(e) => setAdvOrgUrl(e.target.value)} placeholder="https://example.com" className="w-full px-3 py-2 border border-white/[0.08] rounded-lg text-sm" /></div>
+                    <div><label className="schema-label">Alternate Name</label><input type="text" value={advOrgAlternateName} onChange={(e) => setAdvOrgAlternateName(e.target.value)} className="schema-input" /></div>
+                    <div><label className="schema-label">Website URL *</label><input type="url" value={advOrgUrl} onChange={(e) => setAdvOrgUrl(e.target.value)} placeholder="https://example.com" className="schema-input" /></div>
                 </div>
-                <div className="mt-3"><label className="block text-sm font-semibold text-white/60 mb-1">Description</label><textarea value={advOrgDescription} onChange={(e) => setAdvOrgDescription(e.target.value)} className="w-full px-3 py-2 border border-white/[0.08] rounded-lg text-sm h-20" /></div>
-                <div className="mt-3"><label className="block text-sm font-semibold text-white/60 mb-1">Disambiguating Description</label><textarea value={advOrgDisambiguating} onChange={(e) => setAdvOrgDisambiguating(e.target.value)} placeholder="Detailed description for disambiguation..." className="w-full px-3 py-2 border border-white/[0.08] rounded-lg text-sm h-20" /></div>
-                <div className="mt-3"><label className="block text-sm font-semibold text-white/60 mb-1">Slogan</label><input type="text" value={advOrgSlogan} onChange={(e) => setAdvOrgSlogan(e.target.value)} className="w-full px-3 py-2 border border-white/[0.08] rounded-lg text-sm" /></div>
+                <div className="mt-3"><label className="schema-label">Description</label><textarea value={advOrgDescription} onChange={(e) => setAdvOrgDescription(e.target.value)} className="schema-input h-20" /></div>
+                <div className="mt-3"><label className="schema-label">Disambiguating Description</label><textarea value={advOrgDisambiguating} onChange={(e) => setAdvOrgDisambiguating(e.target.value)} placeholder="Detailed description for disambiguation..." className="schema-input h-20" /></div>
+                <div className="mt-3"><label className="schema-label">Slogan</label><input type="text" value={advOrgSlogan} onChange={(e) => setAdvOrgSlogan(e.target.value)} className="schema-input" /></div>
             </div>
             {/* Contact */}
             <div className="p-4 bg-green-500/10 rounded-xl border border-green-500/20">
-                <h4 className="font-semibold text-green-300 mb-3">Contact & Address</h4>
+                <h4 className="schema-note-title">Contact & Address</h4>
                 <div className="grid grid-cols-2 gap-4">
-                    <div><label className="block text-sm font-semibold text-white/60 mb-1">Phone</label><input type="tel" value={advOrgPhone} onChange={(e) => setAdvOrgPhone(e.target.value)} className="w-full px-3 py-2 border border-white/[0.08] rounded-lg text-sm" /></div>
-                    <div><label className="block text-sm font-semibold text-white/60 mb-1">Email</label><input type="email" value={advOrgEmail} onChange={(e) => setAdvOrgEmail(e.target.value)} className="w-full px-3 py-2 border border-white/[0.08] rounded-lg text-sm" /></div>
+                    <div><label className="schema-label">Phone</label><input type="tel" value={advOrgPhone} onChange={(e) => setAdvOrgPhone(e.target.value)} className="schema-input" /></div>
+                    <div><label className="schema-label">Email</label><input type="email" value={advOrgEmail} onChange={(e) => setAdvOrgEmail(e.target.value)} className="schema-input" /></div>
                 </div>
-                <div className="mt-3"><label className="block text-sm font-semibold text-white/60 mb-1">Street Address</label><input type="text" value={advOrgStreet} onChange={(e) => setAdvOrgStreet(e.target.value)} className="w-full px-3 py-2 border border-white/[0.08] rounded-lg text-sm" /></div>
+                <div className="mt-3"><label className="schema-label">Street Address</label><input type="text" value={advOrgStreet} onChange={(e) => setAdvOrgStreet(e.target.value)} className="schema-input" /></div>
                 <div className="grid grid-cols-3 gap-4 mt-3">
-                    <div><label className="block text-sm font-semibold text-white/60 mb-1">City</label><input type="text" value={advOrgCity} onChange={(e) => setAdvOrgCity(e.target.value)} className="w-full px-3 py-2 border border-white/[0.08] rounded-lg text-sm" /></div>
-                    <div><label className="block text-sm font-semibold text-white/60 mb-1">Region/State</label><input type="text" value={advOrgRegion} onChange={(e) => setAdvOrgRegion(e.target.value)} className="w-full px-3 py-2 border border-white/[0.08] rounded-lg text-sm" /></div>
-                    <div><label className="block text-sm font-semibold text-white/60 mb-1">Postal Code</label><input type="text" value={advOrgPostalCode} onChange={(e) => setAdvOrgPostalCode(e.target.value)} className="w-full px-3 py-2 border border-white/[0.08] rounded-lg text-sm" /></div>
+                    <div><label className="schema-label">City</label><input type="text" value={advOrgCity} onChange={(e) => setAdvOrgCity(e.target.value)} className="schema-input" /></div>
+                    <div><label className="schema-label">Region/State</label><input type="text" value={advOrgRegion} onChange={(e) => setAdvOrgRegion(e.target.value)} className="schema-input" /></div>
+                    <div><label className="schema-label">Postal Code</label><input type="text" value={advOrgPostalCode} onChange={(e) => setAdvOrgPostalCode(e.target.value)} className="schema-input" /></div>
                 </div>
             </div>
             {/* Media */}
-            <div className="p-4 bg-purple-500/10 rounded-xl border border-purple-500/20">
-                <h4 className="font-semibold text-purple-300 mb-3">Media</h4>
+            <div className="schema-note">
+                <h4 className="schema-note-title">Media</h4>
                 <div className="grid grid-cols-2 gap-4">
-                    <div><label className="block text-sm font-semibold text-white/60 mb-1">Logo URL</label><input type="url" value={advOrgLogo} onChange={(e) => setAdvOrgLogo(e.target.value)} className="w-full px-3 py-2 border border-white/[0.08] rounded-lg text-sm" /></div>
-                    <div><label className="block text-sm font-semibold text-white/60 mb-1">Image URL</label><input type="url" value={advOrgImage} onChange={(e) => setAdvOrgImage(e.target.value)} className="w-full px-3 py-2 border border-white/[0.08] rounded-lg text-sm" /></div>
+                    <div><label className="schema-label">Logo URL</label><input type="url" value={advOrgLogo} onChange={(e) => setAdvOrgLogo(e.target.value)} className="schema-input" /></div>
+                    <div><label className="schema-label">Image URL</label><input type="url" value={advOrgImage} onChange={(e) => setAdvOrgImage(e.target.value)} className="schema-input" /></div>
                 </div>
             </div>
             {/* KnowsAbout */}
-            <div className="p-4 bg-amber-500/10 rounded-xl border border-amber-500/20">
-                <h4 className="font-semibold text-amber-300 mb-3">Expertise (knowsAbout)</h4>
-                <p className="text-xs text-amber-400 mb-2">AI will auto-generate Wikipedia/Wikidata links for these topics</p>
+            <div className="schema-note">
+                <h4 className="schema-note-title">Expertise (knowsAbout)</h4>
+                <p className="schema-note-text mb-2">AI will auto-generate Wikipedia/Wikidata links for these topics</p>
                 {advOrgKnowsAbout.map((item, i) => (
                     <div key={i} className="flex gap-2 mb-2">
-                        <input type="text" value={item} onChange={(e) => { const n = [...advOrgKnowsAbout]; n[i] = e.target.value; setAdvOrgKnowsAbout(n); }} placeholder="Topic or Wikipedia URL" className="flex-1 px-3 py-2 border border-white/[0.08] rounded-lg text-sm" />
-                        {advOrgKnowsAbout.length > 1 && <button onClick={() => setAdvOrgKnowsAbout(advOrgKnowsAbout.filter((_, idx) => idx !== i))} className="p-2 text-red-500"><Trash2 className="w-4 h-4" /></button>}
+                        <input type="text" value={item} onChange={(e) => { const n = [...advOrgKnowsAbout]; n[i] = e.target.value; setAdvOrgKnowsAbout(n); }} placeholder="Topic or Wikipedia URL" className="schema-input flex-1" />
+                        {advOrgKnowsAbout.length > 1 && <button onClick={() => setAdvOrgKnowsAbout(advOrgKnowsAbout.filter((_, idx) => idx !== i))} className="ui-button schema-remove"><Trash2 className="w-4 h-4" /></button>}
                     </div>
                 ))}
-                <button onClick={() => setAdvOrgKnowsAbout([...advOrgKnowsAbout, ''])} className="text-amber-400 text-sm flex items-center gap-1"><Plus className="w-4 h-4" /> Add Topic</button>
+                <button onClick={() => setAdvOrgKnowsAbout([...advOrgKnowsAbout, ''])} className="schema-note-link"><Plus className="w-4 h-4" /> Add Topic</button>
             </div>
             {/* Social Links */}
             <div className="p-4 bg-cyan-500/10 rounded-xl border border-cyan-500/20">
-                <h4 className="font-semibold text-cyan-300 mb-3">Social Profiles (sameAs)</h4>
+                <h4 className="schema-note-title">Social Profiles (sameAs)</h4>
                 {advOrgSameAs.map((url, i) => (
                     <div key={i} className="flex gap-2 mb-2">
-                        <input type="url" value={url} onChange={(e) => { const n = [...advOrgSameAs]; n[i] = e.target.value; setAdvOrgSameAs(n); }} placeholder="https://twitter.com/..." className="flex-1 px-3 py-2 border border-white/[0.08] rounded-lg text-sm" />
-                        {advOrgSameAs.length > 1 && <button onClick={() => setAdvOrgSameAs(advOrgSameAs.filter((_, idx) => idx !== i))} className="p-2 text-red-500"><Trash2 className="w-4 h-4" /></button>}
+                        <input type="url" value={url} onChange={(e) => { const n = [...advOrgSameAs]; n[i] = e.target.value; setAdvOrgSameAs(n); }} placeholder="https://twitter.com/..." className="schema-input flex-1" />
+                        {advOrgSameAs.length > 1 && <button onClick={() => setAdvOrgSameAs(advOrgSameAs.filter((_, idx) => idx !== i))} className="ui-button schema-remove"><Trash2 className="w-4 h-4" /></button>}
                     </div>
                 ))}
-                <button onClick={() => setAdvOrgSameAs([...advOrgSameAs, ''])} className="text-cyan-400 text-sm flex items-center gap-1"><Plus className="w-4 h-4" /> Add Social Link</button>
+                <button onClick={() => setAdvOrgSameAs([...advOrgSameAs, ''])} className="schema-addlink"><Plus className="w-4 h-4" /> Add Social Link</button>
             </div>
             {/* Services */}
-            <div className="p-4 bg-indigo-500/10 rounded-xl border border-indigo-500/20">
-                <h4 className="font-semibold text-indigo-300 mb-3">Services Offered</h4>
+            <div className="schema-note">
+                <h4 className="schema-note-title">Services Offered</h4>
                 {advOrgServices.map((svc, i) => (
                     <div key={i} className="grid grid-cols-4 gap-2 mb-2">
-                        <input type="text" value={svc.name} onChange={(e) => { const n = [...advOrgServices]; n[i].name = e.target.value; setAdvOrgServices(n); }} placeholder="Service name" className="px-3 py-2 border border-white/[0.08] rounded-lg text-sm" />
-                        <input type="url" value={svc.url} onChange={(e) => { const n = [...advOrgServices]; n[i].url = e.target.value; setAdvOrgServices(n); }} placeholder="Service URL" className="px-3 py-2 border border-white/[0.08] rounded-lg text-sm" />
-                        <input type="text" value={svc.audience} onChange={(e) => { const n = [...advOrgServices]; n[i].audience = e.target.value; setAdvOrgServices(n); }} placeholder="Target audience" className="px-3 py-2 border border-white/[0.08] rounded-lg text-sm" />
-                        <button onClick={() => setAdvOrgServices(advOrgServices.filter((_, idx) => idx !== i))} className="p-2 text-red-500"><Trash2 className="w-4 h-4" /></button>
+                        <input type="text" value={svc.name} onChange={(e) => { const n = [...advOrgServices]; n[i].name = e.target.value; setAdvOrgServices(n); }} placeholder="Service name" className="schema-input" />
+                        <input type="url" value={svc.url} onChange={(e) => { const n = [...advOrgServices]; n[i].url = e.target.value; setAdvOrgServices(n); }} placeholder="Service URL" className="schema-input" />
+                        <input type="text" value={svc.audience} onChange={(e) => { const n = [...advOrgServices]; n[i].audience = e.target.value; setAdvOrgServices(n); }} placeholder="Target audience" className="schema-input" />
+                        <button onClick={() => setAdvOrgServices(advOrgServices.filter((_, idx) => idx !== i))} className="ui-button schema-remove"><Trash2 className="w-4 h-4" /></button>
                     </div>
                 ))}
-                <button onClick={() => setAdvOrgServices([...advOrgServices, { name: '', url: '', description: '', audience: '' }])} className="text-indigo-400 text-sm flex items-center gap-1"><Plus className="w-4 h-4" /> Add Service</button>
+                <button onClick={() => setAdvOrgServices([...advOrgServices, { name: '', url: '', description: '', audience: '' }])} className="schema-note-link"><Plus className="w-4 h-4" /> Add Service</button>
             </div>
-            <button onClick={generateAdvancedOrganizationSchema} disabled={!advOrgName.trim() || isGenerating} className="w-full py-3 bg-gradient-to-r from-brand-500 to-amber-600 text-white rounded-xl font-semibold disabled:opacity-50 flex items-center justify-center gap-2">
+            <button onClick={generateAdvancedOrganizationSchema} disabled={!advOrgName.trim() || isGenerating} className="ui-button ui-button-primary w-full">
                 {isGenerating ? <Loader2 className="w-5 h-5 animate-spin" /> : <Layers className="w-5 h-5" />}
                 {isGenerating ? 'Generating with AI...' : 'Generate Advanced Organization Schema'}
             </button>
@@ -3869,11 +3860,11 @@ Return ONLY valid JSON-LD, no markdown or explanation.`
             {renderQuickFillSection('advancedLocalBusiness', 'from-green-500/10 to-teal-500/10', 'border-white/[0.08]')}
             {/* Basic Info */}
             <div className="p-4 bg-green-500/10 rounded-xl border border-green-500/20">
-                <h4 className="font-semibold text-green-300 mb-3">Business Information</h4>
+                <h4 className="schema-note-title">Business Information</h4>
                 <div className="grid grid-cols-2 gap-4">
-                    <div><label className="block text-sm font-semibold text-white/60 mb-1">Business Name *</label><input type="text" value={advLbName} onChange={(e) => setAdvLbName(e.target.value)} placeholder="Acme Plumbing" className="w-full px-3 py-2 border border-white/[0.08] rounded-lg text-sm" /></div>
-                    <div><label className="block text-sm font-semibold text-white/60 mb-1">Business Type</label>
-                        <select value={advLbType} onChange={(e) => setAdvLbType(e.target.value)} className="w-full px-3 py-2 border border-white/[0.08] rounded-lg text-sm">
+                    <div><label className="schema-label">Business Name *</label><input type="text" value={advLbName} onChange={(e) => setAdvLbName(e.target.value)} placeholder="Acme Plumbing" className="schema-input" /></div>
+                    <div><label className="schema-label">Business Type</label>
+                        <select value={advLbType} onChange={(e) => setAdvLbType(e.target.value)} className="schema-input">
                             <option value="LocalBusiness">LocalBusiness</option><option value="Restaurant">Restaurant</option><option value="Store">Store</option><option value="MedicalBusiness">MedicalBusiness</option>
                             <option value="LegalService">LegalService</option><option value="FinancialService">FinancialService</option><option value="HomeAndConstructionBusiness">HomeAndConstructionBusiness</option>
                             <option value="ProfessionalService">ProfessionalService</option><option value="AutomotiveBusiness">AutomotiveBusiness</option><option value="RealEstateAgent">RealEstateAgent</option>
@@ -3881,90 +3872,90 @@ Return ONLY valid JSON-LD, no markdown or explanation.`
                     </div>
                 </div>
                 <div className="grid grid-cols-2 gap-4 mt-3">
-                    <div><label className="block text-sm font-semibold text-white/60 mb-1">Website URL *</label><input type="url" value={advLbUrl} onChange={(e) => setAdvLbUrl(e.target.value)} className="w-full px-3 py-2 border border-white/[0.08] rounded-lg text-sm" /></div>
-                    <div><label className="block text-sm font-semibold text-white/60 mb-1">Google Maps URL</label><input type="url" value={advLbGoogleMapsUrl} onChange={(e) => setAdvLbGoogleMapsUrl(e.target.value)} placeholder="https://www.google.com/maps?cid=..." className="w-full px-3 py-2 border border-white/[0.08] rounded-lg text-sm" /></div>
+                    <div><label className="schema-label">Website URL *</label><input type="url" value={advLbUrl} onChange={(e) => setAdvLbUrl(e.target.value)} className="schema-input" /></div>
+                    <div><label className="schema-label">Google Maps URL</label><input type="url" value={advLbGoogleMapsUrl} onChange={(e) => setAdvLbGoogleMapsUrl(e.target.value)} placeholder="https://www.google.com/maps?cid=..." className="schema-input" /></div>
                 </div>
-                <div className="mt-3"><label className="block text-sm font-semibold text-white/60 mb-1">Description</label><textarea value={advLbDescription} onChange={(e) => setAdvLbDescription(e.target.value)} className="w-full px-3 py-2 border border-white/[0.08] rounded-lg text-sm h-20" /></div>
+                <div className="mt-3"><label className="schema-label">Description</label><textarea value={advLbDescription} onChange={(e) => setAdvLbDescription(e.target.value)} className="schema-input h-20" /></div>
                 <div className="grid grid-cols-2 gap-4 mt-3">
-                    <div><label className="block text-sm font-semibold text-white/60 mb-1">Price Range</label>
-                        <select value={advLbPriceRange} onChange={(e) => setAdvLbPriceRange(e.target.value)} className="w-full px-3 py-2 border border-white/[0.08] rounded-lg text-sm">
+                    <div><label className="schema-label">Price Range</label>
+                        <select value={advLbPriceRange} onChange={(e) => setAdvLbPriceRange(e.target.value)} className="schema-input">
                             <option value="$">$ (Budget)</option><option value="$$">$$ (Moderate)</option><option value="$$$">$$$ (Expensive)</option><option value="$$$$">$$$$ (Very Expensive)</option>
                         </select>
                     </div>
-                    <div><label className="block text-sm font-semibold text-white/60 mb-1">Payment Accepted</label><input type="text" value={advLbPaymentAccepted} onChange={(e) => setAdvLbPaymentAccepted(e.target.value)} placeholder="Visa, Mastercard, Cash" className="w-full px-3 py-2 border border-white/[0.08] rounded-lg text-sm" /></div>
+                    <div><label className="schema-label">Payment Accepted</label><input type="text" value={advLbPaymentAccepted} onChange={(e) => setAdvLbPaymentAccepted(e.target.value)} placeholder="Visa, Mastercard, Cash" className="schema-input" /></div>
                 </div>
             </div>
             {/* Contact & Address */}
-            <div className="p-4 bg-blue-500/10 rounded-xl border border-blue-500/20">
-                <h4 className="font-semibold text-blue-300 mb-3">Contact & Address</h4>
+            <div className="schema-note">
+                <h4 className="schema-note-title">Contact & Address</h4>
                 <div className="grid grid-cols-2 gap-4">
-                    <div><label className="block text-sm font-semibold text-white/60 mb-1">Phone</label><input type="tel" value={advLbPhone} onChange={(e) => setAdvLbPhone(e.target.value)} className="w-full px-3 py-2 border border-white/[0.08] rounded-lg text-sm" /></div>
-                    <div><label className="block text-sm font-semibold text-white/60 mb-1">Email</label><input type="email" value={advLbEmail} onChange={(e) => setAdvLbEmail(e.target.value)} className="w-full px-3 py-2 border border-white/[0.08] rounded-lg text-sm" /></div>
+                    <div><label className="schema-label">Phone</label><input type="tel" value={advLbPhone} onChange={(e) => setAdvLbPhone(e.target.value)} className="schema-input" /></div>
+                    <div><label className="schema-label">Email</label><input type="email" value={advLbEmail} onChange={(e) => setAdvLbEmail(e.target.value)} className="schema-input" /></div>
                 </div>
-                <div className="mt-3"><label className="block text-sm font-semibold text-white/60 mb-1">Street Address</label><input type="text" value={advLbStreet} onChange={(e) => setAdvLbStreet(e.target.value)} className="w-full px-3 py-2 border border-white/[0.08] rounded-lg text-sm" /></div>
+                <div className="mt-3"><label className="schema-label">Street Address</label><input type="text" value={advLbStreet} onChange={(e) => setAdvLbStreet(e.target.value)} className="schema-input" /></div>
                 <div className="grid grid-cols-4 gap-4 mt-3">
-                    <div><label className="block text-sm font-semibold text-white/60 mb-1">City</label><input type="text" value={advLbCity} onChange={(e) => setAdvLbCity(e.target.value)} className="w-full px-3 py-2 border border-white/[0.08] rounded-lg text-sm" /></div>
-                    <div><label className="block text-sm font-semibold text-white/60 mb-1">State</label><input type="text" value={advLbRegion} onChange={(e) => setAdvLbRegion(e.target.value)} className="w-full px-3 py-2 border border-white/[0.08] rounded-lg text-sm" /></div>
-                    <div><label className="block text-sm font-semibold text-white/60 mb-1">Postal Code</label><input type="text" value={advLbPostalCode} onChange={(e) => setAdvLbPostalCode(e.target.value)} className="w-full px-3 py-2 border border-white/[0.08] rounded-lg text-sm" /></div>
-                    <div><label className="block text-sm font-semibold text-white/60 mb-1">Country</label><input type="text" value={advLbCountry} onChange={(e) => setAdvLbCountry(e.target.value)} className="w-full px-3 py-2 border border-white/[0.08] rounded-lg text-sm" /></div>
+                    <div><label className="schema-label">City</label><input type="text" value={advLbCity} onChange={(e) => setAdvLbCity(e.target.value)} className="schema-input" /></div>
+                    <div><label className="schema-label">State</label><input type="text" value={advLbRegion} onChange={(e) => setAdvLbRegion(e.target.value)} className="schema-input" /></div>
+                    <div><label className="schema-label">Postal Code</label><input type="text" value={advLbPostalCode} onChange={(e) => setAdvLbPostalCode(e.target.value)} className="schema-input" /></div>
+                    <div><label className="schema-label">Country</label><input type="text" value={advLbCountry} onChange={(e) => setAdvLbCountry(e.target.value)} className="schema-input" /></div>
                 </div>
             </div>
             {/* Opening Hours */}
-            <div className="p-4 bg-amber-500/10 rounded-xl border border-amber-500/20">
-                <h4 className="font-semibold text-amber-300 mb-3">Opening Hours</h4>
+            <div className="schema-note">
+                <h4 className="schema-note-title">Opening Hours</h4>
                 {advLbOpeningHours.map((hours, i) => (
                     <div key={i} className="grid grid-cols-4 gap-2 mb-2">
-                        <input type="text" value={hours.days} onChange={(e) => { const n = [...advLbOpeningHours]; n[i].days = e.target.value; setAdvLbOpeningHours(n); }} placeholder="Mo-Fr" className="px-3 py-2 border border-white/[0.08] rounded-lg text-sm" />
-                        <input type="time" value={hours.opens} onChange={(e) => { const n = [...advLbOpeningHours]; n[i].opens = e.target.value; setAdvLbOpeningHours(n); }} className="px-3 py-2 border border-white/[0.08] rounded-lg text-sm" />
-                        <input type="time" value={hours.closes} onChange={(e) => { const n = [...advLbOpeningHours]; n[i].closes = e.target.value; setAdvLbOpeningHours(n); }} className="px-3 py-2 border border-white/[0.08] rounded-lg text-sm" />
-                        <button onClick={() => setAdvLbOpeningHours(advLbOpeningHours.filter((_, idx) => idx !== i))} className="p-2 text-red-500"><Trash2 className="w-4 h-4" /></button>
+                        <input type="text" value={hours.days} onChange={(e) => { const n = [...advLbOpeningHours]; n[i].days = e.target.value; setAdvLbOpeningHours(n); }} placeholder="Mo-Fr" className="schema-input" />
+                        <input type="time" value={hours.opens} onChange={(e) => { const n = [...advLbOpeningHours]; n[i].opens = e.target.value; setAdvLbOpeningHours(n); }} className="schema-input" />
+                        <input type="time" value={hours.closes} onChange={(e) => { const n = [...advLbOpeningHours]; n[i].closes = e.target.value; setAdvLbOpeningHours(n); }} className="schema-input" />
+                        <button onClick={() => setAdvLbOpeningHours(advLbOpeningHours.filter((_, idx) => idx !== i))} className="ui-button schema-remove"><Trash2 className="w-4 h-4" /></button>
                     </div>
                 ))}
-                <button onClick={() => setAdvLbOpeningHours([...advLbOpeningHours, { days: '', opens: '09:00', closes: '17:00' }])} className="text-amber-400 text-sm flex items-center gap-1"><Plus className="w-4 h-4" /> Add Hours</button>
+                <button onClick={() => setAdvLbOpeningHours([...advLbOpeningHours, { days: '', opens: '09:00', closes: '17:00' }])} className="schema-note-link"><Plus className="w-4 h-4" /> Add Hours</button>
             </div>
             {/* Awards */}
             <div className="p-4 bg-yellow-500/10 rounded-xl border border-yellow-500/20">
-                <h4 className="font-semibold text-yellow-300 mb-3">Awards & Recognition</h4>
+                <h4 className="schema-note-title">Awards & Recognition</h4>
                 {advLbAwards.map((award, i) => (
                     <div key={i} className="flex gap-2 mb-2">
-                        <input type="text" value={award} onChange={(e) => { const n = [...advLbAwards]; n[i] = e.target.value; setAdvLbAwards(n); }} placeholder="Best Business 2024" className="flex-1 px-3 py-2 border border-white/[0.08] rounded-lg text-sm" />
-                        {advLbAwards.length > 1 && <button onClick={() => setAdvLbAwards(advLbAwards.filter((_, idx) => idx !== i))} className="p-2 text-red-500"><Trash2 className="w-4 h-4" /></button>}
+                        <input type="text" value={award} onChange={(e) => { const n = [...advLbAwards]; n[i] = e.target.value; setAdvLbAwards(n); }} placeholder="Best Business 2024" className="schema-input flex-1" />
+                        {advLbAwards.length > 1 && <button onClick={() => setAdvLbAwards(advLbAwards.filter((_, idx) => idx !== i))} className="ui-button schema-remove"><Trash2 className="w-4 h-4" /></button>}
                     </div>
                 ))}
-                <button onClick={() => setAdvLbAwards([...advLbAwards, ''])} className="text-yellow-400 text-sm flex items-center gap-1"><Plus className="w-4 h-4" /> Add Award</button>
+                <button onClick={() => setAdvLbAwards([...advLbAwards, ''])} className="schema-addlink"><Plus className="w-4 h-4" /> Add Award</button>
             </div>
             {/* Services */}
-            <div className="p-4 bg-indigo-500/10 rounded-xl border border-indigo-500/20">
-                <h4 className="font-semibold text-indigo-300 mb-3">Services Offered</h4>
+            <div className="schema-note">
+                <h4 className="schema-note-title">Services Offered</h4>
                 {advLbServices.map((svc, i) => (
                     <div key={i} className="grid grid-cols-4 gap-2 mb-2">
-                        <input type="text" value={svc.name} onChange={(e) => { const n = [...advLbServices]; n[i].name = e.target.value; setAdvLbServices(n); }} placeholder="Service name" className="px-3 py-2 border border-white/[0.08] rounded-lg text-sm" />
-                        <input type="url" value={svc.url} onChange={(e) => { const n = [...advLbServices]; n[i].url = e.target.value; setAdvLbServices(n); }} placeholder="URL" className="px-3 py-2 border border-white/[0.08] rounded-lg text-sm" />
-                        <input type="text" value={svc.audience} onChange={(e) => { const n = [...advLbServices]; n[i].audience = e.target.value; setAdvLbServices(n); }} placeholder="Audience" className="px-3 py-2 border border-white/[0.08] rounded-lg text-sm" />
-                        <button onClick={() => setAdvLbServices(advLbServices.filter((_, idx) => idx !== i))} className="p-2 text-red-500"><Trash2 className="w-4 h-4" /></button>
+                        <input type="text" value={svc.name} onChange={(e) => { const n = [...advLbServices]; n[i].name = e.target.value; setAdvLbServices(n); }} placeholder="Service name" className="schema-input" />
+                        <input type="url" value={svc.url} onChange={(e) => { const n = [...advLbServices]; n[i].url = e.target.value; setAdvLbServices(n); }} placeholder="URL" className="schema-input" />
+                        <input type="text" value={svc.audience} onChange={(e) => { const n = [...advLbServices]; n[i].audience = e.target.value; setAdvLbServices(n); }} placeholder="Audience" className="schema-input" />
+                        <button onClick={() => setAdvLbServices(advLbServices.filter((_, idx) => idx !== i))} className="ui-button schema-remove"><Trash2 className="w-4 h-4" /></button>
                     </div>
                 ))}
-                <button onClick={() => setAdvLbServices([...advLbServices, { name: '', url: '', description: '', audience: '' }])} className="text-indigo-400 text-sm flex items-center gap-1"><Plus className="w-4 h-4" /> Add Service</button>
+                <button onClick={() => setAdvLbServices([...advLbServices, { name: '', url: '', description: '', audience: '' }])} className="schema-note-link"><Plus className="w-4 h-4" /> Add Service</button>
             </div>
             {/* KnowsAbout & SameAs */}
-            <div className="p-4 bg-purple-500/10 rounded-xl border border-purple-500/20">
-                <h4 className="font-semibold text-purple-300 mb-3">Expertise & Social Links</h4>
-                <label className="block text-sm font-semibold text-white/60 mb-1">KnowsAbout Topics</label>
+            <div className="schema-note">
+                <h4 className="schema-note-title">Expertise & Social Links</h4>
+                <label className="schema-label">KnowsAbout Topics</label>
                 {advLbKnowsAbout.map((item, i) => (
                     <div key={i} className="flex gap-2 mb-2">
-                        <input type="text" value={item} onChange={(e) => { const n = [...advLbKnowsAbout]; n[i] = e.target.value; setAdvLbKnowsAbout(n); }} placeholder="Topic" className="flex-1 px-3 py-2 border border-white/[0.08] rounded-lg text-sm" />
+                        <input type="text" value={item} onChange={(e) => { const n = [...advLbKnowsAbout]; n[i] = e.target.value; setAdvLbKnowsAbout(n); }} placeholder="Topic" className="schema-input flex-1" />
                     </div>
                 ))}
-                <button onClick={() => setAdvLbKnowsAbout([...advLbKnowsAbout, ''])} className="text-brand-300 text-sm flex items-center gap-1 mb-3"><Plus className="w-4 h-4" /> Add Topic</button>
-                <label className="block text-sm font-semibold text-white/60 mb-1 mt-3">Social Profiles (sameAs)</label>
+                <button onClick={() => setAdvLbKnowsAbout([...advLbKnowsAbout, ''])} className="schema-addlink"><Plus className="w-4 h-4" /> Add Topic</button>
+                <label className="schema-label mt-3">Social Profiles (sameAs)</label>
                 {advLbSameAs.map((url, i) => (
                     <div key={i} className="flex gap-2 mb-2">
-                        <input type="url" value={url} onChange={(e) => { const n = [...advLbSameAs]; n[i] = e.target.value; setAdvLbSameAs(n); }} placeholder="https://..." className="flex-1 px-3 py-2 border border-white/[0.08] rounded-lg text-sm" />
+                        <input type="url" value={url} onChange={(e) => { const n = [...advLbSameAs]; n[i] = e.target.value; setAdvLbSameAs(n); }} placeholder="https://..." className="schema-input flex-1" />
                     </div>
                 ))}
-                <button onClick={() => setAdvLbSameAs([...advLbSameAs, ''])} className="text-brand-300 text-sm flex items-center gap-1"><Plus className="w-4 h-4" /> Add Link</button>
+                <button onClick={() => setAdvLbSameAs([...advLbSameAs, ''])} className="schema-addlink"><Plus className="w-4 h-4" /> Add Link</button>
             </div>
-            <button onClick={generateAdvancedLocalBusinessSchema} disabled={!advLbName.trim() || isGenerating} className="w-full py-3 bg-gradient-to-r from-brand-500 to-amber-600 text-white rounded-xl font-semibold disabled:opacity-50 flex items-center justify-center gap-2">
+            <button onClick={generateAdvancedLocalBusinessSchema} disabled={!advLbName.trim() || isGenerating} className="ui-button ui-button-primary w-full">
                 {isGenerating ? <Loader2 className="w-5 h-5 animate-spin" /> : <Award className="w-5 h-5" />}
                 {isGenerating ? 'Generating with AI...' : 'Generate Advanced Local Business Schema'}
             </button>
@@ -3975,39 +3966,39 @@ Return ONLY valid JSON-LD, no markdown or explanation.`
     const renderAdvancedServiceForm = () => (
         <div className="space-y-6">
             {renderQuickFillSection('advancedService', 'from-purple-500/10 to-violet-500/10', 'border-white/[0.08]')}
-            <div className="p-4 bg-purple-500/10 rounded-xl border border-purple-500/20">
-                <h4 className="font-semibold text-purple-300 mb-3">Service Information</h4>
+            <div className="schema-note">
+                <h4 className="schema-note-title">Service Information</h4>
                 <div className="grid grid-cols-2 gap-4">
-                    <div><label className="block text-sm font-semibold text-white/60 mb-1">Service Name *</label><input type="text" value={advSvcName} onChange={(e) => setAdvSvcName(e.target.value)} placeholder="Heating Services" className="w-full px-3 py-2 border border-white/[0.08] rounded-lg text-sm" /></div>
-                    <div><label className="block text-sm font-semibold text-white/60 mb-1">Service Type</label><input type="text" value={advSvcType} onChange={(e) => setAdvSvcType(e.target.value)} placeholder="Residential Heating" className="w-full px-3 py-2 border border-white/[0.08] rounded-lg text-sm" /></div>
+                    <div><label className="schema-label">Service Name *</label><input type="text" value={advSvcName} onChange={(e) => setAdvSvcName(e.target.value)} placeholder="Heating Services" className="schema-input" /></div>
+                    <div><label className="schema-label">Service Type</label><input type="text" value={advSvcType} onChange={(e) => setAdvSvcType(e.target.value)} placeholder="Residential Heating" className="schema-input" /></div>
                 </div>
-                <div className="mt-3"><label className="block text-sm font-semibold text-white/60 mb-1">Description</label><textarea value={advSvcDescription} onChange={(e) => setAdvSvcDescription(e.target.value)} className="w-full px-3 py-2 border border-white/[0.08] rounded-lg text-sm h-20" /></div>
+                <div className="mt-3"><label className="schema-label">Description</label><textarea value={advSvcDescription} onChange={(e) => setAdvSvcDescription(e.target.value)} className="schema-input h-20" /></div>
                 <div className="grid grid-cols-2 gap-4 mt-3">
-                    <div><label className="block text-sm font-semibold text-white/60 mb-1">Service URL</label><input type="url" value={advSvcUrl} onChange={(e) => setAdvSvcUrl(e.target.value)} className="w-full px-3 py-2 border border-white/[0.08] rounded-lg text-sm" /></div>
-                    <div><label className="block text-sm font-semibold text-white/60 mb-1">Target Audience</label><input type="text" value={advSvcAudience} onChange={(e) => setAdvSvcAudience(e.target.value)} placeholder="Homeowners" className="w-full px-3 py-2 border border-white/[0.08] rounded-lg text-sm" /></div>
+                    <div><label className="schema-label">Service URL</label><input type="url" value={advSvcUrl} onChange={(e) => setAdvSvcUrl(e.target.value)} className="schema-input" /></div>
+                    <div><label className="schema-label">Target Audience</label><input type="text" value={advSvcAudience} onChange={(e) => setAdvSvcAudience(e.target.value)} placeholder="Homeowners" className="schema-input" /></div>
                 </div>
             </div>
-            <div className="p-4 bg-blue-500/10 rounded-xl border border-blue-500/20">
-                <h4 className="font-semibold text-blue-300 mb-3">References</h4>
+            <div className="schema-note">
+                <h4 className="schema-note-title">References</h4>
                 <div className="grid grid-cols-2 gap-4">
-                    <div><label className="block text-sm font-semibold text-white/60 mb-1">Provider @id</label><input type="text" value={advSvcProvider} onChange={(e) => setAdvSvcProvider(e.target.value)} placeholder="https://example.com/#organization" className="w-full px-3 py-2 border border-white/[0.08] rounded-lg text-sm" /></div>
-                    <div><label className="block text-sm font-semibold text-white/60 mb-1">Brand @id</label><input type="text" value={advSvcBrand} onChange={(e) => setAdvSvcBrand(e.target.value)} placeholder="https://example.com/#organization" className="w-full px-3 py-2 border border-white/[0.08] rounded-lg text-sm" /></div>
+                    <div><label className="schema-label">Provider @id</label><input type="text" value={advSvcProvider} onChange={(e) => setAdvSvcProvider(e.target.value)} placeholder="https://example.com/#organization" className="schema-input" /></div>
+                    <div><label className="schema-label">Brand @id</label><input type="text" value={advSvcBrand} onChange={(e) => setAdvSvcBrand(e.target.value)} placeholder="https://example.com/#organization" className="schema-input" /></div>
                 </div>
-                <div className="mt-3"><label className="block text-sm font-semibold text-white/60 mb-1">Area Served @id</label><input type="text" value={advSvcAreaServedRef} onChange={(e) => setAdvSvcAreaServedRef(e.target.value)} placeholder="#servedareaidentifier" className="w-full px-3 py-2 border border-white/[0.08] rounded-lg text-sm" /></div>
+                <div className="mt-3"><label className="schema-label">Area Served @id</label><input type="text" value={advSvcAreaServedRef} onChange={(e) => setAdvSvcAreaServedRef(e.target.value)} placeholder="#servedareaidentifier" className="schema-input" /></div>
             </div>
-            <div className="p-4 bg-indigo-500/10 rounded-xl border border-indigo-500/20">
-                <h4 className="font-semibold text-indigo-300 mb-3">Sub-Services (Offer Catalog)</h4>
+            <div className="schema-note">
+                <h4 className="schema-note-title">Sub-Services (Offer Catalog)</h4>
                 {advSvcSubServices.map((svc, i) => (
                     <div key={i} className="grid grid-cols-4 gap-2 mb-2">
-                        <input type="text" value={svc.name} onChange={(e) => { const n = [...advSvcSubServices]; n[i].name = e.target.value; setAdvSvcSubServices(n); }} placeholder="Sub-service name" className="px-3 py-2 border border-white/[0.08] rounded-lg text-sm" />
-                        <input type="url" value={svc.url} onChange={(e) => { const n = [...advSvcSubServices]; n[i].url = e.target.value; setAdvSvcSubServices(n); }} placeholder="URL" className="px-3 py-2 border border-white/[0.08] rounded-lg text-sm" />
-                        <input type="text" value={svc.audience} onChange={(e) => { const n = [...advSvcSubServices]; n[i].audience = e.target.value; setAdvSvcSubServices(n); }} placeholder="Audience" className="px-3 py-2 border border-white/[0.08] rounded-lg text-sm" />
-                        <button onClick={() => setAdvSvcSubServices(advSvcSubServices.filter((_, idx) => idx !== i))} className="p-2 text-red-500"><Trash2 className="w-4 h-4" /></button>
+                        <input type="text" value={svc.name} onChange={(e) => { const n = [...advSvcSubServices]; n[i].name = e.target.value; setAdvSvcSubServices(n); }} placeholder="Sub-service name" className="schema-input" />
+                        <input type="url" value={svc.url} onChange={(e) => { const n = [...advSvcSubServices]; n[i].url = e.target.value; setAdvSvcSubServices(n); }} placeholder="URL" className="schema-input" />
+                        <input type="text" value={svc.audience} onChange={(e) => { const n = [...advSvcSubServices]; n[i].audience = e.target.value; setAdvSvcSubServices(n); }} placeholder="Audience" className="schema-input" />
+                        <button onClick={() => setAdvSvcSubServices(advSvcSubServices.filter((_, idx) => idx !== i))} className="ui-button schema-remove"><Trash2 className="w-4 h-4" /></button>
                     </div>
                 ))}
-                <button onClick={() => setAdvSvcSubServices([...advSvcSubServices, { name: '', url: '', description: '', audience: '' }])} className="text-indigo-400 text-sm flex items-center gap-1"><Plus className="w-4 h-4" /> Add Sub-Service</button>
+                <button onClick={() => setAdvSvcSubServices([...advSvcSubServices, { name: '', url: '', description: '', audience: '' }])} className="schema-note-link"><Plus className="w-4 h-4" /> Add Sub-Service</button>
             </div>
-            <button onClick={generateAdvancedServiceSchema} disabled={!advSvcName.trim() || isGenerating} className="w-full py-3 bg-gradient-to-r from-brand-500 to-amber-600 text-white rounded-xl font-semibold disabled:opacity-50 flex items-center justify-center gap-2">
+            <button onClick={generateAdvancedServiceSchema} disabled={!advSvcName.trim() || isGenerating} className="ui-button ui-button-primary w-full">
                 {isGenerating ? <Loader2 className="w-5 h-5 animate-spin" /> : <Briefcase className="w-5 h-5" />}
                 {isGenerating ? 'Generating with AI...' : 'Generate Advanced Service Schema'}
             </button>
@@ -4019,41 +4010,41 @@ Return ONLY valid JSON-LD, no markdown or explanation.`
         <div className="space-y-6">
             {renderQuickFillSection('advancedWebPage', 'from-brand-500/[0.04] to-transparent', 'border-white/[0.08]')}
             <div className="p-4 bg-cyan-500/10 rounded-xl border border-cyan-500/20">
-                <h4 className="font-semibold text-cyan-300 mb-3">Page Information</h4>
+                <h4 className="schema-note-title">Page Information</h4>
                 <div className="grid grid-cols-2 gap-4">
-                    <div><label className="block text-sm font-semibold text-white/60 mb-1">Page URL (@id) *</label><input type="url" value={advWpUrl} onChange={(e) => setAdvWpUrl(e.target.value)} placeholder="https://example.com/page" className="w-full px-3 py-2 border border-white/[0.08] rounded-lg text-sm" /></div>
-                    <div><label className="block text-sm font-semibold text-white/60 mb-1">Page Name</label><input type="text" value={advWpName} onChange={(e) => setAdvWpName(e.target.value)} className="w-full px-3 py-2 border border-white/[0.08] rounded-lg text-sm" /></div>
+                    <div><label className="schema-label">Page URL (@id) *</label><input type="url" value={advWpUrl} onChange={(e) => setAdvWpUrl(e.target.value)} placeholder="https://example.com/page" className="schema-input" /></div>
+                    <div><label className="schema-label">Page Name</label><input type="text" value={advWpName} onChange={(e) => setAdvWpName(e.target.value)} className="schema-input" /></div>
                 </div>
-                <div className="mt-3"><label className="block text-sm font-semibold text-white/60 mb-1">Description</label><textarea value={advWpDescription} onChange={(e) => setAdvWpDescription(e.target.value)} className="w-full px-3 py-2 border border-white/[0.08] rounded-lg text-sm h-20" /></div>
-                <div className="mt-3"><label className="block text-sm font-semibold text-white/60 mb-1">Publisher @id</label><input type="text" value={advWpPublisher} onChange={(e) => setAdvWpPublisher(e.target.value)} placeholder="https://maps.google.com/?cid=..." className="w-full px-3 py-2 border border-white/[0.08] rounded-lg text-sm" /></div>
+                <div className="mt-3"><label className="schema-label">Description</label><textarea value={advWpDescription} onChange={(e) => setAdvWpDescription(e.target.value)} className="schema-input h-20" /></div>
+                <div className="mt-3"><label className="schema-label">Publisher @id</label><input type="text" value={advWpPublisher} onChange={(e) => setAdvWpPublisher(e.target.value)} placeholder="https://maps.google.com/?cid=..." className="schema-input" /></div>
             </div>
-            <div className="p-4 bg-blue-500/10 rounded-xl border border-blue-500/20">
-                <h4 className="font-semibold text-blue-300 mb-3">About Entities</h4>
-                <p className="text-xs text-blue-400 mb-2">AI will generate Wikipedia and Knowledge Graph URLs for each entity</p>
+            <div className="schema-note">
+                <h4 className="schema-note-title">About Entities</h4>
+                <p className="schema-note-text mb-2">AI will generate Wikipedia and Knowledge Graph URLs for each entity</p>
                 {advWpAboutEntities.map((entity, i) => (
                     <div key={i} className="grid grid-cols-4 gap-2 mb-2">
-                        <input type="text" value={entity.name} onChange={(e) => { const n = [...advWpAboutEntities]; n[i].name = e.target.value; setAdvWpAboutEntities(n); }} placeholder="Entity name (e.g., HVAC)" className="px-3 py-2 border border-white/[0.08] rounded-lg text-sm" />
-                        <input type="url" value={entity.wikiUrl} onChange={(e) => { const n = [...advWpAboutEntities]; n[i].wikiUrl = e.target.value; setAdvWpAboutEntities(n); }} placeholder="Wikipedia URL (optional)" className="px-3 py-2 border border-white/[0.08] rounded-lg text-sm" />
-                        <input type="url" value={entity.kgUrl} onChange={(e) => { const n = [...advWpAboutEntities]; n[i].kgUrl = e.target.value; setAdvWpAboutEntities(n); }} placeholder="Knowledge Graph URL (optional)" className="px-3 py-2 border border-white/[0.08] rounded-lg text-sm" />
-                        <button onClick={() => setAdvWpAboutEntities(advWpAboutEntities.filter((_, idx) => idx !== i))} className="p-2 text-red-500"><Trash2 className="w-4 h-4" /></button>
+                        <input type="text" value={entity.name} onChange={(e) => { const n = [...advWpAboutEntities]; n[i].name = e.target.value; setAdvWpAboutEntities(n); }} placeholder="Entity name (e.g., HVAC)" className="schema-input" />
+                        <input type="url" value={entity.wikiUrl} onChange={(e) => { const n = [...advWpAboutEntities]; n[i].wikiUrl = e.target.value; setAdvWpAboutEntities(n); }} placeholder="Wikipedia URL (optional)" className="schema-input" />
+                        <input type="url" value={entity.kgUrl} onChange={(e) => { const n = [...advWpAboutEntities]; n[i].kgUrl = e.target.value; setAdvWpAboutEntities(n); }} placeholder="Knowledge Graph URL (optional)" className="schema-input" />
+                        <button onClick={() => setAdvWpAboutEntities(advWpAboutEntities.filter((_, idx) => idx !== i))} className="ui-button schema-remove"><Trash2 className="w-4 h-4" /></button>
                     </div>
                 ))}
-                <button onClick={() => setAdvWpAboutEntities([...advWpAboutEntities, { name: '', wikiUrl: '', kgUrl: '' }])} className="text-blue-400 text-sm flex items-center gap-1"><Plus className="w-4 h-4" /> Add About Entity</button>
+                <button onClick={() => setAdvWpAboutEntities([...advWpAboutEntities, { name: '', wikiUrl: '', kgUrl: '' }])} className="schema-addlink"><Plus className="w-4 h-4" /> Add About Entity</button>
             </div>
-            <div className="p-4 bg-purple-500/10 rounded-xl border border-purple-500/20">
-                <h4 className="font-semibold text-purple-300 mb-3">Mentions Entities</h4>
+            <div className="schema-note">
+                <h4 className="schema-note-title">Mentions Entities</h4>
                 <p className="text-xs text-brand-300 mb-2">Entities mentioned but not the main topic of the page</p>
                 {advWpMentionsEntities.map((entity, i) => (
                     <div key={i} className="grid grid-cols-4 gap-2 mb-2">
-                        <input type="text" value={entity.name} onChange={(e) => { const n = [...advWpMentionsEntities]; n[i].name = e.target.value; setAdvWpMentionsEntities(n); }} placeholder="Entity name" className="px-3 py-2 border border-white/[0.08] rounded-lg text-sm" />
-                        <input type="url" value={entity.wikiUrl} onChange={(e) => { const n = [...advWpMentionsEntities]; n[i].wikiUrl = e.target.value; setAdvWpMentionsEntities(n); }} placeholder="Wikipedia URL (optional)" className="px-3 py-2 border border-white/[0.08] rounded-lg text-sm" />
-                        <input type="url" value={entity.kgUrl} onChange={(e) => { const n = [...advWpMentionsEntities]; n[i].kgUrl = e.target.value; setAdvWpMentionsEntities(n); }} placeholder="Knowledge Graph URL (optional)" className="px-3 py-2 border border-white/[0.08] rounded-lg text-sm" />
-                        <button onClick={() => setAdvWpMentionsEntities(advWpMentionsEntities.filter((_, idx) => idx !== i))} className="p-2 text-red-500"><Trash2 className="w-4 h-4" /></button>
+                        <input type="text" value={entity.name} onChange={(e) => { const n = [...advWpMentionsEntities]; n[i].name = e.target.value; setAdvWpMentionsEntities(n); }} placeholder="Entity name" className="schema-input" />
+                        <input type="url" value={entity.wikiUrl} onChange={(e) => { const n = [...advWpMentionsEntities]; n[i].wikiUrl = e.target.value; setAdvWpMentionsEntities(n); }} placeholder="Wikipedia URL (optional)" className="schema-input" />
+                        <input type="url" value={entity.kgUrl} onChange={(e) => { const n = [...advWpMentionsEntities]; n[i].kgUrl = e.target.value; setAdvWpMentionsEntities(n); }} placeholder="Knowledge Graph URL (optional)" className="schema-input" />
+                        <button onClick={() => setAdvWpMentionsEntities(advWpMentionsEntities.filter((_, idx) => idx !== i))} className="ui-button schema-remove"><Trash2 className="w-4 h-4" /></button>
                     </div>
                 ))}
-                <button onClick={() => setAdvWpMentionsEntities([...advWpMentionsEntities, { name: '', wikiUrl: '', kgUrl: '' }])} className="text-brand-300 text-sm flex items-center gap-1"><Plus className="w-4 h-4" /> Add Mentions Entity</button>
+                <button onClick={() => setAdvWpMentionsEntities([...advWpMentionsEntities, { name: '', wikiUrl: '', kgUrl: '' }])} className="schema-addlink"><Plus className="w-4 h-4" /> Add Mentions Entity</button>
             </div>
-            <button onClick={generateAdvancedWebPageSchema} disabled={!advWpUrl.trim() || isGenerating} className="w-full py-3 bg-gradient-to-r from-brand-500 to-amber-600 text-white rounded-xl font-semibold disabled:opacity-50 flex items-center justify-center gap-2">
+            <button onClick={generateAdvancedWebPageSchema} disabled={!advWpUrl.trim() || isGenerating} className="ui-button ui-button-primary w-full">
                 {isGenerating ? <Loader2 className="w-5 h-5 animate-spin" /> : <FileCode className="w-5 h-5" />}
                 {isGenerating ? 'Generating with AI...' : 'Generate Advanced WebPage Schema'}
             </button>
@@ -4066,12 +4057,12 @@ Return ONLY valid JSON-LD, no markdown or explanation.`
             {renderQuickFillSection('softwareApplication', 'from-emerald-500/10 to-green-500/10', 'border-white/[0.08]')}
             <div className="grid grid-cols-2 gap-4">
                 <div>
-                    <label className="block text-sm font-semibold text-white/60 mb-2">Software Name *</label>
-                    <input type="text" value={softwareName} onChange={(e) => setSoftwareName(e.target.value)} placeholder="ProEdit Photo Editor" className="w-full px-4 py-2.5 border border-white/[0.08] rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-transparent" />
+                    <label className="schema-label">Software Name *</label>
+                    <input type="text" value={softwareName} onChange={(e) => setSoftwareName(e.target.value)} placeholder="ProEdit Photo Editor" className="schema-input" />
                 </div>
                 <div>
-                    <label className="block text-sm font-semibold text-white/60 mb-2">Application Type</label>
-                    <select value={softwareType} onChange={(e) => setSoftwareType(e.target.value)} className="w-full px-4 py-2.5 border border-white/[0.08] rounded-xl">
+                    <label className="schema-label">Application Type</label>
+                    <select value={softwareType} onChange={(e) => setSoftwareType(e.target.value)} className="schema-input">
                         <option value="SoftwareApplication">Software Application</option>
                         <option value="WebApplication">Web Application</option>
                         <option value="DesktopApplication">Desktop Application</option>
@@ -4079,31 +4070,31 @@ Return ONLY valid JSON-LD, no markdown or explanation.`
                 </div>
             </div>
             <div>
-                <label className="block text-sm font-semibold text-white/60 mb-2">Description *</label>
-                <textarea value={softwareDescription} onChange={(e) => setSoftwareDescription(e.target.value)} placeholder="Professional photo editing software..." rows={3} className="w-full px-4 py-2.5 border border-white/[0.08] rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-transparent" />
+                <label className="schema-label">Description *</label>
+                <textarea value={softwareDescription} onChange={(e) => setSoftwareDescription(e.target.value)} placeholder="Professional photo editing software..." rows={3} className="schema-input" />
             </div>
             <div className="grid grid-cols-2 gap-4">
                 <div>
-                    <label className="block text-sm font-semibold text-white/60 mb-2">Software URL</label>
-                    <input type="url" value={softwareUrl} onChange={(e) => setSoftwareUrl(e.target.value)} placeholder="https://example.com" className="w-full px-4 py-2.5 border border-white/[0.08] rounded-xl" />
+                    <label className="schema-label">Software URL</label>
+                    <input type="url" value={softwareUrl} onChange={(e) => setSoftwareUrl(e.target.value)} placeholder="https://example.com" className="schema-input" />
                 </div>
                 <div>
-                    <label className="block text-sm font-semibold text-white/60 mb-2">Download URL</label>
-                    <input type="url" value={softwareDownloadUrl} onChange={(e) => setSoftwareDownloadUrl(e.target.value)} placeholder="https://example.com/download" className="w-full px-4 py-2.5 border border-white/[0.08] rounded-xl" />
+                    <label className="schema-label">Download URL</label>
+                    <input type="url" value={softwareDownloadUrl} onChange={(e) => setSoftwareDownloadUrl(e.target.value)} placeholder="https://example.com/download" className="schema-input" />
                 </div>
             </div>
             <div className="grid grid-cols-3 gap-4">
                 <div>
-                    <label className="block text-sm font-semibold text-white/60 mb-2">Version</label>
-                    <input type="text" value={softwareVersion} onChange={(e) => setSoftwareVersion(e.target.value)} placeholder="5.2.0" className="w-full px-4 py-2.5 border border-white/[0.08] rounded-xl" />
+                    <label className="schema-label">Version</label>
+                    <input type="text" value={softwareVersion} onChange={(e) => setSoftwareVersion(e.target.value)} placeholder="5.2.0" className="schema-input" />
                 </div>
                 <div>
-                    <label className="block text-sm font-semibold text-white/60 mb-2">Operating System</label>
-                    <input type="text" value={softwareOS} onChange={(e) => setSoftwareOS(e.target.value)} placeholder="Windows, macOS, Linux" className="w-full px-4 py-2.5 border border-white/[0.08] rounded-xl" />
+                    <label className="schema-label">Operating System</label>
+                    <input type="text" value={softwareOS} onChange={(e) => setSoftwareOS(e.target.value)} placeholder="Windows, macOS, Linux" className="schema-input" />
                 </div>
                 <div>
-                    <label className="block text-sm font-semibold text-white/60 mb-2">Category</label>
-                    <select value={softwareCategory} onChange={(e) => setSoftwareCategory(e.target.value)} className="w-full px-4 py-2.5 border border-white/[0.08] rounded-xl">
+                    <label className="schema-label">Category</label>
+                    <select value={softwareCategory} onChange={(e) => setSoftwareCategory(e.target.value)} className="schema-input">
                         <option value="">Select category</option>
                         <option value="BusinessApplication">Business</option>
                         <option value="DesignApplication">Design</option>
@@ -4122,35 +4113,35 @@ Return ONLY valid JSON-LD, no markdown or explanation.`
             </div>
             <div className="grid grid-cols-4 gap-4">
                 <div>
-                    <label className="block text-sm font-semibold text-white/60 mb-2">Price</label>
-                    <input type="text" value={softwarePrice} onChange={(e) => setSoftwarePrice(e.target.value)} placeholder="99.99" className="w-full px-4 py-2.5 border border-white/[0.08] rounded-xl" />
+                    <label className="schema-label">Price</label>
+                    <input type="text" value={softwarePrice} onChange={(e) => setSoftwarePrice(e.target.value)} placeholder="99.99" className="schema-input" />
                 </div>
                 <div>
-                    <label className="block text-sm font-semibold text-white/60 mb-2">Currency</label>
-                    <select value={softwareCurrency} onChange={(e) => setSoftwareCurrency(e.target.value)} className="w-full px-4 py-2.5 border border-white/[0.08] rounded-xl">
+                    <label className="schema-label">Currency</label>
+                    <select value={softwareCurrency} onChange={(e) => setSoftwareCurrency(e.target.value)} className="schema-input">
                         <option value="USD">USD</option>
                         <option value="EUR">EUR</option>
                         <option value="GBP">GBP</option>
                     </select>
                 </div>
                 <div>
-                    <label className="block text-sm font-semibold text-white/60 mb-2">Rating (1-5)</label>
-                    <input type="text" value={softwareRating} onChange={(e) => setSoftwareRating(e.target.value)} placeholder="4.8" className="w-full px-4 py-2.5 border border-white/[0.08] rounded-xl" />
+                    <label className="schema-label">Rating (1-5)</label>
+                    <input type="text" value={softwareRating} onChange={(e) => setSoftwareRating(e.target.value)} placeholder="4.8" className="schema-input" />
                 </div>
                 <div>
-                    <label className="block text-sm font-semibold text-white/60 mb-2">Rating Count</label>
-                    <input type="text" value={softwareRatingCount} onChange={(e) => setSoftwareRatingCount(e.target.value)} placeholder="15420" className="w-full px-4 py-2.5 border border-white/[0.08] rounded-xl" />
+                    <label className="schema-label">Rating Count</label>
+                    <input type="text" value={softwareRatingCount} onChange={(e) => setSoftwareRatingCount(e.target.value)} placeholder="15420" className="schema-input" />
                 </div>
             </div>
             <div>
-                <label className="block text-sm font-semibold text-white/60 mb-2">Image URL</label>
-                <input type="url" value={softwareImage} onChange={(e) => setSoftwareImage(e.target.value)} placeholder="https://example.com/screenshot.png" className="w-full px-4 py-2.5 border border-white/[0.08] rounded-xl" />
+                <label className="schema-label">Image URL</label>
+                <input type="url" value={softwareImage} onChange={(e) => setSoftwareImage(e.target.value)} placeholder="https://example.com/screenshot.png" className="schema-input" />
             </div>
             <div>
-                <label className="block text-sm font-semibold text-white/60 mb-2">Author/Publisher</label>
-                <input type="text" value={softwareAuthor} onChange={(e) => setSoftwareAuthor(e.target.value)} placeholder="Company Name" className="w-full px-4 py-2.5 border border-white/[0.08] rounded-xl" />
+                <label className="schema-label">Author/Publisher</label>
+                <input type="text" value={softwareAuthor} onChange={(e) => setSoftwareAuthor(e.target.value)} placeholder="Company Name" className="schema-input" />
             </div>
-            <button onClick={generateSoftwareApplicationSchema} disabled={!softwareName.trim()} className="w-full py-3 bg-gradient-to-r from-emerald-600 to-green-600 text-white rounded-xl font-semibold disabled:opacity-50 flex items-center justify-center gap-2">
+            <button onClick={generateSoftwareApplicationSchema} disabled={!softwareName.trim()} className="ui-button ui-button-primary w-full">
                 <Code className="w-5 h-5" />
                 Generate Software Schema
             </button>
@@ -4163,40 +4154,40 @@ Return ONLY valid JSON-LD, no markdown or explanation.`
             {renderQuickFillSection('mobileApplication', 'from-brand-500/[0.04] to-transparent', 'border-white/[0.08]')}
             <div className="grid grid-cols-2 gap-4">
                 <div>
-                    <label className="block text-sm font-semibold text-white/60 mb-2">App Name *</label>
-                    <input type="text" value={mobileAppName} onChange={(e) => setMobileAppName(e.target.value)} placeholder="FitTrack Pro" className="w-full px-4 py-2.5 border border-white/[0.08] rounded-xl focus:ring-2 focus:ring-fuchsia-500 focus:border-transparent" />
+                    <label className="schema-label">App Name *</label>
+                    <input type="text" value={mobileAppName} onChange={(e) => setMobileAppName(e.target.value)} placeholder="FitTrack Pro" className="schema-input focus:ring-2 focus:ring-fuchsia-500 focus:border-transparent" />
                 </div>
                 <div>
-                    <label className="block text-sm font-semibold text-white/60 mb-2">Operating System</label>
-                    <input type="text" value={mobileAppOS} onChange={(e) => setMobileAppOS(e.target.value)} placeholder="iOS, Android" className="w-full px-4 py-2.5 border border-white/[0.08] rounded-xl" />
+                    <label className="schema-label">Operating System</label>
+                    <input type="text" value={mobileAppOS} onChange={(e) => setMobileAppOS(e.target.value)} placeholder="iOS, Android" className="schema-input" />
                 </div>
             </div>
             <div>
-                <label className="block text-sm font-semibold text-white/60 mb-2">Description *</label>
-                <textarea value={mobileAppDescription} onChange={(e) => setMobileAppDescription(e.target.value)} placeholder="Comprehensive fitness tracking app..." rows={3} className="w-full px-4 py-2.5 border border-white/[0.08] rounded-xl focus:ring-2 focus:ring-fuchsia-500 focus:border-transparent" />
+                <label className="schema-label">Description *</label>
+                <textarea value={mobileAppDescription} onChange={(e) => setMobileAppDescription(e.target.value)} placeholder="Comprehensive fitness tracking app..." rows={3} className="schema-input focus:ring-2 focus:ring-fuchsia-500 focus:border-transparent" />
             </div>
             <div className="grid grid-cols-2 gap-4">
                 <div>
-                    <label className="block text-sm font-semibold text-white/60 mb-2">App Store URL (iOS)</label>
-                    <input type="url" value={mobileAppStoreUrl} onChange={(e) => setMobileAppStoreUrl(e.target.value)} placeholder="https://apps.apple.com/app/..." className="w-full px-4 py-2.5 border border-white/[0.08] rounded-xl" />
+                    <label className="schema-label">App Store URL (iOS)</label>
+                    <input type="url" value={mobileAppStoreUrl} onChange={(e) => setMobileAppStoreUrl(e.target.value)} placeholder="https://apps.apple.com/app/..." className="schema-input" />
                 </div>
                 <div>
-                    <label className="block text-sm font-semibold text-white/60 mb-2">Play Store URL (Android)</label>
-                    <input type="url" value={mobilePlayStoreUrl} onChange={(e) => setMobilePlayStoreUrl(e.target.value)} placeholder="https://play.google.com/store/apps/..." className="w-full px-4 py-2.5 border border-white/[0.08] rounded-xl" />
+                    <label className="schema-label">Play Store URL (Android)</label>
+                    <input type="url" value={mobilePlayStoreUrl} onChange={(e) => setMobilePlayStoreUrl(e.target.value)} placeholder="https://play.google.com/store/apps/..." className="schema-input" />
                 </div>
             </div>
             <div className="grid grid-cols-3 gap-4">
                 <div>
-                    <label className="block text-sm font-semibold text-white/60 mb-2">Version</label>
-                    <input type="text" value={mobileAppVersion} onChange={(e) => setMobileAppVersion(e.target.value)} placeholder="3.1.0" className="w-full px-4 py-2.5 border border-white/[0.08] rounded-xl" />
+                    <label className="schema-label">Version</label>
+                    <input type="text" value={mobileAppVersion} onChange={(e) => setMobileAppVersion(e.target.value)} placeholder="3.1.0" className="schema-input" />
                 </div>
                 <div>
-                    <label className="block text-sm font-semibold text-white/60 mb-2">Website URL</label>
-                    <input type="url" value={mobileAppUrl} onChange={(e) => setMobileAppUrl(e.target.value)} placeholder="https://example.com" className="w-full px-4 py-2.5 border border-white/[0.08] rounded-xl" />
+                    <label className="schema-label">Website URL</label>
+                    <input type="url" value={mobileAppUrl} onChange={(e) => setMobileAppUrl(e.target.value)} placeholder="https://example.com" className="schema-input" />
                 </div>
                 <div>
-                    <label className="block text-sm font-semibold text-white/60 mb-2">Category</label>
-                    <select value={mobileAppCategory} onChange={(e) => setMobileAppCategory(e.target.value)} className="w-full px-4 py-2.5 border border-white/[0.08] rounded-xl">
+                    <label className="schema-label">Category</label>
+                    <select value={mobileAppCategory} onChange={(e) => setMobileAppCategory(e.target.value)} className="schema-input">
                         <option value="">Select category</option>
                         <option value="BusinessApplication">Business</option>
                         <option value="EducationApplication">Education</option>
@@ -4222,37 +4213,37 @@ Return ONLY valid JSON-LD, no markdown or explanation.`
             </div>
             <div className="grid grid-cols-4 gap-4">
                 <div>
-                    <label className="block text-sm font-semibold text-white/60 mb-2">Price (0 for free)</label>
-                    <input type="text" value={mobileAppPrice} onChange={(e) => setMobileAppPrice(e.target.value)} placeholder="0" className="w-full px-4 py-2.5 border border-white/[0.08] rounded-xl" />
+                    <label className="schema-label">Price (0 for free)</label>
+                    <input type="text" value={mobileAppPrice} onChange={(e) => setMobileAppPrice(e.target.value)} placeholder="0" className="schema-input" />
                 </div>
                 <div>
-                    <label className="block text-sm font-semibold text-white/60 mb-2">Currency</label>
-                    <select value={mobileAppCurrency} onChange={(e) => setMobileAppCurrency(e.target.value)} className="w-full px-4 py-2.5 border border-white/[0.08] rounded-xl">
+                    <label className="schema-label">Currency</label>
+                    <select value={mobileAppCurrency} onChange={(e) => setMobileAppCurrency(e.target.value)} className="schema-input">
                         <option value="USD">USD</option>
                         <option value="EUR">EUR</option>
                         <option value="GBP">GBP</option>
                     </select>
                 </div>
                 <div>
-                    <label className="block text-sm font-semibold text-white/60 mb-2">Rating (1-5)</label>
-                    <input type="text" value={mobileAppRating} onChange={(e) => setMobileAppRating(e.target.value)} placeholder="4.7" className="w-full px-4 py-2.5 border border-white/[0.08] rounded-xl" />
+                    <label className="schema-label">Rating (1-5)</label>
+                    <input type="text" value={mobileAppRating} onChange={(e) => setMobileAppRating(e.target.value)} placeholder="4.7" className="schema-input" />
                 </div>
                 <div>
-                    <label className="block text-sm font-semibold text-white/60 mb-2">Rating Count</label>
-                    <input type="text" value={mobileAppRatingCount} onChange={(e) => setMobileAppRatingCount(e.target.value)} placeholder="89000" className="w-full px-4 py-2.5 border border-white/[0.08] rounded-xl" />
+                    <label className="schema-label">Rating Count</label>
+                    <input type="text" value={mobileAppRatingCount} onChange={(e) => setMobileAppRatingCount(e.target.value)} placeholder="89000" className="schema-input" />
                 </div>
             </div>
             <div className="grid grid-cols-2 gap-4">
                 <div>
-                    <label className="block text-sm font-semibold text-white/60 mb-2">App Icon URL</label>
-                    <input type="url" value={mobileAppImage} onChange={(e) => setMobileAppImage(e.target.value)} placeholder="https://example.com/icon.png" className="w-full px-4 py-2.5 border border-white/[0.08] rounded-xl" />
+                    <label className="schema-label">App Icon URL</label>
+                    <input type="url" value={mobileAppImage} onChange={(e) => setMobileAppImage(e.target.value)} placeholder="https://example.com/icon.png" className="schema-input" />
                 </div>
                 <div>
-                    <label className="block text-sm font-semibold text-white/60 mb-2">Developer/Publisher</label>
-                    <input type="text" value={mobileAppAuthor} onChange={(e) => setMobileAppAuthor(e.target.value)} placeholder="Company Name" className="w-full px-4 py-2.5 border border-white/[0.08] rounded-xl" />
+                    <label className="schema-label">Developer/Publisher</label>
+                    <input type="text" value={mobileAppAuthor} onChange={(e) => setMobileAppAuthor(e.target.value)} placeholder="Company Name" className="schema-input" />
                 </div>
             </div>
-            <button onClick={generateMobileApplicationSchema} disabled={!mobileAppName.trim()} className="w-full py-3 bg-gradient-to-r from-fuchsia-500 to-pink-500 text-white rounded-xl font-semibold disabled:opacity-50 flex items-center justify-center gap-2">
+            <button onClick={generateMobileApplicationSchema} disabled={!mobileAppName.trim()} className="ui-button ui-button-primary w-full">
                 <Globe className="w-5 h-5" />
                 Generate Mobile App Schema
             </button>
@@ -4289,17 +4280,17 @@ Return ONLY valid JSON-LD, no markdown or explanation.`
     // Schema type selection grid
     if (!activeSchema) {
         return (
-            <div className="p-6">
+            <div className="schema-page">
                 <div className="">
                     {/* Header */}
-                    <div className="bg-gradient-to-r from-brand-500 via-amber-500 to-amber-600 rounded-2xl p-8 text-white mb-8 shadow-xl">
-                        <div className="flex items-center gap-4">
-                            <div className="w-16 h-16 bg-white/20 rounded-2xl flex items-center justify-center backdrop-blur-sm">
-                                <Code className="w-8 h-8" />
-                            </div>
-                            <div>
-                                <h1 className="text-3xl font-bold">Schema SEO</h1>
-                                <p className="text-white/70">Generate structured data markup for better SEO and rich results</p>
+                    <div className="ctool-hero mb-8">
+                        <div className="ctool-hero-row">
+                            <span className="ctool-hero-icon">
+                                <Code className="w-5 h-5" />
+                            </span>
+                            <div className="min-w-0">
+                                <h1 className="ctool-title font-display">Schema SEO</h1>
+                                <p className="ctool-subtitle">Generate structured data markup for better SEO and rich results</p>
                             </div>
                         </div>
                     </div>
@@ -4312,15 +4303,15 @@ Return ONLY valid JSON-LD, no markdown or explanation.`
                                 <div
                                     key={type.id}
                                     onClick={() => navigate(`/schema-seo/${type.id}`)}
-                                    className="rounded-2xl p-6 border border-white/[0.08] bg-[#0d1117] hover:border-brand-500/30 hover:shadow-lg hover:shadow-brand-500/5 transition-all cursor-pointer group hover:-translate-y-1"
+                                    className="schema-type group"
                                 >
-                                    <div className={`w-14 h-14 bg-gradient-to-br ${type.gradient} rounded-xl flex items-center justify-center text-white mb-4 group-hover:scale-110 transition-transform shadow-lg`}>
-                                        <Icon className="w-7 h-7" />
+                                    <div className="schema-type-icon">
+                                        <Icon className="w-5 h-5" />
                                     </div>
-                                    <h3 className="text-lg font-bold text-white/90 mb-2">{type.name}</h3>
-                                    <p className="text-sm text-white/40">{type.description}</p>
+                                    <h3 className="schema-type-name">{type.name}</h3>
+                                    <p className="schema-type-desc">{type.description}</p>
                                     {['entity', 'localBusiness', 'advancedOrg', 'advancedLocalBusiness', 'advancedService', 'advancedWebPage'].includes(type.id) && (
-                                        <span className="mt-3 inline-flex items-center gap-1 px-2 py-1 bg-brand-500/15 text-brand-300 text-xs font-medium rounded-full">
+                                        <span className="schema-badge">
                                             <Sparkles className="w-3 h-3" /> AI-Powered
                                         </span>
                                     )}
@@ -4339,45 +4330,45 @@ Return ONLY valid JSON-LD, no markdown or explanation.`
     const Icon = currentType?.icon || Code;
 
     return (
-        <div className="p-6">
+        <div className="schema-page">
             <div className="">
                 {/* Back Button */}
                 <button
                     onClick={() => { navigate('/schema-seo'); setGeneratedSchema(null); }}
-                    className="flex items-center gap-2 px-4 py-2.5 bg-white/[0.04] text-white/60 hover:text-white rounded-xl border border-white/[0.08] transition font-medium mb-6"
+                    className="ui-button ctool-tool-btn mb-6"
                 >
                     <ChevronLeft className="w-5 h-5" />
                     Back to Schema Types
                 </button>
 
                 {/* Header */}
-                <div className={`bg-gradient-to-r ${currentType?.gradient} rounded-2xl p-6 text-white mb-6 shadow-xl`}>
-                    <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm">
-                            <Icon className="w-6 h-6" />
-                        </div>
-                        <div>
-                            <h2 className="text-2xl font-bold">{currentType?.name}</h2>
-                            <p className="text-white/80">{currentType?.description}</p>
+                <div className="ctool-hero mb-6">
+                    <div className="ctool-hero-row">
+                        <span className="ctool-hero-icon">
+                            <Icon className="w-5 h-5" />
+                        </span>
+                        <div className="min-w-0">
+                            <h2 className="ctool-title font-display">{currentType?.name}</h2>
+                            <p className="ctool-subtitle">{currentType?.description}</p>
                         </div>
                     </div>
                 </div>
 
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                     {/* Input Form */}
-                    <div className="rounded-2xl border border-white/[0.08] bg-[#0d1117] p-6">
-                        <h3 className="text-lg font-bold text-white/90 mb-4">Input Details</h3>
+                    <div className="schema-card">
+                        <h3 className="schema-card-title mb-4">Input Details</h3>
                         {renderForm()}
                     </div>
 
                     {/* Generated Schema Output */}
-                    <div className="rounded-2xl border border-white/[0.08] bg-[#0d1117] p-6">
+                    <div className="schema-card">
                         <div className="flex items-center justify-between mb-4">
-                            <h3 className="text-lg font-bold text-white/90">Generated JSON-LD</h3>
+                            <h3 className="schema-card-title">Generated JSON-LD</h3>
                             {generatedSchema && (
                                 <button
                                     onClick={copyToClipboard}
-                                    className="flex items-center gap-2 px-4 py-2 bg-brand-500/15 text-brand-300 rounded-lg hover:bg-brand-500/25 transition font-medium"
+                                    className="ui-button ctool-tool-btn"
                                 >
                                     {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
                                     {copied ? 'Copied!' : 'Copy'}
@@ -4386,21 +4377,21 @@ Return ONLY valid JSON-LD, no markdown or explanation.`
                         </div>
 
                         {generatedSchema ? (
-                            <div className="bg-gray-900 rounded-xl p-4 overflow-auto max-h-[500px]">
-                                <pre className="text-sm text-green-400 font-mono whitespace-pre-wrap">
+                            <div className="schema-code">
+                                <pre>
                                     <code>{`<script type="application/ld+json">\n${JSON.stringify(generatedSchema, null, 2)}\n</script>`}</code>
                                 </pre>
                             </div>
                         ) : (
-                            <div className="bg-white/[0.02] rounded-xl p-8 text-center border-2 border-dashed border-white/[0.08]">
-                                <Code className="w-12 h-12 text-white/20 mx-auto mb-3" />
-                                <p className="text-white/40">Fill in the form and generate your schema markup</p>
+                            <div className="schema-output-empty">
+                                <Code className="w-12 h-12 mx-auto mb-3" />
+                                <p>Fill in the form and generate your schema markup</p>
                             </div>
                         )}
 
                         {generatedSchema && (
-                            <div className="mt-4 p-4 bg-brand-500/[0.06] rounded-xl border border-brand-500/20">
-                                <h4 className="font-semibold text-brand-300 mb-2 flex items-center gap-2">
+                            <div className="schema-note mt-4">
+                                <h4 className="schema-note-title flex items-center gap-2">
                                     <ExternalLink className="w-4 h-4" />
                                     Validate Your Schema
                                 </h4>
@@ -4409,7 +4400,7 @@ Return ONLY valid JSON-LD, no markdown or explanation.`
                                         href="https://validator.schema.org/"
                                         target="_blank"
                                         rel="noopener noreferrer"
-                                        className="text-brand-400 hover:underline text-sm"
+                                        className="schema-note-link"
                                     >
                                         ✓ Schema.org Validator (Official) →
                                     </a>
@@ -4417,7 +4408,7 @@ Return ONLY valid JSON-LD, no markdown or explanation.`
                                         href="https://search.google.com/test/rich-results"
                                         target="_blank"
                                         rel="noopener noreferrer"
-                                        className="text-brand-400 hover:underline text-sm"
+                                        className="schema-note-link"
                                     >
                                         ✓ Google Rich Results Test →
                                     </a>

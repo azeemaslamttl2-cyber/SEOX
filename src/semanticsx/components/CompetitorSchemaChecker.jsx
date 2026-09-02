@@ -32,7 +32,7 @@ const CompetitorSchemaChecker = () => {
         NewsArticle: { icon: FileText, color: 'bg-sky-500/15 text-sky-300', priority: 1 },
         FAQPage: { icon: HelpCircle, color: 'bg-pink-500/15 text-pink-300', priority: 1 },
         WebSite: { icon: Globe, color: 'bg-indigo-500/15 text-indigo-300', priority: 1 },
-        WebPage: { icon: Globe, color: 'bg-slate-500/15 text-slate-300', priority: 2 },
+        WebPage: { icon: Globe, color: 'bg-line-strong/15 schema-muted', priority: 2 },
         BreadcrumbList: { icon: ChevronDown, color: 'bg-amber-500/15 text-amber-300', priority: 2 },
         Review: { icon: Star, color: 'bg-yellow-500/15 text-yellow-300', priority: 2 },
         AggregateRating: { icon: Star, color: 'bg-yellow-500/15 text-yellow-300', priority: 2 },
@@ -63,7 +63,7 @@ const CompetitorSchemaChecker = () => {
         QAPage: { icon: HelpCircle, color: 'bg-pink-500/15 text-pink-300', priority: 2 },
         Question: { icon: HelpCircle, color: 'bg-pink-500/15 text-pink-300', priority: 2 },
         Answer: { icon: Check, color: 'bg-green-500/15 text-green-300', priority: 3 },
-        CreativeWork: { icon: FileText, color: 'bg-slate-500/15 text-slate-300', priority: 3 },
+        CreativeWork: { icon: FileText, color: 'bg-line-strong/15 schema-muted', priority: 3 },
         SoftwareApplication: { icon: Code, color: 'bg-indigo-500/15 text-indigo-300', priority: 2 },
         MobileApplication: { icon: Code, color: 'bg-indigo-500/15 text-indigo-300', priority: 2 },
         Restaurant: { icon: MapPin, color: 'bg-orange-500/15 text-orange-300', priority: 1 },
@@ -477,34 +477,34 @@ Generate a best-practice template that incorporates the best patterns from these
     };
 
     return (
-        <div className="p-3 md:p-6">
+        <div className="schema-page">
             <div className="">
                 {/* Header */}
-                <div className="bg-gradient-to-r from-brand-500 via-amber-500 to-amber-600 rounded-2xl p-4 md:p-8 text-white mb-6 shadow-xl">
-                    <div className="flex items-center gap-3 md:gap-4 mb-4">
-                        <div className="w-14 h-14 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm">
-                            <FileCode className="w-7 h-7" />
+                <div className="ctool-hero mb-6">
+                    <div className="ctool-hero-row">
+                        <div className="ctool-hero-icon">
+                            <FileCode className="w-5 h-5" />
                         </div>
                         <div>
-                            <h1 className="text-xl md:text-3xl font-bold">Schema Intelligence Analyzer</h1>
-                            <p className="text-sm md:text-base text-white/70">AI-Powered Competitor Schema Analysis & Optimization</p>
+                            <h1 className="ctool-title font-display">Schema Intelligence Analyzer</h1>
+                            <p className="ctool-subtitle">AI-Powered Competitor Schema Analysis & Optimization</p>
                         </div>
                     </div>
-                    <p className="text-white/60 text-sm md:text-base">
+                    <p className="sres-hero-meta">
                         Scan competitor schemas, validate against schema.org, compare coverage, and get AI-powered recommendations.
                     </p>
                 </div>
 
                 {/* URL Inputs */}
-                <div className="rounded-2xl border border-white/[0.08] bg-[#0d1117] p-4 md:p-6 mb-6">
+                <div className="schema-card mb-6">
                     <div className="flex items-center justify-between mb-4">
-                        <h2 className="text-lg font-semibold text-white/90 flex items-center gap-2">
-                            <Globe className="w-5 h-5 text-brand-400" />
+                        <h2 className="schema-card-title flex items-center gap-2">
+                            <Globe className="w-5 h-5 ctool-accent" />
                             Competitor URLs
                         </h2>
                         <button
                             onClick={addUrlInput}
-                            className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-brand-400 bg-brand-500/10 hover:bg-brand-500/20 rounded-lg transition"
+                            className="ui-button ctool-tool-btn"
                         >
                             <Plus className="w-4 h-4" />
                             Add URL
@@ -515,25 +515,25 @@ Generate a best-practice template that incorporates the best patterns from these
                         {urls.map((url, index) => (
                             <div key={index} className="flex flex-col sm:flex-row gap-3">
                                 <div className="flex-1 relative">
-                                    <Globe className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-white/30" />
+                                    <Globe className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 sres-search-icon" />
                                     <input
                                         type="url"
                                         value={url}
                                         onChange={(e) => updateUrl(index, e.target.value)}
                                         placeholder="https://competitor.com"
-                                        className="w-full pl-12 pr-4 py-3 border border-white/[0.08] rounded-xl bg-[#010409] text-white/70 placeholder:text-white/20 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500/40 transition"
+                                        className="schema-input schema-input-lg pl-11"
                                     />
                                 </div>
                                 <button
                                     onClick={() => checkSchema(url, index)}
                                     disabled={!url.trim() || isAnalyzing[index]}
-                                    className="w-full sm:w-auto px-5 py-3 bg-gradient-to-r from-brand-500 to-amber-600 text-white rounded-xl hover:from-brand-600 hover:to-amber-700 disabled:opacity-50 disabled:cursor-not-allowed transition font-medium flex items-center justify-center gap-2"
+                                    className="ui-button ui-button-primary w-full sm:w-auto"
                                 >
                                     {isAnalyzing[index] ? <Loader2 className="w-4 h-4 animate-spin" /> : <Search className="w-4 h-4" />}
                                     Scan
                                 </button>
                                 {urls.length > 1 && (
-                                    <button onClick={() => removeUrlInput(index)} className="p-3 text-white/30 hover:text-red-400 hover:bg-red-500/100/10 rounded-xl transition">
+                                    <button onClick={() => removeUrlInput(index)} className="ui-button schema-remove">
                                         <Trash2 className="w-5 h-5" />
                                     </button>
                                 )}
@@ -544,7 +544,7 @@ Generate a best-practice template that incorporates the best patterns from these
                     {urls.filter(u => u.trim()).length > 1 && (
                         <button
                             onClick={checkAllSchemas}
-                            className="mt-4 w-full py-3 border-2 border-dashed border-cyan-200 text-brand-400 rounded-xl hover:bg-brand-500/10 hover:border-cyan-300 transition font-medium flex items-center justify-center gap-2"
+                            className="ui-button schema-add mt-4"
                         >
                             <Search className="w-4 h-4" />
                             Scan All URLs
@@ -552,7 +552,7 @@ Generate a best-practice template that incorporates the best patterns from these
                     )}
 
                     {error && (
-                        <div className="mt-4 p-4 bg-red-500/10 border border-red-500/20 rounded-xl text-red-400 flex items-center gap-2">
+                        <div className="app-alert app-alert-error mt-4">
                             <AlertCircle className="w-5 h-5 flex-shrink-0" />
                             {error}
                         </div>
@@ -565,39 +565,39 @@ Generate a best-practice template that incorporates the best patterns from these
                         {/* Stats Overview - Only show comparison stats when multiple URLs */}
                         {results.length > 1 && (
                             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-                                <div className="rounded-xl p-4 border border-white/[0.08] bg-[#0d1117]">
+                                <div className="schema-result">
                                     <div className="flex items-center gap-3">
-                                        <div className="p-2 bg-brand-500/15 rounded-lg"><Globe className="w-5 h-5 text-brand-400" /></div>
+                                        <div className="p-2 bg-brand-500/15 rounded-lg"><Globe className="w-5 h-5 ctool-accent" /></div>
                                         <div>
-                                            <div className="text-2xl font-bold text-white">{results.length}</div>
-                                            <div className="text-sm text-white/40">Sites Compared</div>
+                                            <div className="schema-stat">{results.length}</div>
+                                            <div className="schema-muted">Sites Compared</div>
                                         </div>
                                     </div>
                                 </div>
-                                <div className="rounded-xl p-4 border border-white/[0.08] bg-[#0d1117]">
+                                <div className="schema-result">
                                     <div className="flex items-center gap-3">
                                         <div className="p-2 bg-indigo-500/15 rounded-lg"><Code className="w-5 h-5 text-indigo-400" /></div>
                                         <div>
-                                            <div className="text-2xl font-bold text-white">{results.reduce((sum, r) => sum + r.schemaCount, 0)}</div>
-                                            <div className="text-sm text-white/40">Total Schemas</div>
+                                            <div className="schema-stat">{results.reduce((sum, r) => sum + r.schemaCount, 0)}</div>
+                                            <div className="schema-muted">Total Schemas</div>
                                         </div>
                                     </div>
                                 </div>
-                                <div className="rounded-xl p-4 border border-white/[0.08] bg-[#0d1117]">
+                                <div className="schema-result">
                                     <div className="flex items-center gap-3">
                                         <div className="p-2 bg-purple-500/15 rounded-lg"><Layers className="w-5 h-5 text-purple-400" /></div>
                                         <div>
-                                            <div className="text-2xl font-bold text-white">{comparisonMatrix?.types.length || 0}</div>
-                                            <div className="text-sm text-white/40">Unique Types</div>
+                                            <div className="schema-stat">{comparisonMatrix?.types.length || 0}</div>
+                                            <div className="schema-muted">Unique Types</div>
                                         </div>
                                     </div>
                                 </div>
-                                <div className="rounded-xl p-4 border border-white/[0.08] bg-[#0d1117]">
+                                <div className="schema-result">
                                     <div className="flex items-center gap-3">
                                         <div className="p-2 bg-emerald-500/15 rounded-lg"><TrendingUp className="w-5 h-5 text-green-400" /></div>
                                         <div>
-                                            <div className="text-2xl font-bold text-white">{Math.round(results.reduce((sum, r) => sum + r.avgScore, 0) / results.length)}%</div>
-                                            <div className="text-sm text-white/40">Avg Score</div>
+                                            <div className="schema-stat">{Math.round(results.reduce((sum, r) => sum + r.avgScore, 0) / results.length)}%</div>
+                                            <div className="schema-muted">Avg Score</div>
                                         </div>
                                     </div>
                                 </div>
@@ -605,8 +605,8 @@ Generate a best-practice template that incorporates the best patterns from these
                         )}
 
                         {/* Tab Navigation */}
-                        <div className="rounded-2xl border border-white/[0.08] bg-[#0d1117] mb-6 overflow-hidden">
-                            <div className="flex border-b border-white/[0.08] overflow-x-auto">
+                        <div className="schema-tabs mb-6">
+                            <div className="schema-tabbar">
                                 {[
                                     { id: 'results', label: 'Results', icon: FileJson },
                                     { id: 'matrix', label: 'Comparison', icon: GitCompare },
@@ -616,10 +616,7 @@ Generate a best-practice template that incorporates the best patterns from these
                                     <button
                                         key={tab.id}
                                         onClick={() => setActiveTab(tab.id)}
-                                        className={`flex items-center gap-2 px-6 py-4 text-sm font-medium whitespace-nowrap transition ${activeTab === tab.id
-                                            ? 'text-brand-400 border-b-2 border-cyan-600 bg-brand-500/10/50'
-                                            : 'text-white/40 hover:text-white/70 hover:bg-white/[0.04]'
-                                            }`}
+                                        className={`ui-button ctool-tab ${activeTab === tab.id ? 'active' : ''}`}
                                     >
                                         <tab.icon className="w-4 h-4" />
                                         {tab.label}
@@ -629,7 +626,7 @@ Generate a best-practice template that incorporates the best patterns from these
                                 <button
                                     onClick={generateRecommendations}
                                     disabled={isGeneratingRecommendations}
-                                    className="flex items-center gap-2 px-5 py-3 m-2 bg-gradient-to-r from-brand-500 to-amber-600 text-white rounded-xl hover:from-brand-600 hover:to-amber-700 disabled:opacity-50 transition font-medium shadow-md text-sm"
+                                    className="ui-button ui-button-primary m-2"
                                 >
                                     {isGeneratingRecommendations ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
                                     Analyze with AI
@@ -647,9 +644,9 @@ Generate a best-practice template that incorporates the best patterns from these
                                                     onClick={() => toggleResult(result.url)}
                                                 >
                                                     <div className="flex items-center gap-3">
-                                                        {expandedResults[result.url] ? <ChevronUp className="w-5 h-5 text-white/40" /> : <ChevronDown className="w-5 h-5 text-white/40" />}
+                                                        {expandedResults[result.url] ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
                                                         <div>
-                                                            <h3 className="font-semibold text-white/90">{result.title}</h3>
+                                                            <h3 className="schema-card-title">{result.title}</h3>
                                                             <p className="text-xs text-white/40 truncate max-w-md">{result.url}</p>
                                                         </div>
                                                     </div>
@@ -657,7 +654,7 @@ Generate a best-practice template that incorporates the best patterns from these
                                                         <span className={`px-3 py-1 rounded-lg text-sm font-medium ${getScoreColor(result.avgScore)}`}>
                                                             {result.avgScore}% Quality
                                                         </span>
-                                                        <span className="px-3 py-1 bg-brand-500/100/15 text-cyan-300 rounded-lg text-sm font-medium">
+                                                        <span className="ctool-count-badge">
                                                             {result.schemaCount} schemas
                                                         </span>
                                                         <button
@@ -665,7 +662,7 @@ Generate a best-practice template that incorporates the best patterns from these
                                                                 e.stopPropagation();
                                                                 setResults(prev => prev.filter(r => r.url !== result.url));
                                                             }}
-                                                            className="p-2 text-white/30 hover:text-red-400 hover:bg-red-500/100/10 rounded-lg transition"
+                                                            className="ui-button schema-remove"
                                                             title="Remove from analysis"
                                                         >
                                                             <Trash2 className="w-4 h-4" />
@@ -684,7 +681,7 @@ Generate a best-practice template that incorporates the best patterns from these
                                                                         key={i}
                                                                         onClick={() => generateSchemaTemplate(type)}
                                                                         disabled={isGeneratingTemplate}
-                                                                        className={`px-3 py-1.5 rounded-lg text-sm font-medium flex items-center gap-2 ${config.color} hover:ring-2 hover:ring-offset-1 hover:ring-current transition`}
+                                                                        className="ui-button ctool-pill"
                                                                         title="Click to generate template"
                                                                     >
                                                                         <Icon className="w-4 h-4" />
@@ -715,9 +712,9 @@ Generate a best-practice template that incorporates the best patterns from these
                                                                             </div>
                                                                             <button
                                                                                 onClick={() => copySchema(schema, `${idx}-${i}`)}
-                                                                                className="p-2 text-white/40 hover:text-brand-400 hover:bg-white rounded-lg transition"
+                                                                                className="ui-button schema-remove schema-copy"
                                                                             >
-                                                                                {copiedIndex === `${idx}-${i}` ? <Check className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4" />}
+                                                                                {copiedIndex === `${idx}-${i}` ? <Check className="w-4 h-4 text-success-600" /> : <Copy className="w-4 h-4" />}
                                                                             </button>
                                                                         </div>
 
@@ -750,9 +747,9 @@ Generate a best-practice template that incorporates the best patterns from these
                                         <table className="w-full text-sm">
                                             <thead>
                                                 <tr className="bg-white/[0.03]">
-                                                    <th className="text-left p-3 font-semibold text-white/90 sticky left-0 bg-white/[0.03]">Schema Type</th>
+                                                    <th className="text-left p-3 schema-card-title sticky left-0 bg-white/[0.03]">Schema Type</th>
                                                     {results.map(r => (
-                                                        <th key={r.url} className="p-3 text-center font-semibold text-white/90 min-w-[120px]">
+                                                        <th key={r.url} className="p-3 text-center schema-card-title min-w-[120px]">
                                                             <div className="truncate max-w-[100px]" title={r.title}>{r.title}</div>
                                                         </th>
                                                     ))}
@@ -810,7 +807,7 @@ Generate a best-practice template that incorporates the best patterns from these
                                                             <p className="text-white/60 text-lg">{aiRecommendations.summary}</p>
                                                             {aiRecommendations.overallScore && (
                                                                 <div className="mt-3 flex items-center gap-3">
-                                                                    <span className="text-sm text-white/40">Competitor Schema Coverage:</span>
+                                                                    <span className="schema-muted">Competitor Schema Coverage:</span>
                                                                     <span className={`text-xl font-bold ${aiRecommendations.overallScore >= 70 ? 'text-green-400' : aiRecommendations.overallScore >= 40 ? 'text-amber-600' : 'text-red-600'}`}>
                                                                         {aiRecommendations.overallScore}%
                                                                     </span>
@@ -824,7 +821,7 @@ Generate a best-practice template that incorporates the best patterns from these
                                                 {aiRecommendations.insights && (
                                                     <div className="grid md:grid-cols-3 gap-4">
                                                         {aiRecommendations.insights.quickWins?.length > 0 && (
-                                                            <div className="bg-green-500/10 rounded-xl p-4 border border-green-500/20">
+                                                            <div className="schema-result-found">
                                                                 <h4 className="font-semibold text-green-300 flex items-center gap-2 mb-3">
                                                                     <Zap className="w-5 h-5" /> Quick Wins
                                                                 </h4>
@@ -832,7 +829,7 @@ Generate a best-practice template that incorporates the best patterns from these
                                                                     {aiRecommendations.insights.quickWins.map((item, i) => (
                                                                         <div key={i} className="bg-white/[0.06] rounded-lg p-3 border border-green-500/10">
                                                                             <div className="font-medium text-green-300">{item.schema}</div>
-                                                                            <div className="text-sm text-white/50">{item.reason}</div>
+                                                                            <div className="schema-muted">{item.reason}</div>
                                                                         </div>
                                                                     ))}
                                                                 </div>
@@ -848,7 +845,7 @@ Generate a best-practice template that incorporates the best patterns from these
                                                                     {aiRecommendations.insights.competitiveEdge.map((item, i) => (
                                                                         <div key={i} className="bg-white/[0.06] rounded-lg p-3 border border-purple-500/10">
                                                                             <div className="font-medium text-purple-300">{item.schema}</div>
-                                                                            <div className="text-sm text-white/50">{item.reason}</div>
+                                                                            <div className="schema-muted">{item.reason}</div>
                                                                         </div>
                                                                     ))}
                                                                 </div>
@@ -856,7 +853,7 @@ Generate a best-practice template that incorporates the best patterns from these
                                                         )}
 
                                                         {aiRecommendations.insights.mustHave?.length > 0 && (
-                                                            <div className="bg-red-500/10 rounded-xl p-4 border border-red-500/20">
+                                                            <div className="schema-result-missing">
                                                                 <h4 className="font-semibold text-red-300 flex items-center gap-2 mb-3">
                                                                     <Target className="w-5 h-5" /> Must Have
                                                                 </h4>
@@ -864,7 +861,7 @@ Generate a best-practice template that incorporates the best patterns from these
                                                                     {aiRecommendations.insights.mustHave.map((item, i) => (
                                                                         <div key={i} className="bg-white/[0.06] rounded-lg p-3 border border-red-500/10">
                                                                             <div className="font-medium text-red-300">{item.schema}</div>
-                                                                            <div className="text-sm text-white/50">{item.reason}</div>
+                                                                            <div className="schema-muted">{item.reason}</div>
                                                                         </div>
                                                                     ))}
                                                                 </div>
@@ -888,19 +885,19 @@ Generate a best-practice template that incorporates the best patterns from these
                                                                     }`}>
                                                                     <div className="flex items-center gap-2 mb-2">
                                                                         <span className={`px-2 py-0.5 rounded text-xs font-bold uppercase ${rec.priority === 'high' ? 'bg-red-500/20 text-red-300' :
-                                                                            rec.priority === 'medium' ? 'bg-amber-500/20 text-amber-300' :
-                                                                                'bg-green-500/20 text-green-300'
+                                                                            rec.priority === 'medium' ? 'app-badge app-badge-warning' :
+                                                                                'app-badge app-badge-success'
                                                                             }`}>{rec.priority}</span>
-                                                                        <span className="font-semibold text-white/90">{rec.schema}</span>
+                                                                        <span className="schema-card-title">{rec.schema}</span>
                                                                         <button
                                                                             onClick={() => generateSchemaTemplate(rec.schema)}
                                                                             disabled={isGeneratingTemplate}
-                                                                            className="ml-auto flex items-center gap-1 px-2 py-1 text-xs bg-white/[0.08] rounded-lg border border-white/[0.1] hover:bg-white/[0.12] transition text-white/60"
+                                                                            className="ui-button ctool-tool-btn ml-auto"
                                                                         >
                                                                             <Wand2 className="w-3 h-3" /> Generate
                                                                         </button>
                                                                     </div>
-                                                                    <p className="text-sm text-white/60 mb-1">{rec.reason}</p>
+                                                                    <p className="schema-muted mb-1">{rec.reason}</p>
                                                                     <p className="text-xs text-white/40">💡 {rec.implementation}</p>
                                                                     {rec.expectedImpact && (
                                                                         <p className="text-xs text-brand-400 mt-1">📈 {rec.expectedImpact}</p>
@@ -912,9 +909,9 @@ Generate a best-practice template that incorporates the best patterns from these
                                                 )}
                                             </div>
                                         ) : (
-                                            <div className="text-center py-12">
-                                                <Sparkles className="w-12 h-12 text-white/20 mx-auto mb-4" />
-                                                <h3 className="text-lg font-semibold text-white/60 mb-2">No AI Analysis Yet</h3>
+                                            <div className="schema-empty">
+                                                <Sparkles className="w-12 h-12 mx-auto mb-4" />
+                                                <h3 className="mb-2">No AI Analysis Yet</h3>
                                                 <p className="text-white/40 mb-4">Click "Analyze with AI" to get intelligent recommendations</p>
                                             </div>
                                         )}
@@ -927,8 +924,8 @@ Generate a best-practice template that incorporates the best patterns from these
                                         {generatedTemplate ? (
                                             <div className="space-y-6">
                                                 <div className="flex items-center justify-between">
-                                                    <h3 className="text-lg font-semibold text-white/90 flex items-center gap-2">
-                                                        <Wand2 className="w-5 h-5 text-brand-400" />
+                                                    <h3 className="schema-card-title flex items-center gap-2">
+                                                        <Wand2 className="w-5 h-5 ctool-accent" />
                                                         {generatedTemplate.type} Schema Template
                                                     </h3>
                                                     <button
@@ -937,15 +934,15 @@ Generate a best-practice template that incorporates the best patterns from these
                                                             setCopiedIndex('template');
                                                             setTimeout(() => setCopiedIndex(null), 2000);
                                                         }}
-                                                        className="flex items-center gap-2 px-4 py-2 bg-brand-500/100/15 text-cyan-300 rounded-lg hover:bg-cyan-200 transition font-medium"
+                                                        className="ui-button ctool-tool-btn"
                                                     >
                                                         {copiedIndex === 'template' ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
                                                         Copy Template
                                                     </button>
                                                 </div>
 
-                                                <div className="bg-slate-900 rounded-xl p-4 overflow-x-auto">
-                                                    <pre className="text-sm text-slate-300 font-mono">
+                                                <div className="schema-code rounded-xl p-4 overflow-x-auto">
+                                                    <pre className="text-sm schema-muted font-mono">
                                                         {JSON.stringify(generatedTemplate.template, null, 2)}
                                                     </pre>
                                                 </div>
@@ -955,7 +952,7 @@ Generate a best-practice template that incorporates the best patterns from these
                                                         <h4 className="font-semibold text-blue-300 mb-3">📋 Implementation Steps</h4>
                                                         <ol className="space-y-2">
                                                             {generatedTemplate.instructions.map((step, i) => (
-                                                                <li key={i} className="flex gap-3 text-sm text-white/60">
+                                                                <li key={i} className="flex gap-3 schema-muted">
                                                                     <span className="w-6 h-6 bg-blue-500/20 text-blue-300 rounded-full flex items-center justify-center flex-shrink-0 font-medium">{i + 1}</span>
                                                                     {step}
                                                                 </li>
@@ -965,31 +962,31 @@ Generate a best-practice template that incorporates the best patterns from these
                                                 )}
 
                                                 {generatedTemplate.tips?.length > 0 && (
-                                                    <div className="bg-green-500/10 rounded-xl p-4 border border-green-500/20">
+                                                    <div className="schema-result-found">
                                                         <h4 className="font-semibold text-green-300 mb-2">💡 Best Practices</h4>
                                                         <ul className="space-y-1">
                                                             {generatedTemplate.tips.map((tip, i) => (
-                                                                <li key={i} className="text-sm text-white/60">• {tip}</li>
+                                                                <li key={i} className="schema-muted">• {tip}</li>
                                                             ))}
                                                         </ul>
                                                     </div>
                                                 )}
 
                                                 {generatedTemplate.commonMistakes?.length > 0 && (
-                                                    <div className="bg-red-500/10 rounded-xl p-4 border border-red-500/20">
+                                                    <div className="schema-result-missing">
                                                         <h4 className="font-semibold text-red-300 mb-2">⚠️ Common Mistakes to Avoid</h4>
                                                         <ul className="space-y-1">
                                                             {generatedTemplate.commonMistakes.map((mistake, i) => (
-                                                                <li key={i} className="text-sm text-white/60">• {mistake}</li>
+                                                                <li key={i} className="schema-muted">• {mistake}</li>
                                                             ))}
                                                         </ul>
                                                     </div>
                                                 )}
                                             </div>
                                         ) : (
-                                            <div className="text-center py-12">
-                                                <Wand2 className="w-12 h-12 text-white/20 mx-auto mb-4" />
-                                                <h3 className="text-lg font-semibold text-white/60 mb-2">No Template Generated</h3>
+                                            <div className="schema-empty">
+                                                <Wand2 className="w-12 h-12 mx-auto mb-4" />
+                                                <h3 className="mb-2">No Template Generated</h3>
                                                 <p className="text-white/40">Click on any schema type badge to generate an optimized template</p>
                                             </div>
                                         )}
@@ -1002,18 +999,18 @@ Generate a best-practice template that incorporates the best patterns from these
 
                 {/* Empty State */}
                 {results.length === 0 && !Object.values(isAnalyzing).some(Boolean) && (
-                    <div className="rounded-2xl border border-white/[0.08] bg-[#0d1117] p-8 md:p-12 text-center">
-                        <div className="w-16 h-16 bg-gradient-to-br from-brand-500/20 to-amber-500/20 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                            <FileCode className="w-8 h-8 text-brand-400" />
+                    <div className="schema-empty-card">
+                        <div className="kw-connect-icon mx-auto mb-4">
+                            <FileCode className="w-6 h-6" />
                         </div>
-                        <h3 className="text-xl font-bold text-white/90 mb-2">Schema Intelligence Analyzer</h3>
-                        <p className="text-white/40 max-w-md mx-auto mb-6">
+                        <h3 className="ctool-empty-title mb-2">Schema Intelligence Analyzer</h3>
+                        <p className="ctool-empty-text mx-auto mb-6">
                             Enter competitor URLs to scan their schema markup, validate against schema.org, and get AI-powered recommendations.
                         </p>
-                        <div className="flex flex-wrap justify-center gap-3 text-sm text-white/30">
-                            <span className="flex items-center gap-1"><CheckCircle className="w-4 h-4 text-green-500" /> Schema Validation</span>
-                            <span className="flex items-center gap-1"><GitCompare className="w-4 h-4 text-blue-500" /> Side-by-Side Comparison</span>
-                            <span className="flex items-center gap-1"><Sparkles className="w-4 h-4 text-purple-500" /> AI Recommendations</span>
+                        <div className="schema-feature-row">
+                            <span className="flex items-center gap-1"><CheckCircle className="w-4 h-4" /> Schema Validation</span>
+                            <span className="flex items-center gap-1"><GitCompare className="w-4 h-4" /> Side-by-Side Comparison</span>
+                            <span className="flex items-center gap-1"><Sparkles className="w-4 h-4" /> AI Recommendations</span>
                             <span className="flex items-center gap-1"><Wand2 className="w-4 h-4 text-cyan-500" /> Template Generation</span>
                         </div>
                     </div>
