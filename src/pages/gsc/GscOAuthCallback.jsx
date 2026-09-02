@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { AlertCircle, Loader2 } from "lucide-react";
 import { useAuth } from "../../context/AuthContext.jsx";
@@ -15,6 +15,7 @@ export default function GscOAuthCallback() {
   const navigate = useNavigate();
   const [params] = useSearchParams();
   const [error, setError] = useState("");
+  const exchangeStartedRef = useRef(false);
   const state = useMemo(() => parseGscOAuthState(params.get("state")), [params]);
 
   useEffect(() => {
@@ -39,6 +40,9 @@ export default function GscOAuthCallback() {
       setError("Please log in before connecting Search Console.");
       return;
     }
+
+    if (exchangeStartedRef.current) return;
+    exchangeStartedRef.current = true;
 
     async function exchangeCode() {
       try {

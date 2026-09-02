@@ -4,6 +4,8 @@ import fs from "node:fs";
 import { onRequest as autocompleteOnRequest } from "./functions/api/autocomplete.js";
 import { onRequest as gscTokenOnRequest } from "./functions/api/gsc-token.js";
 import { onRequest as pagespeedOnRequest } from "./functions/api/pagespeed.js";
+import { onRequest as screamingFrogOnRequest } from "./functions/api/tech-seo/screaming-frog.js";
+import { onRequest as screamingFrogReportDownloadOnRequest } from "./functions/api/tech-seo/screaming-frog/report-download.js";
 import { onRequest as projectsOnRequest } from "./functions/api/projects.js";
 import { onRequest as projectDetailsOnRequest } from "./functions/api/project-details.js";
 import { onRequest as backlinksAnalyzeOnRequest } from "./functions/api/tech-seo/backlinks/analyze.js";
@@ -99,7 +101,14 @@ async function readRawBody(req) {
   return new Promise((resolve) => {
     const chunks = [];
     req.on("data", (chunk) => chunks.push(Buffer.from(chunk)));
-    req.on("end", () => resolve(Buffer.concat(chunks).toString("utf8") || undefined));
+    // Request bodies can be multipart uploads. Returning UTF-8 text here
+    // corrupts arbitrary ZIP bytes before Request.formData() sees them.
+    const finish = () => {
+      const body = Buffer.concat(chunks);
+      resolve(body.length ? body : undefined);
+    };
+    req.on("end", finish);
+    req.on("error", finish);
   });
 }
 
@@ -314,6 +323,18 @@ function pagespeedApiPlugin() {
   };
 }
 
+function screamingFrogApiPlugin() {
+  return {
+    name: "seox-screaming-frog-api",
+    configureServer(server) {
+      registerScreamingFrogMiddleware(server);
+    },
+    configurePreviewServer(server) {
+      registerScreamingFrogMiddleware(server);
+    },
+  };
+}
+
 function webmasterApiPlugin() {
   return {
     name: "seox-webmaster-api",
@@ -485,12 +506,17 @@ function contentOutlineApiPlugin() {
 }
 
 function mountedUrl(req, mountPath) {
+  const forwardedHost = String(req.headers?.["x-forwarded-host"] || req.headers?.host || "").split(",")[0].trim();
+  const host = /^[a-z0-9.:[\]-]+$/i.test(forwardedHost) ? forwardedHost : "127.0.0.1:3000";
+  const forwardedProtocol = String(req.headers?.["x-forwarded-proto"] || "").split(",")[0].trim().toLowerCase();
+  const protocol = forwardedProtocol === "https" ? "https" : "http";
+  const origin = `${protocol}://${host}`;
   const raw = req.url || "";
-  if (raw.startsWith(mountPath)) return `http://127.0.0.1${raw}`;
-  if (raw.startsWith("/?")) return `http://127.0.0.1${mountPath}${raw.slice(1)}`;
-  if (raw.startsWith("?")) return `http://127.0.0.1${mountPath}${raw}`;
-  if (!raw || raw === "/") return `http://127.0.0.1${mountPath}`;
-  return `http://127.0.0.1${mountPath}${raw.startsWith("/") ? raw : `/${raw}`}`;
+  if (raw.startsWith(mountPath)) return `${origin}${raw}`;
+  if (raw.startsWith("/?")) return `${origin}${mountPath}${raw.slice(1)}`;
+  if (raw.startsWith("?")) return `${origin}${mountPath}${raw}`;
+  if (!raw || raw === "/") return `${origin}${mountPath}`;
+  return `${origin}${mountPath}${raw.startsWith("/") ? raw : `/${raw}`}`;
 }
 
 function registerFetchUrlMetaMiddleware(server) {
@@ -540,6 +566,32 @@ function registerPagespeedMiddleware(server) {
       sendJson(res, error?.status || 500, {
         error: "PageSpeed request failed",
         message: error?.message || "Unknown error",
+      });
+    }
+  });
+}
+
+function registerScreamingFrogMiddleware(server) {
+  server.middlewares.use("/api/tech-seo/screaming-frog/report-download", async (req, res) => {
+    try {
+      const request = await createWebRequest(req, "/api/tech-seo/screaming-frog/report-download");
+      const response = await screamingFrogReportDownloadOnRequest({ request, env: loadDevApiEnv() });
+      await sendWebResponse(res, response);
+    } catch (error) {
+      sendJson(res, error?.status || 500, { status: "error", success: false, message: error?.message || "Screaming Frog report download failed." });
+    }
+  });
+  server.middlewares.use("/api/tech-seo/screaming-frog", async (req, res) => {
+    try {
+      const request = await createWebRequest(req, "/api/tech-seo/screaming-frog");
+      const response = await screamingFrogOnRequest({ request, env: loadDevApiEnv() });
+      await sendWebResponse(res, response);
+    } catch (error) {
+      sendJson(res, error?.status || 500, {
+        status: "error",
+        success: false,
+        message: error?.message || "Screaming Frog request failed.",
+        errors: [],
       });
     }
   });
@@ -1141,7 +1193,7 @@ function sendJson(res, status, payload) {
 }
 
 export default defineConfig({
-  plugins: [react(), proxyApiPlugin(), deepseekApiPlugin(), fetchUrlMetaApiPlugin(), pagespeedApiPlugin(), webmasterApiPlugin(), autocompleteApiPlugin(), gscTokenApiPlugin(), projectsApiPlugin(), projectDetailsApiPlugin(), backlinksAnalyzeApiPlugin(), w3cValidationApiPlugin(), expiredDomainsCheckApiPlugin(), backlinkCleanerApiPlugin(), backlinkIndexerApiPlugin(), keywordResearchApiPlugin(), ubersuggestApiPlugin(), authApiPlugin(), contentOutlineApiPlugin(), crawlerApiPlugin()],
+  plugins: [react(), proxyApiPlugin(), deepseekApiPlugin(), fetchUrlMetaApiPlugin(), pagespeedApiPlugin(), screamingFrogApiPlugin(), webmasterApiPlugin(), autocompleteApiPlugin(), gscTokenApiPlugin(), projectsApiPlugin(), projectDetailsApiPlugin(), backlinksAnalyzeApiPlugin(), w3cValidationApiPlugin(), expiredDomainsCheckApiPlugin(), backlinkCleanerApiPlugin(), backlinkIndexerApiPlugin(), keywordResearchApiPlugin(), ubersuggestApiPlugin(), authApiPlugin(), contentOutlineApiPlugin(), crawlerApiPlugin()],
   server: {
     port: 3000,
     host: true,

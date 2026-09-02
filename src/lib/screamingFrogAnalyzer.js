@@ -1,43 +1,55 @@
 const URL_COLUMNS = new Set(['address', 'url', 'source url']);
+const SCREAMING_FROG_HEADERS = new Set([
+  ...URL_COLUMNS, 'destination', 'status code', 'issue name', 'issue type',
+  'title 1', 'meta description 1', 'h1-1', 'canonical link element 1', 'errors', 'warnings',
+]);
 
 export function parseScreamingFrogCsv(text) {
-  const lines = String(text || '').split(/\r?\n/).filter((line) => line.trim());
-  if (!lines.length) return { headers: [], rows: [], urls: [], errors: [] };
+  const source = String(text || '').replace(/^\uFEFF/, '');
+  if (!source.trim()) return { headers: [], rows: [], urls: [], errors: [], hasRecognizedHeader: false };
 
-  const parseLine = (line) => {
-    const values = [];
-    let value = '';
-    let quoted = false;
-    for (let index = 0; index < line.length; index += 1) {
-      const character = line[index];
-      if (character === '"') {
-        if (quoted && line[index + 1] === '"') {
-          value += '"';
-          index += 1;
-        } else {
-          quoted = !quoted;
-        }
-      } else if ((character === ',' || character === '\t') && !quoted) {
-        values.push(value.trim());
-        value = '';
-      } else {
-        value += character;
-      }
+  // Screaming Frog exports can be comma, semicolon, or tab separated. Parse
+  // records (rather than splitting lines) so quoted values may contain commas
+  // and line breaks.
+  const firstLine = source.split(/\r\n|\n|\r/, 1)[0] || '';
+  const delimiters = [',', ';', '\t'];
+  const delimiter = delimiters.reduce((best, candidate) => {
+    const count = (firstLine.match(new RegExp(candidate === '\t' ? '\\t' : `\\${candidate}`, 'g')) || []).length;
+    return count > best.count ? { value: candidate, count } : best;
+  }, { value: ',', count: -1 }).value;
+  const records = [];
+  let row = [];
+  let value = '';
+  let quoted = false;
+  for (let index = 0; index < source.length; index += 1) {
+    const character = source[index];
+    if (character === '"') {
+      if (quoted && source[index + 1] === '"') { value += '"'; index += 1; }
+      else quoted = !quoted;
+    } else if (character === delimiter && !quoted) {
+      row.push(value.trim()); value = '';
+    } else if ((character === '\n' || character === '\r') && !quoted) {
+      if (character === '\r' && source[index + 1] === '\n') index += 1;
+      row.push(value.trim());
+      if (row.some((cell) => cell)) records.push(row);
+      row = []; value = '';
+    } else {
+      value += character;
     }
-    values.push(value.trim());
-    return values;
-  };
+  }
+  row.push(value.trim());
+  if (row.some((cell) => cell)) records.push(row);
+  if (!records.length) return { headers: [], rows: [], urls: [], errors: [], hasRecognizedHeader: false };
 
-  const firstRow = parseLine(lines[0]);
-  const hasHeader = firstRow.some((header) => URL_COLUMNS.has(header.toLowerCase()));
+  const firstRow = records[0];
+  const hasHeader = firstRow.some((header) => SCREAMING_FROG_HEADERS.has(header.toLowerCase()));
   if (!hasHeader) {
-    const values = lines.flatMap(parseLine).map((value) => value.replace(/^['"]|['"]$/g, '').trim());
-    return { headers: ['Address'], rows: values.map((Address) => ({ Address })), urls: values, errors: [] };
+    const values = records.flat().map((cell) => cell.replace(/^['"]|['"]$/g, '').trim()).filter(Boolean);
+    return { headers: ['Address'], rows: values.map((Address) => ({ Address })), urls: values, errors: [], hasRecognizedHeader: false };
   }
 
   const headers = firstRow;
-  const rows = lines.slice(1).map((line) => {
-    const values = parseLine(line);
+  const rows = records.slice(1).map((values) => {
     return Object.fromEntries(headers.map((header, index) => [header, values[index] || '']));
   });
   const urlHeader = headers.find((header) => URL_COLUMNS.has(header.toLowerCase()));
@@ -46,6 +58,7 @@ export function parseScreamingFrogCsv(text) {
     rows,
     urls: rows.map((row) => row[urlHeader]).filter(Boolean),
     errors: [],
+    hasRecognizedHeader: true,
   };
 }
 
@@ -80,7 +93,8 @@ export function detectScreamingFrogFileType(headers) {
   if (names.has('address') && names.has('meta description 1')) return 'meta_descriptions';
   if (names.has('address') && names.has('h1-1')) return 'h1';
   if (names.has('destination') || (names.has('address') && names.has('status code'))) return 'external';
-  return 'internal_html';
+  if (names.has('address')) return 'internal_html';
+  return null;
 }
 
 export function analyzeScreamingFrog(data) {
@@ -156,6 +170,7 @@ export function analyzeScreamingFrog(data) {
 export function buildScreamingFrogData(text) {
   const parsed = parseScreamingFrogCsv(text);
   const type = detectScreamingFrogFileType(parsed.headers);
+  if (!type) return {};
   const mainPageTypes = new Set(['page_titles', 'meta_descriptions', 'h1']);
   return { [mainPageTypes.has(type) ? 'internal_html' : type]: parsed };
 }
