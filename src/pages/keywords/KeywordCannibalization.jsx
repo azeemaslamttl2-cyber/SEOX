@@ -106,10 +106,11 @@ export default function KeywordCannibalization() {
 
   if (gsc.isCheckingConnection) {
     return (
-      <div className="flex min-h-[360px] items-center justify-center">
-        <div className="text-center">
-          <Loader2 className="mx-auto h-8 w-8 animate-spin text-blue-400" />
-          <p className="mt-3 text-sm text-white/35">Checking Search Console connection...</p>
+      <div className="keyword-cannibalization-page kw-page space-y-5">
+        <Hero />
+        <div className="kw-connect-card kw-loading-card">
+          <Loader2 className="h-7 w-7 animate-spin" />
+          <p className="kw-connect-text">Checking Search Console connection...</p>
         </div>
       </div>
     );
@@ -117,68 +118,72 @@ export default function KeywordCannibalization() {
 
   if (!gsc.isSignedIn) {
     return (
-      <div className="space-y-5">
-        <Header />
-        <div className="rounded-2xl border border-white/[0.08] bg-[#0d1117] p-8 text-center">
-          <Globe className="mx-auto h-12 w-12 text-white/20" />
-          <h2 className="mt-4 text-lg font-bold text-white/80">Connect Google Search Console</h2>
-          <p className="mx-auto mt-2 max-w-md text-sm text-white/35">
+      <div className="keyword-cannibalization-page kw-page space-y-5">
+        <Hero />
+        <div className="kw-connect-card">
+          <span className="kw-connect-icon">
+            <Globe className="h-6 w-6" />
+          </span>
+          <h2 className="kw-connect-title">Connect Google Search Console</h2>
+          <p className="kw-connect-text">
             PGC needs query and page data to detect when multiple URLs compete for the same keyword.
           </p>
           <button
             onClick={gsc.handleSignIn}
-            className="mt-6 inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-rose-500 to-pink-500 px-6 py-3 text-sm font-bold text-white shadow-lg"
+            className="ui-button ui-button-primary kw-connect-button"
           >
             <LogIn className="h-4 w-4" />
             Connect Search Console
           </button>
-          <p className="mx-auto mt-4 max-w-lg text-[11px] text-white/20">
-            Google OAuth callback URL: <span className="font-mono text-white/35">{gsc.redirectUri}</span>
+          <p className="kw-connect-meta">
+            Google OAuth callback URL: <span className="kw-connect-uri">{gsc.redirectUri}</span>
           </p>
-          {gsc.error && <p className="mt-4 text-xs font-semibold text-rose-300">{gsc.error}</p>}
+          {gsc.error && <p className="kw-connect-error">{gsc.error}</p>}
         </div>
       </div>
     );
   }
 
   return (
-    <div className="keyword-cannibalization-page space-y-5">
-      <div className="keyword-cannibalization-header flex items-center justify-between gap-3">
+    <div className="keyword-cannibalization-page kw-page space-y-5">
+      <div className="kw-hero">
+        <div className="flex flex-wrap items-center justify-between gap-4">
         <Header />
-        <div className="flex items-center gap-2">
+        <div className="flex flex-shrink-0 items-center gap-2">
           <button
             onClick={exportCsv}
             disabled={!filteredRows.length}
-            className="flex items-center gap-2 rounded-lg border border-white/[0.08] bg-white/[0.03] px-4 py-2 text-xs font-semibold text-white/50 transition hover:text-white/70 disabled:opacity-40"
+            className="ui-button gke-secondary"
           >
             <Download className="h-3.5 w-3.5" /> Export
           </button>
           <button
             onClick={gsc.handleSignOut}
-            className="flex items-center gap-2 rounded-lg border border-white/[0.08] bg-white/[0.03] px-3 py-2 text-xs font-semibold text-white/40 transition hover:text-rose-300"
+            className="ui-button gke-disconnect"
           >
             <LogOut className="h-3.5 w-3.5" />
             Disconnect
           </button>
         </div>
+        </div>
       </div>
 
       {showInfo && (
-        <div className="keyword-cannibalization-info flex items-start gap-3 rounded-xl border border-white/[0.08] bg-[#0d1117] px-4 py-3">
-          <Info className="mt-0.5 h-4 w-4 flex-shrink-0 text-white/30" />
-          <p className="flex-1 text-xs text-white/50">
-            <span className="font-semibold text-white/70">About Keyword Cannibalization.</span>{" "}
+        <div className="app-alert app-alert-info kc-info">
+          <Info className="mt-0.5 h-4 w-4 flex-shrink-0" />
+          <p className="flex-1">
+            <span className="kc-info-lead">About Keyword Cannibalization.</span>{" "}
             Keyword cannibalization happens when two or more pages rank for the same query, splitting impressions and confusing search intent.
           </p>
-          <button onClick={() => setShowInfo(false)} className="text-white/20 hover:text-white/40">
+          <button onClick={() => setShowInfo(false)} className="gke-alert-close" aria-label="Dismiss">
             <X className="h-3.5 w-3.5" />
           </button>
         </div>
       )}
 
-      <div className="keyword-cannibalization-filters rounded-2xl border border-white/[0.08] bg-[#0d1117] p-4">
+      <div className="keyword-cannibalization-filters gke-filters">
         <div className="flex flex-wrap items-center gap-3">
-          <div className="flex min-w-[260px] flex-1 items-center gap-2 rounded-xl border border-white/[0.08] bg-[#010409] px-4 py-2.5">
+          <div className="flex min-w-[260px] flex-1 items-center gap-2 gke-field">
             <Globe className="h-4 w-4 text-blue-400" />
             <select
               value={gsc.selectedSite}
@@ -195,14 +200,12 @@ export default function KeywordCannibalization() {
           <DatePill start={gsc.currentStart} end={gsc.currentEnd} />
           <span className="text-xs text-white/20">vs</span>
           <DatePill start={gsc.previousStart} end={gsc.previousEnd} muted />
-          <div className="flex items-center gap-0.5 rounded-lg bg-white/[0.04] p-0.5">
+          <div className="admin-tabs gke-presets">
             {gsc.datePresets.map((preset) => (
               <button
                 key={preset.id}
                 onClick={() => gsc.setDatePreset(preset.id)}
-                className={`rounded-md px-2.5 py-1.5 text-[10px] font-bold transition ${
-                  gsc.datePreset === preset.id ? "bg-blue-500 text-white" : "text-white/30 hover:text-white/50"
-                }`}
+                className={`admin-tab ${gsc.datePreset === preset.id ? "active" : ""}`}
               >
                 {preset.label}
               </button>
@@ -227,7 +230,7 @@ export default function KeywordCannibalization() {
           <button
             onClick={applyCannibalization}
             disabled={!gsc.selectedSite || gsc.isLoading}
-            className="flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-blue-500 to-indigo-500 px-4 py-2.5 text-xs font-bold text-white shadow-md disabled:cursor-not-allowed disabled:opacity-60"
+            className="ui-button ui-button-primary gke-apply"
           >
             {gsc.isLoading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <RefreshCw className="h-3.5 w-3.5" />}
             Apply
@@ -237,26 +240,26 @@ export default function KeywordCannibalization() {
       </div>
 
       {gsc.error && (
-        <div className="flex items-center gap-2 rounded-xl border border-rose-500/20 bg-rose-500/[0.05] px-4 py-3 text-xs text-rose-200">
+        <div className="app-alert app-alert-error">
           <AlertCircle className="h-4 w-4" />
           <span className="flex-1">{gsc.error}</span>
-          <button onClick={() => gsc.setError("")} className="text-rose-200/60 hover:text-rose-100">
+          <button onClick={() => gsc.setError("")} className="gke-alert-close" aria-label="Dismiss">
             <X className="h-3.5 w-3.5" />
           </button>
         </div>
       )}
 
-      <div className="keyword-cannibalization-results rounded-2xl border border-white/[0.08] bg-[#0d1117]">
+      <div className="keyword-cannibalization-results kw-results">
         <div className="flex items-center justify-between gap-3 border-b border-white/[0.06] px-5 py-3">
           <h3 className="text-sm font-bold text-white/70">
             Keyword Cannibalization <span className="text-white/30">({filteredRows.length})</span>
           </h3>
-          <div className="flex items-center gap-2 rounded-lg border border-white/[0.08] bg-[#010409] px-3 py-1.5">
+          <div className="kw-search">
             <Search className="h-3.5 w-3.5 text-white/25" />
             <input
               value={searchTerm}
               onChange={(event) => setSearchTerm(event.target.value)}
-              className="w-40 bg-transparent text-xs text-white/60 placeholder:text-white/20 focus:outline-none"
+              className="kw-search-input w-40"
               placeholder="Filter keywords..."
             />
           </div>
@@ -329,13 +332,25 @@ export default function KeywordCannibalization() {
 
 function Header() {
   return (
-    <div className="flex items-center gap-3">
-      <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-rose-500/15">
-        <Copy className="h-5 w-5 text-rose-400" />
-      </div>
+    <div className="kw-title-row">
+      <span className="gke-icon">
+        <Copy className="h-5 w-5" />
+      </span>
       <div>
-        <h1 className="font-display text-xl font-black text-white">Keyword Cannibalization</h1>
-        <p className="text-xs text-white/35">Find queries where multiple URLs compete for the same ranking opportunity.</p>
+        <h1 className="kw-title font-display">Keyword Cannibalization</h1>
+        <p className="kw-description">Find queries where multiple URLs compete for the same ranking opportunity.</p>
+      </div>
+    </div>
+  );
+}
+
+/* Banner shell for the states that carry no header actions, so the
+   disconnected and loading screens keep the same banner as the loaded one. */
+function Hero() {
+  return (
+    <div className="kw-hero">
+      <div className="flex flex-wrap items-center justify-between gap-4">
+        <Header />
       </div>
     </div>
   );
@@ -343,7 +358,7 @@ function Header() {
 
 function DatePill({ end, muted, start }) {
   return (
-    <div className="flex items-center gap-2 rounded-xl border border-white/[0.08] bg-[#010409] px-4 py-2.5">
+    <div className="flex items-center gap-2 gke-field">
       <Calendar className="h-3.5 w-3.5 text-white/30" />
       <span className={`text-xs ${muted ? "text-white/35" : "text-white/50"}`}>
         {formatDateShort(start)} - {formatDateShort(end)}
@@ -354,13 +369,13 @@ function DatePill({ end, muted, start }) {
 
 function DateInput({ label, onChange, value }) {
   return (
-    <label className="flex items-center gap-2 rounded-xl border border-white/[0.08] bg-[#010409] px-3 py-2">
+    <label className="gke-field gke-datefield">
       <span className="text-[10px] font-bold uppercase tracking-wide text-white/25">{label}</span>
       <input
         type="date"
         value={value}
         onChange={(event) => onChange(event.target.value)}
-        className="bg-transparent text-xs text-white/55 outline-none [color-scheme:dark]"
+        className="gke-date-input"
       />
     </label>
   );
@@ -371,7 +386,7 @@ function TH({ label, onClick }) {
     <button
       onClick={onClick}
       disabled={!onClick}
-      className="text-left text-[10px] font-bold uppercase tracking-wider text-white/30 hover:text-white/50 disabled:hover:text-white/30"
+      className="gke-th"
     >
       {label}
       {onClick && <ChevronDown className="ml-1 inline h-3 w-3 opacity-40" />}

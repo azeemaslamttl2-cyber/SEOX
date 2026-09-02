@@ -589,7 +589,7 @@ const CompetitorContentAnalyzer = () => {
                                         1: 'bg-emerald-100 text-emerald-700',
                                         2: 'bg-blue-100 text-blue-700',
                                         3: 'bg-purple-100 text-purple-700',
-                                        4: 'bg-amber-100 text-amber-700',
+                                        4: 'bg-surface-muted text-amber-700',
                                         5: 'bg-gray-100 text-gray-700',
                                         6: 'bg-gray-100 text-gray-500'
                                     };
@@ -633,35 +633,35 @@ const CompetitorContentAnalyzer = () => {
     };
 
     return (
-        <div className="content-tool-page tool-dark-surface bg-gradient-to-br from-slate-50 to-amber-50 p-3 md:p-6">
+        <div className="content-tool-page ctool-page space-y-5">
             <div className="">
                 {/* Header */}
-                <div className="bg-gradient-to-r from-amber-600 to-orange-600 rounded-2xl p-4 md:p-8 text-white mb-6 md:mb-8 shadow-xl">
-                    <div className="flex items-center gap-3 md:gap-4 mb-4">
-                        <div className="w-12 md:w-14 h-12 md:h-14 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm">
-                            <Globe className="w-6 md:w-7 h-6 md:h-7" />
+                <div className="ctool-hero mb-6">
+                    <div className="ctool-hero-row">
+                        <div className="ctool-hero-icon">
+                            <Globe className="w-5 h-5" />
                         </div>
                         <div>
-                            <h1 className="text-xl md:text-3xl font-bold">Content Analyzer</h1>
-                            <p className="text-sm md:text-base text-amber-200">Extract NLP data from competitor pages</p>
+                            <h1 className="ctool-title font-display">Content Analyzer</h1>
+                            <p className="ctool-subtitle">Extract NLP data from competitor pages</p>
                         </div>
                     </div>
 
-                    <p className="text-amber-100 text-sm md:text-base mb-6">
+                    <p className="ctool-subtitle mt-4 mb-5">
                         Add competitor URLs to extract entities, n-grams, skip-gram words, and content outlines from their pages.
                     </p>
                 </div>
 
                 {/* URL Inputs */}
-                <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-4 md:p-6 mb-6">
+                <div className="ctool-card mb-6">
                     <div className="flex items-center justify-between mb-4">
                         <h2 className="text-base md:text-lg font-semibold text-gray-900 flex items-center gap-2">
-                            <Globe className="w-5 h-5 text-amber-600" />
+                            <Globe className="w-5 h-5 ctool-accent" />
                             Competitor URLs
                         </h2>
                         <button
                             onClick={addUrlInput}
-                            className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-amber-600 bg-amber-50 hover:bg-amber-100 rounded-lg transition"
+                            className="ui-button ctool-tool-btn"
                         >
                             <Plus className="w-4 h-4" />
                             Add URL
@@ -678,13 +678,13 @@ const CompetitorContentAnalyzer = () => {
                                         value={url}
                                         onChange={(e) => updateUrl(index, e.target.value)}
                                         placeholder="https://example.com/article"
-                                        className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500/30 focus:border-amber-500 transition text-sm"
+                                        className="ctool-input w-full pl-10"
                                     />
                                 </div>
                                 {urls.length > 1 && (
                                     <button
                                         onClick={() => removeUrlInput(index)}
-                                        className="p-3 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-xl transition"
+                                        className="ui-button ctool-icon-btn"
                                     >
                                         <X className="w-4 h-4" />
                                     </button>
@@ -696,7 +696,7 @@ const CompetitorContentAnalyzer = () => {
                     <button
                         onClick={extractAll}
                         disabled={isExtracting || urls.every(u => !u.trim())}
-                        className="w-full py-3 bg-gradient-to-r from-amber-600 to-orange-600 text-white rounded-xl hover:from-amber-700 hover:to-orange-700 disabled:opacity-50 disabled:cursor-not-allowed transition font-semibold flex items-center justify-center gap-2 shadow-lg"
+                        className="ui-button ui-button-primary w-full"
                     >
                         {isExtracting ? (
                             <>
@@ -720,7 +720,7 @@ const CompetitorContentAnalyzer = () => {
                             </div>
                             <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
                                 <div
-                                    className="h-full bg-gradient-to-r from-amber-500 to-orange-500 transition-all duration-300"
+                                    className="h-full bg-brand-500 transition-all duration-300"
                                     style={{ width: `${progress}%` }}
                                 />
                             </div>
@@ -742,7 +742,7 @@ const CompetitorContentAnalyzer = () => {
                         <div className="flex justify-end">
                             <button
                                 onClick={copyPrompt}
-                                className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-amber-600 to-orange-600 text-white rounded-xl hover:from-amber-700 hover:to-orange-700 transition font-semibold shadow-lg"
+                                className="ui-button ui-button-primary"
                             >
                                 {copiedSection === 'prompt' ? (
                                     <>
@@ -767,14 +767,14 @@ const CompetitorContentAnalyzer = () => {
                             const Icon = config.icon;
 
                             return (
-                                <div key={sectionKey} className="bg-white rounded-2xl shadow-lg border border-gray-200 overflow-hidden">
+                                <div key={sectionKey} className="ctool-card ctool-card-flush overflow-hidden">
                                     {/* Section Header */}
                                     <div
-                                        className="flex items-center justify-between p-4 bg-gray-50 cursor-pointer hover:bg-gray-100 transition"
+                                        className="ctool-section-head"
                                         onClick={() => toggleSection(sectionKey)}
                                     >
                                         <div className="flex items-center gap-3">
-                                            <div className={`w-10 h-10 rounded-lg bg-gradient-to-br ${config.color} flex items-center justify-center text-white`}>
+                                            <div className="ctool-empty-icon h-10 w-10">
                                                 <Icon className="w-5 h-5" />
                                             </div>
                                             <div>
@@ -788,7 +788,7 @@ const CompetitorContentAnalyzer = () => {
                                             </span>
                                             <button
                                                 onClick={(e) => { e.stopPropagation(); copySectionData(sectionKey); }}
-                                                className="p-2 text-gray-500 hover:text-amber-600 hover:bg-amber-50 rounded-lg transition"
+                                                className="p-2 text-gray-500 hover:ctool-accent hover:bg-amber-50 rounded-lg transition"
                                                 title={`Copy ${config.label}`}
                                             >
                                                 {copiedSection === sectionKey ? (
@@ -814,8 +814,8 @@ const CompetitorContentAnalyzer = () => {
                 )}
 
                 {/* Info */}
-                <div className="mt-6 p-4 bg-gradient-to-r from-amber-50 to-orange-50 rounded-xl border border-amber-200">
-                    <p className="text-amber-700 text-sm">
+                <div className="ctool-note mt-6">
+                    <p className="">
                         <strong>Content Analyzer:</strong> Add competitor URLs to extract entities, n-grams, skip-gram words, and content outlines. The "Copy Prompt" button copies all data (excluding outline) formatted for content optimization.
                     </p>
                 </div>

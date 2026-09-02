@@ -141,24 +141,28 @@ export default function Ubersuggest() {
 
   return (
     <div className="ubersuggest-page space-y-5">
-      <div className="flex flex-col items-center py-6">
-        <div className="flex items-center gap-2 rounded-full bg-gradient-to-r from-orange-500 to-rose-500 px-5 py-2">
-          <Search className="h-4 w-4 text-white" />
-          <span className="text-sm font-bold text-white">Ubersuggest</span>
+      <div className="kw-hero">
+        <div className="kw-title-row">
+          <span className="edf-tile">
+            <Search className="h-5 w-5" />
+          </span>
+          <div>
+            <h1 className="kw-title font-display">Ubersuggest</h1>
+            <p className="kw-description">
+              Discover live Google autocomplete ideas organized by questions, prepositions, and comparisons.
+            </p>
+          </div>
         </div>
-        <p className="mt-3 max-w-md text-center text-sm text-white/35">
-          Discover live Google autocomplete ideas organized by questions, prepositions, and comparisons.
-        </p>
       </div>
 
-      <div className="grid gap-3 lg:grid-cols-[1fr_220px_auto]">
-        <div className="flex items-center gap-2 rounded-xl border border-white/[0.08] bg-[#0d1117] px-4 py-3">
-          <Search className="h-4 w-4 text-white/25" />
+      <div className="ub-controls">
+        <div className="ub-field">
+          <Search className="h-4 w-4" />
           <input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && !isLoading && handleSearch()}
-            className="flex-1 bg-transparent text-sm text-white/70 placeholder:text-white/20 focus:outline-none"
+            className="ub-input flex-1"
             placeholder="Enter keyword, e.g. Pakistan"
           />
         </div>
@@ -166,22 +170,22 @@ export default function Ubersuggest() {
           <button
             type="button"
             onClick={() => setShowRegion((value) => !value)}
-            className="ubersuggest-region-trigger flex h-full w-full items-center justify-between gap-2 rounded-xl border border-white/[0.08] bg-[#0d1117] px-4 py-3 text-left"
+            className="ub-region-trigger"
           >
             <span className="flex min-w-0 items-center gap-2">
-              <Globe className="h-4 w-4 flex-shrink-0 text-blue-400" />
-              <span className="truncate text-sm text-white/60">{region.name}</span>
+              <Globe className="ub-region-icon h-4 w-4 flex-shrink-0" />
+              <span className="ub-region-name truncate">{region.name}</span>
             </span>
             <ChevronDown className={`h-4 w-4 flex-shrink-0 text-white/30 transition-transform ${showRegion ? "rotate-180" : ""}`} />
           </button>
           {showRegion && (
-            <div className="ubersuggest-region-menu absolute z-40 mt-2 w-full overflow-hidden rounded-xl border border-white/[0.1] bg-[#0d1117] shadow-2xl shadow-black/40">
+            <div className="ub-region-menu absolute z-40 mt-2 w-full">
               <div className="border-b border-white/[0.06] p-2">
                 <input
                   value={regionSearch}
                   onChange={(event) => setRegionSearch(event.target.value)}
                   onClick={(event) => event.stopPropagation()}
-                  className="w-full rounded-lg border border-white/[0.08] bg-[#010409] px-3 py-2 text-xs text-white/65 placeholder:text-white/20 focus:outline-none"
+                  className="ub-menu-search"
                   placeholder="Search country..."
                   autoFocus
                 />
@@ -196,8 +200,8 @@ export default function Ubersuggest() {
                       setShowRegion(false);
                       setRegionSearch("");
                     }}
-                    className={`ubersuggest-region-option flex w-full items-center justify-between px-4 py-2.5 text-left text-sm transition hover:bg-orange-500/10 ${
-                      regionCode === item.gl ? "bg-orange-500/10 text-orange-300" : "text-white/60"
+                    className={`ub-region-option ${
+                      regionCode === item.gl ? "is-active" : ""
                     }`}
                   >
                     <span>{item.name}</span>
@@ -211,7 +215,7 @@ export default function Ubersuggest() {
         <button
           onClick={handleSearch}
           disabled={isLoading || !query.trim()}
-          className="flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-orange-500 to-rose-500 px-5 py-3 text-sm font-bold text-white shadow-lg shadow-orange-500/20 transition hover:shadow-orange-500/30 disabled:cursor-not-allowed disabled:opacity-60"
+          className="ui-button ui-button-primary ub-search-button"
         >
           {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
           {isLoading ? `${progress}%` : "Search"}
@@ -220,18 +224,18 @@ export default function Ubersuggest() {
 
       {isLoading && (
         <div className="h-2 overflow-hidden rounded-full bg-white/[0.06]">
-          <div className="h-full bg-gradient-to-r from-orange-500 to-rose-500 transition-all" style={{ width: `${progress}%` }} />
+          <div className="kw-progress-fill" style={{ width: `${progress}%` }} />
         </div>
       )}
-      {error && <p className="text-xs font-semibold text-rose-300">{error}</p>}
+      {error && <div className="app-alert app-alert-error mt-3">{error}</div>}
 
       {!results ? (
-        <div className="flex flex-col items-center justify-center rounded-2xl border border-white/[0.08] bg-[#0d1117] p-16">
-          <div className="flex h-14 w-14 items-center justify-center rounded-full bg-orange-500/10">
-            <Search className="h-6 w-6 text-orange-400/50" />
-          </div>
-          <h3 className="mt-4 text-base font-bold text-white/25">Enter a keyword to explore</h3>
-          <p className="mt-1 text-sm text-white/15">Questions, prepositions, and comparisons will appear here.</p>
+        <div className="kw-results app-empty-state kw-empty">
+          <span className="kw-empty-icon">
+            <Search className="h-5 w-5" />
+          </span>
+          <h3 className="kw-empty-title">Enter a keyword to explore</h3>
+          <p className="kw-empty-body">Questions, prepositions, and comparisons will appear here.</p>
         </div>
       ) : (
         <>
@@ -242,14 +246,10 @@ export default function Ubersuggest() {
                 <button
                   key={cat.key}
                   onClick={() => setActiveCategory(cat.key)}
-                  className={`ubersuggest-category-card rounded-xl border p-4 text-center transition ${
-                    activeCategory === cat.key
-                      ? "border-orange-500/30 bg-orange-500/[0.05]"
-                      : "border-white/[0.06] bg-[#0d1117] hover:bg-white/[0.02]"
-                  }`}
+                  className={`ub-cat-card ${activeCategory === cat.key ? "is-active" : ""}`}
                 >
-                  <Icon className={`mx-auto h-5 w-5 ${activeCategory === cat.key ? "text-orange-400" : "text-blue-400"}`} />
-                  <div className={`mt-2 font-display text-3xl font-black ${activeCategory === cat.key ? "text-orange-400" : "text-blue-400"}`}>
+                  <Icon className="ub-cat-icon mx-auto h-5 w-5" />
+                  <div className="ub-cat-value">
                     {cat.count}
                   </div>
                   <div className="mt-0.5 text-xs text-white/40">{cat.label}</div>
@@ -258,7 +258,7 @@ export default function Ubersuggest() {
             })}
           </div>
 
-          <div className="ubersuggest-results rounded-2xl border border-white/[0.08] bg-[#0d1117]">
+          <div className="kw-results">
             <div className="flex flex-wrap items-center justify-between gap-3 border-b border-white/[0.06] px-5 py-3">
               <div className="flex items-center gap-4">
                 {categories.map((cat) => {
@@ -267,9 +267,7 @@ export default function Ubersuggest() {
                     <button
                       key={cat.key}
                       onClick={() => setActiveCategory(cat.key)}
-                      className={`flex items-center gap-1.5 text-sm font-semibold transition ${
-                        activeCategory === cat.key ? "text-orange-400" : "text-white/30 hover:text-white/50"
-                      }`}
+                      className={`ub-cat-tab ${activeCategory === cat.key ? "is-active" : ""}`}
                     >
                       <Icon className="h-4 w-4" /> {cat.label}
                     </button>
@@ -277,27 +275,27 @@ export default function Ubersuggest() {
                 })}
               </div>
               <div className="flex items-center gap-3">
-                <div className="flex items-center gap-0.5 rounded-lg bg-white/[0.04] p-0.5">
+                <div className="admin-tabs ub-view-tabs">
                   <button
                     onClick={() => setViewMode("visualization")}
-                    className={`rounded-md px-3 py-1 text-[11px] font-bold ${viewMode === "visualization" ? "bg-orange-500 text-white" : "text-white/30"}`}
+                    className={`admin-tab ${viewMode === "visualization" ? "active" : ""}`}
                   >
                     <Eye className="mr-1 inline h-3 w-3" />
                     Visualization
                   </button>
                   <button
                     onClick={() => setViewMode("data")}
-                    className={`rounded-md px-3 py-1 text-[11px] font-bold ${viewMode === "data" ? "bg-orange-500 text-white" : "text-white/30"}`}
+                    className={`admin-tab ${viewMode === "data" ? "active" : ""}`}
                   >
                     <Table2 className="mr-1 inline h-3 w-3" />
                     Data
                   </button>
                 </div>
-                <button onClick={copyCurrent} className="flex items-center gap-1 text-[11px] font-semibold text-white/30 hover:text-white/50">
+                <button onClick={copyCurrent} className="ui-button ub-mini-button">
                   {copied ? <Check className="h-3 w-3" /> : <CopyIcon />}
                   Copy Category
                 </button>
-                <button onClick={exportCsv} className="flex items-center gap-1 text-[11px] font-semibold text-white/30 hover:text-white/50">
+                <button onClick={exportCsv} className="ui-button ub-mini-button">
                   <Download className="h-3 w-3" /> Export CSV
                 </button>
               </div>
@@ -306,10 +304,10 @@ export default function Ubersuggest() {
             {viewMode === "data" ? (
               <div className="grid gap-4 p-5 md:grid-cols-3">
                 {Object.entries(currentData).map(([modifier, keywords]) => (
-                    <div key={modifier} className="ubersuggest-data-card rounded-xl border border-white/[0.06] bg-[#010409]">
+                    <div key={modifier} className="ub-data-card">
                     <div className="flex items-center justify-between border-b border-white/[0.06] px-4 py-2.5">
                       <span className="text-sm font-bold text-white/70">{modifier}</span>
-                      <span className="text-[10px] font-bold text-orange-400">{keywords.length} keywords</span>
+                      <span className="ub-data-count">{keywords.length} keywords</span>
                     </div>
                     <div className="space-y-2 px-4 py-3">
                       {keywords.length ? (
@@ -443,7 +441,7 @@ function Visualization({ query, data }) {
     image.src = `data:image/svg+xml;base64,${btoa(unescape(encodeURIComponent(svgData)))}`;
   }
 
-  const toolButton = "flex h-7 w-7 items-center justify-center rounded border border-slate-300 bg-white text-xs font-bold text-slate-500 transition hover:bg-slate-100";
+  const toolButton = "ub-tool-button";
   const getTextProps = (angle) => {
     const normalized = ((angle % 360) + 360) % 360;
     const left = normalized > 90 && normalized < 270;
@@ -487,7 +485,7 @@ function Visualization({ query, data }) {
         </div>
         <button
           onClick={exportImage}
-          className="absolute right-4 top-3 z-10 flex items-center gap-1.5 rounded border border-slate-300 bg-white px-3 py-1.5 text-xs font-semibold text-slate-600 hover:bg-slate-100"
+          className="ui-button ub-canvas-button absolute right-4 top-3 z-10"
         >
           <FileDown className="h-3.5 w-3.5" />
           Export IMG

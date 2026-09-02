@@ -1,6 +1,6 @@
 // src/components/CsvGenerator.jsx
 import React, { useState } from "react";
-import { Download, Bot, Settings, FileSpreadsheet, RefreshCw, LayoutTemplate, ToggleLeft, ToggleRight, UserPlus, Wand2, Link as LinkIcon, Command } from "lucide-react";
+import { Bot, Check, Command, Download, FileSpreadsheet, LayoutTemplate, Link as LinkIcon, RefreshCw, Settings, ToggleLeft, ToggleRight, UserPlus, Wand2 } from "lucide-react";
 import { authenticatedFetch } from '../lib/authenticatedFetch.js';
 
 // --- 1. SCHEMAS & CONSTANTS ---
@@ -358,31 +358,31 @@ export default function CsvGenerator() {
     };
 
     return (
-        <div className="h-full bg-gradient-to-br from-slate-50 via-white to-blue-50/30 p-6 overflow-y-auto">
-            <div className="">
+        <div className="csv-page">
+            <div>
 
                 {notification && (
-                    <div className="mb-4 inline-block animate-fade-in bg-green-100 text-green-700 border border-green-300 px-4 py-2 rounded-full text-sm font-medium">
+                    <div className="app-alert app-alert-success csv-toast">
                         {notification}
                     </div>
                 )}
 
-                <div className="flex flex-col lg:flex-row gap-8">
+                <div className="csv-layout">
 
                     {/* LEFT: Sidebar / Config */}
-                    <div className="w-full lg:w-1/3 space-y-6">
+                    <div className="csv-config">
 
                         {/* Type Selector */}
-                        <div className="bg-white rounded-2xl shadow-lg border border-slate-200 overflow-hidden">
-                            <div className="bg-slate-50 px-5 py-3 border-b border-slate-200 flex items-center gap-2">
-                                <LayoutTemplate className="w-4 h-4 text-blue-500" />
-                                <span className="text-sm font-bold text-slate-700">Backlink Type</span>
+                        <div className="csv-card">
+                            <div className="csv-card-head">
+                                <LayoutTemplate className="csv-head-icon w-4 h-4" />
+                                <span className="csv-card-title">Backlink Type</span>
                             </div>
                             <div className="p-5">
                                 <select
                                     value={activeType}
                                     onChange={handleTypeChange}
-                                    className="w-full bg-slate-50 border border-slate-200 rounded-lg p-3 text-slate-800 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition appearance-none cursor-pointer"
+                                    className="csv-select"
                                 >
                                     {BACKLINK_TYPES.map(t => (
                                         <option key={t.id} value={t.id}>{t.label}</option>
@@ -392,10 +392,10 @@ export default function CsvGenerator() {
                         </div>
 
                         {/* Configuration Form */}
-                        <div className="bg-white rounded-2xl shadow-lg border border-slate-200 overflow-hidden">
-                            <div className="bg-slate-50 px-5 py-3 border-b border-slate-200 flex items-center gap-2">
+                        <div className="csv-card">
+                            <div className="csv-card-head">
                                 <Settings className="w-4 h-4 text-purple-500" />
-                                <span className="text-sm font-bold text-slate-700">Configuration</span>
+                                <span className="csv-card-title">Configuration</span>
                             </div>
 
                             <div className="p-5 space-y-6">
@@ -403,12 +403,12 @@ export default function CsvGenerator() {
                                 {/* 1. DOMAIN MODE TOGGLE */}
                                 <div className="flex items-center justify-between bg-slate-50 p-3 rounded-lg border border-slate-200">
                                     <div className="flex flex-col">
-                                        <span className="text-sm font-bold text-slate-700">Multiple Domains</span>
+                                        <span className="csv-card-title">Multiple Domains</span>
                                         <span className="text-[10px] text-slate-400">Turn on if you want to create backlinks for multiple domains</span>
                                     </div>
                                     <button
                                         onClick={() => setMultiDomainMode(!multiDomainMode)}
-                                        className="text-blue-500 hover:text-blue-600 transition"
+                                        className="csv-icon-button"
                                     >
                                         {multiDomainMode ? <ToggleRight className="w-8 h-8" /> : <ToggleLeft className="w-8 h-8 text-slate-400" />}
                                     </button>
@@ -457,10 +457,10 @@ export default function CsvGenerator() {
                                             className="flex items-center gap-2 cursor-pointer group"
                                             onClick={() => setUseRandomIdentity(!useRandomIdentity)}
                                         >
-                                            <div className={`w-4 h-4 rounded border flex items-center justify-center transition ${useRandomIdentity ? 'bg-blue-500 border-blue-500' : 'border-slate-300'}`}>
-                                                {useRandomIdentity && <span className="text-white text-[10px]">✓</span>}
-                                            </div>
-                                            <span className={`text-xs ${useRandomIdentity ? 'text-blue-500' : 'text-slate-400'} group-hover:text-blue-400 transition`}>Randomize?</span>
+                                            <span className={`csv-check ${useRandomIdentity ? "is-on" : ""}`}>
+                                                {useRandomIdentity && <Check className="h-3 w-3" strokeWidth={3} />}
+                                            </span>
+                                            <span className={`csv-check-label ${useRandomIdentity ? "is-on" : ""}`}>Randomize?</span>
                                         </div>
                                     </div>
 
@@ -472,7 +472,7 @@ export default function CsvGenerator() {
                                                     placeholder="Base Name (e.g. John Doe)"
                                                     value={baseData.Name}
                                                     onChange={(e) => handleBaseDataChange("Name", e.target.value)}
-                                                    className="w-full bg-slate-50 border border-slate-200 rounded-lg p-2.5 text-sm text-slate-800 focus:border-blue-500 outline-none"
+                                                    className="csv-input"
                                                 />
                                             )}
                                             {headers.includes("Email") && (
@@ -480,7 +480,7 @@ export default function CsvGenerator() {
                                                     placeholder="Base Email (e.g. john@site.com)"
                                                     value={baseData.Email}
                                                     onChange={(e) => handleBaseDataChange("Email", e.target.value)}
-                                                    className="w-full bg-slate-50 border border-slate-200 rounded-lg p-2.5 text-sm text-slate-800 focus:border-blue-500 outline-none"
+                                                    className="csv-input"
                                                 />
                                             )}
                                             {headers.includes("Username") && (
@@ -488,7 +488,7 @@ export default function CsvGenerator() {
                                                     placeholder="Base Username (e.g. johndoe)"
                                                     value={baseData.Username}
                                                     onChange={(e) => handleBaseDataChange("Username", e.target.value)}
-                                                    className="w-full bg-slate-50 border border-slate-200 rounded-lg p-2.5 text-sm text-slate-800 focus:border-blue-500 outline-none"
+                                                    className="csv-input"
                                                 />
                                             )}
                                         </div>
@@ -511,7 +511,7 @@ export default function CsvGenerator() {
                                                         placeholder="Base Email (e.g. john@site.com)"
                                                         value={baseData.Email}
                                                         onChange={(e) => handleBaseDataChange("Email", e.target.value)}
-                                                        className="w-full bg-slate-50 border border-slate-200 rounded-lg p-2.5 text-sm text-slate-800 focus:border-blue-500 outline-none"
+                                                        className="csv-input"
                                                     />
                                                 </div>
                                             )}
@@ -526,7 +526,7 @@ export default function CsvGenerator() {
                                                     placeholder="Website URL"
                                                     value={baseData.Website}
                                                     onChange={(e) => handleBaseDataChange("Website", e.target.value)}
-                                                    className="w-full bg-slate-50 border border-slate-200 rounded-lg p-2.5 text-sm text-slate-800 focus:border-blue-500 outline-none"
+                                                    className="csv-input"
                                                 />
                                             )}
                                             {headers.includes("Website Name") && (
@@ -534,7 +534,7 @@ export default function CsvGenerator() {
                                                     placeholder="Website Name (e.g. My Site)"
                                                     value={baseData["Website Name"]}
                                                     onChange={(e) => handleBaseDataChange("Website Name", e.target.value)}
-                                                    className="w-full bg-slate-50 border border-slate-200 rounded-lg p-2.5 text-sm text-slate-800 focus:border-blue-500 outline-none"
+                                                    className="csv-input"
                                                 />
                                             )}
                                         </div>
@@ -546,7 +546,7 @@ export default function CsvGenerator() {
                                             placeholder="Default Password"
                                             value={baseData.Password}
                                             onChange={(e) => handleBaseDataChange("Password", e.target.value)}
-                                            className="w-full bg-slate-50 border border-slate-200 rounded-lg p-2.5 text-sm text-slate-800 focus:border-blue-500 outline-none"
+                                            className="csv-input"
                                         />
                                     )}
                                     {activeType === 'edu-backlinks' && (
@@ -561,7 +561,7 @@ export default function CsvGenerator() {
                                             placeholder="Address"
                                             value={baseData["Address"]}
                                             onChange={(e) => handleBaseDataChange("Address", e.target.value)}
-                                            className="w-full bg-slate-50 border border-slate-200 rounded-lg p-2.5 text-sm text-slate-800 focus:border-blue-500 outline-none"
+                                            className="csv-input"
                                         />
                                     )}
 
@@ -575,45 +575,45 @@ export default function CsvGenerator() {
                                                 placeholder="Company"
                                                 value={baseData["Company"]}
                                                 onChange={(e) => handleBaseDataChange("Company", e.target.value)}
-                                                className="w-full bg-slate-50 border border-slate-200 rounded-lg p-2.5 text-sm text-slate-800 focus:border-blue-500 outline-none"
+                                                className="csv-input"
                                             />
                                             <input
                                                 placeholder="Title (e.g. Owner, Manager)"
                                                 value={baseData["Title"]}
                                                 onChange={(e) => handleBaseDataChange("Title", e.target.value)}
-                                                className="w-full bg-slate-50 border border-slate-200 rounded-lg p-2.5 text-sm text-slate-800 focus:border-blue-500 outline-none"
+                                                className="csv-input"
                                             />
                                             <input
                                                 placeholder="Phone"
                                                 value={baseData["Phone"]}
                                                 onChange={(e) => handleBaseDataChange("Phone", e.target.value)}
-                                                className="w-full bg-slate-50 border border-slate-200 rounded-lg p-2.5 text-sm text-slate-800 focus:border-blue-500 outline-none"
+                                                className="csv-input"
                                             />
                                             <input
                                                 placeholder="Address"
                                                 value={baseData["Address"]}
                                                 onChange={(e) => handleBaseDataChange("Address", e.target.value)}
-                                                className="w-full bg-slate-50 border border-slate-200 rounded-lg p-2.5 text-sm text-slate-800 focus:border-blue-500 outline-none"
+                                                className="csv-input"
                                             />
                                             <div className="grid grid-cols-2 gap-2">
                                                 <input
                                                     placeholder="City"
                                                     value={baseData["City"]}
                                                     onChange={(e) => handleBaseDataChange("City", e.target.value)}
-                                                    className="w-full bg-slate-50 border border-slate-200 rounded-lg p-2.5 text-sm text-slate-800 focus:border-blue-500 outline-none"
+                                                    className="csv-input"
                                                 />
                                                 <input
                                                     placeholder="State"
                                                     value={baseData["State"]}
                                                     onChange={(e) => handleBaseDataChange("State", e.target.value)}
-                                                    className="w-full bg-slate-50 border border-slate-200 rounded-lg p-2.5 text-sm text-slate-800 focus:border-blue-500 outline-none"
+                                                    className="csv-input"
                                                 />
                                             </div>
                                             <input
                                                 placeholder="Zip"
                                                 value={baseData["Zip"]}
                                                 onChange={(e) => handleBaseDataChange("Zip", e.target.value)}
-                                                className="w-full bg-slate-50 border border-slate-200 rounded-lg p-2.5 text-sm text-slate-800 focus:border-blue-500 outline-none"
+                                                className="csv-input"
                                             />
                                         </div>
                                     )}
@@ -633,7 +633,7 @@ export default function CsvGenerator() {
                                         placeholder="Company Name / Topic (Required for Content)"
                                         value={aiTopic}
                                         onChange={(e) => setAiTopic(e.target.value)}
-                                        className="w-full bg-slate-50 border border-blue-300 rounded-lg p-2.5 text-slate-800 focus:border-blue-500 transition"
+                                        className="csv-input csv-input-accent"
                                     />
 
                                     <div className="relative">
@@ -674,16 +674,16 @@ export default function CsvGenerator() {
                     </div>
 
                     {/* RIGHT: Preview Table */}
-                    <div className="w-full lg:w-2/3 bg-white rounded-2xl shadow-lg border border-slate-200 flex flex-col overflow-hidden">
-                        <div className="p-4 border-b border-slate-200 flex justify-between items-center bg-slate-50">
-                            <h3 className="font-bold text-slate-800 flex items-center gap-2">
-                                <FileSpreadsheet className="w-5 h-5 text-green-500" />
+                    <div className="csv-preview">
+                        <div className="csv-preview-head">
+                            <h3 className="csv-card-title">
+                                <FileSpreadsheet className="w-4 h-4" />
                                 Data Preview
                             </h3>
                             {generatedRows.length > 0 && (
                                 <button
                                     onClick={downloadCSV}
-                                    className="bg-green-500 hover:bg-green-600 text-white text-xs font-bold py-2 px-4 rounded-lg flex items-center gap-2 transition hover:shadow-lg hover:shadow-green-500/20"
+                                    className="ui-button ui-button-primary csv-download"
                                 >
                                     <Download className="w-4 h-4" />
                                     Download CSV
@@ -693,11 +693,11 @@ export default function CsvGenerator() {
 
                         <div className="flex-1 overflow-auto">
                             {generatedRows.length === 0 ? (
-                                <div className="flex flex-col items-center justify-center text-slate-400 p-8 text-center h-96">
-                                    <div className="w-20 h-20 bg-slate-100 rounded-full flex items-center justify-center mb-4">
-                                        <Settings className="w-10 h-10 opacity-50" />
-                                    </div>
-                                    <h4 className="text-lg font-medium text-slate-600 mb-2">Ready to Generate</h4>
+                                <div className="app-empty-state csv-empty">
+                                    <span className="csv-empty-icon">
+                                        <Settings className="h-5 w-5" />
+                                    </span>
+                                    <h4 className="csv-empty-title">Ready to Generate</h4>
                                     <p className="text-sm max-w-sm">
                                         {multiDomainMode
                                             ? "Paste your domains on the left and click Generate to extract names and build the CSV."
@@ -705,12 +705,12 @@ export default function CsvGenerator() {
                                     </p>
                                 </div>
                             ) : (
-                                <table className="w-full text-left text-sm text-slate-600 border-collapse">
-                                    <thead className="text-xs text-slate-500 uppercase bg-slate-50 sticky top-0 z-10">
+                                <table className="csv-table">
+                                    <thead>
                                         <tr>
-                                            <th className="px-4 py-3 border-b border-slate-200 w-12 text-center bg-slate-50">#</th>
+                                            <th className="csv-th csv-th-num">#</th>
                                             {headers.map(h => (
-                                                <th key={h} className="px-4 py-3 border-b border-slate-200 whitespace-nowrap bg-slate-50 font-semibold tracking-wide">
+                                                <th key={h} className="csv-th">
                                                     {h}
                                                 </th>
                                             ))}
@@ -718,10 +718,10 @@ export default function CsvGenerator() {
                                     </thead>
                                     <tbody>
                                         {generatedRows.map((row, idx) => (
-                                            <tr key={idx} className="border-b border-slate-100 hover:bg-slate-50 transition group">
-                                                <td className="px-4 py-3 font-mono text-slate-400 text-center border-r border-slate-100">{idx + 1}</td>
+                                            <tr key={idx} className="csv-tr group">
+                                                <td className="csv-td csv-td-num">{idx + 1}</td>
                                                 {headers.map(h => (
-                                                    <td key={h} className="px-4 py-3 max-w-[250px] truncate group-hover:text-slate-800 transition-colors" title={row[h]}>
+                                                    <td key={h} className="csv-td" title={row[h]}>
                                                         {row[h]}
                                                     </td>
                                                 ))}
@@ -732,9 +732,12 @@ export default function CsvGenerator() {
                             )}
                         </div>
 
-                        <div className="p-2 bg-slate-50 border-t border-slate-200 text-xs text-center text-slate-400 flex justify-between px-4">
-                            <span>Status: {isGenerating ? 'Processing...' : 'Ready'}</span>
-                            <span>{generatedRows.length} rows generated</span>
+                        <div className="csv-statusbar">
+                            <span className="csv-status">
+                              <span className={`csv-status-dot ${isGenerating ? "is-busy" : "is-ready"}`} />
+                              {isGenerating ? "Processing…" : "Ready"}
+                            </span>
+                            <span className="csv-rowcount">{generatedRows.length} rows generated</span>
                         </div>
                     </div>
                 </div>

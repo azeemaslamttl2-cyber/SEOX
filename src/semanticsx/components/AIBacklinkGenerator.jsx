@@ -70,31 +70,33 @@ const AIBacklinkGenerator = () => {
     };
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-slate-50 to-indigo-50">
+        <div className="alb-page">
             {/* Hero Section */}
-            <div className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white py-16 px-6">
-                <div className="">
-                    <div className="flex flex-col lg:flex-row items-center gap-8 lg:gap-12">
-                        {/* Left side - Text content */}
-                        <div className="flex-1">
-                            <div className="flex items-center gap-3 mb-4">
-                                <div className="p-3 bg-white/10 rounded-xl backdrop-blur-sm">
-                                    <Link2 className="w-8 h-8" />
+            <div className="alb-hero">
+                <div>
+                    <div className="alb-hero-inner">
+                        <div className="alb-title-row">
+                            <span className="edf-tile">
+                                <Link2 className="h-5 w-5" />
+                            </span>
+                            <div>
+                                <div className="flex flex-wrap items-center gap-2">
+                                    <h1 className="alb-title font-display">AI Link Builder</h1>
+                                    <span className="admin-badge badge-sebt">Chrome Extension</span>
                                 </div>
-                                <span className="text-indigo-200 font-medium">Chrome Extension</span>
+                                <p className="alb-lead">
+                                    Automate your link building with AI-powered form filling, smart content
+                                    generation, and access to 152+ curated backlink opportunities.
+                                </p>
                             </div>
-                            <h1 className="text-4xl md:text-5xl font-bold mb-4">AI Link Builder</h1>
-                            <p className="text-xl text-indigo-100 max-w-2xl mb-8">
-                                Automate your link building with AI-powered form filling, smart content generation,
-                                and access to 152+ curated backlink opportunities.
-                            </p>
-                            <div className="flex flex-wrap gap-4">
+                        </div>
+                        <div className="alb-hero-actions">
                                 {isEnterprise ? (
                                     <a
                                         href="https://drive.google.com/file/d/1XP6tpdwMD0VXHueBBwyIb4BxoXkw_24A/view?usp=sharing"
                                         target="_blank"
                                         rel="noopener noreferrer"
-                                        className="flex items-center gap-2 px-6 py-3 bg-white text-indigo-600 rounded-xl font-semibold hover:bg-indigo-50 transition-all shadow-lg"
+                                        className="ui-button alb-action alb-action-secondary"
                                     >
                                         <Download className="w-5 h-5" />
                                         Download Extension (V 1.2)
@@ -102,7 +104,7 @@ const AIBacklinkGenerator = () => {
                                 ) : (
                                     <Link
                                         to="/upgrade"
-                                        className="flex items-center gap-2 px-6 py-3 bg-white/20 text-white rounded-xl font-semibold hover:bg-white/30 transition-all border border-white/30"
+                                        className="ui-button alb-action alb-action-secondary"
                                     >
                                         <Lock className="w-5 h-5" />
                                         Enterprise Only - Upgrade
@@ -110,39 +112,30 @@ const AIBacklinkGenerator = () => {
                                 )}
                                 <a
                                     href="#tutorials"
-                                    className="flex items-center gap-2 px-6 py-3 bg-white/10 backdrop-blur-sm text-white rounded-xl font-semibold hover:bg-white/20 transition-all border border-white/20"
+                                    className="ui-button ui-button-primary alb-action"
                                 >
                                     <Play className="w-5 h-5" />
                                     Watch Tutorials
                                 </a>
                             </div>
-                        </div>
-                        {/* Right side - Image */}
-                        <div className="flex-shrink-0">
-                            <img
-                                src="/ailinkbuilding.jpg"
-                                alt="AI Link Building"
-                                className="w-full max-w-md lg:max-w-lg rounded-2xl shadow-2xl"
-                            />
-                        </div>
                     </div>
                 </div>
             </div>
 
-            <div className="px-6 py-12">
+            <div className="alb-body">
 
                 {/* Features Grid */}
                 <section className="mb-16">
-                    <h2 className="text-2xl font-bold text-gray-900 mb-8">Key Features</h2>
+                    <h2 className="alb-section-title font-display">Key Features</h2>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         {features.map((feature, i) => (
-                            <div key={i} className="bg-white rounded-xl p-6 border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
+                            <div key={i} className="alb-feature-card">
                                 <div className="flex items-start gap-4">
-                                    <div className="p-3 bg-indigo-50 rounded-lg">
-                                        <feature.icon className="w-6 h-6 text-indigo-600" />
-                                    </div>
+                                    <span className="alb-feature-icon">
+                                        <feature.icon className="h-5 w-5" />
+                                    </span>
                                     <div>
-                                        <h3 className="font-semibold text-gray-900 mb-1">{feature.title}</h3>
+                                        <h3 className="alb-feature-title">{feature.title}</h3>
                                         <p className="text-gray-600 text-sm">{feature.description}</p>
                                     </div>
                                 </div>
@@ -153,28 +146,28 @@ const AIBacklinkGenerator = () => {
 
                 {/* How It Works */}
                 <section className="mb-16">
-                    <h2 className="text-2xl font-bold text-gray-900 mb-8">How It Works</h2>
-                    <div className="bg-white rounded-xl p-8 border border-gray-100 shadow-sm">
+                    <h2 className="alb-section-title font-display">How It Works</h2>
+                    <div className="alb-steps-card">
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                             <div className="text-center">
-                                <div className="w-12 h-12 bg-indigo-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                                    <span className="text-xl font-bold text-indigo-600">1</span>
+                                <div className="alb-step-num">
+                                    <span>1</span>
                                 </div>
-                                <h3 className="font-semibold text-gray-900 mb-2">Install Extension</h3>
+                                <h3 className="alb-step-title">Install Extension</h3>
                                 <p className="text-gray-600 text-sm">Download and add the AI Link Builder to your Chrome browser</p>
                             </div>
                             <div className="text-center">
-                                <div className="w-12 h-12 bg-indigo-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                                    <span className="text-xl font-bold text-indigo-600">2</span>
+                                <div className="alb-step-num">
+                                    <span>2</span>
                                 </div>
-                                <h3 className="font-semibold text-gray-900 mb-2">Configure Settings</h3>
+                                <h3 className="alb-step-title">Configure Settings</h3>
                                 <p className="text-gray-600 text-sm">Add your website details and customize AI settings</p>
                             </div>
                             <div className="text-center">
-                                <div className="w-12 h-12 bg-indigo-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                                    <span className="text-xl font-bold text-indigo-600">3</span>
+                                <div className="alb-step-num">
+                                    <span>3</span>
                                 </div>
-                                <h3 className="font-semibold text-gray-900 mb-2">Build Backlinks</h3>
+                                <h3 className="alb-step-title">Build Backlinks</h3>
                                 <p className="text-gray-600 text-sm">Let the AI automate your link building process</p>
                             </div>
                         </div>
@@ -183,13 +176,13 @@ const AIBacklinkGenerator = () => {
 
                 {/* Available Link Categories */}
                 <section className="mb-16">
-                    <h2 className="text-2xl font-bold text-gray-900 mb-8">Available Link Categories</h2>
+                    <h2 className="alb-section-title font-display">Available Link Categories</h2>
                     <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-0">
                             {[
                                 { name: 'Profile Backlinks', count: 67, color: 'bg-blue-500' },
                                 { name: 'Local Citations', count: 28, color: 'bg-emerald-500' },
-                                { name: 'EDU Backlinks', count: 20, color: 'bg-purple-500' },
+                                { name: 'EDU Backlinks', count: 20, color: 'bg-navy-700' },
                                 { name: 'Comment Backlinks', count: 17, color: 'bg-amber-500' },
                                 { name: 'Forum Backlinks', count: 11, color: 'bg-rose-500' },
                                 { name: 'Tool Websites', count: 5, color: 'bg-cyan-500' },
@@ -207,8 +200,8 @@ const AIBacklinkGenerator = () => {
                                 </div>
                             ))}
                         </div>
-                        <div className="bg-gradient-to-r from-indigo-50 to-purple-50 px-5 py-3 border-t border-gray-100">
-                            <p className="text-sm text-indigo-700 font-medium text-center">
+                        <div className="alb-note">
+                            <p className="alb-note-text">
                                 <span className="font-bold">152+ Total Recipes</span>
                                 {isSEBT && " — More categories coming soon!"}
                             </p>
@@ -220,35 +213,35 @@ const AIBacklinkGenerator = () => {
                 <section id="tutorials" className="mb-16">
                     <div className="flex items-center justify-between mb-8">
                         <h2 className="text-2xl font-bold text-gray-900">Video Tutorials</h2>
-                        <span className="text-indigo-600 font-medium">{tutorials.length} videos</span>
+                        <span className="admin-badge badge-sebt">{tutorials.length} videos</span>
                     </div>
                     <div className="space-y-4">
                         {tutorials.map((tutorial) => (
                             <div
                                 key={tutorial.id}
-                                className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden transition-all"
+                                className="alb-tutorial-card"
                             >
                                 {/* Tutorial Header - Collapsible Button */}
                                 <button
                                     onClick={() => toggleTutorial(tutorial.id)}
-                                    className="w-full p-5 flex items-center gap-5 hover:bg-gray-50 transition-colors text-left"
+                                    className="alb-tutorial-header"
                                 >
-                                    <div className="w-16 h-16 bg-gradient-to-br from-indigo-100 to-purple-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                                        <div className={`w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-md transition-transform ${expandedTutorial === tutorial.id ? 'scale-90' : ''}`}>
+                                    <div className="alb-tutorial-thumb">
+                                        <div className="alb-tutorial-play">
                                             {expandedTutorial === tutorial.id ? (
-                                                <ChevronDown className="w-5 h-5 text-indigo-600" />
+                                                <ChevronDown className="w-5 h-5" />
                                             ) : (
-                                                <Play className="w-4 h-4 text-indigo-600 ml-0.5" />
+                                                <Play className="w-4 h-4 ml-0.5" />
                                             )}
                                         </div>
                                     </div>
                                     <div className="flex-1">
-                                        <h3 className="font-semibold text-gray-900 mb-1">
+                                        <h3 className="alb-feature-title">
                                             {tutorial.title}
                                         </h3>
-                                        <p className="text-gray-500 text-sm">{tutorial.description}</p>
+                                        <p className="alb-tutorial-desc">{tutorial.description}</p>
                                     </div>
-                                    <div className="flex items-center gap-2 text-indigo-600">
+                                    <div className="alb-tutorial-meta flex items-center gap-2">
                                         {expandedTutorial === tutorial.id ? (
                                             <span className="text-sm font-medium">Close</span>
                                         ) : (
@@ -283,22 +276,22 @@ const AIBacklinkGenerator = () => {
                 </section>
 
                 {/* Download Section */}
-                <section className="bg-gradient-to-r from-indigo-600 to-purple-600 rounded-2xl p-8 text-white text-center">
-                    <Chrome className="w-12 h-12 mx-auto mb-4 opacity-80" />
-                    <h2 className="text-2xl font-bold mb-2">Ready to automate your link building?</h2>
-                    <p className="text-indigo-100 mb-2 max-w-lg mx-auto">
+                <section className="alb-cta">
+                    <span className="edf-tile alb-cta-tile"><Chrome className="h-5 w-5" /></span>
+                    <h2 className="alb-cta-title font-display">Ready to automate your link building?</h2>
+                    <p className="alb-cta-body">
                         Download the AI Link Builder extension and start building high-quality backlinks today.
                     </p>
-                    <p className="text-indigo-200 text-sm mb-6">
-                        Current Version: <span className="font-semibold text-white">V 1.1</span>
+                    <p className="alb-cta-version">
+                        Current Version: <span>V 1.1</span>
                     </p>
-                    <div className="flex flex-wrap justify-center gap-4">
+                    <div className="alb-cta-actions">
                         {isEnterprise ? (
                             <a
                                 href="https://drive.google.com/file/d/1XP6tpdwMD0VXHueBBwyIb4BxoXkw_24A/view?usp=sharing"
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="flex items-center gap-2 px-6 py-3 bg-white text-indigo-600 rounded-xl font-semibold hover:bg-indigo-50 transition-all shadow-lg"
+                                className="ui-button alb-action alb-action-secondary"
                             >
                                 <Download className="w-5 h-5" />
                                 Download for Chrome (V 1.2)
@@ -306,7 +299,7 @@ const AIBacklinkGenerator = () => {
                         ) : (
                             <Link
                                 to="/upgrade"
-                                className="flex items-center gap-2 px-6 py-3 bg-white/20 text-white rounded-xl font-semibold hover:bg-white/30 transition-all border border-white/30"
+                                className="ui-button alb-action alb-action-secondary"
                             >
                                 <Lock className="w-5 h-5" />
                                 Enterprise Only ( Upgrade )
@@ -314,7 +307,7 @@ const AIBacklinkGenerator = () => {
                         )}
                         <a
                             href="#tutorials"
-                            className="flex items-center gap-2 px-6 py-3 bg-white/10 backdrop-blur-sm text-white rounded-xl font-semibold hover:bg-white/20 transition-all border border-white/20"
+                            className="ui-button ui-button-primary alb-action"
                         >
                             <Video className="w-5 h-5" />
                             Watch Tutorials

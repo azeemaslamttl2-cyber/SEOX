@@ -78,33 +78,32 @@ export default function BacklinkDirectory() {
     return (
       <div className="">
         {/* Category Header */}
-        <div className="relative overflow-hidden rounded-3xl border border-white/[0.06] bg-gradient-to-r from-indigo-600 to-violet-600">
-          <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_30%_50%,rgba(255,255,255,0.08),transparent)]" />
-          <div className="relative z-10 p-6">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <button
-                  onClick={() => setSelectedCat(null)}
-                  className="flex h-9 w-9 items-center justify-center rounded-xl bg-white/10 text-white hover:bg-white/20"
-                >
-                  <ArrowLeft className="h-4 w-4" />
-                </button>
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/15">
-                  <Icon className="h-5 w-5 text-white" />
-                </div>
-                <div>
-                  <h2 className="font-display text-xl font-black text-white">{cat.category}</h2>
-                  <p className="text-xs text-white/60">{cat.desc}</p>
-                </div>
+        <div className="edf-hero">
+          <div className="flex flex-wrap items-center justify-between gap-4">
+            <div className="bd-title-row">
+              <button
+                type="button"
+                onClick={() => setSelectedCat(null)}
+                aria-label="Back to all categories"
+                className="ui-button bd-back-button"
+              >
+                <ArrowLeft className="h-4 w-4" />
+              </button>
+              <span className="edf-tile">
+                <Icon className="h-5 w-5" />
+              </span>
+              <div>
+                <h2 className="edf-title font-display">{cat.category}</h2>
+                <p className="edf-description">{cat.desc}</p>
               </div>
-              <div className="flex items-center gap-2">
-                <span className="rounded-full bg-white/15 px-3 py-1 text-xs font-bold text-white">
-                  {cat.totalLinks} total links
-                </span>
-                <button className="flex items-center gap-1.5 rounded-lg bg-white/15 px-3 py-1.5 text-xs font-bold text-white hover:bg-white/25">
-                  <Download className="h-3.5 w-3.5" /> Export
-                </button>
-              </div>
+            </div>
+            <div className="bd-actions">
+              <span className="admin-badge badge-sebt bd-count">
+                {cat.totalLinks} total links
+              </span>
+              <button className="ui-button bd-secondary-button">
+                <Download className="h-3.5 w-3.5" /> Export
+              </button>
             </div>
           </div>
         </div>
@@ -267,7 +266,7 @@ export default function BacklinkDirectory() {
               onClick={() => setSelectedCat(globalIdx)}
               className="backlink-category-card group rounded-2xl border border-white/[0.06] bg-white/[0.02] p-5 text-left transition hover:bg-white/[0.04] hover:border-white/[0.1]"
             >
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-500/10 text-indigo-400 transition group-hover:bg-indigo-500/20">
+              <div className="bd-card-icon">
                 <Icon className="h-5 w-5" />
               </div>
               <h3 className="mt-3 font-display text-sm font-bold text-white/85">{cat.category}</h3>
