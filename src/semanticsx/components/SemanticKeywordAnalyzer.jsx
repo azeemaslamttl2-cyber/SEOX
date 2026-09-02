@@ -427,41 +427,41 @@ const SemanticKeywordAnalyzer = () => {
     };
 
     return (
-        <div className="content-tool-page tool-dark-surface bg-gradient-to-br from-slate-50 to-teal-50 p-3 md:p-6">
+        <div className="content-tool-page ctool-page space-y-5">
             <div className="">
                 {/* Header */}
-                <div className="bg-gradient-to-r from-teal-600 to-cyan-600 rounded-2xl p-4 md:p-8 text-white mb-6 md:mb-8 shadow-xl">
-                    <div className="flex items-center gap-3 md:gap-4 mb-4">
-                        <div className="w-12 md:w-14 h-12 md:h-14 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm">
-                            <Zap className="w-6 md:w-7 h-6 md:h-7" />
+                <div className="ctool-hero mb-6">
+                    <div className="ctool-hero-row">
+                        <div className="ctool-hero-icon">
+                            <Zap className="w-5 h-5" />
                         </div>
                         <div>
-                            <h1 className="text-xl md:text-3xl font-bold">Semantic Generator</h1>
-                            <p className="text-sm md:text-base text-teal-200">Generate all NLP data for a keyword in one click</p>
+                            <h1 className="ctool-title font-display">Semantic Generator</h1>
+                            <p className="ctool-subtitle">Generate all NLP data for a keyword in one click</p>
                         </div>
                     </div>
 
-                    <p className="text-teal-100 text-sm md:text-base mb-6">
+                    <p className="ctool-subtitle mt-4 mb-5">
                         Enter a keyword to generate entities, n-grams, NLP keywords, grammar relationships, unique n-grams, and skip-gram words — all at once.
                     </p>
 
                     {/* Search Input */}
                     <div className="flex flex-col sm:flex-row gap-3">
                         <div className="flex-1 relative">
-                            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-teal-200" />
+                            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 ctool-field-icon" />
                             <input
                                 type="text"
                                 value={keyword}
                                 onChange={(e) => setKeyword(e.target.value)}
                                 placeholder="Enter a keyword (e.g., content marketing, SEO tools)"
-                                className="w-full pl-12 pr-4 py-4 bg-white/15 border border-white/30 rounded-xl text-white placeholder-teal-200 focus:outline-none focus:ring-2 focus:ring-white/50 focus:bg-white/20 backdrop-blur-sm transition-all"
+                                className="ctool-input w-full pl-11"
                                 onKeyDown={(e) => e.key === 'Enter' && !isGenerating && generateAll()}
                             />
                         </div>
                         <button
                             onClick={generateAll}
                             disabled={isGenerating || !keyword.trim()}
-                            className="px-8 py-4 bg-white text-teal-600 rounded-xl font-bold hover:bg-teal-50 disabled:opacity-50 disabled:cursor-not-allowed transition flex items-center justify-center gap-2 shadow-lg"
+                            className="ui-button ui-button-primary"
                         >
                             {isGenerating ? (
                                 <Loader2 className="w-5 h-5 animate-spin" />
@@ -483,7 +483,7 @@ const SemanticKeywordAnalyzer = () => {
                 {/* Loading State */}
                 {isGenerating && (
                     <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-8 md:p-12 text-center mb-6">
-                        <Loader2 className="w-12 h-12 text-teal-500 mx-auto mb-4 animate-spin" />
+                        <Loader2 className="w-12 h-12 ctool-accent mx-auto mb-4 animate-spin" />
                         <h3 className="text-xl font-bold text-gray-900 mb-2">Analyzing “{keyword}”</h3>
                         <p className="text-gray-500">{currentStep}</p>
                         <div className="mt-4 flex justify-center gap-2">
@@ -492,7 +492,7 @@ const SemanticKeywordAnalyzer = () => {
                                     key={key}
                                     className={`w-3 h-3 rounded-full transition-all duration-300 ${
                                         currentStep.toLowerCase().includes(SECTIONS[key].label.toLowerCase().split(' ')[0].toLowerCase())
-                                            ? 'bg-teal-500 scale-125'
+                                            ? 'bg-brand-500 scale-125'
                                             : results && results[key]
                                                 ? 'bg-green-400'
                                                 : 'bg-gray-200'
@@ -510,7 +510,7 @@ const SemanticKeywordAnalyzer = () => {
                         <div className="flex justify-end">
                             <button
                                 onClick={copyPrompt}
-                                className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-teal-600 to-cyan-600 text-white rounded-xl hover:from-teal-700 hover:to-cyan-700 transition font-semibold shadow-lg"
+                                className="ui-button ui-button-primary"
                             >
                                 {copiedSection === 'prompt' ? (
                                     <>
@@ -534,14 +534,14 @@ const SemanticKeywordAnalyzer = () => {
                             const Icon = config.icon;
 
                             return (
-                                <div key={sectionKey} className="bg-white rounded-2xl shadow-lg border border-gray-200 overflow-hidden">
+                                <div key={sectionKey} className="ctool-card ctool-card-flush overflow-hidden">
                                     {/* Section Header */}
                                     <div
-                                        className="flex items-center justify-between p-4 bg-gray-50 cursor-pointer hover:bg-gray-100 transition"
+                                        className="ctool-section-head"
                                         onClick={() => toggleSection(sectionKey)}
                                     >
                                         <div className="flex items-center gap-3">
-                                            <div className={`w-10 h-10 rounded-lg bg-gradient-to-br ${config.color} flex items-center justify-center text-white`}>
+                                            <div className="ctool-empty-icon h-10 w-10">
                                                 <Icon className="w-5 h-5" />
                                             </div>
                                             <div>
@@ -555,7 +555,7 @@ const SemanticKeywordAnalyzer = () => {
                                             </span>
                                             <button
                                                 onClick={(e) => { e.stopPropagation(); copySectionData(sectionKey); }}
-                                                className="p-2 text-gray-500 hover:text-teal-600 hover:bg-teal-50 rounded-lg transition"
+                                                className="p-2 text-gray-500 hover:ctool-accent  rounded-lg transition"
                                                 title={`Copy ${config.label}`}
                                             >
                                                 {copiedSection === sectionKey ? (
@@ -583,8 +583,8 @@ const SemanticKeywordAnalyzer = () => {
                 {/* Empty State */}
                 {!results && !isGenerating && (
                     <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-8 md:p-12 text-center">
-                        <div className="w-16 h-16 bg-teal-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                            <Zap className="w-8 h-8 text-teal-600" />
+                        <div className="w-16 h-16 bg-surface-muted rounded-2xl flex items-center justify-center mx-auto mb-4">
+                            <Zap className="w-8 h-8 ctool-accent" />
                         </div>
                         <h3 className="text-xl font-bold text-gray-900 mb-2">All-in-One NLP Analysis</h3>
                         <p className="text-gray-500 max-w-md mx-auto mb-6">
@@ -595,8 +595,8 @@ const SemanticKeywordAnalyzer = () => {
                             {Object.entries(SECTIONS).map(([key, config]) => {
                                 const Icon = config.icon;
                                 return (
-                                    <div key={key} className="flex items-center gap-2 p-3 bg-gray-50 rounded-xl">
-                                        <div className={`w-8 h-8 rounded-lg bg-gradient-to-br ${config.color} flex items-center justify-center text-white`}>
+                                    <div key={key} className="ctool-mini-card">
+                                        <div className="ctool-empty-icon h-8 w-8">
                                             <Icon className="w-4 h-4" />
                                         </div>
                                         <span className="text-sm font-medium text-gray-700">{config.label}</span>
@@ -610,7 +610,7 @@ const SemanticKeywordAnalyzer = () => {
                                 <button
                                     key={example}
                                     onClick={() => setKeyword(example)}
-                                    className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-teal-50 hover:text-teal-600 transition text-sm"
+                                    className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg  hover:ctool-accent transition text-sm"
                                 >
                                     {example}
                                 </button>
@@ -620,8 +620,8 @@ const SemanticKeywordAnalyzer = () => {
                 )}
 
                 {/* Info */}
-                <div className="mt-6 p-4 bg-gradient-to-r from-teal-50 to-cyan-50 rounded-xl border border-teal-200">
-                    <p className="text-teal-700 text-sm">
+                <div className="ctool-note mt-6">
+                    <p className="">
                         <strong>Semantic Generator:</strong> Generates all NLP data in one click — entities, n-grams, NLP keywords, grammar relationships, unique n-grams, and skip-gram words. Use the &quot;Copy Prompt&quot; button to copy all results formatted for content optimization.
                     </p>
                 </div>

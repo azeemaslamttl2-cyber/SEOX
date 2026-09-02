@@ -8,9 +8,9 @@ export default function KeywordResearchLayout() {
     <div className="app-shell flex h-screen overflow-hidden bg-ink-900 text-white">
       <IconRail />
       <KeywordSecondaryNav />
-      <div className="flex flex-1 flex-col overflow-hidden">
+      <div className="flex flex-1 flex-col min-w-0 overflow-hidden">
         <KeywordTopBar />
-        <main className="app-main flex-1 overflow-y-auto px-4 py-6 lg:px-8">
+        <main className="app-main flex-1 overflow-y-auto min-w-0 px-4 py-6 lg:px-8">
           <Outlet />
         </main>
       </div>

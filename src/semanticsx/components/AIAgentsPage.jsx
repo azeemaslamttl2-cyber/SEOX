@@ -1189,16 +1189,28 @@ const AI_AGENTS_DATA = [
 ];
 
 // Color mapping for categories — dark theme
+// Every category used to carry its own hue across the tile, badge, body
+// text, borders and buttons — nine of them on one screen. The category is
+// already identified by its icon and title, so the palette now resolves to
+// the shared neutral component classes and the keys are kept so the data
+// shape (category.color) stays valid.
+const SHARED_CATEGORY_STYLE = {
+    bg: "sres-section-icon",
+    light: "sres-agent-head",
+    border: "sres-usecase",
+    text: "sres-agent-h4",
+    badge: "ctool-count-badge"
+};
 const CATEGORY_COLORS = {
-    indigo: { bg: "from-indigo-500 to-indigo-600", light: "from-indigo-500/10 to-transparent", border: "border-indigo-500/30", text: "text-indigo-300", badge: "bg-indigo-500/15 text-indigo-300" },
-    purple: { bg: "from-purple-500 to-purple-600", light: "from-purple-500/10 to-transparent", border: "border-purple-500/30", text: "text-purple-300", badge: "bg-purple-500/15 text-purple-300" },
-    emerald: { bg: "from-emerald-500 to-emerald-600", light: "from-emerald-500/10 to-transparent", border: "border-emerald-500/30", text: "text-emerald-300", badge: "bg-emerald-500/15 text-emerald-300" },
-    amber: { bg: "from-amber-500 to-amber-600", light: "from-amber-500/10 to-transparent", border: "border-amber-500/30", text: "text-amber-300", badge: "bg-amber-500/15 text-amber-300" },
-    pink: { bg: "from-pink-500 to-pink-600", light: "from-pink-500/10 to-transparent", border: "border-pink-500/30", text: "text-pink-300", badge: "bg-pink-500/15 text-pink-300" },
-    red: { bg: "from-red-500 to-red-600", light: "from-red-500/10 to-transparent", border: "border-red-500/30", text: "text-red-300", badge: "bg-red-500/15 text-red-300" },
-    cyan: { bg: "from-cyan-500 to-cyan-600", light: "from-cyan-500/10 to-transparent", border: "border-cyan-500/30", text: "text-cyan-300", badge: "bg-cyan-500/15 text-cyan-300" },
-    teal: { bg: "from-teal-500 to-teal-600", light: "from-teal-500/10 to-transparent", border: "border-teal-500/30", text: "text-teal-300", badge: "bg-teal-500/15 text-teal-300" },
-    violet: { bg: "from-violet-500 to-violet-600", light: "from-violet-500/10 to-transparent", border: "border-violet-500/30", text: "text-violet-300", badge: "bg-violet-500/15 text-violet-300" }
+    indigo: SHARED_CATEGORY_STYLE,
+    purple: SHARED_CATEGORY_STYLE,
+    emerald: SHARED_CATEGORY_STYLE,
+    amber: SHARED_CATEGORY_STYLE,
+    pink: SHARED_CATEGORY_STYLE,
+    red: SHARED_CATEGORY_STYLE,
+    cyan: SHARED_CATEGORY_STYLE,
+    teal: SHARED_CATEGORY_STYLE,
+    violet: SHARED_CATEGORY_STYLE
 };
 
 // ============================================================================
@@ -1244,62 +1256,54 @@ const AIAgentsPage = () => {
     const filteredAgentsCount = filteredCategories.reduce((sum, cat) => sum + cat.agents.length, 0);
 
     return (
-        <div className="p-3 md:p-6">
+        <div className="sres-page">
             <div className="">
-            {/* Animation Keyframes */}
-            <style>{`
-                @keyframes fadeInUp {
-                    from { opacity: 0; transform: translateY(20px); }
-                    to { opacity: 1; transform: translateY(0); }
-                }
-            `}</style>
-
             {/* Hero Header */}
-            <div className="bg-gradient-to-r from-brand-500 via-amber-500 to-amber-600 rounded-2xl p-4 md:p-8 text-white mb-6 shadow-xl">
-                <div className="flex items-center gap-3 md:gap-4 mb-4">
-                    <div className="w-14 h-14 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm">
-                        <Bot className="w-7 h-7" />
-                    </div>
-                    <div>
-                        <h1 className="text-xl md:text-3xl font-bold">AI Agents for SEO</h1>
-                        <p className="text-sm md:text-base text-white/70">
+            <div className="ctool-hero mb-6">
+                <div className="ctool-hero-row">
+                    <span className="ctool-hero-icon">
+                        <Bot className="w-5 h-5" />
+                    </span>
+                    <div className="min-w-0">
+                        <h1 className="ctool-title font-display">AI Agents for SEO</h1>
+                        <p className="ctool-subtitle">
                             {totalAgents} powerful AI agents across {AI_AGENTS_DATA.length} categories
                         </p>
                     </div>
                 </div>
-                <p className="text-white/60 text-sm md:text-base">
-                    Enhance your semantic SEO workflow with curated GPT agents. All credits to <span className="text-white font-medium">Koray Tuğberk GÜBÜR</span>
+                <p className="sres-hero-meta">
+                    Enhance your semantic SEO workflow with curated GPT agents. All credits to <span className="ctool-em">Koray Tuğberk GÜBÜR</span>
                 </p>
             </div>
 
             <div className="space-y-6">
                 {/* Search & Controls */}
-                <div className="rounded-2xl border border-white/[0.08] bg-[#0d1117] p-4">
+                <div className="ctool-card">
                     <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
                         <div className="relative flex-1 w-full md:max-w-lg">
-                            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30" />
+                            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 sres-search-icon" />
                             <input
                                 type="text"
                                 placeholder="Search agents by name, category, or use case..."
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
-                                className="w-full pl-11 pr-4 py-3 bg-[#010409] border border-white/[0.08] rounded-xl text-white/70 placeholder:text-white/20 focus:outline-none focus:border-brand-500/40 focus:ring-2 focus:ring-brand-500/20 transition-all"
+                                className="sres-search-input pl-11 pr-4"
                             />
                         </div>
                         <div className="flex items-center gap-3">
-                            <span className="text-sm text-white/40">
+                            <span className="sres-count">
                                 {searchQuery ? `${filteredAgentsCount} of ${totalAgents} agents` : `${totalAgents} agents`}
                             </span>
                             <div className="flex gap-2">
                                 <button
                                     onClick={expandAll}
-                                    className="px-3 py-2 text-sm font-medium text-white/40 hover:text-brand-400 hover:bg-brand-500/10 rounded-lg transition-colors"
+                                    className="ui-button ctool-tool-btn"
                                 >
                                     Expand All
                                 </button>
                                 <button
                                     onClick={collapseAll}
-                                    className="px-3 py-2 text-sm font-medium text-white/40 hover:text-brand-400 hover:bg-brand-500/10 rounded-lg transition-colors"
+                                    className="ui-button ctool-tool-btn"
                                 >
                                     Collapse All
                                 </button>
@@ -1315,30 +1319,30 @@ const AIAgentsPage = () => {
                     const IconComponent = category.icon;
 
                     return (
-                        <section key={category.category} className="rounded-2xl border border-white/[0.08] bg-[#0d1117] overflow-hidden hover:border-white/[0.12] transition-all">
+                        <section key={category.category} className="sres-section">
                             <button
                                 onClick={() => toggleCategory(originalIndex)}
-                                className="w-full flex items-center justify-between px-6 py-5 hover:bg-white/[0.04] transition-colors"
+                                className="sres-section-head"
                             >
                                 <div className="flex items-center gap-4">
-                                    <div className={`p-3 bg-gradient-to-br ${colors.bg} rounded-xl shadow-lg`}>
-                                        <IconComponent className="w-5 h-5 text-white" />
+                                    <div className={colors.bg}>
+                                        <IconComponent className="w-5 h-5" />
                                     </div>
                                     <div className="text-left">
                                         <div className="flex items-center gap-3">
-                                            <h2 className="text-xl font-semibold text-white/90">{category.category}</h2>
-                                            <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${colors.badge}`}>
+                                            <h2 className="sres-section-title">{category.category}</h2>
+                                            <span className={colors.badge}>
                                                 {category.agents.length} agents
                                             </span>
                                         </div>
-                                        <p className="text-sm text-white/40">{category.description}</p>
+                                        <p className="sres-section-sub">{category.description}</p>
                                     </div>
                                 </div>
-                                <div className="p-2 rounded-full bg-white/[0.06]">
+                                <div className="sres-chevron">
                                     {expandedCategories[originalIndex] ? (
-                                        <ChevronUp className="w-5 h-5 text-white/40" />
+                                        <ChevronUp className="w-5 h-5" />
                                     ) : (
-                                        <ChevronDown className="w-5 h-5 text-white/40" />
+                                        <ChevronDown className="w-5 h-5" />
                                     )}
                                 </div>
                             </button>
@@ -1352,34 +1356,31 @@ const AIAgentsPage = () => {
                                         return (
                                             <div
                                                 key={agentIdx}
-                                                className={`group relative overflow-hidden rounded-xl bg-white/[0.03] border border-white/[0.08] hover:border-white/[0.15] transition-all duration-300`}
-                                                style={{
-                                                    animation: `fadeInUp 0.4s ease-out ${agentIdx * 0.05}s both`
-                                                }}
+                                                className="sres-agent group"
                                             >
                                                 {/* Card Header */}
-                                                <div className={`p-5 bg-gradient-to-br ${colors.light}`}>
+                                                <div className={colors.light}>
                                                     <div className="flex items-start justify-between mb-3">
                                                         {agent.emoji ? (
-                                                            <span className="text-3xl drop-shadow-sm">{agent.emoji}</span>
+                                                            <span className="sres-card-emoji">{agent.emoji}</span>
                                                         ) : (
-                                                            <div className={`p-2.5 bg-gradient-to-br ${colors.bg} rounded-xl shadow-md`}>
-                                                                <Wand2 className="w-5 h-5 text-white" />
+                                                            <div className="sres-section-icon">
+                                                                <Wand2 className="w-5 h-5" />
                                                             </div>
                                                         )}
                                                         <a
                                                             href={agent.url}
                                                             target="_blank"
                                                             rel="noopener noreferrer"
-                                                            className={`p-1.5 rounded-lg hover:bg-white/80 transition-colors`}
+                                                            className="sres-agent-open"
                                                         >
-                                                            <ExternalLink className={`w-4 h-4 text-stone-400 hover:${colors.text}`} />
+                                                            <ExternalLink className="w-4 h-4" />
                                                         </a>
                                                     </div>
-                                                    <h3 className={`font-semibold text-white/90 mb-2 text-lg`}>
+                                                    <h3 className="sres-agent-title">
                                                         {agent.name}
                                                     </h3>
-                                                    <p className="text-sm text-white/50 leading-relaxed">
+                                                    <p className="sres-agent-text">
                                                         {agent.description}
                                                     </p>
                                                 </div>
@@ -1387,7 +1388,7 @@ const AIAgentsPage = () => {
                                                 {/* Expandable Content Toggle */}
                                                 <button
                                                     onClick={() => toggleAgent(originalIndex, agentIdx)}
-                                                    className={`w-full px-5 py-3 flex items-center justify-between text-sm font-medium ${colors.text} bg-white/[0.03] hover:bg-white/[0.06] transition-colors border-t border-white/[0.06]`}
+                                                    className="sres-agent-toggle"
                                                 >
                                                     <span>{isExpanded ? 'Hide Details' : 'View Details'}</span>
                                                     {isExpanded ? (
@@ -1399,19 +1400,19 @@ const AIAgentsPage = () => {
 
                                                 {/* Expanded Content */}
                                                 {isExpanded && (
-                                                    <div className="px-5 pb-5 space-y-4 border-t border-white/[0.06] bg-white/[0.02]">
+                                                    <div className="sres-agent-body space-y-4">
 
                                                         {/* What it Does Section */}
                                                         {agent.fullDescription && agent.fullDescription.length > 0 && (
                                                             <div className="pt-4">
-                                                                <h4 className={`text-sm font-semibold ${colors.text} mb-2 flex items-center gap-2`}>
+                                                                <h4 className="sres-agent-h4">
                                                                     <Sparkles className="w-4 h-4" />
                                                                     What It Detects / Does
                                                                 </h4>
                                                                 <ul className="space-y-1.5">
                                                                     {agent.fullDescription.map((item, idx) => (
-                                                                        <li key={idx} className="text-sm text-white/50 flex items-start gap-2">
-                                                                            <span className={`mt-1.5 w-1.5 h-1.5 rounded-full bg-${category.color}-400 flex-shrink-0`}></span>
+                                                                        <li key={idx} className="sres-agent-li">
+                                                                            <span className="sres-bullet"></span>
                                                                             {item}
                                                                         </li>
                                                                     ))}
@@ -1421,7 +1422,7 @@ const AIAgentsPage = () => {
 
                                                         {/* Use Cases Section */}
                                                         <div className={agent.fullDescription ? '' : 'pt-4'}>
-                                                            <h4 className={`text-sm font-semibold ${colors.text} mb-2 flex items-center gap-2`}>
+                                                            <h4 className="sres-agent-h4">
                                                                 <Target className="w-4 h-4" />
                                                                 Use Cases
                                                             </h4>
@@ -1429,7 +1430,7 @@ const AIAgentsPage = () => {
                                                                 {agent.useCases.map((useCase, ucIdx) => (
                                                                     <span
                                                                         key={ucIdx}
-                                                                        className={`px-2.5 py-1 bg-white/[0.06] border border-white/[0.1] ${colors.text} text-xs rounded-full`}
+                                                                        className="sres-usecase"
                                                                     >
                                                                         {useCase}
                                                                     </span>
@@ -1440,14 +1441,14 @@ const AIAgentsPage = () => {
                                                         {/* Required Input Section */}
                                                         {agent.requiredInput && agent.requiredInput.length > 0 && (
                                                             <div>
-                                                                <h4 className={`text-sm font-semibold ${colors.text} mb-2 flex items-center gap-2`}>
+                                                                <h4 className="sres-agent-h4">
                                                                     <FileText className="w-4 h-4" />
                                                                     Required Input
                                                                 </h4>
                                                                 <ul className="space-y-1.5">
                                                                     {agent.requiredInput.map((input, idx) => (
-                                                                        <li key={idx} className="text-sm text-white/50 flex items-start gap-2">
-                                                                            <span className={`mt-1.5 w-1.5 h-1.5 rounded-full bg-${category.color}-400 flex-shrink-0`}></span>
+                                                                        <li key={idx} className="sres-agent-li">
+                                                                            <span className="sres-bullet"></span>
                                                                             {input}
                                                                         </li>
                                                                     ))}
@@ -1458,13 +1459,13 @@ const AIAgentsPage = () => {
                                                 )}
 
                                                 {/* Action Buttons Footer */}
-                                                <div className={`flex gap-2 px-5 py-3 bg-white/[0.03] border-t border-white/[0.06]`}>
+                                                <div className="sres-agent-foot">
                                                     {agent.exampleUrl && (
                                                         <a
                                                             href={agent.exampleUrl}
                                                             target="_blank"
                                                             rel="noopener noreferrer"
-                                                            className={`flex items-center gap-1.5 px-3 py-2 text-xs font-medium ${colors.text} bg-white/[0.06] border ${colors.border} rounded-lg hover:bg-white/[0.1] transition-all duration-200 hover:scale-105`}
+                                                            className="ui-button ctool-tool-btn"
                                                         >
                                                             <Eye className="w-3.5 h-3.5" />
                                                             Example
@@ -1474,7 +1475,7 @@ const AIAgentsPage = () => {
                                                         href={agent.url}
                                                         target="_blank"
                                                         rel="noopener noreferrer"
-                                                        className={`flex items-center gap-1.5 px-3 py-2 text-xs font-medium text-white bg-gradient-to-r ${colors.bg} rounded-lg hover:shadow-md transition-all duration-200 hover:scale-105 ml-auto`}
+                                                        className="ui-button ui-button-primary ml-auto"
                                                     >
                                                         <ExternalLink className="w-3.5 h-3.5" />
                                                         Open Agent
@@ -1491,27 +1492,26 @@ const AIAgentsPage = () => {
 
                 {/* Empty State */}
                 {filteredCategories.length === 0 && (
-                    <div className="rounded-2xl border border-white/[0.08] bg-[#0d1117] p-12 text-center">
-                        <Search className="w-12 h-12 text-white/20 mx-auto mb-4" />
-                        <h3 className="text-lg font-semibold text-white/60 mb-2">No agents found</h3>
-                        <p className="text-white/40">Try adjusting your search query</p>
+                    <div className="sres-empty">
+                        <Search className="w-12 h-12 mx-auto mb-4" />
+                        <h3 className="mb-2">No agents found</h3>
+                        <p>Try adjusting your search query</p>
                     </div>
                 )}
 
                 {/* Credit Footer */}
-                <div className="rounded-2xl border border-white/[0.08] bg-[#0d1117] p-6 text-center">
+                <div className="sres-credit">
                     <div className="flex items-center justify-center gap-3 mb-3">
-                        <Sparkles className="w-5 h-5 text-brand-400" />
-                        <span className="text-white font-semibold">All Credits</span>
-                        <Sparkles className="w-5 h-5 text-brand-400" />
+                        <Sparkles className="w-5 h-5" />
+                        <span className="sres-credit-label">All Credits</span>
+                        <Sparkles className="w-5 h-5" />
                     </div>
-                    <p className="text-white/40">
+                    <p>
                         These AI agents were compiled by{' '}
                         <a
                             href="https://twitter.com/KorayGubur"
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="text-brand-400 hover:text-brand-300 font-medium transition-colors"
                         >
                             Koray Tuğberk GÜBÜR
                         </a>

@@ -54,43 +54,42 @@ export default function NGramsExtractor() {
   ];
 
   return (
-    <div className="space-y-6">
-      <div className="relative overflow-hidden rounded-[28px] border border-[#d9cac7] bg-[#E13A27] p-5 shadow-[0_12px_28px_-18px_rgba(225,58,39,0.9)] sm:p-6">
-        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_15%_20%,rgba(255,255,255,0.14),transparent_30%)]" />
-        <div className="relative z-10 flex items-center gap-4">
-          <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-2xl border border-white/20 bg-white/15 text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.2)]">
+    <div className="ctool-page space-y-6">
+      <div className="ctool-hero">
+        <div className="ctool-hero-row">
+          <div className="ctool-hero-icon">
             <Hash className="h-6 w-6" />
           </div>
           <div className="min-w-0">
-            <h1 className="font-display text-[2.5rem] font-black leading-none tracking-[-0.05em] text-white sm:text-[3rem]">
+            <h1 className="ctool-title font-display">
               N-Grams Extractor
             </h1>
-            <p className="mt-2 max-w-[720px] text-sm leading-relaxed text-[#ffeae7]">
+            <p className="ctool-subtitle">
               Extract, analyze, and optimize n-grams for semantic SEO and content relevance.
             </p>
           </div>
         </div>
       </div>
 
-      <div className="rounded-2xl border border-white/[0.08] bg-[#0d1117] p-5 shadow-[0_10px_30px_-18px_rgba(15,23,42,0.9)] sm:p-6">
+      <div className="ctool-card">
         <div className="mb-3 flex items-center justify-between gap-3">
           <div className="flex items-center gap-2">
-            <Globe className="h-4 w-4 text-[#E13A27]" />
-            <span className="text-sm font-bold text-white/80">Source Content</span>
+            <Globe className="ctool-card-icon h-4 w-4" />
+            <span className="ctool-card-title">Source Content</span>
           </div>
-          <div className="flex items-center gap-2 rounded-xl border border-white/10 bg-white/[0.03] p-1">
+          <div className="ctool-seg">
             <button
               onClick={() => setMode("url")}
-              className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-bold transition ${
-                mode === "url" ? "bg-[#E13A27] text-white" : "text-white/60 hover:text-white"
+              className={`ui-button transition ${
+                mode === "url" ? "ctool-seg-btn active" : "ctool-seg-btn"
               }`}
             >
               <Globe className="h-3.5 w-3.5" /> URL Mode
             </button>
             <button
               onClick={() => setMode("text")}
-              className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-bold transition ${
-                mode === "text" ? "bg-[#E13A27] text-white" : "text-white/60 hover:text-white"
+              className={`ui-button transition ${
+                mode === "text" ? "ctool-seg-btn active" : "ctool-seg-btn"
               }`}
             >
               <Type className="h-3.5 w-3.5" /> Text Mode
@@ -100,7 +99,7 @@ export default function NGramsExtractor() {
 
         {mode === "url" ? (
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-            <div className="flex flex-1 items-center gap-2 rounded-xl border border-white/[0.08] bg-[#010409] px-4 py-3">
+            <div className="ctool-field flex-1">
               <Globe className="h-4 w-4 text-white/25" />
               <input
                 value={url}
@@ -112,7 +111,7 @@ export default function NGramsExtractor() {
             <button
               onClick={handleExtract}
               disabled={loading}
-              className="flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#E13A27] to-[#d93524] px-5 py-3 text-sm font-bold text-white shadow-[0_10px_24px_-12px_rgba(225,58,39,0.9)] transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-50"
+              className="ui-button ui-button-primary"
             >
               <Hash className="h-4 w-4" /> {loading ? "..." : "Extract"}
             </button>
@@ -123,13 +122,13 @@ export default function NGramsExtractor() {
               value={text}
               onChange={(e) => setText(e.target.value)}
               rows={6}
-              className="w-full resize-none rounded-xl border border-white/[0.08] bg-[#010409] px-4 py-3 font-mono text-sm text-white/80 placeholder:text-white/25 focus:border-[#E13A27] focus:outline-none focus:ring-2 focus:ring-[#E13A27]/15"
+              className="ctool-textarea"
               placeholder="Paste your content here..."
             />
             <button
               onClick={handleExtract}
               disabled={loading}
-              className="mt-3 flex items-center gap-2 rounded-xl bg-gradient-to-r from-[#E13A27] to-[#d93524] px-5 py-2.5 text-sm font-bold text-white shadow-[0_10px_24px_-12px_rgba(225,58,39,0.9)] transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-50"
+              className="ui-button ui-button-primary mt-3"
             >
               <Hash className="h-4 w-4" /> {loading ? "Extracting..." : "Extract"}
             </button>
@@ -137,10 +136,10 @@ export default function NGramsExtractor() {
         )}
       </div>
 
-      <div className="rounded-xl border border-[#E13A27]/20 bg-[#fff3f1] px-5 py-4">
+      <div className="ctool-note">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-3">
-            <Sparkles className="h-5 w-5 text-[#E13A27]" />
+            <Sparkles className="ctool-card-icon h-5 w-5" />
             <div>
               <p className="text-sm font-bold text-slate-800">Generate Unique N-Grams</p>
               <p className="text-xs text-slate-600">Generate original, niche n-grams to make your content stand out and rank for specific queries.</p>
@@ -149,7 +148,7 @@ export default function NGramsExtractor() {
           <button
             onClick={handleGenerateUnique}
             disabled={uniqueLoading || !(text.trim() || url.trim() || results)}
-            className="flex items-center justify-center gap-1.5 rounded-lg border border-[#E13A27]/30 bg-[#E13A27]/10 px-4 py-2 text-xs font-bold text-[#B33221] transition hover:bg-[#E13A27]/15 disabled:cursor-not-allowed disabled:opacity-40"
+            className="ui-button ctool-tool-btn"
           >
             <Sparkles className="h-3.5 w-3.5" /> {uniqueLoading ? "Generating..." : "Generate Unique"}
           </button>
@@ -157,12 +156,12 @@ export default function NGramsExtractor() {
       </div>
 
       {(uniqueResults.length > 0 || uniqueError) && (
-        <div className="rounded-2xl border border-[#E13A27]/20 bg-[#fffaf8] p-5 shadow-[0_6px_24px_-12px_rgba(17,24,39,0.18)]">
+        <div className="ctool-card">
           <h3 className="mb-3 flex items-center gap-2 text-sm font-bold text-slate-800">
-            <Sparkles className="h-4 w-4 text-[#E13A27]" /> DeepSeek Unique N-Grams
+            <Sparkles className="ctool-card-icon h-4 w-4" /> DeepSeek Unique N-Grams
           </h3>
           {uniqueError && (
-            <p className="mb-3 rounded-lg border border-amber-500/20 bg-amber-50 px-3 py-2 text-[11px] text-amber-700">
+            <p className="app-alert app-alert-warning mb-3">
               {uniqueError}
             </p>
           )}
@@ -183,8 +182,8 @@ export default function NGramsExtractor() {
               <button
                 key={tab.key}
                 onClick={() => setActiveTab(tab.key)}
-                className={`text-sm font-semibold transition ${
-                  activeTab === tab.key ? "text-[#E13A27]" : "text-slate-500 hover:text-slate-700"
+                className={`transition ${
+                  activeTab === tab.key ? "ctool-tab active" : "ctool-tab"
                 }`}
               >
                 {tab.label} <span className="text-[10px] text-slate-400">({results[tab.key].length})</span>

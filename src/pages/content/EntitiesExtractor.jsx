@@ -88,33 +88,32 @@ export default function EntitiesExtractor() {
   }
 
   return (
-    <div className="entities-extractor-workspace space-y-6 rounded-[28px] bg-[#f5f7fb] p-3 sm:p-4">
+    <div className="entities-extractor-workspace ctool-page space-y-6">
       {/* Hero Header */}
-      <div className="extractor-hero relative overflow-hidden rounded-[22px] border border-[#3a3b7b] bg-[#2b2d75] p-5 shadow-[0_12px_28px_-18px_rgba(21,23,59,0.9)] sm:p-6">
-        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(255,255,255,0.12),transparent_34%),linear-gradient(90deg,rgba(255,255,255,0.04),rgba(255,255,255,0))]" />
-        <div className="relative z-10 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-          <div className="flex items-center gap-4">
-            <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-2xl border border-white/20 bg-white/12 text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.18)]">
+      <div className="extractor-hero ctool-hero">
+        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+          <div className="ctool-hero-row">
+            <div className="ctool-hero-icon">
               <Scan className="h-6 w-6" />
             </div>
             <div className="min-w-0">
-              <h1 className="font-display text-[2.6rem] font-black leading-none tracking-[-0.05em] text-white sm:text-[3.1rem]">
+              <h1 className="ctool-title font-display">
                 Entities Extractor
               </h1>
-              <p className="mt-2 max-w-[680px] text-sm leading-relaxed text-[#dfe2ff]">
+              <p className="ctool-subtitle">
                 Extract, classify, and calculate Google NLP Knowledge Graph salience scores from content and URLs.
               </p>
             </div>
           </div>
 
           {/* Mode Switcher */}
-          <div className="flex w-fit items-center gap-2 rounded-2xl border border-white/10 bg-[#f3f4f8] p-1.5 shadow-[0_6px_16px_-10px_rgba(15,23,42,0.5)]">
+          <div className="ctool-seg">
             <button
               onClick={() => setMode("url")}
-              className={`flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-bold transition ${
+              className={`ui-button transition ${
                 mode === "url"
-                  ? "bg-[#E13A27] text-white shadow-sm"
-                  : "bg-transparent text-[#2d2b6f] hover:bg-white/40"
+                  ? "ctool-seg-btn active"
+                  : "ctool-seg-btn"
               }`}
             >
               <Globe className="h-4 w-4" />
@@ -122,10 +121,10 @@ export default function EntitiesExtractor() {
             </button>
             <button
               onClick={() => setMode("text")}
-              className={`flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-bold transition ${
+              className={`ui-button transition ${
                 mode === "text"
-                  ? "bg-[#E13A27] text-white shadow-sm"
-                  : "bg-transparent text-[#2d2b6f] hover:bg-white/40"
+                  ? "ctool-seg-btn active"
+                  : "ctool-seg-btn"
               }`}
             >
               <Type className="h-4 w-4" />
@@ -141,14 +140,14 @@ export default function EntitiesExtractor() {
           <div>
             <div className="flex items-center justify-between mb-3.5">
               <div className="flex items-center gap-2">
-                <Globe className="h-4 w-4 text-[#E13A27]" />
+                <Globe className="ctool-card-icon h-4 w-4" />
                 <h3 className="font-display text-sm font-bold text-slate-900">
                   Target URLs for Entity Extraction
                 </h3>
               </div>
               <button
                 onClick={() => setUrls([...urls, ""])}
-                className="btn-add-url flex items-center gap-1.5 border border-[#E13A27]/20 bg-[#E13A27]/5 text-[#E13A27] hover:bg-[#E13A27]/10"
+                className="ui-button ctool-tool-btn btn-add-url"
               >
                 <Plus className="h-3.5 w-3.5" />
                 <span>Add Another URL</span>
@@ -158,7 +157,7 @@ export default function EntitiesExtractor() {
             <div className="space-y-2.5">
               {urls.map((url, i) => (
                 <div key={i} className="flex items-center gap-2">
-                  <div className="flex flex-1 items-center gap-3 rounded-xl border border-slate-200 bg-slate-50/70 px-4 py-2.5 focus-within:bg-white focus-within:border-[#E13A27] focus-within:ring-2 focus-within:ring-[#E13A27]/10 transition shadow-[0_2px_10px_-6px_rgba(22,29,69,0.18)]">
+                  <div className="ctool-field flex-1">
                     <Globe className="h-4 w-4 text-slate-400 flex-shrink-0" />
                     <input
                       type="url"
@@ -189,7 +188,7 @@ export default function EntitiesExtractor() {
           <div>
             <div className="flex items-center justify-between mb-3.5">
               <div className="flex items-center gap-2">
-                <Type className="h-4 w-4 text-[#E13A27]" />
+                <Type className="ctool-card-icon h-4 w-4" />
                 <h3 className="font-display text-sm font-bold text-slate-900">
                   Paste Content for Semantic Extraction
                 </h3>
@@ -202,7 +201,7 @@ export default function EntitiesExtractor() {
               value={text}
               onChange={(e) => setText(e.target.value)}
               rows={6}
-              className="w-full rounded-xl border border-slate-200 bg-slate-50/70 p-4 text-xs font-medium text-slate-800 placeholder:text-slate-400 focus:bg-white focus:outline-none focus:border-[#E13A27] focus:ring-2 focus:ring-[#E13A27]/10 transition shadow-2xs resize-none"
+              className="ctool-textarea"
               placeholder="Paste article paragraphs, competitor content, or keyword briefs here..."
             />
           </div>
@@ -214,7 +213,7 @@ export default function EntitiesExtractor() {
             <button
               onClick={handleExtract}
               disabled={loading || (mode === "url" ? !urls.some((u) => u.trim()) : !text.trim())}
-              className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#E13A27] px-5 py-3 text-sm font-bold text-white shadow-[0_10px_24px_-12px_rgba(225,58,39,0.9)] transition hover:translate-y-[-1px] hover:bg-[#d73523] disabled:cursor-not-allowed disabled:opacity-60"
+              className="ui-button ui-button-primary"
             >
               {loading ? (
                 <>
@@ -232,7 +231,7 @@ export default function EntitiesExtractor() {
             {results && (
               <button
                 onClick={handleReset}
-                className="rounded-xl border border-[#E13A27]/20 bg-[#E13A27]/5 px-3.5 py-2 text-xs font-semibold text-[#E13A27] transition hover:bg-[#E13A27]/10"
+                className="ui-button ctool-tool-btn"
               >
                 Clear Results
               </button>
@@ -255,7 +254,7 @@ export default function EntitiesExtractor() {
                 <h3 className="font-display text-base font-bold text-slate-900">
                   Extracted Entities
                 </h3>
-                <span className="inline-flex items-center gap-1 rounded-full border border-[#E13A27]/20 bg-[#E13A27]/10 px-2.5 py-0.5 text-xs font-bold text-[#B33221]">
+                <span className="ctool-count-badge">
                   {results.length} Total
                 </span>
               </div>
@@ -267,7 +266,7 @@ export default function EntitiesExtractor() {
             <div className="flex items-center gap-2">
               <button
                 onClick={copyCsv}
-                className="inline-flex items-center gap-1.5 rounded-xl border border-[#E13A27]/20 bg-[#E13A27]/5 px-3 py-2 text-xs font-semibold text-[#E13A27] transition hover:bg-[#E13A27]/10"
+                className="ui-button ctool-tool-btn"
               >
                 {copied ? <Check className="h-3.5 w-3.5 text-emerald-600" /> : <Copy className="h-3.5 w-3.5" />}
                 <span>{copied ? "Copied CSV" : "Export CSV"}</span>
@@ -282,7 +281,7 @@ export default function EntitiesExtractor() {
                 <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Total Entities</span>
                 <p className="text-lg font-bold text-slate-900">{results.length}</p>
               </div>
-              <div className="flex h-9 w-9 items-center justify-center rounded-xl border border-[#E13A27]/15 bg-[#E13A27]/10 text-[#E13A27]">
+              <div className="ctool-empty-icon h-9 w-9">
                 <Tag className="h-4 w-4" />
               </div>
             </div>
@@ -292,7 +291,7 @@ export default function EntitiesExtractor() {
                 <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Avg Salience</span>
                 <p className="text-lg font-bold text-emerald-700">{avgSalience}%</p>
               </div>
-              <div className="flex h-9 w-9 items-center justify-center rounded-xl border border-[#E13A27]/15 bg-[#fff3f1] text-[#E13A27]">
+              <div className="ctool-empty-icon h-9 w-9">
                 <TrendingUp className="h-4 w-4" />
               </div>
             </div>
@@ -318,7 +317,7 @@ export default function EntitiesExtractor() {
                 value={filterQuery}
                 onChange={(e) => setFilterQuery(e.target.value)}
                 placeholder="Filter entities..."
-                className="w-full rounded-xl border border-slate-200 bg-slate-50 pl-9 pr-3 py-1.5 text-xs text-slate-800 placeholder:text-slate-400 focus:bg-white focus:outline-none focus:border-[#E13A27] focus:ring-2 focus:ring-[#E13A27]/10"
+                className="ctool-input w-full pl-9"
               />
             </div>
 
@@ -326,10 +325,10 @@ export default function EntitiesExtractor() {
             <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar">
               <button
                 onClick={() => setSelectedType("all")}
-                className={`rounded-lg px-2.5 py-1 text-xs font-semibold transition ${
+                className={`ui-button transition ${
                   selectedType === "all"
-                    ? "bg-[#E13A27] text-white"
-                    : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                    ? "ctool-pill active"
+                    : "ctool-pill"
                 }`}
               >
                 All ({results.length})
@@ -338,10 +337,10 @@ export default function EntitiesExtractor() {
                 <button
                   key={type}
                   onClick={() => setSelectedType(type)}
-                  className={`rounded-lg px-2.5 py-1 text-xs font-semibold transition ${
+                  className={`ui-button transition ${
                     selectedType === type
-                      ? "bg-[#E13A27] text-white"
-                      : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                      ? "ctool-pill active"
+                      : "ctool-pill"
                   }`}
                 >
                   {type}
@@ -386,7 +385,7 @@ export default function EntitiesExtractor() {
                     <div className="flex items-center gap-2.5">
                       <div className="h-1.5 flex-1 rounded-full bg-slate-100 overflow-hidden">
                         <div
-                          className="h-full rounded-full bg-gradient-to-r from-brand-500 to-amber-500"
+                          className="h-full rounded-full bg-brand-500"
                           style={{ width: `${Math.round((r.salience || 0) * 100)}%` }}
                         />
                       </div>
@@ -411,7 +410,7 @@ export default function EntitiesExtractor() {
       {!results && (
         <div className="rounded-2xl border border-slate-200/80 bg-white p-6 shadow-[0_6px_24px_-12px_rgba(17,24,39,0.18)]">
           <div className="flex items-center gap-2.5 mb-3">
-            <HelpCircle className="h-4 w-4 text-[#E13A27]" />
+            <HelpCircle className="ctool-card-icon h-4 w-4" />
             <h3 className="font-display text-sm font-bold text-slate-900">
               Why Entity Optimization Matters in Modern SEO
             </h3>
