@@ -114,20 +114,18 @@ export default function KeywordResearch() {
 
   return (
     <div className="keyword-research-page space-y-5">
-      <div className="dashboard-welcome keyword-research-welcome relative overflow-hidden rounded-2xl border border-brand-600 bg-brand-500 p-6 sm:p-8">
-        <div className="pointer-events-none absolute -right-16 -top-16 h-56 w-56 animate-float-slow rounded-full bg-college-blue/20 blur-3xl" />
-        <div className="pointer-events-none absolute -bottom-20 -left-12 h-56 w-56 animate-float rounded-full bg-college-yellow/20 blur-3xl" />
-        <div className="relative z-10 flex items-center gap-4">
-          <div className="keyword-research-icon flex h-14 w-14 items-center justify-center rounded-2xl bg-white/20 backdrop-blur-sm">
-            <BarChart3 className="h-7 w-7" />
-          </div>
+      <div className="kw-hero">
+        <div className="kw-title-row">
+          <span className="edf-tile">
+            <BarChart3 className="h-5 w-5" />
+          </span>
           <div>
-            <h1 className="font-display text-2xl font-bold tracking-tight sm:text-3xl">Keyword Research Tool</h1>
-            <p className="mt-1 text-sm text-white">Discover high-value keywords with DataForSEO Google Ads data.</p>
+            <h1 className="kw-title font-display">Keyword Research Tool</h1>
+            <p className="kw-description">Discover high-value keywords with DataForSEO Google Ads data.</p>
           </div>
         </div>
         {results.length > 0 && (
-          <div className="keyword-research-stats relative z-10 mt-6 grid gap-3 md:grid-cols-4">
+          <div className="kw-stats">
             <Stat icon={Search} label="Keywords Found" value={results.length} />
             <Stat icon={TrendingUp} label="Highest Volume" value={formatNumber(maxVolume)} />
             <Stat icon={DollarSign} label="Max CPC" value={`$${maxCpc.toFixed(2)}`} />
@@ -136,37 +134,29 @@ export default function KeywordResearch() {
         )}
       </div>
 
-      <div className="keyword-research-panel rounded-2xl border border-white/[0.08] bg-[#0d1117] p-6">
-        <div className="mb-6 flex items-center gap-1">
+      <div className="kw-panel">
+        <div className="admin-tabs kw-modes">
           <button
             onClick={() => setMode("seed")}
-            className={`flex items-center gap-2 rounded-xl px-6 py-2.5 text-sm font-bold transition ${
-              mode === "seed"
-                ? "bg-gradient-to-r from-blue-500 to-indigo-500 text-white shadow-lg shadow-blue-500/20"
-                : "bg-white/[0.04] text-white/40 hover:bg-white/[0.06]"
-            }`}
+            className={`admin-tab ${mode === "seed" ? "active" : ""}`}
           >
             <Search className="h-4 w-4" /> Seed Keyword
           </button>
           <button
             onClick={() => setMode("domain")}
-            className={`flex items-center gap-2 rounded-xl px-6 py-2.5 text-sm font-bold transition ${
-              mode === "domain"
-                ? "bg-gradient-to-r from-blue-500 to-indigo-500 text-white shadow-lg shadow-blue-500/20"
-                : "bg-white/[0.04] text-white/40 hover:bg-white/[0.06]"
-            }`}
+            className={`admin-tab ${mode === "domain" ? "active" : ""}`}
           >
             <Globe className="h-4 w-4" /> Domain
           </button>
         </div>
 
-        <div className="grid gap-4 md:grid-cols-[1fr_1fr_2fr]">
+        <div className="kw-fields">
           <div>
-            <label className="text-[11px] font-semibold uppercase tracking-wider text-white/40">Country</label>
+            <label className="kw-label">Country</label>
             <select
               value={countryCode}
               onChange={(e) => setCountryCode(e.target.value)}
-              className="mt-1.5 w-full rounded-xl border border-white/[0.08] bg-[#010409] px-4 py-3 text-sm text-white/70 focus:border-blue-500/30 focus:outline-none"
+              className="kw-input mt-1.5"
             >
               {DATAFORSEO_LOCATIONS.map((item) => (
                 <option key={item.code} value={item.code}>
@@ -176,13 +166,13 @@ export default function KeywordResearch() {
             </select>
           </div>
           <div>
-            <label className="text-[11px] font-semibold uppercase tracking-wider text-white/40">Language</label>
-            <div className="mt-1.5 rounded-xl border border-white/[0.08] bg-[#010409] px-4 py-3 text-sm text-white/50">
+            <label className="kw-label">Language</label>
+            <div className="kw-static-field">
               {location.language.toUpperCase()} <span className="ml-1 text-[10px] text-white/20">Auto</span>
             </div>
           </div>
           <div>
-            <label className="text-[11px] font-semibold uppercase tracking-wider text-white/40">
+            <label className="kw-label">
               {mode === "seed" ? "Seed Keyword" : "Domain"}
             </label>
             <div className="mt-1.5 flex items-center gap-2">
@@ -190,13 +180,13 @@ export default function KeywordResearch() {
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && !isLoading && handleSearch()}
-                className="flex-1 rounded-xl border border-white/[0.08] bg-[#010409] px-4 py-3 text-sm text-white/70 placeholder:text-white/20 focus:border-blue-500/30 focus:outline-none"
+                className="kw-input flex-1"
                 placeholder={mode === "seed" ? "e.g. SEO tools" : "e.g. competitor.com"}
               />
               <button
                 onClick={handleSearch}
                 disabled={isLoading || !query.trim()}
-                className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-blue-500 to-indigo-500 px-5 py-3 text-sm font-bold text-white shadow-lg shadow-blue-500/20 transition hover:shadow-blue-500/30 disabled:cursor-not-allowed disabled:opacity-60"
+                className="ui-button ui-button-primary kw-search-button"
               >
                 {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
                 {isLoading ? "Searching" : "Search"}
@@ -206,21 +196,21 @@ export default function KeywordResearch() {
         </div>
 
         {error && (
-          <div className="mt-4 flex items-center gap-2 rounded-xl border border-rose-500/20 bg-rose-500/[0.05] px-4 py-3 text-xs text-rose-200">
+          <div className="app-alert app-alert-error mt-4">
             <AlertCircle className="h-4 w-4" />
             {error}
           </div>
         )}
       </div>
 
-      <div className="keyword-research-results min-h-[300px] rounded-2xl border border-white/[0.08] bg-[#0d1117]">
+      <div className="kw-results">
         {!searched ? (
-          <div className="flex flex-col items-center justify-center py-20">
-            <div className="flex h-16 w-16 items-center justify-center rounded-full bg-blue-500/10">
-              <Search className="h-7 w-7 text-blue-400/50" />
-            </div>
-            <h3 className="mt-4 text-lg font-bold text-white/30">Start Your Keyword Research</h3>
-            <p className="mt-1 max-w-xs text-center text-sm text-white/15">
+          <div className="app-empty-state kw-empty">
+            <span className="kw-empty-icon">
+              <Search className="h-5 w-5" />
+            </span>
+            <h3 className="kw-empty-title">Start Your Keyword Research</h3>
+            <p className="kw-empty-body">
               Enter a seed keyword or domain to fetch keyword data, CPC, competition, and search volume.
             </p>
           </div>
@@ -234,14 +224,14 @@ export default function KeywordResearch() {
                 <button
                   onClick={copyKeywords}
                   disabled={!sortedResults.length}
-                  className="flex items-center gap-1 rounded-lg border border-white/[0.08] px-3 py-1.5 text-[11px] font-semibold text-blue-400 hover:text-blue-300 disabled:opacity-40"
+                  className="ui-button kw-export-button"
                 >
                   <Copy className="h-3.5 w-3.5" /> {copied ? "Copied" : "Copy Keywords"}
                 </button>
                 <button
                   onClick={exportCsv}
                   disabled={!sortedResults.length}
-                  className="flex items-center gap-1 rounded-lg border border-white/[0.08] px-3 py-1.5 text-[11px] font-semibold text-blue-400 hover:text-blue-300 disabled:opacity-40"
+                  className="ui-button kw-export-button"
                 >
                   <Download className="h-3.5 w-3.5" /> Export CSV
                 </button>
@@ -258,7 +248,7 @@ export default function KeywordResearch() {
               </div>
               {isLoading ? (
                 <div className="flex items-center justify-center py-16">
-                  <Loader2 className="h-6 w-6 animate-spin text-blue-400" />
+                  <Loader2 className="kw-spinner h-6 w-6 animate-spin" />
                 </div>
               ) : sortedResults.length ? (
                 sortedResults.map((item, index) => (
@@ -268,7 +258,7 @@ export default function KeywordResearch() {
                       index < sortedResults.length - 1 ? "border-b border-white/[0.03]" : ""
                     }`}
                   >
-                    <span className="cursor-pointer truncate text-sm text-blue-300 hover:underline">{item.keyword}</span>
+                    <span className="kw-keyword">{item.keyword}</span>
                     <span className="font-mono text-sm text-white/60">{formatNumber(item.search_volume || 0)}</span>
                     <span className="font-mono text-sm text-emerald-400">${Number(item.cpc || 0).toFixed(2)}</span>
                     <span className={`w-fit rounded-full px-2 py-0.5 text-xs font-bold ${competitionClass(item.competition)}`}>
@@ -290,10 +280,12 @@ export default function KeywordResearch() {
 
 function Stat({ icon: Icon, label, value }) {
   return (
-    <div className="rounded-xl border border-white/15 bg-white/10 p-4 backdrop-blur-sm">
-      <Icon className="h-4 w-4 text-white/60" />
-      <div className="mt-2 font-display text-2xl font-black text-white">{value}</div>
-      <div className="text-xs text-blue-100/70">{label}</div>
+    <div className="kw-stat">
+      <div className="kw-stat-head">
+        <Icon className="h-3.5 w-3.5" />
+        <span>{label}</span>
+      </div>
+      <div className="kw-stat-value">{value}</div>
     </div>
   );
 }
@@ -330,7 +322,7 @@ function MiniSparkline({ data }) {
       {values.map((value, index) => (
         <span
           key={index}
-          className="flex-1 rounded-sm bg-blue-400/70"
+          className="kw-bar flex-1 rounded-sm"
           style={{ height: `${Math.max(10, (value / max) * 100)}%` }}
         />
       ))}

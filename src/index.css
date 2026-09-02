@@ -15,6 +15,10 @@
   --brand-red-hover: #c72f1d;
   --brand-red-active: #a72518;
   --brand-red-subtle: #fef4f2;
+  /* Tile fill: --brand-red-subtle (#fef4f2) is only ~2% off white, so
+     it disappears on a white card. One step deeper stays quiet but is
+     actually visible. */
+  --tile-bg: #fdeae5;
   --brand-red-border: #fbcfc7;
   --brand-blue: #2d2b6f;
   --brand-blue-hover: #252359;
@@ -79,6 +83,7 @@
   /* --- Focus ----------------------------------------------------- */
   --focus-ring: rgba(45, 43, 111, 0.9);
   --focus-ring-inverse: #ffffff;
+  --focus-ring-brand: 0 0 0 3px rgba(223, 60, 39, 0.12);
   --focus-width: 2px;
   --focus-offset: 2px;
 
@@ -86,6 +91,7 @@
   --ease: cubic-bezier(0.16, 1, 0.3, 1);
   --dur-fast: 120ms;
   --dur: 160ms;
+  --motion-fast: 120ms var(--ease);
 
   /* --- Control sizing (consistent heights everywhere) ------------ */
   --control-h-sm: 32px;
@@ -2162,233 +2168,36 @@ button [class*="text-stone"] {
   background: var(--surface-sunken) !important;
 }
 
-.gsc-keyword-explorer .gsc-keyword-header h1 {
-  color: var(--text-primary) !important;
-}
-.gsc-keyword-explorer .gsc-keyword-header p {
-  color: var(--text-secondary) !important;
-}
-.gsc-keyword-explorer .gsc-keyword-header > div:first-child > div:first-child {
-  background: #dbeafe !important;
-  color: #2563eb !important;
-}
-.gsc-keyword-explorer .gsc-keyword-header button,
-.gsc-keyword-explorer .gsc-keyword-filters button:not([class*="bg-gradient"]),
-.gsc-keyword-explorer .gsc-keyword-results button {
-  background: #ffffff !important;
-  border-color: var(--border-strong) !important;
-  color: var(--text-secondary) !important;
-}
-.gsc-keyword-explorer .gsc-keyword-header button:hover:not(:disabled),
-.gsc-keyword-explorer .gsc-keyword-filters button:not([class*="bg-gradient"]):hover:not(:disabled),
-.gsc-keyword-explorer .gsc-keyword-results button:hover:not(:disabled) {
-  background: var(--surface-sunken) !important;
-  color: #1d4ed8 !important;
-}
-.gsc-keyword-explorer .gsc-keyword-filters,
-.gsc-keyword-explorer .gsc-keyword-results,
-.gsc-keyword-explorer .gsc-keyword-highlights {
-  background: #ffffff !important;
-  border-color: var(--border) !important;
-  box-shadow: 0 4px 16px rgba(45, 43, 111, 0.05);
-}
-.gsc-keyword-explorer .gsc-keyword-filters select,
-.gsc-keyword-explorer .gsc-keyword-filters input,
-.gsc-keyword-explorer .gsc-keyword-results input,
-.gsc-keyword-explorer .gsc-keyword-filters label {
-  color: var(--text-secondary) !important;
-}
-.gsc-keyword-explorer .gsc-keyword-filters select,
-.gsc-keyword-explorer .gsc-keyword-filters input,
-.gsc-keyword-explorer .gsc-keyword-results input,
-.gsc-keyword-explorer .gsc-keyword-filters > div > div,
-.gsc-keyword-explorer .gsc-keyword-results > div:first-child > div {
-  background: var(--surface-sunken) !important;
-  border-color: var(--border-strong) !important;
-}
-.gsc-keyword-explorer .gsc-keyword-filters select {
-  color: var(--text-primary) !important;
-}
-.gsc-keyword-explorer .gsc-keyword-filters input::placeholder,
-.gsc-keyword-explorer .gsc-keyword-results input::placeholder {
-  color: var(--text-disabled) !important;
-}
-.gsc-keyword-explorer .gsc-keyword-filters button[class*="bg-gradient"] {
-  background: var(--brand-red) !important;
-  border-color: var(--brand-red) !important;
-  color: #ffffff !important;
-}
-.gsc-keyword-explorer-low-hanging .gsc-keyword-filters button[class*="bg-gradient"] {
-  background: var(--brand-red) !important;
-  border-color: var(--brand-red) !important;
-}
-.gsc-keyword-explorer-low-hanging .gsc-keyword-highlights {
-  background: #fffbeb !important;
-  border-color: #fed7aa !important;
-}
-.gsc-keyword-explorer-low-hanging .gsc-keyword-header > div:first-child > div:first-child {
-  background: #fef3c7 !important;
-  color: #d97706 !important;
-}
-.gsc-keyword-explorer .gsc-keyword-filters button[class*="bg-gradient"]:hover:not(:disabled) {
-  background: var(--brand-red-hover) !important;
-}
-.gsc-keyword-explorer .gsc-keyword-filters button[class*="bg-gradient"]:disabled {
-  background: var(--text-disabled) !important;
-  border-color: var(--text-disabled) !important;
-  color: #ffffff !important;
-  opacity: 1 !important;
-}
-.gsc-keyword-explorer .gsc-keyword-highlights h3 {
-  color: var(--text-primary) !important;
-}
-.gsc-keyword-explorer .gsc-keyword-highlights p {
-  color: var(--text-secondary) !important;
-}
-.gsc-keyword-explorer .gsc-keyword-table-header {
-  background: var(--surface-sunken) !important;
-  border-color: var(--border) !important;
-}
-.gsc-keyword-explorer .gsc-keyword-table-header button {
-  background: transparent !important;
-  border-color: transparent !important;
-  color: var(--text-secondary) !important;
-}
-.gsc-keyword-explorer .gsc-keyword-row {
-  border-color: #eef2f7 !important;
-}
-.gsc-keyword-explorer .gsc-keyword-row:hover {
-  background: var(--surface-sunken) !important;
-}
-.gsc-keyword-explorer .gsc-keyword-row > span.text-blue-300,
-.gsc-keyword-explorer .gsc-keyword-row > a:hover {
-  color: #2563eb !important;
-}
-.gsc-keyword-explorer .gsc-keyword-row > span.font-mono,
-.gsc-keyword-explorer .gsc-keyword-row > a,
-.gsc-keyword-explorer .gsc-keyword-row > span.text-white\/25 {
-  color: var(--text-secondary) !important;
-}
-.gsc-keyword-explorer .gsc-keyword-table-header button,
-.gsc-keyword-explorer .gsc-keyword-table-header button:hover:not(:disabled) {
-  background: transparent !important;
-  border-color: transparent !important;
-  color: var(--text-secondary) !important;
-}
-.gsc-keyword-explorer-lost .gsc-keyword-header > div:first-child > div:first-child {
-  background: #ffe4e6 !important;
-  color: #e11d48 !important;
-}
-.gsc-keyword-explorer-branded .gsc-keyword-header > div:first-child > div:first-child {
-  background: #ede9fe !important;
-  color: #7c3aed !important;
-}
-.gsc-keyword-explorer-lost .gsc-keyword-highlights {
-  background: #fff1f2 !important;
-  border-color: #fecdd3 !important;
-}
-.gsc-keyword-explorer-branded .gsc-keyword-highlights {
-  background: #f5f3ff !important;
-  border-color: #ddd6fe !important;
-}
-.gsc-keyword-explorer-lost .gsc-keyword-filters button[class*="bg-gradient"] {
-  background: #e11d48 !important;
-  border-color: #e11d48 !important;
-}
-.gsc-keyword-explorer-lost .gsc-keyword-filters button[class*="bg-gradient"]:hover:not(:disabled) {
-  background: #be123c !important;
-}
-.gsc-keyword-explorer-branded .gsc-keyword-filters button[class*="bg-gradient"] {
-  background: #7c3aed !important;
-  border-color: #7c3aed !important;
-}
-.gsc-keyword-explorer-branded .gsc-keyword-filters button[class*="bg-gradient"]:hover:not(:disabled) {
-  background: #6d28d9 !important;
-}
-.gsc-keyword-explorer-lost .gsc-keyword-results,
-.gsc-keyword-explorer-branded .gsc-keyword-results {
-  background: #ffffff !important;
-  border-color: var(--border) !important;
-}
-
-.keyword-cannibalization-page .keyword-cannibalization-header h1 {
-  color: var(--text-primary) !important;
-}
-.keyword-cannibalization-page .keyword-cannibalization-header p {
-  color: var(--text-secondary) !important;
-}
-.keyword-cannibalization-page .keyword-cannibalization-header > div:first-child > div:first-child {
-  background: #ffe4e6 !important;
-  color: #e11d48 !important;
-}
-.keyword-cannibalization-page .keyword-cannibalization-header button,
-.keyword-cannibalization-page .keyword-cannibalization-filters button,
-.keyword-cannibalization-page .keyword-cannibalization-results button {
-  background: #ffffff !important;
-  border-color: var(--border-strong) !important;
-  color: var(--text-secondary) !important;
-}
-.keyword-cannibalization-page .keyword-cannibalization-header button:hover:not(:disabled),
-.keyword-cannibalization-page .keyword-cannibalization-filters button:hover:not(:disabled),
-.keyword-cannibalization-page .keyword-cannibalization-results button:hover:not(:disabled) {
-  background: var(--surface-sunken) !important;
-  color: #1d4ed8 !important;
-}
-.keyword-cannibalization-page .keyword-cannibalization-info,
-.keyword-cannibalization-page .keyword-cannibalization-filters,
-.keyword-cannibalization-page .keyword-cannibalization-results {
-  background: #ffffff !important;
-  border-color: var(--border) !important;
-  box-shadow: 0 4px 16px rgba(45, 43, 111, 0.05);
-}
-.keyword-cannibalization-page .keyword-cannibalization-info {
-  background: #fff1f2 !important;
-  border-color: #fecdd3 !important;
-}
-.keyword-cannibalization-page .keyword-cannibalization-info p {
-  color: var(--text-secondary) !important;
-}
-.keyword-cannibalization-page .keyword-cannibalization-info p span,
-.keyword-cannibalization-page .keyword-cannibalization-info svg {
-  color: #be123c !important;
-}
-.keyword-cannibalization-page .keyword-cannibalization-filters select,
-.keyword-cannibalization-page .keyword-cannibalization-filters input,
-.keyword-cannibalization-page .keyword-cannibalization-results input,
-.keyword-cannibalization-page .keyword-cannibalization-filters > div > div,
-.keyword-cannibalization-page .keyword-cannibalization-results > div:first-child > div {
-  background: var(--surface-sunken) !important;
-  border-color: var(--border-strong) !important;
-  color: var(--text-primary) !important;
-}
-.keyword-cannibalization-page .keyword-cannibalization-filters button[class*="bg-gradient"] {
-  background: var(--brand-red) !important;
-  border-color: var(--brand-red) !important;
-  color: #ffffff !important;
-}
-.keyword-cannibalization-page .keyword-cannibalization-filters button[class*="bg-gradient"]:hover:not(:disabled) {
-  background: var(--brand-red-hover) !important;
-}
+/* ---------------------------------------------------------------------------
+   KEYWORD EXPLORER — table rows only
+   The header, filter, results-card and highlight styling that used to live
+   here has been replaced by the shared .kw-* / .gke-* component system, which
+   the five /keywords GSC screens now use. Only the table-body rules below
+   still target markup that exists, so the rest was removed rather than left
+   to out-specify the new components.
+   --------------------------------------------------------------------------- */
+.gsc-keyword-explorer .gsc-keyword-table-header,
 .keyword-cannibalization-page .keyword-cannibalization-table-header {
   background: var(--surface-sunken) !important;
   border-color: var(--border) !important;
 }
-.keyword-cannibalization-page .keyword-cannibalization-table-header button,
-.keyword-cannibalization-page .keyword-cannibalization-table-header button:hover:not(:disabled) {
-  background: transparent !important;
-  border-color: transparent !important;
-  color: var(--text-secondary) !important;
-}
+.gsc-keyword-explorer .gsc-keyword-row,
 .keyword-cannibalization-page .keyword-cannibalization-row {
-  border-color: #eef2f7 !important;
+  border-color: var(--border-subtle) !important;
 }
+.gsc-keyword-explorer .gsc-keyword-row:hover,
 .keyword-cannibalization-page .keyword-cannibalization-row:hover {
   background: var(--surface-sunken) !important;
 }
+.gsc-keyword-explorer .gsc-keyword-row > span.text-blue-300,
+.gsc-keyword-explorer .gsc-keyword-row > a:hover,
 .keyword-cannibalization-page .keyword-cannibalization-row > div > span.text-blue-300,
 .keyword-cannibalization-page .keyword-cannibalization-row a:hover {
-  color: #2563eb !important;
+  color: var(--info-text) !important;
 }
+.gsc-keyword-explorer .gsc-keyword-row > span.font-mono,
+.gsc-keyword-explorer .gsc-keyword-row > a,
+.gsc-keyword-explorer .gsc-keyword-row > span.text-white\/25,
 .keyword-cannibalization-page .keyword-cannibalization-row > div a,
 .keyword-cannibalization-page .keyword-cannibalization-row > span.font-mono {
   color: var(--text-secondary) !important;
@@ -2573,35 +2382,32 @@ button [class*="text-stone"] {
 }
 
 /* 2. Hero Header Card */
-.semantic-writer-workspace .writer-hero {
-  background: linear-gradient(135deg, var(--brand-blue) 0%, #1e1b4b 100%) !important;
-  border: 1px solid var(--brand-blue-hover) !important;
-  color: #ffffff !important;
-  box-shadow: 0 10px 25px -5px rgba(45, 43, 111, 0.25) !important;
-}
 .semantic-writer-workspace .writer-hero h1,
 .semantic-writer-workspace .writer-hero h1 span,
 .semantic-writer-workspace .writer-hero .hero-title {
-  color: #ffffff !important;
+  color: var(--brand-blue) !important;
 }
 .semantic-writer-workspace .writer-hero p,
 .semantic-writer-workspace .writer-hero .hero-sub {
-  color: var(--border-strong) !important;
+  color: var(--text-secondary) !important;
 }
 .semantic-writer-workspace .writer-hero .hero-icon {
-  background: rgba(255, 255, 255, 0.15) !important;
-  border: 1px solid rgba(255, 255, 255, 0.25) !important;
-  color: #ffc600 !important;
+  background: var(--tile-bg) !important;
+  border: 1px solid var(--brand-red-border) !important;
+  color: var(--brand-red) !important;
 }
 .semantic-writer-workspace .writer-hero button {
-  background: rgba(255, 255, 255, 0.15) !important;
-  border: 1px solid rgba(255, 255, 255, 0.25) !important;
-  color: #ffffff !important;
-  font-weight: 700 !important;
+  background: var(--surface) !important;
+  border: 1px solid var(--border) !important;
+  color: var(--text-secondary) !important;
+  --btn-fg: var(--text-secondary);
+  font-weight: 600 !important;
 }
 .semantic-writer-workspace .writer-hero button:hover:not(:disabled) {
-  background: rgba(255, 255, 255, 0.25) !important;
-  color: #ffffff !important;
+  background: var(--surface-sunken) !important;
+  border-color: var(--border-strong) !important;
+  color: var(--text-primary) !important;
+  --btn-fg: var(--text-primary);
 }
 
 /* 3. API Status Alert Banner */
@@ -2922,19 +2728,6 @@ button [class*="text-stone"] {
 .entities-extractor-workspace h4 {
   color: var(--brand-blue) !important;
 }
-.entities-extractor-workspace .extractor-hero {
-  background: linear-gradient(135deg, var(--brand-red) 0%, var(--brand-red-hover) 100%) !important;
-  border: 1px solid var(--brand-red-hover) !important;
-  color: #ffffff !important;
-  box-shadow: 0 10px 25px -5px rgba(225, 58, 39, 0.35) !important;
-}
-.entities-extractor-workspace .extractor-hero h1,
-.entities-extractor-workspace .extractor-hero h1 span {
-  color: #ffffff !important;
-}
-.entities-extractor-workspace .extractor-hero p {
-  color: #fff4f2 !important;
-}
 .entities-extractor-workspace .extractor-tab-active {
   background: var(--brand-blue) !important;
   border: 1px solid var(--brand-blue-hover) !important;
@@ -3040,18 +2833,6 @@ button [class*="text-stone"] {
 .content-optimization-workspace h3,
 .content-optimization-workspace h4 {
   color: var(--brand-blue) !important;
-}
-.content-optimization-workspace .optimization-hero {
-  background: linear-gradient(135deg, var(--brand-red) 0%, var(--brand-red-hover) 100%) !important;
-  border: 1px solid var(--brand-red-hover) !important;
-  color: #ffffff !important;
-  box-shadow: 0 10px 25px -5px rgba(225, 58, 39, 0.35) !important;
-}
-.content-optimization-workspace .optimization-hero h1 {
-  color: #0d2f66 !important;
-}
-.content-optimization-workspace .optimization-hero p {
-  color: #fff4f2 !important;
 }
 .content-optimization-workspace .toolbar-btn {
   background: transparent !important;
@@ -3180,18 +2961,6 @@ button [class*="text-stone"] {
 .seo-tools-hub-workspace h3,
 .seo-tools-hub-workspace h4 {
   color: var(--brand-blue) !important;
-}
-.seo-tools-hub-workspace .seo-hub-hero {
-  background: linear-gradient(135deg, var(--brand-red) 0%, var(--brand-red-hover) 100%) !important;
-  border: 1px solid var(--brand-red-hover) !important;
-  color: #ffffff !important;
-  box-shadow: 0 10px 25px -5px rgba(225, 58, 39, 0.35) !important;
-}
-.seo-tools-hub-workspace .seo-hub-hero h1 {
-  color: #ffffff !important;
-}
-.seo-tools-hub-workspace .seo-hub-hero p {
-  color: #fff4f2 !important;
 }
 .seo-tools-hub-workspace .btn-tool-open {
   background: var(--surface-sunken) !important;
@@ -4359,9 +4128,10 @@ section[class*="bg-white/[0.0"][class*="rounded"][class*="border"] {
   color: var(--text-secondary) !important;
 }
 .writer-hero .hero-icon {
-  background: var(--brand-red) !important;
+  background: var(--tile-bg) !important;
+  border: 1px solid var(--brand-red-border) !important;
   border-radius: var(--radius-lg) !important;
-  color: #ffffff !important;
+  color: var(--brand-red) !important;
 }
 
 /* ==================================================================
@@ -8526,4 +8296,2351 @@ aside.w3c-card {
   font-size: 12px;
   font-variant-numeric: tabular-nums;
   font-weight: 600;
+}
+
+/* ==================================================================
+   BACKLINK DIRECTORY — CATEGORY DETAIL HEADER
+
+   Was an indigo→violet gradient band. The heading rendered dark on that
+   purple because the global `h1/h2` rule paints headings brand navy —
+   navy on violet is roughly 1.6:1 — and the subtitle at `text-white/60`
+   was remapped by the compat layer, leaving it almost invisible. Same
+   banner as the category grid view now, so the two match when you
+   navigate between them.
+   ================================================================== */
+.bd-back-button {
+  background: var(--surface) !important;
+  border: 1px solid var(--border) !important;
+  color: var(--text-secondary) !important;
+  --btn-fg: var(--text-secondary);
+  flex: 0 0 auto;
+  height: 34px;
+  padding: 0 !important;
+  width: 34px;
+}
+.bd-back-button:hover:not(:disabled) {
+  background: var(--surface-sunken) !important;
+  border-color: var(--border-strong) !important;
+  color: var(--text-primary) !important;
+  --btn-fg: var(--text-primary);
+}
+.bd-count {
+  font-size: 12px !important;
+  padding: 5px 10px !important;
+}
+
+/* ==================================================================
+   BACKLINK DIRECTORY — CATEGORY CARD ICONS
+   Matched to the banner tiles: brand-red glyph on a light red ground
+   with a red hairline.
+   ================================================================== */
+.bd-card-icon {
+  align-items: center;
+  background: var(--brand-red-subtle) !important;
+  border: 1px solid var(--brand-red-border);
+  border-radius: var(--radius-lg);
+  color: var(--brand-red) !important;
+  display: flex;
+  flex: 0 0 auto;
+  height: 40px;
+  justify-content: center;
+  transition: background-color var(--dur) ease, border-color var(--dur) ease;
+  width: 40px;
+}
+.bd-card-icon svg { color: var(--brand-red) !important; height: 18px; width: 18px; }
+
+/* ==================================================================
+   ICON TILES — ONE FILL EVERYWHERE
+
+   Every tile in the product (page banners, connect states, category
+   cards) shares this fill so they read identically. Applied last so it
+   supersedes the per-page declarations written earlier.
+   ================================================================== */
+.edf-tile,
+.gsc-state-tile,
+.sf-tile,
+.bing-connect-tile,
+.bd-card-icon,
+.analyzer-section-icon,
+.crawl-section-icon,
+.w3c-title > svg,
+.gsc-audit-title > svg,
+.bing-title > svg,
+.backlinks-title > svg,
+.duplicate-title > svg,
+.plagiarism-title > svg,
+.sf-title > svg,
+.radar-title > svg,
+.radar-page-title > svg,
+.auditor-title > svg,
+.auditor-hero h1 > svg:first-child,
+.analyzer-title > svg,
+.bing-connect-title > svg,
+.crawl-hero .crawl-title > div > svg:first-child,
+.speed-hero .speed-title > div > svg:first-child,
+:is(.eeat-hero, .semantic-hero) [class*="h-10"][class*="w-10"][class*="rounded"],
+.robots-hero [class*="h-12"][class*="w-12"][class*="rounded"] {
+  background: var(--tile-bg) !important;
+  border: 1px solid var(--brand-red-border) !important;
+  color: var(--brand-red) !important;
+}
+/* Tiles are identity, not controls — they do not react to hover. */
+.bd-card-icon,
+.group:hover .bd-card-icon {
+  background: var(--tile-bg) !important;
+  border-color: var(--brand-red-border) !important;
+}
+
+/* ==================================================================
+   AI LINK BUILDER
+
+   A marketing landing page sitting inside the app: a full-height
+   slate→indigo page wash, an indigo→purple hero band with a 48px
+   heading and py-16, `mb-16` between sections, and indigo accents
+   throughout. Rebuilt on the dashboard's language.
+   ================================================================== */
+.alb-page { background: transparent; min-height: 0; }
+
+.alb-hero {
+  background-color: var(--surface);
+  background-image:
+    radial-gradient(120% 110% at 100% 0%, rgba(223, 60, 39, 0.055) 0%, transparent 55%),
+    radial-gradient(90% 110% at 100% 100%, rgba(45, 43, 111, 0.04) 0%, transparent 60%);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-xs);
+  color: var(--text-primary);
+  padding: 26px 28px;
+}
+/* Title left, actions right — the W3C banner arrangement. */
+.alb-hero-inner {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  justify-content: space-between;
+}
+.alb-title-row {
+  align-items: flex-start;
+  display: flex;
+  flex: 1 1 420px;
+  gap: 12px;
+  min-width: 0;
+}
+.alb-title-row > span.edf-tile { margin-top: 1px; }
+.alb-title {
+  color: var(--brand-blue);
+  font-size: 1.5rem;
+  font-weight: 700;
+  letter-spacing: -0.018em;
+  line-height: 2rem;
+}
+.alb-lead {
+  color: var(--text-secondary);
+  font-size: 0.875rem;
+  line-height: 1.375rem;
+  margin-top: 4px;
+  max-width: 68ch;
+}
+.alb-hero-actions { display: flex; flex-shrink: 0; flex-wrap: wrap; gap: 8px; }
+.alb-action { min-height: var(--control-h-lg); padding: 0 18px; }
+.alb-action-secondary {
+  background: var(--surface) !important;
+  border: 1px solid var(--border) !important;
+  color: var(--text-secondary) !important;
+  --btn-fg: var(--text-secondary);
+}
+.alb-action-secondary:hover:not(:disabled) {
+  background: var(--surface-sunken) !important;
+  border-color: var(--border-strong) !important;
+  color: var(--text-primary) !important;
+}
+
+/* --- Body sections ------------------------------------------------- */
+.alb-body { padding: 20px 0 0; }
+.alb-body > section { margin-bottom: 24px !important; }
+.alb-section-title {
+  color: var(--brand-blue);
+  font-size: 1.125rem;
+  font-weight: 700;
+  letter-spacing: -0.015em;
+  margin-bottom: 14px !important;
+}
+
+.alb-feature-card,
+.alb-steps-card,
+.alb-tutorial-card,
+.alb-cta {
+  background: var(--surface) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: var(--radius-xl) !important;
+  box-shadow: var(--shadow-xs) !important;
+}
+.alb-feature-card { padding: 18px 20px; transition: border-color var(--dur) var(--ease), box-shadow var(--dur) var(--ease); }
+.alb-feature-card:hover { border-color: var(--border-strong) !important; box-shadow: var(--shadow-sm) !important; }
+.alb-feature-icon {
+  align-items: center;
+  background: var(--tile-bg);
+  border: 1px solid var(--brand-red-border);
+  border-radius: var(--radius-lg);
+  color: var(--brand-red) !important;
+  display: inline-flex;
+  flex: 0 0 auto;
+  height: 40px;
+  justify-content: center;
+  width: 40px;
+}
+.alb-feature-title { color: var(--text-primary) !important; font-size: 0.875rem; font-weight: 600; margin-bottom: 2px; }
+
+.alb-steps-card { padding: 24px; }
+.alb-step-num {
+  align-items: center;
+  background: var(--tile-bg);
+  border: 1px solid var(--brand-red-border);
+  border-radius: var(--radius-pill);
+  color: var(--brand-red);
+  display: flex;
+  font-size: 0.9375rem;
+  font-weight: 700;
+  height: 40px;
+  justify-content: center;
+  margin: 0 auto 12px;
+  width: 40px;
+}
+.alb-step-title { color: var(--text-primary) !important; font-size: 0.875rem; font-weight: 600; margin-bottom: 4px; }
+
+.alb-tutorial-thumb {
+  align-items: center;
+  background: var(--surface-sunken) !important;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg) !important;
+  display: flex;
+  flex-shrink: 0;
+  height: 52px;
+  justify-content: center;
+  width: 52px;
+}
+.alb-tutorial-thumb svg { color: var(--brand-red) !important; }
+
+/* --- Closing CTA: a surface, not a gradient slab -------------------- */
+.alb-cta {
+  padding: 32px 26px !important;
+  text-align: center;
+}
+.alb-cta-tile { margin: 0 auto; }
+.alb-cta-title {
+  color: var(--brand-blue) !important;
+  font-size: 1.25rem;
+  font-weight: 700;
+  letter-spacing: -0.015em;
+  margin-top: 14px;
+}
+.alb-cta-body {
+  color: var(--text-secondary) !important;
+  font-size: 0.875rem;
+  margin: 6px auto 0;
+  max-width: 52ch;
+}
+.alb-cta-version { color: var(--text-muted) !important; font-size: 12px; margin: 8px 0 18px; }
+.alb-cta-version span { color: var(--text-primary) !important; font-weight: 600; }
+.alb-cta-actions { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; }
+
+@media (max-width: 640px) {
+  .alb-hero, .alb-cta { padding: 20px !important; }
+}
+
+/* Tutorial note strip + meta, formerly indigo. */
+.alb-note {
+  background: var(--surface-sunken);
+  border-top: 1px solid var(--border-subtle);
+  padding: 10px 20px;
+}
+.alb-note-text {
+  color: var(--text-secondary) !important;
+  font-size: 12px;
+  font-weight: 500;
+  text-align: center;
+}
+.alb-tutorial-meta { color: var(--brand-red-hover) !important; font-size: 12px; font-weight: 500; }
+.alb-tutorial-meta svg { color: var(--brand-red-hover) !important; }
+
+/* ==================================================================
+   AI LINK BUILDER — TUTORIAL ROWS
+
+   Each row's header is a bare <button>, so it fell through to the
+   default primary bucket and painted the entire row brand red — with a
+   navy title on top of it and the "Watch" affordance rendered red on
+   red. Styling the card alone does not help; the button must declare
+   its own surface.
+   ================================================================== */
+.alb-tutorial-header {
+  align-items: center;
+  background: transparent !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  color: var(--text-primary) !important;
+  --btn-fg: var(--text-primary);
+  display: flex;
+  gap: 16px;
+  padding: 16px 18px !important;
+  text-align: left;
+  transition: background-color var(--dur) ease;
+  width: 100%;
+}
+.alb-tutorial-header:hover:not(:disabled) {
+  background: var(--surface-sunken) !important;
+  color: var(--text-primary) !important;
+}
+
+/* Play affordance reads as a control, and grows slightly on hover. */
+.alb-tutorial-play {
+  align-items: center;
+  background: var(--surface) !important;
+  border: 1px solid var(--brand-red-border);
+  border-radius: var(--radius-pill);
+  box-shadow: var(--shadow-xs);
+  color: var(--brand-red) !important;
+  display: flex;
+  height: 34px;
+  justify-content: center;
+  transition: transform var(--dur) var(--ease), border-color var(--dur) ease;
+  width: 34px;
+}
+.alb-tutorial-header:hover .alb-tutorial-play {
+  border-color: var(--brand-red);
+  transform: scale(1.06);
+}
+.alb-tutorial-play svg { color: var(--brand-red) !important; }
+
+.alb-tutorial-desc {
+  color: var(--text-secondary) !important;
+  font-size: 0.8125rem;
+  line-height: 1.35;
+  margin-top: 2px;
+}
+.alb-tutorial-meta {
+  color: var(--text-muted) !important;
+  flex-shrink: 0;
+  font-size: 12px;
+  font-weight: 500;
+}
+.alb-tutorial-header:hover .alb-tutorial-meta {
+  color: var(--brand-red-hover) !important;
+}
+.alb-tutorial-meta svg { color: currentColor !important; }
+
+/* ==================================================================
+   CSV GENERATOR
+
+   Built on a slate/blue palette with a full-height page wash, 2xl cards
+   under `shadow-lg`, and a green Download button. Rebuilt on the
+   dashboard's surfaces and token scale.
+   ================================================================== */
+.csv-page {
+  background: transparent;
+  height: auto;
+  overflow: visible;
+  padding: 0;
+}
+.csv-toast { display: inline-flex; margin-bottom: 16px; }
+
+.csv-layout {
+  align-items: start;
+  display: grid;
+  gap: 16px;
+  grid-template-columns: minmax(0, 360px) minmax(0, 1fr);
+}
+.csv-config { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+
+.csv-card,
+.csv-preview {
+  background: var(--surface) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: var(--radius-xl) !important;
+  box-shadow: var(--shadow-xs) !important;
+  min-width: 0;
+  overflow: hidden;
+}
+.csv-preview { display: flex; flex-direction: column; }
+.csv-card-head,
+.csv-preview-head {
+  align-items: center;
+  background: var(--surface-sunken) !important;
+  border-bottom: 1px solid var(--border-subtle) !important;
+  display: flex;
+  gap: 8px;
+  padding: 11px 16px !important;
+}
+.csv-preview-head { justify-content: space-between; }
+.csv-card-title {
+  align-items: center;
+  color: var(--brand-blue) !important;
+  display: flex;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  gap: 8px;
+}
+.csv-card-title svg,
+.csv-head-icon { color: var(--brand-red) !important; }
+
+/* --- Controls ------------------------------------------------------ */
+.csv-input,
+.csv-select {
+  background: var(--surface) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: var(--radius-md) !important;
+  color: var(--text-primary) !important;
+  font-size: 13px;
+  min-height: var(--control-h);
+  outline: none;
+  padding: 0 12px !important;
+  transition: border-color var(--dur) ease, box-shadow var(--dur) ease;
+  width: 100%;
+}
+.csv-select { appearance: none; cursor: pointer; padding-right: 30px !important; }
+.csv-input::placeholder { color: var(--text-disabled) !important; }
+.csv-input:hover, .csv-select:hover { border-color: var(--border-strong) !important; }
+.csv-input:focus, .csv-select:focus {
+  border-color: var(--brand-red) !important;
+  box-shadow: 0 0 0 3px rgba(223, 60, 39, 0.12) !important;
+}
+.csv-input-accent { border-color: var(--brand-red-border) !important; }
+.csv-icon-button {
+  background: transparent !important;
+  border: 0 !important;
+  color: var(--text-muted) !important;
+  --btn-fg: var(--text-muted);
+  padding: 0 !important;
+}
+.csv-icon-button:hover:not(:disabled) {
+  background: transparent !important;
+  color: var(--brand-red-hover) !important;
+  --btn-fg: var(--brand-red-hover);
+}
+.csv-download {
+  font-size: 12px;
+  min-height: var(--control-h-sm);
+  padding: 0 12px !important;
+}
+
+/* --- Empty state ---------------------------------------------------- */
+.csv-empty { min-height: 340px; padding: 40px 24px; }
+.csv-empty-icon {
+  align-items: center;
+  background: var(--tile-bg);
+  border: 1px solid var(--brand-red-border);
+  border-radius: var(--radius-lg);
+  color: var(--brand-red) !important;
+  display: inline-flex;
+  height: 44px;
+  justify-content: center;
+  margin-bottom: 12px;
+  width: 44px;
+}
+.csv-empty-title {
+  color: var(--text-primary) !important;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+@media (max-width: 1024px) {
+  .csv-layout { grid-template-columns: minmax(0, 1fr); }
+}
+
+/* ==================================================================
+   CSV GENERATOR — REMAINING SLATE/BLUE UTILITIES
+
+   The preview table, labels and helper rows still carry this file's own
+   slate/blue palette. Rather than editing ~40 inline class strings, the
+   palette is mapped onto the token scale within the page's scope.
+   ================================================================== */
+.csv-page [class*="text-slate-4"],
+.csv-page [class*="text-slate-5"] { color: var(--text-muted) !important; }
+.csv-page [class*="text-slate-6"],
+.csv-page [class*="text-slate-7"] { color: var(--text-secondary) !important; }
+.csv-page [class*="text-slate-8"],
+.csv-page [class*="text-slate-9"] { color: var(--text-primary) !important; }
+.csv-page [class*="bg-slate-5"],
+.csv-page [class*="bg-slate-1"] { background-color: var(--surface-sunken) !important; }
+.csv-page [class*="bg-slate-2"] { background-color: var(--surface-muted) !important; }
+.csv-page [class*="border-slate-"] { border-color: var(--border) !important; }
+
+/* Blue was this page's accent; brand red takes that role. */
+.csv-page [class*="text-blue-"] { color: var(--brand-red-hover) !important; }
+.csv-page [class*="border-blue-"] { border-color: var(--brand-red-border) !important; }
+.csv-page [class~="bg-blue-50"] { background-color: var(--tile-bg) !important; }
+.csv-page [class~="bg-blue-500"] { background-color: var(--brand-red) !important; }
+.csv-page [class*="text-green-"] { color: var(--success-text) !important; }
+
+/* ==================================================================
+   CSV GENERATOR — DATA PREVIEW TABLE
+   ================================================================== */
+.csv-table {
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+  text-align: left;
+  width: 100%;
+}
+.csv-th {
+  background: var(--surface-sunken);
+  border-bottom: 1px solid var(--border);
+  color: var(--text-muted);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  padding: 10px 16px;
+  position: sticky;
+  text-transform: uppercase;
+  top: 0;
+  white-space: nowrap;
+  z-index: 1;
+}
+.csv-th-num {
+  border-right: 1px solid var(--border-subtle);
+  text-align: right;
+  width: 52px;
+}
+.csv-tr { transition: background-color var(--dur-fast) ease; }
+.csv-tr:hover { background: var(--surface-sunken); }
+.csv-td {
+  border-bottom: 1px solid var(--border-subtle);
+  color: var(--text-primary);
+  max-width: 280px;
+  overflow: hidden;
+  padding: 10px 16px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+/* Row numbers are an index, not data — quiet, right-aligned, monospaced. */
+.csv-td-num {
+  background: var(--surface-sunken);
+  border-right: 1px solid var(--border-subtle);
+  color: var(--text-disabled);
+  font-family: var(--font-mono, ui-monospace, monospace);
+  font-size: 11px;
+  text-align: right;
+  width: 52px;
+}
+.csv-tr:hover .csv-td-num { color: var(--text-muted); }
+.csv-tr:last-child .csv-td { border-bottom: 0; }
+
+/* --- Status bar ----------------------------------------------------- */
+.csv-statusbar {
+  align-items: center;
+  background: var(--surface-sunken);
+  border-top: 1px solid var(--border);
+  color: var(--text-muted);
+  display: flex;
+  font-size: 11px;
+  justify-content: space-between;
+  padding: 8px 16px;
+}
+.csv-status {
+  align-items: center;
+  color: var(--text-secondary);
+  display: inline-flex;
+  font-weight: 500;
+  gap: 7px;
+}
+.csv-status-dot {
+  border-radius: var(--radius-pill);
+  height: 6px;
+  width: 6px;
+}
+.csv-status-dot.is-ready { background: var(--success); }
+.csv-status-dot.is-busy  { background: var(--warning); animation: pulse 1.4s ease-in-out infinite; }
+.csv-rowcount { font-variant-numeric: tabular-nums; font-weight: 600; color: var(--text-secondary); }
+
+/* ==================================================================
+   EMPTY-STATE ICON TILES
+
+   `.app-empty-state svg` is a descendant selector (0,1,1), so it
+   outranks a tile's own class (0,1,0) and greyed out the glyph inside —
+   the gear on the CSV generator's empty state rendered muted on a red
+   tile, which read as a broken icon. A tile inside an empty state keeps
+   its own colour and spacing.
+   ================================================================== */
+.app-empty-state .csv-empty-icon svg,
+.app-empty-state .edf-empty-icon svg,
+.app-empty-state .gsc-state-tile svg,
+.app-empty-state [class*="-empty-icon"] svg,
+.app-empty-state [class*="-tile"] svg {
+  color: inherit !important;
+  margin-bottom: 0;
+}
+.csv-empty-icon,
+.csv-empty-icon svg { color: var(--brand-red) !important; }
+.csv-empty-icon svg { height: 20px; width: 20px; }
+
+/* ==================================================================
+   CSV GENERATOR — RANDOMIZE CHECKBOX
+
+   A hand-rolled 16px box using Tailwind's `rounded`, which this token
+   scale defines as 8px — half the box's own width, so when it filled it
+   read as a circle rather than a checkbox. The tick was also a text
+   glyph, which cannot be centred reliably across fonts.
+   ================================================================== */
+.csv-check {
+  align-items: center;
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-xs);
+  color: #ffffff;
+  display: inline-flex;
+  flex: 0 0 auto;
+  height: 16px;
+  justify-content: center;
+  transition: background-color var(--dur) ease, border-color var(--dur) ease;
+  width: 16px;
+}
+.csv-check.is-on {
+  background: var(--brand-red) !important;
+  border-color: var(--brand-red) !important;
+}
+.csv-check svg { color: #ffffff !important; }
+.csv-check-label {
+  color: var(--text-secondary);
+  font-size: 12px;
+  transition: color var(--dur) ease;
+}
+.csv-check-label.is-on { color: var(--brand-red-hover); font-weight: 500; }
+.group:hover .csv-check:not(.is-on) { border-color: var(--brand-red-border); }
+
+/* ==================================================================
+   KEYWORD RESEARCH
+
+   The header borrowed `dashboard-welcome` (whose rules assume the
+   Dashboard's DOM), the panel sat on `bg-[#0d1117]` with `bg-[#010409]`
+   fields, and the mode toggle used a blue→indigo gradient for its
+   active state. Rebuilt on the standard banner and token scale.
+   ================================================================== */
+.kw-hero {
+  background-color: var(--surface);
+  background-image:
+    radial-gradient(120% 110% at 100% 0%, rgba(223, 60, 39, 0.055) 0%, transparent 55%),
+    radial-gradient(90% 110% at 100% 100%, rgba(45, 43, 111, 0.04) 0%, transparent 60%);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-xs);
+  padding: 24px 26px;
+}
+.kw-title-row { align-items: center; display: flex; gap: 12px; min-width: 0; }
+.kw-title {
+  color: var(--brand-blue);
+  font-size: 1.25rem;
+  font-weight: 700;
+  letter-spacing: -0.015em;
+  line-height: 1.75rem;
+}
+.kw-description {
+  color: var(--text-secondary);
+  font-size: 0.8125rem;
+  line-height: 1.25rem;
+  margin-top: 3px;
+  max-width: 62ch;
+}
+
+/* --- Result stats -------------------------------------------------- */
+.kw-stats {
+  border-top: 1px solid var(--border-subtle);
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  margin-top: 20px;
+  padding-top: 18px;
+}
+.kw-stat {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  min-width: 0;
+  padding: 12px 14px;
+}
+.kw-stat-head {
+  align-items: center;
+  color: var(--text-muted);
+  display: flex;
+  font-size: 10px;
+  font-weight: 600;
+  gap: 6px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+.kw-stat-head svg { color: var(--brand-red); }
+.kw-stat-value {
+  color: var(--text-primary);
+  font-size: 1.375rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+  margin-top: 6px;
+}
+
+/* --- Controls panel ------------------------------------------------ */
+.kw-panel {
+  background: var(--surface) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: var(--radius-xl) !important;
+  box-shadow: var(--shadow-xs);
+  padding: 20px;
+}
+.kw-modes { display: inline-flex; margin-bottom: 18px; width: auto; }
+.kw-modes .admin-tab {
+  align-items: center;
+  display: inline-flex;
+  gap: 7px;
+  font-size: 13px;
+  min-height: 32px;
+  padding: 0 16px !important;
+}
+.kw-modes .admin-tab.active {
+  background: var(--surface) !important;
+  color: var(--brand-blue) !important;
+  --btn-fg: var(--brand-blue);
+  box-shadow: var(--shadow-xs) !important;
+}
+.kw-modes .admin-tab:not(.active) {
+  background: transparent !important;
+  color: var(--text-secondary) !important;
+  --btn-fg: var(--text-secondary);
+}
+
+.kw-fields {
+  display: grid;
+  gap: 14px;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 2fr);
+}
+.kw-label {
+  color: var(--text-secondary) !important;
+  display: block;
+  font-size: 12px;
+  font-weight: 500;
+}
+.kw-input,
+.kw-static-field {
+  background: var(--surface) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: var(--radius-md) !important;
+  color: var(--text-primary) !important;
+  font-size: 13px;
+  min-height: var(--control-h-lg);
+  padding: 0 12px !important;
+  transition: border-color var(--dur) ease, box-shadow var(--dur) ease;
+  width: 100%;
+}
+.kw-static-field {
+  align-items: center;
+  background: var(--surface-sunken) !important;
+  color: var(--text-secondary) !important;
+  display: flex;
+  margin-top: 6px;
+}
+.kw-static-field span { color: var(--text-muted) !important; font-size: 10px; }
+.kw-input::placeholder { color: var(--text-disabled) !important; }
+.kw-input:hover { border-color: var(--border-strong) !important; }
+.kw-input:focus {
+  border-color: var(--brand-red) !important;
+  box-shadow: 0 0 0 3px rgba(223, 60, 39, 0.12) !important;
+  outline: none;
+}
+.kw-search-button { flex-shrink: 0; min-height: var(--control-h-lg); padding: 0 18px; }
+
+.kw-results {
+  background: var(--surface) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: var(--radius-xl) !important;
+  box-shadow: var(--shadow-xs);
+  min-height: 300px;
+  overflow: hidden;
+}
+
+@media (max-width: 1024px) {
+  .kw-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .kw-fields { grid-template-columns: minmax(0, 1fr); }
+}
+
+/* Keyword research: results-area accents, formerly blue. */
+.kw-empty-icon {
+  align-items: center;
+  background: var(--tile-bg);
+  border: 1px solid var(--brand-red-border);
+  border-radius: var(--radius-lg);
+  color: var(--brand-red) !important;
+  display: flex;
+  height: 44px;
+  justify-content: center;
+  width: 44px;
+}
+.kw-spinner { color: var(--brand-red) !important; }
+.kw-keyword {
+  color: var(--text-primary) !important;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.kw-keyword:hover { color: var(--brand-red-hover) !important; text-decoration: underline; text-underline-offset: 2px; }
+.kw-bar { background: var(--brand-red) !important; opacity: 0.75; }
+.kw-export-button {
+  background: var(--surface) !important;
+  border: 1px solid var(--border) !important;
+  color: var(--text-secondary) !important;
+  --btn-fg: var(--text-secondary);
+  font-size: 11px;
+  min-height: var(--control-h-sm);
+  padding: 0 10px !important;
+}
+.kw-export-button:hover:not(:disabled) {
+  background: var(--surface-sunken) !important;
+  border-color: var(--border-strong) !important;
+  color: var(--text-primary) !important;
+}
+
+/* ==================================================================
+   SUGGEST KEYWORDS
+
+   Shared the Keyword Research shell (kw-*), plus its own violet→fuchsia
+   accent for the generate button and progress bar, and emerald/amber
+   tints on the A-Z and 0-9 groups. Those two accents are meaningful —
+   they distinguish letter groups from number groups — so they keep
+   semantic tones rather than being flattened to brand red.
+   ================================================================== */
+.kw-fields-2 { grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); }
+.kw-select-shell {
+  align-items: center;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  display: flex;
+  gap: 8px;
+  margin-top: 6px;
+  min-height: var(--control-h-lg);
+  padding: 0 12px;
+}
+.kw-select-shell > svg { color: var(--text-muted) !important; flex: 0 0 auto; }
+.kw-select-shell:focus-within {
+  border-color: var(--brand-red);
+  box-shadow: 0 0 0 3px rgba(223, 60, 39, 0.12);
+}
+.kw-bare-select {
+  background: transparent;
+  border: 0;
+  color: var(--text-primary) !important;
+  font-size: 13px;
+  outline: none;
+  width: 100%;
+}
+
+.kw-progress {
+  background: var(--surface-muted);
+  border-radius: var(--radius-pill);
+  height: 6px;
+  margin-top: 16px;
+  overflow: hidden;
+}
+.kw-progress-fill {
+  background: var(--brand-red);
+  height: 100%;
+  transition: width var(--dur) var(--ease);
+}
+
+/* One empty state across the three keyword pages: same height, padding,
+   icon, title size and measure. */
+.kw-empty {
+  align-items: center;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-height: 280px;
+  padding: 48px 24px;
+  text-align: center;
+}
+.kw-empty-title { color: var(--text-primary) !important; font-size: 0.9375rem; font-weight: 600; margin-top: 12px; }
+.kw-empty-body {
+  color: var(--text-muted) !important;
+  font-size: 13px;
+  line-height: 1.45;
+  margin-top: 4px;
+  max-width: 46ch;
+  text-align: center;
+}
+
+/* --- Groups: letters vs numbers keep distinct semantic tones ------- */
+.kw-group,
+.kw-variation {
+  background: var(--surface) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: var(--radius-xl) !important;
+  box-shadow: var(--shadow-xs);
+}
+.kw-variation { padding: 18px 20px; }
+.kw-group.is-success { border-color: var(--success-border) !important; }
+.kw-group.is-warning { border-color: var(--warning-border) !important; }
+.kw-group.is-success .kw-group-icon { color: var(--success-text) !important; }
+.kw-group.is-warning .kw-group-icon { color: var(--warning-text) !important; }
+.kw-group-title { color: var(--brand-blue) !important; font-size: 0.875rem; font-weight: 700; }
+.kw-group-body {
+  border-top: 1px solid var(--border-subtle);
+  padding: 10px 18px 16px;
+}
+.kw-group-item { color: var(--text-secondary) !important; font-size: 13px; padding: 3px 0; }
+
+.kw-icon-button {
+  background: var(--surface) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: var(--radius-sm) !important;
+  color: var(--text-muted) !important;
+  --btn-fg: var(--text-muted);
+  padding: 5px !important;
+}
+.kw-icon-button:hover:not(:disabled) {
+  background: var(--surface-sunken) !important;
+  color: var(--brand-red-hover) !important;
+  --btn-fg: var(--brand-red-hover);
+}
+.kw-icon-button-sm { border: 0 !important; background: transparent !important; padding: 2px !important; }
+
+.kw-var-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  min-width: 0;
+  overflow: hidden;
+}
+.kw-var-head {
+  align-items: center;
+  border-bottom: 1px solid var(--border-subtle);
+  display: flex;
+  justify-content: space-between;
+  padding: 6px 10px;
+}
+.kw-var-head.is-success { background: var(--success-bg) !important; color: var(--success-text) !important; }
+.kw-var-head.is-warning { background: var(--warning-bg) !important; color: var(--warning-text) !important; }
+.kw-var-head span { font-size: 11px; font-weight: 700; }
+.kw-var-item {
+  color: var(--text-secondary) !important;
+  font-size: 11px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.kw-var-item:hover { color: var(--text-primary) !important; }
+
+@media (max-width: 1024px) {
+  .kw-fields-2 { grid-template-columns: minmax(0, 1fr); }
+}
+
+/* Suggest Keywords action row: secondary actions left, primary right —
+   the same meta-left / action-right pairing used elsewhere. */
+.kw-actions {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: space-between;
+  margin-top: 16px;
+}
+.kw-actions-left { display: flex; flex-wrap: wrap; gap: 8px; }
+
+@media (max-width: 640px) {
+  .kw-actions { flex-direction: column-reverse; align-items: stretch; }
+  .kw-actions .kw-search-button { width: 100%; }
+  .kw-actions-left > .ui-button { flex: 1; }
+}
+
+/* ==================================================================
+   SUGGEST KEYWORDS — GROUP TOGGLES
+
+   Three bare <button> elements act as accordion headers here, so each
+   fell through to the default primary bucket and painted a full-width
+   red bar — with the navy title sitting on top of it. Container buttons
+   have to declare their own surface.
+   ================================================================== */
+.kw-variation-toggle,
+.kw-group-toggle {
+  align-items: center;
+  background: transparent !important;
+  border: 0 !important;
+  border-radius: var(--radius-sm) !important;
+  color: var(--text-primary) !important;
+  --btn-fg: var(--text-primary);
+  display: flex;
+  padding: 0 !important;
+  text-align: left;
+}
+/* The spacing belongs to the panel, not the header — a fixed
+   margin-bottom here left dead space under the title when collapsed. */
+.kw-variation-toggle {
+  justify-content: space-between;
+  width: 100%;
+}
+.kw-variation-grid {
+  border-top: 1px solid var(--border-subtle);
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  margin-top: 14px;
+  padding-top: 16px;
+}
+@media (max-width: 1280px) { .kw-variation-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+@media (max-width: 768px)  { .kw-variation-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.kw-group-toggle { gap: 8px; }
+.kw-variation-toggle:hover:not(:disabled),
+.kw-group-toggle:hover:not(:disabled) {
+  background: transparent !important;
+  color: var(--brand-blue) !important;
+  --btn-fg: var(--brand-blue);
+}
+.kw-chevron, .kw-chevron-button { color: var(--text-muted) !important; }
+.kw-chevron-button {
+  background: transparent !important;
+  border: 0 !important;
+  --btn-fg: var(--text-muted);
+  padding: 2px !important;
+}
+.kw-chevron-button:hover:not(:disabled) {
+  background: transparent !important;
+  color: var(--text-primary) !important;
+  --btn-fg: var(--text-primary);
+}
+
+/* Collapsed accordions size to their header only. */
+.kw-variation { padding: 14px 20px; }
+.kw-variation:has(.kw-variation-grid) { padding: 18px 20px; }
+.kw-group > div:first-child { padding: 12px 16px; }
+
+/* ==================================================================
+   UBERSUGGEST
+
+   Header was a centred orange→rose gradient pill; the controls and
+   cards sat on `bg-[#0d1117]`; the category cards, category tabs and
+   view switch all used orange for their active state. Rebuilt on the
+   shared keyword-page shell.
+   ================================================================== */
+.ub-controls {
+  display: grid;
+  gap: 10px;
+  grid-template-columns: minmax(0, 1fr) 220px auto;
+}
+.ub-field,
+.ub-region-trigger {
+  align-items: center;
+  background: var(--surface) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: var(--radius-md) !important;
+  color: var(--text-primary) !important;
+  --btn-fg: var(--text-primary);
+  display: flex;
+  gap: 8px;
+  min-height: var(--control-h-lg);
+  min-width: 0;
+  padding: 0 12px !important;
+  transition: border-color var(--dur) ease, box-shadow var(--dur) ease;
+}
+.ub-region-trigger { justify-content: space-between; text-align: left; width: 100%; }
+.ub-field > svg { color: var(--text-muted) !important; flex: 0 0 auto; }
+.ub-region-icon { color: var(--text-muted) !important; }
+.ub-region-name { color: var(--text-primary) !important; font-size: 13px; }
+.ub-field:focus-within,
+.ub-region-trigger:focus-visible {
+  border-color: var(--brand-red) !important;
+  box-shadow: 0 0 0 3px rgba(223, 60, 39, 0.12);
+}
+.ub-input {
+  background: transparent;
+  border: 0;
+  color: var(--text-primary) !important;
+  font-size: 13px;
+  min-width: 0;
+  outline: none;
+}
+.ub-input::placeholder { color: var(--text-disabled) !important; }
+.ub-region-menu {
+  background: var(--surface) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: var(--radius-lg) !important;
+  box-shadow: var(--shadow-overlay) !important;
+  overflow: hidden;
+}
+.ub-search-button { min-height: var(--control-h-lg); padding: 0 20px; }
+
+/* --- Category cards ------------------------------------------------ */
+.ub-cat-card {
+  background: var(--surface) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: var(--radius-lg) !important;
+  color: var(--text-primary) !important;
+  --btn-fg: var(--text-primary);
+  padding: 14px !important;
+  text-align: center;
+  transition: border-color var(--dur) ease, background-color var(--dur) ease;
+}
+.ub-cat-card:hover:not(:disabled) {
+  background: var(--surface-sunken) !important;
+  border-color: var(--border-strong) !important;
+  color: var(--text-primary) !important;
+}
+.ub-cat-card.is-active {
+  background: var(--tile-bg) !important;
+  border-color: var(--brand-red-border) !important;
+  color: var(--brand-red-active) !important;
+  --btn-fg: var(--brand-red-active);
+}
+.ub-cat-card.is-active svg { color: var(--brand-red) !important; }
+
+/* --- Category tabs -------------------------------------------------- */
+.ub-cat-tab {
+  align-items: center;
+  background: transparent !important;
+  border: 0 !important;
+  color: var(--text-secondary) !important;
+  --btn-fg: var(--text-secondary);
+  display: inline-flex;
+  font-size: 13px;
+  font-weight: 600;
+  gap: 6px;
+  padding: 0 !important;
+}
+.ub-cat-tab:hover:not(:disabled) { background: transparent !important; color: var(--text-primary) !important; }
+.ub-cat-tab.is-active { color: var(--brand-red-hover) !important; --btn-fg: var(--brand-red-hover); }
+
+.ub-view-tabs { display: inline-flex; width: auto; }
+.ub-view-tabs .admin-tab {
+  font-size: 11px;
+  font-weight: 600;
+  min-height: 26px;
+  padding: 0 10px !important;
+}
+.ub-view-tabs .admin-tab.active {
+  background: var(--surface) !important;
+  color: var(--brand-blue) !important;
+  --btn-fg: var(--brand-blue);
+  box-shadow: var(--shadow-xs) !important;
+}
+.ub-view-tabs .admin-tab:not(.active) {
+  background: transparent !important;
+  color: var(--text-secondary) !important;
+  --btn-fg: var(--text-secondary);
+}
+
+/* --- Small actions -------------------------------------------------- */
+.ub-mini-button,
+.ub-canvas-button,
+.ub-tool-button {
+  background: var(--surface) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: var(--radius-sm) !important;
+  color: var(--text-secondary) !important;
+  --btn-fg: var(--text-secondary);
+  font-size: 11px;
+  font-weight: 600;
+  min-height: 26px;
+  padding: 0 9px !important;
+}
+.ub-tool-button {
+  align-items: center;
+  display: inline-flex;
+  height: 28px;
+  justify-content: center;
+  padding: 0 !important;
+  width: 28px;
+}
+.ub-mini-button:hover:not(:disabled),
+.ub-canvas-button:hover:not(:disabled),
+.ub-tool-button:hover:not(:disabled) {
+  background: var(--surface-sunken) !important;
+  border-color: var(--border-strong) !important;
+  color: var(--text-primary) !important;
+  --btn-fg: var(--text-primary);
+}
+
+@media (max-width: 900px) {
+  .ub-controls { grid-template-columns: minmax(0, 1fr); }
+}
+
+/* Ubersuggest: region menu, category values and data cards. */
+.ub-menu-search {
+  background: var(--surface) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: var(--radius-sm) !important;
+  color: var(--text-primary) !important;
+  font-size: 12px;
+  min-height: 32px;
+  padding: 0 10px !important;
+  width: 100%;
+}
+.ub-menu-search::placeholder { color: var(--text-disabled) !important; }
+.ub-menu-search:focus { border-color: var(--brand-red) !important; outline: none; }
+.ub-region-option {
+  align-items: center;
+  background: transparent !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  color: var(--text-secondary) !important;
+  --btn-fg: var(--text-secondary);
+  display: flex;
+  font-size: 13px;
+  justify-content: space-between;
+  padding: 8px 14px !important;
+  text-align: left;
+  width: 100%;
+}
+.ub-region-option:hover:not(:disabled) {
+  background: var(--surface-sunken) !important;
+  color: var(--text-primary) !important;
+  --btn-fg: var(--text-primary);
+}
+.ub-region-option.is-active {
+  background: var(--tile-bg) !important;
+  color: var(--brand-red-active) !important;
+  --btn-fg: var(--brand-red-active);
+  font-weight: 600;
+}
+.ub-cat-icon { color: var(--text-muted) !important; }
+.ub-cat-card.is-active .ub-cat-icon { color: var(--brand-red) !important; }
+.ub-cat-value {
+  color: var(--text-primary);
+  font-size: 1.5rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+  margin-top: 6px;
+}
+.ub-cat-card.is-active .ub-cat-value { color: var(--brand-red-active); }
+.ub-data-card {
+  background: var(--surface) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: var(--radius-lg) !important;
+  min-width: 0;
+  overflow: hidden;
+}
+.ub-data-count { color: var(--brand-red-hover) !important; font-size: 10px; font-weight: 700; }
+
+/* ==================================================================
+   GSC KEYWORD EXPLORER  (/keywords/new, /low-hanging, /lost, /branded)
+
+   One component drives all four pages. Each `kind` had its own accent —
+   blue, amber, rose, violet — applied to the icon, the Apply button and
+   the panel alike, so the four pages read as four different products.
+
+   The icon keeps a semantic tone (new = info, low-hanging = warning,
+   lost = error, branded = brand) because it distinguishes the four
+   views. Every action is brand red, as everywhere else.
+   ================================================================== */
+/* The four explorers used to tile their glyph in a different hue each
+   (blue / amber / rose / violet), which read as four unrelated pages when
+   viewed back to back. They now share the brand tile every other banner in
+   the app uses; the per-kind accent survives on the highlight text only. */
+.gke-icon {
+  background: var(--tile-bg);
+  border: 1px solid var(--brand-red-border);
+  border-radius: var(--radius-lg);
+  box-sizing: content-box;
+  color: var(--brand-red) !important;
+  flex: 0 0 auto;
+  height: 20px;
+  padding: 10px;
+  width: 20px;
+}
+.gke-icon > svg { display: block; height: 20px; width: 20px; }
+.gke-icon-info,
+.gke-icon-warning,
+.gke-icon-danger,
+.gke-icon-brand {
+  background: var(--tile-bg);
+  border: 1px solid var(--brand-red-border);
+  color: var(--brand-red) !important;
+}
+.gke-text-info    { color: var(--info-text) !important; }
+.gke-text-warning { color: var(--warning-text) !important; }
+.gke-text-danger  { color: var(--error-text) !important; }
+.gke-text-brand   { color: var(--brand-red-hover) !important; }
+
+.gke-filters {
+  background: var(--surface) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: var(--radius-xl) !important;
+  box-shadow: var(--shadow-xs);
+  padding: 14px 16px;
+}
+.gke-field {
+  align-items: center;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  display: flex;
+  flex: 1 1 260px;
+  gap: 8px;
+  min-height: var(--control-h);
+  min-width: 0;
+  padding: 0 12px;
+}
+.gke-field > svg { color: var(--text-muted) !important; flex: 0 0 auto; }
+.gke-field select,
+.gke-field input {
+  background: transparent !important;
+  border: 0;
+  color: var(--text-primary) !important;
+  font-size: 13px;
+  min-width: 0;
+  outline: none;
+  width: 100%;
+}
+.gke-field:focus-within {
+  border-color: var(--brand-red);
+  box-shadow: 0 0 0 3px rgba(223, 60, 39, 0.12);
+}
+
+.gke-presets { display: inline-flex; width: auto; }
+.gke-presets .admin-tab {
+  font-size: 10px;
+  font-weight: 700;
+  min-height: 26px;
+  padding: 0 9px !important;
+}
+.gke-presets .admin-tab.active {
+  background: var(--surface) !important;
+  color: var(--brand-blue) !important;
+  --btn-fg: var(--brand-blue);
+  box-shadow: var(--shadow-xs) !important;
+}
+.gke-presets .admin-tab:not(.active) {
+  background: transparent !important;
+  color: var(--text-secondary) !important;
+  --btn-fg: var(--text-secondary);
+}
+
+.gke-apply { min-height: var(--control-h); padding: 0 14px !important; font-size: 12px; }
+.gke-secondary,
+.gke-disconnect {
+  background: var(--surface) !important;
+  border: 1px solid var(--border) !important;
+  color: var(--text-secondary) !important;
+  --btn-fg: var(--text-secondary);
+  font-size: 12px;
+  min-height: var(--control-h-sm);
+  padding: 0 12px !important;
+}
+.gke-secondary:hover:not(:disabled) {
+  background: var(--surface-sunken) !important;
+  border-color: var(--border-strong) !important;
+  color: var(--text-primary) !important;
+}
+.gke-disconnect:hover:not(:disabled) {
+  background: var(--error-bg) !important;
+  border-color: var(--error-border) !important;
+  color: var(--error-text) !important;
+  --btn-fg: var(--error-text);
+}
+.gke-panel {
+  background: var(--surface) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: var(--radius-xl) !important;
+}
+
+/* Explorer: alert dismiss, sortable table headers, date inputs. */
+.gke-alert-close {
+  background: transparent !important;
+  border: 0 !important;
+  color: currentColor !important;
+  --btn-fg: currentColor;
+  flex-shrink: 0;
+  opacity: 0.7;
+  padding: 0 !important;
+}
+.gke-alert-close:hover:not(:disabled) { background: transparent !important; opacity: 1; }
+.gke-th {
+  background: transparent !important;
+  border: 0 !important;
+  color: var(--text-muted) !important;
+  --btn-fg: var(--text-muted);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  padding: 0 !important;
+  text-align: left;
+  text-transform: uppercase;
+}
+.gke-th:hover:not(:disabled) { background: transparent !important; color: var(--text-primary) !important; --btn-fg: var(--text-primary); }
+.gke-date-input {
+  background: transparent;
+  border: 0;
+  color: var(--text-primary) !important;
+  color-scheme: light;
+  font-size: 12px;
+  outline: none;
+}
+
+/* Cannibalization: the explanatory info panel. */
+.kc-info { align-items: flex-start; }
+.kc-info-lead { font-weight: 600; }
+
+/* ---------------------------------------------------------------------------
+   KEYWORD EXPLORER — remaining dark-theme surfaces
+   The five /keywords GSC screens still carried arbitrary near-black values
+   (bg-[#0d1117] cards, bg-[#010409] inset fields) that Tailwind emits
+   literally, so no compat rule could reach them. These give the connect card,
+   the results search box and the date fields the same light treatment the
+   rest of the explorer already uses.
+   --------------------------------------------------------------------------- */
+/* Connect / loading state. The five explorers spend most of their life on
+   this screen, so it gets the same card, tile and type scale as the loaded
+   view rather than the plain bordered box it used to be. */
+.kw-page { width: 100%; }
+
+.kw-connect-card {
+  align-items: center;
+  background-color: var(--surface);
+  background-image:
+    radial-gradient(120% 110% at 100% 0%, rgba(223, 60, 39, 0.05) 0%, transparent 55%),
+    radial-gradient(90% 110% at 0% 100%, rgba(45, 43, 111, 0.035) 0%, transparent 60%);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-xs);
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  padding: 56px 32px;
+  text-align: center;
+}
+.kw-connect-icon {
+  align-items: center;
+  background: var(--tile-bg);
+  border: 1px solid var(--brand-red-border);
+  border-radius: var(--radius-xl);
+  color: var(--brand-red) !important;
+  display: inline-flex;
+  height: 52px;
+  justify-content: center;
+  width: 52px;
+}
+.kw-connect-title {
+  color: var(--brand-blue) !important;
+  font-size: 1rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  line-height: 1.5rem;
+  margin-top: 18px;
+}
+.kw-connect-text {
+  color: var(--text-secondary) !important;
+  font-size: 0.8125rem;
+  line-height: 1.25rem;
+  margin-top: 6px;
+  max-width: 46ch;
+}
+.kw-connect-button {
+  margin-top: 22px;
+  min-height: var(--control-h-lg);
+  padding: 0 20px;
+}
+.kw-connect-meta {
+  border-top: 1px solid var(--border-subtle);
+  color: var(--text-muted) !important;
+  font-size: 11px;
+  line-height: 1rem;
+  margin-top: 26px;
+  padding-top: 18px;
+  width: 100%;
+}
+.kw-connect-uri {
+  color: var(--text-secondary) !important;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+.kw-connect-error {
+  color: var(--error-text) !important;
+  font-size: 12px;
+  font-weight: 600;
+  margin-top: 12px;
+}
+
+.kw-loading-card > svg {
+  color: var(--brand-red) !important;
+}
+.kw-loading-card .kw-connect-text { margin-top: 14px; }
+
+.kw-search {
+  align-items: center;
+  background: var(--surface-sunken);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-sm);
+  display: flex;
+  gap: 8px;
+  padding: 6px 10px;
+  transition: border-color var(--motion-fast), box-shadow var(--motion-fast);
+}
+.kw-search:focus-within {
+  border-color: var(--brand-red-border);
+  box-shadow: var(--focus-ring-brand);
+}
+.kw-search > svg { color: var(--text-muted) !important; flex: 0 0 auto; }
+.kw-search-input {
+  background: transparent !important;
+  border: 0;
+  color: var(--text-primary) !important;
+  font-size: 12px;
+  outline: none;
+}
+.kw-search-input::placeholder { color: var(--text-disabled) !important; }
+
+.gke-datefield { padding: 6px 10px !important; }
+.gke-datefield > span { color: var(--text-muted) !important; }
+
+/* ===========================================================================
+   CONTENT TOOLS - /content/* (11 screens)
+   These pages shared a recipe from an earlier design pass: a solid red
+   `rounded-[28px]` banner carrying a 3rem black title, near-black `#0d1117`
+   cards with `#010409` inputs, and red gradient buttons. That is the exact
+   set the brief asks us to avoid (huge type, bubble radius, gradients,
+   heavy shadows), and none of it matched the banner the rest of the app
+   settled on. This system restates the same blocks - same order, same
+   layout - using the dashboard/w3c banner and the shared card scale.
+   =========================================================================== */
+.ctool-page { width: 100%; }
+
+/* --- Banner: identical geometry to .w3c-hero / .kw-hero ------------------ */
+.ctool-hero {
+  background-color: var(--surface);
+  background-image:
+    radial-gradient(120% 110% at 100% 0%, rgba(223, 60, 39, 0.055) 0%, transparent 55%),
+    radial-gradient(90% 110% at 100% 100%, rgba(45, 43, 111, 0.04) 0%, transparent 60%);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-xs);
+  padding: 24px 26px;
+}
+.ctool-hero-row { align-items: center; display: flex; gap: 14px; min-width: 0; }
+.ctool-hero-icon {
+  align-items: center;
+  background: var(--tile-bg);
+  border: 1px solid var(--brand-red-border);
+  border-radius: var(--radius-lg);
+  color: var(--brand-red) !important;
+  display: inline-flex;
+  flex: 0 0 auto;
+  height: 42px;
+  justify-content: center;
+  width: 42px;
+}
+.ctool-hero-icon > svg { height: 20px; width: 20px; }
+.ctool-title {
+  color: var(--brand-blue) !important;
+  font-size: 1.25rem;
+  font-weight: 700;
+  letter-spacing: -0.015em;
+  line-height: 1.75rem;
+}
+.ctool-subtitle {
+  color: var(--text-secondary) !important;
+  font-size: 0.8125rem;
+  line-height: 1.25rem;
+  margin-top: 3px;
+  max-width: 72ch;
+}
+
+/* --- Panels -------------------------------------------------------------- */
+.ctool-card {
+  background: var(--surface) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-xs);
+  padding: 20px;
+}
+@media (min-width: 640px) { .ctool-card { padding: 24px; } }
+.ctool-card-title {
+  color: var(--text-primary) !important;
+  font-size: 13px;
+  font-weight: 600;
+}
+.ctool-card-icon { color: var(--brand-red) !important; }
+
+/* --- Fields -------------------------------------------------------------- */
+.ctool-textarea,
+.ctool-input {
+  background: var(--surface-sunken) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: var(--radius-lg);
+  color: var(--text-primary) !important;
+  font-size: 13px;
+  line-height: 1.5;
+  padding: 12px 14px;
+  transition: border-color var(--motion-fast), box-shadow var(--motion-fast);
+  width: 100%;
+}
+.ctool-textarea { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; resize: none; }
+.ctool-textarea::placeholder,
+.ctool-input::placeholder { color: var(--text-disabled) !important; }
+.ctool-textarea:focus,
+.ctool-input:focus {
+  border-color: var(--brand-red) !important;
+  box-shadow: var(--focus-ring-brand);
+  outline: none;
+}
+.ctool-field {
+  align-items: center;
+  background: var(--surface-sunken) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: var(--radius-lg);
+  display: flex;
+  gap: 10px;
+  min-height: var(--control-h-lg);
+  padding: 0 14px;
+}
+.ctool-field:focus-within {
+  border-color: var(--brand-red) !important;
+  box-shadow: var(--focus-ring-brand);
+}
+.ctool-field > svg { color: var(--text-muted) !important; flex: 0 0 auto; }
+.ctool-field input {
+  background: transparent !important;
+  border: 0;
+  color: var(--text-primary) !important;
+  flex: 1 1 auto;
+  font-size: 13px;
+  min-width: 0;
+  outline: none;
+}
+.ctool-field input::placeholder { color: var(--text-disabled) !important; }
+
+/* --- Small header actions (Upload / Clear / Copy) ------------------------ */
+.ctool-tool-btn {
+  background: var(--surface) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: var(--radius-sm);
+  color: var(--text-secondary) !important;
+  --btn-fg: var(--text-secondary);
+  font-size: 11px;
+  font-weight: 600;
+  gap: 6px;
+  min-height: var(--control-h-sm);
+  padding: 0 10px;
+}
+.ctool-tool-btn:hover:not(:disabled) {
+  background: var(--surface-sunken) !important;
+  border-color: var(--border-strong) !important;
+  color: var(--text-primary) !important;
+  --btn-fg: var(--text-primary);
+}
+
+/* --- Segmented mode switch (URL / Text) ---------------------------------- */
+.ctool-seg {
+  background: var(--surface-muted);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  display: inline-flex;
+  gap: 2px;
+  padding: 3px;
+}
+.ctool-seg-btn {
+  background: transparent !important;
+  border: 0 !important;
+  border-radius: var(--radius-sm);
+  color: var(--text-secondary) !important;
+  --btn-fg: var(--text-secondary);
+  font-size: 12px;
+  font-weight: 600;
+  gap: 6px;
+  min-height: 30px;
+  padding: 0 12px;
+}
+.ctool-seg-btn:hover:not(:disabled) {
+  background: var(--surface) !important;
+  color: var(--text-primary) !important;
+  --btn-fg: var(--text-primary);
+}
+.ctool-seg-btn.active,
+.ctool-seg-btn.active:hover {
+  background: var(--brand-red) !important;
+  box-shadow: var(--shadow-xs);
+  color: #ffffff !important;
+  --btn-fg: #ffffff;
+}
+
+/* --- Filter pills (entity type, tabs) ------------------------------------ */
+.ctool-pill {
+  background: var(--surface-muted) !important;
+  border: 1px solid transparent !important;
+  border-radius: var(--radius-sm);
+  color: var(--text-secondary) !important;
+  --btn-fg: var(--text-secondary);
+  font-size: 12px;
+  font-weight: 600;
+  min-height: var(--control-h-sm);
+  padding: 0 10px;
+}
+.ctool-pill:hover:not(:disabled) {
+  background: var(--surface-sunken) !important;
+  border-color: var(--border-strong) !important;
+  color: var(--text-primary) !important;
+  --btn-fg: var(--text-primary);
+}
+.ctool-pill.active,
+.ctool-pill.active:hover {
+  background: var(--tile-bg) !important;
+  border-color: var(--brand-red-border) !important;
+  color: var(--brand-red-hover) !important;
+  --btn-fg: var(--brand-red-hover);
+}
+
+/* --- Result chips -------------------------------------------------------- */
+.ctool-chip {
+  background: var(--surface-sunken) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: var(--radius-sm);
+  color: var(--text-secondary) !important;
+  display: inline-flex;
+  font-size: 12px;
+  font-weight: 500;
+  padding: 5px 10px;
+  transition: background-color var(--motion-fast), border-color var(--motion-fast), color var(--motion-fast);
+}
+.ctool-chip:hover {
+  background: var(--tile-bg) !important;
+  border-color: var(--brand-red-border) !important;
+  color: var(--brand-red-hover) !important;
+}
+
+/* --- Empty state --------------------------------------------------------- */
+.ctool-empty {
+  align-items: center;
+  background: var(--surface) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-xs);
+  display: flex;
+  flex-direction: column;
+  padding: 52px 24px;
+  text-align: center;
+}
+.ctool-empty-icon {
+  align-items: center;
+  background: var(--tile-bg);
+  border: 1px solid var(--brand-red-border);
+  border-radius: var(--radius-xl);
+  color: var(--brand-red) !important;
+  display: inline-flex;
+  height: 52px;
+  justify-content: center;
+  width: 52px;
+}
+.ctool-empty-icon > svg { color: var(--brand-red) !important; }
+.ctool-empty-title {
+  color: var(--brand-blue) !important;
+  font-size: 0.9375rem;
+  font-weight: 700;
+  line-height: 1.375rem;
+  margin-top: 16px;
+}
+.ctool-empty-text {
+  color: var(--text-secondary) !important;
+  font-size: 0.8125rem;
+  line-height: 1.25rem;
+  margin-top: 5px;
+  max-width: 46ch;
+}
+
+/* --- Explainer strip under the input panel ------------------------------- */
+.ctool-note {
+  background: var(--brand-red-subtle) !important;
+  border: 1px solid var(--brand-red-border) !important;
+  border-radius: var(--radius-lg);
+  padding: 12px 16px;
+}
+.ctool-note p { color: var(--text-secondary) !important; font-size: 12px; line-height: 1.5; }
+.ctool-note-lead { color: var(--brand-red-hover) !important; font-weight: 700; }
+
+/* --- Result group heading ------------------------------------------------ */
+.ctool-group-title {
+  color: var(--text-primary) !important;
+  font-size: 13px;
+  font-weight: 600;
+}
+.ctool-group-keyword { color: var(--brand-red-hover) !important; }
+
+/* --- Copyable result chips ------------------------------------------------
+   The n-gram / dominant-word grids rendered every result as a solid red
+   button, so a 60-word result read as 60 primary CTAs. They are copy
+   affordances, so they use the neutral chip and reveal the brand on hover. */
+.ctool-chip-btn {
+  cursor: pointer;
+  font-weight: 600;
+  padding: 6px 11px;
+}
+.ctool-chip-btn:hover:not(:disabled) {
+  background: var(--tile-bg) !important;
+  border-color: var(--brand-red-border) !important;
+  color: var(--brand-red-hover) !important;
+  --btn-fg: var(--brand-red-hover);
+}
+.ctool-chip-btn:focus-visible {
+  box-shadow: var(--focus-ring-brand);
+  outline: none;
+}
+
+/* --- Count badge next to a result heading -------------------------------- */
+.ctool-count-badge {
+  align-items: center;
+  background: var(--tile-bg);
+  border: 1px solid var(--brand-red-border);
+  border-radius: var(--radius-pill);
+  color: var(--brand-red-hover) !important;
+  display: inline-flex;
+  font-size: 11px;
+  font-weight: 700;
+  gap: 4px;
+  padding: 2px 9px;
+}
+
+/* --- Underlined result tabs ---------------------------------------------- */
+.ctool-tab {
+  background: transparent !important;
+  border: 0 !important;
+  border-bottom: 2px solid transparent !important;
+  border-radius: 0 !important;
+  color: var(--text-muted) !important;
+  --btn-fg: var(--text-muted);
+  font-size: 13px;
+  font-weight: 600;
+  min-height: var(--control-h);
+  padding: 0 2px;
+}
+.ctool-tab:hover:not(:disabled) {
+  background: transparent !important;
+  color: var(--text-primary) !important;
+  --btn-fg: var(--text-primary);
+}
+.ctool-tab.active,
+.ctool-tab.active:hover {
+  background: transparent !important;
+  border-bottom-color: var(--brand-red) !important;
+  color: var(--brand-red-hover) !important;
+  --btn-fg: var(--brand-red-hover);
+}
+
+/* --- Small status badge -------------------------------------------------- */
+.app-badge {
+  align-items: center;
+  border-radius: var(--radius-pill);
+  display: inline-flex;
+  font-size: 10px;
+  font-weight: 700;
+  gap: 4px;
+  letter-spacing: 0.01em;
+  padding: 2px 9px;
+  white-space: nowrap;
+}
+.app-badge-brand {
+  background: var(--tile-bg);
+  border: 1px solid var(--brand-red-border);
+  color: var(--brand-red-hover) !important;
+}
+
+.ctool-section-label {
+  align-items: center;
+  color: var(--text-muted) !important;
+  display: flex;
+  font-size: 11px;
+  font-weight: 700;
+  gap: 6px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.ctool-help-text { color: var(--text-secondary) !important; font-size: 11px; line-height: 1.45; }
+
+.ctool-checkbox {
+  accent-color: var(--brand-red);
+  border-radius: var(--radius-xs);
+  height: 15px;
+  width: 15px;
+}
+.ctool-em { color: var(--text-primary) !important; font-weight: 600; }
+.ctool-card-success {
+  background: var(--success-bg) !important;
+  border-color: var(--success-border) !important;
+}
+.ctool-success-title { color: var(--success-text) !important; font-size: 13px; font-weight: 600; }
+.ctool-output {
+  background: var(--surface-sunken) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: var(--radius-lg);
+  color: var(--text-primary) !important;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 13px;
+  padding: 12px 14px;
+}
+
+/* --- semanticsx content tools: shared chrome ----------------------------- */
+.ctool-card-flush { padding: 0 !important; }
+.ctool-section-head {
+  align-items: center;
+  background: var(--surface-sunken);
+  cursor: pointer;
+  display: flex;
+  gap: 12px;
+  justify-content: space-between;
+  padding: 14px 16px;
+  transition: background-color var(--motion-fast);
+}
+.ctool-section-head:hover { background: var(--surface-muted); }
+.ctool-mini-card {
+  align-items: center;
+  background: var(--surface-sunken);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  display: flex;
+  gap: 8px;
+  padding: 12px;
+}
+.ctool-accent { color: var(--brand-red) !important; }
+.ctool-field-icon { color: var(--text-muted) !important; }
+.ctool-icon-btn {
+  background: transparent !important;
+  border: 1px solid transparent !important;
+  border-radius: var(--radius-lg);
+  color: var(--text-muted) !important;
+  --btn-fg: var(--text-muted);
+  height: var(--control-h-lg);
+  padding: 0 !important;
+  width: var(--control-h-lg);
+}
+.ctool-icon-btn:hover:not(:disabled) {
+  background: var(--error-bg) !important;
+  border-color: var(--error-border) !important;
+  color: var(--error) !important;
+  --btn-fg: var(--error);
+}
+
+.ctool-copied-overlay {
+  align-items: center;
+  background: var(--success-bg);
+  border-radius: var(--radius-sm);
+  color: var(--success-text) !important;
+  display: flex;
+  font-size: 10px;
+  font-weight: 700;
+  inset: 0;
+  justify-content: center;
+  position: absolute;
+}
+
+/* ===========================================================================
+   SEMANTIC SEO LIBRARY — /semantic-seo/resources and /semantic-seo/ai-agents
+   Both screens are accordion libraries built on the same shell: a gradient
+   banner, `#0d1117` section cards, and a per-section colour (nine hues on the
+   agents page alone) driving the tile, the badge, the body text, the borders
+   and the buttons. That is the rainbow the brief rules out, and it left the
+   two sibling pages looking unrelated to each other and to the dashboard.
+   One neutral card system; the section identity is carried by its icon and
+   title, as everywhere else in the app.
+   =========================================================================== */
+.sres-page { width: 100%; }
+
+.sres-section {
+  background: var(--surface) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-xs);
+  overflow: hidden;
+}
+
+.sres-section-head {
+  align-items: center;
+  background: transparent !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  display: flex;
+  gap: 16px;
+  justify-content: space-between;
+  padding: 18px 22px !important;
+  text-align: left;
+  transition: background-color var(--motion-fast);
+  width: 100%;
+}
+.sres-section-head:hover:not(:disabled) { background: var(--surface-sunken) !important; }
+
+.sres-section-icon {
+  align-items: center;
+  background: var(--tile-bg);
+  border: 1px solid var(--brand-red-border);
+  border-radius: var(--radius-lg);
+  color: var(--brand-red) !important;
+  display: inline-flex;
+  flex: 0 0 auto;
+  height: 42px;
+  justify-content: center;
+  width: 42px;
+}
+.sres-section-icon > svg { height: 20px; width: 20px; }
+
+.sres-section-title {
+  color: var(--brand-blue) !important;
+  font-size: 1rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  line-height: 1.5rem;
+}
+.sres-section-sub {
+  color: var(--text-secondary) !important;
+  font-size: 0.8125rem;
+  line-height: 1.25rem;
+  margin-top: 2px;
+}
+
+.sres-chevron {
+  align-items: center;
+  background: var(--surface-muted);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-pill);
+  color: var(--text-muted) !important;
+  display: inline-flex;
+  flex: 0 0 auto;
+  height: 30px;
+  justify-content: center;
+  width: 30px;
+}
+.sres-chevron > svg { height: 16px; width: 16px; }
+
+/* --- Resource / tool / map cards ----------------------------------------- */
+.sres-card {
+  background: var(--surface) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: var(--radius-lg);
+  display: block;
+  padding: 18px;
+  transition: border-color var(--motion-fast), box-shadow var(--motion-fast),
+    background-color var(--motion-fast);
+}
+.sres-card:hover {
+  background: var(--brand-red-subtle) !important;
+  border-color: var(--brand-red-border) !important;
+  box-shadow: var(--shadow-sm);
+}
+.sres-card-title {
+  color: var(--text-primary) !important;
+  font-size: 0.875rem;
+  font-weight: 600;
+  line-height: 1.25rem;
+}
+.sres-card:hover .sres-card-title { color: var(--brand-red-hover) !important; }
+.sres-card-text {
+  color: var(--text-secondary) !important;
+  font-size: 0.8125rem;
+  line-height: 1.25rem;
+  margin-top: 3px;
+}
+.sres-card-link {
+  align-items: center;
+  color: var(--brand-red-hover) !important;
+  display: flex;
+  font-size: 11px;
+  font-weight: 600;
+  gap: 6px;
+  margin-top: 14px;
+}
+.sres-card-emoji { display: block; font-size: 26px; line-height: 1; }
+
+/* Horizontal variant used by the slides and tools rows. */
+.sres-row {
+  align-items: center;
+  display: flex;
+  gap: 16px;
+}
+.sres-row .sres-card-emoji { font-size: 32px; }
+.sres-row > svg:last-child { color: var(--text-disabled) !important; flex: 0 0 auto; }
+.sres-row:hover > svg:last-child { color: var(--brand-red) !important; }
+
+/* --- Website list --------------------------------------------------------- */
+.sres-site {
+  align-items: center;
+  background: var(--surface) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: var(--radius-lg);
+  display: flex;
+  gap: 12px;
+  padding: 12px;
+  transition: border-color var(--motion-fast), background-color var(--motion-fast);
+}
+.sres-site:hover {
+  background: var(--brand-red-subtle) !important;
+  border-color: var(--brand-red-border) !important;
+}
+.sres-favicon {
+  align-items: center;
+  background: var(--surface-sunken);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  display: flex;
+  flex: 0 0 auto;
+  height: 38px;
+  justify-content: center;
+  overflow: hidden;
+  width: 38px;
+}
+.sres-site-name {
+  color: var(--text-primary) !important;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.sres-site:hover .sres-site-name { color: var(--brand-red-hover) !important; }
+.sres-site-niche { color: var(--text-muted) !important; font-size: 11px; }
+.sres-site > svg:last-child { color: var(--text-disabled) !important; flex: 0 0 auto; }
+.sres-site:hover > svg:last-child { color: var(--brand-red) !important; }
+
+/* --- Search --------------------------------------------------------------- */
+.sres-search-icon { color: var(--text-muted) !important; }
+.sres-search-input {
+  background: var(--surface-sunken) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: var(--radius-lg);
+  color: var(--text-primary) !important;
+  font-size: 13px;
+  min-height: var(--control-h-lg);
+  transition: border-color var(--motion-fast), box-shadow var(--motion-fast);
+  width: 100%;
+}
+.sres-search-input::placeholder { color: var(--text-disabled) !important; }
+.sres-search-input:focus {
+  border-color: var(--brand-red) !important;
+  box-shadow: var(--focus-ring-brand);
+  outline: none;
+}
+
+/* --- Agent cards ---------------------------------------------------------- */
+/* Agent card.
+   The first pass kept the original three-band construction: a tinted header,
+   a white toggle strip and a tinted footer, each separated by a rule. Stacked
+   48 times that read as a stack of slabs rather than a card, and the solid
+   red "Open Agent" on every one turned the grid into a wall of CTAs. One
+   continuous surface now, with the emoji promoted to a real tile, the
+   description clamped so cards in a row line up, and the primary action
+   tinted at rest and solid on hover. */
+.sres-agent {
+  background: var(--surface) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: var(--radius-xl);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  position: relative;
+}
+/* Hover is a quiet elevation only: no lift, no brand hairline, no coloured
+   border. */
+.sres-agent:hover {
+  border-color: var(--border-strong) !important;
+  box-shadow: var(--shadow-sm);
+}
+
+.sres-agent-head {
+  background: var(--surface) !important;
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  padding: 20px 20px 18px;
+}
+.sres-agent-head > div:first-child { align-items: center; margin-bottom: 14px !important; }
+
+/* The emoji sat loose at 26px against a lot of empty header. It now reads as
+   an icon tile, matching the tiles used on every other card in the app. */
+.sres-agent-head .sres-card-emoji {
+  align-items: center;
+  background: var(--surface-sunken);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  display: inline-flex;
+  flex: 0 0 auto;
+  font-size: 22px;
+  height: 44px;
+  justify-content: center;
+  line-height: 1;
+  width: 44px;
+}
+
+.sres-agent-title {
+  color: var(--brand-blue) !important;
+  font-size: 0.9375rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  line-height: 1.375rem;
+  margin-bottom: 6px;
+}
+.sres-agent-text {
+  color: var(--text-secondary) !important;
+  display: -webkit-box;
+  font-size: 0.8125rem;
+  line-height: 1.3125rem;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  overflow: hidden;
+}
+.sres-agent-open {
+  align-items: center;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  color: var(--text-disabled) !important;
+  display: inline-flex;
+  height: 28px;
+  justify-content: center;
+  transition: background-color var(--motion-fast), color var(--motion-fast),
+    border-color var(--motion-fast);
+  width: 28px;
+}
+.sres-agent-open:hover {
+  background: var(--tile-bg);
+  border-color: var(--brand-red-border);
+  color: var(--brand-red) !important;
+}
+
+.sres-agent-toggle {
+  align-items: center;
+  background: var(--surface) !important;
+  border: 0 !important;
+  border-top: 1px solid var(--border-subtle) !important;
+  border-radius: 0 !important;
+  color: var(--text-muted) !important;
+  --btn-fg: var(--text-muted);
+  display: flex;
+  font-size: 11px;
+  font-weight: 700;
+  justify-content: space-between;
+  letter-spacing: 0.04em;
+  padding: 10px 20px !important;
+  text-transform: uppercase;
+  width: 100%;
+}
+.sres-agent-toggle:hover:not(:disabled) {
+  background: var(--surface-sunken) !important;
+  color: var(--brand-red-hover) !important;
+  --btn-fg: var(--brand-red-hover);
+}
+.sres-agent-toggle svg { transition: transform var(--motion-fast); }
+
+.sres-agent-body {
+  background: var(--surface) !important;
+  border-top: 1px solid var(--border-subtle);
+  padding: 0 18px 18px;
+}
+.sres-agent-h4 {
+  align-items: center;
+  color: var(--brand-blue) !important;
+  display: flex;
+  font-size: 12px;
+  font-weight: 700;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+.sres-agent-li {
+  align-items: flex-start;
+  color: var(--text-secondary) !important;
+  display: flex;
+  font-size: 0.8125rem;
+  gap: 8px;
+  line-height: 1.25rem;
+}
+/* The bullet was `bg-${category.color}-400`, an interpolated class Tailwind
+   never emitted, so every list rendered with invisible markers. */
+.sres-bullet {
+  background: var(--brand-red);
+  border-radius: var(--radius-pill);
+  flex: 0 0 auto;
+  height: 5px;
+  margin-top: 7px;
+  width: 5px;
+}
+.sres-usecase {
+  background: var(--surface-sunken) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: var(--radius-pill);
+  color: var(--text-secondary) !important;
+  display: inline-flex;
+  font-size: 11px;
+  padding: 3px 10px;
+}
+.sres-agent-foot {
+  align-items: center;
+  background: var(--surface-sunken) !important;
+  border-top: 1px solid var(--border-subtle);
+  display: flex;
+  gap: 8px;
+  margin-top: auto;
+  padding: 12px 20px;
+}
+/* Primary action, repeated 48 times on one screen: tinted at rest so the
+   grid stays readable, solid brand on hover and focus. */
+.sres-agent-foot .ui-button-primary {
+  background: var(--tile-bg) !important;
+  border: 1px solid var(--brand-red-border) !important;
+  box-shadow: none !important;
+  color: var(--brand-red-hover) !important;
+  --btn-fg: var(--brand-red-hover);
+  font-size: 12px;
+  font-weight: 600;
+  min-height: var(--control-h-sm);
+  padding: 0 14px !important;
+}
+.sres-agent-foot .ui-button-primary:hover:not(:disabled),
+.sres-agent-foot .ui-button-primary:focus-visible {
+  background: var(--brand-red) !important;
+  border-color: var(--brand-red) !important;
+  color: #ffffff !important;
+  --btn-fg: #ffffff;
+}
+.sres-agent-foot .ctool-tool-btn { min-height: var(--control-h-sm); }
+
+/* --- Empty state + credit strip ------------------------------------------- */
+.sres-empty {
+  background: var(--surface) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-xs);
+  padding: 56px 24px;
+  text-align: center;
+}
+.sres-empty > svg { color: var(--text-disabled) !important; margin: 0 auto 14px; }
+.sres-empty h3 { color: var(--brand-blue) !important; font-size: 0.9375rem; font-weight: 700; }
+.sres-empty p { color: var(--text-secondary) !important; font-size: 0.8125rem; margin-top: 4px; }
+
+.sres-credit {
+  background: var(--surface) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-xs);
+  padding: 22px;
+  text-align: center;
+}
+.sres-credit svg { color: var(--brand-red) !important; }
+.sres-credit-label { color: var(--brand-blue) !important; font-size: 13px; font-weight: 700; }
+.sres-credit p { color: var(--text-secondary) !important; font-size: 0.8125rem; }
+.sres-credit a { color: var(--brand-red-hover) !important; font-weight: 600; }
+.sres-credit a:hover { text-decoration: underline; }
+
+.sres-count { color: var(--text-muted) !important; font-size: 0.8125rem; }
+
+/* The AI Agents banner carries a second line under the title block. Left as
+   a plain paragraph it started at the card edge while the title sat indented
+   past the tile, so the banner read as two unaligned blocks. It now sits on
+   its own hairline meta row, the same shape .w3c-meta uses. */
+.sres-hero-meta {
+  border-top: 1px solid var(--border-subtle);
+  color: var(--text-secondary) !important;
+  font-size: 0.8125rem;
+  line-height: 1.25rem;
+  margin-top: 18px;
+  padding-top: 14px;
+}
+
+/* Agents without an emoji fall back to a lucide glyph; match the emoji tile
+   exactly so a mixed row does not step. */
+.sres-agent-head .sres-section-icon {
+  border-radius: var(--radius-lg);
+  height: 44px;
+  padding: 0;
+  width: 44px;
 }

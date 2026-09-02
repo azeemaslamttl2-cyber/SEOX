@@ -73,22 +73,22 @@ export default function ContentOptimization() {
   }
 
   return (
-    <div className="content-optimization-workspace w-full space-y-5 pb-6">
+    <div className="content-optimization-workspace ctool-page space-y-5 pb-6">
       {/* Hero Header */}
-      <div className="optimization-hero relative overflow-hidden rounded-3xl p-6 sm:p-8 shadow-xl">
+      <div className="optimization-hero">
         <div className="pointer-events-none absolute inset-0">
           <div className="absolute -right-16 -top-16 h-72 w-72 rounded-full bg-white/10 blur-[90px]" />
           <div className="absolute -bottom-10 -left-10 h-60 w-60 rounded-full bg-black/10 blur-[80px]" />
         </div>
-        <div className="relative z-10 flex items-center gap-4">
-          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/90 text-brand-500 shadow-inner flex-shrink-0">
+        <div className="ctool-hero-row">
+          <div className="ctool-hero-icon">
             <Sparkles className="h-6 w-6" />
           </div>
           <div className="min-w-0">
-            <h1 className="font-black leading-none tracking-tight text-[#0d2f66] text-2xl sm:text-3xl lg:text-4xl">
+            <h1 className="ctool-title font-display">
               Content Optimization
             </h1>
-            <p className="mt-2 max-w-[1100px] text-xs sm:text-sm text-[#fff4f2]">
+            <p className="ctool-subtitle">
               Improve readability, topical depth, keyword coverage, and semantic clarity with structured AI feedback.
             </p>
           </div>
