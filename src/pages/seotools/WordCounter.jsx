@@ -27,20 +27,20 @@ export default function WordCounter() {
     <div className="space-y-4">
       <ToolHeader title="Word Counter" Icon={Hash} gradient="from-slate-800 via-emerald-800 to-teal-700" subtitle="Count words, characters, sentences, and reading time" />
 
-      <div className="rounded-2xl border border-white/[0.08] bg-[#0d1117] p-5">
+      <div className="stool-card">
         <textarea
           value={text}
           onChange={(e) => setText(e.target.value)}
           rows={9}
-          className="w-full rounded-xl border border-white/[0.08] bg-[#010409] px-4 py-3 text-sm text-white/70 placeholder:text-white/15 focus:outline-none focus:border-emerald-500/30 resize-none"
+          className="ctool-textarea"
           placeholder="Paste or type your text here..."
         />
 
         <div className="mt-4 grid grid-cols-2 md:grid-cols-5 gap-3">
           {cards.map((c) => (
-            <div key={c.label} className="rounded-xl border border-white/[0.06] bg-[#010409] p-4 text-center">
+            <div key={c.label} className="stool-well text-center">
               <div className={`font-display text-2xl font-black ${c.color}`}>{c.value}</div>
-              <div className="text-[11px] text-white/35 mt-0.5">{c.label}</div>
+              <div className="ctool-help-text mt-0.5">{c.label}</div>
             </div>
           ))}
         </div>

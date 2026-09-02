@@ -74,13 +74,13 @@ export default function RobotsGenerator() {
   const preview = generate() || `# Your robots.txt will appear here\n# Start by selecting options on the left`;
 
   const Section = ({ id, icon: Icon, title, desc, children, color = "violet" }) => (
-    <div className="rounded-2xl border border-white/[0.08] bg-[#0d1117] overflow-hidden">
-      <button onClick={() => setOpen({ ...open, [id]: !open[id] })} className="flex w-full items-center justify-between p-4">
+    <div className="stool-card stool-card-flush">
+      <button onClick={() => setOpen({ ...open, [id]: !open[id] })} className="stool-row-btn">
         <div className="flex items-center gap-2.5">
           <Icon className={`h-4 w-4 text-${color}-400`} />
           <div className="text-left">
-            <h3 className="text-sm font-bold text-white/80">{title}</h3>
-            {desc && <p className="text-[11px] text-white/35 mt-0.5">{desc}</p>}
+            <h3 className="stool-title">{title}</h3>
+            {desc && <p className="ctool-help-text mt-0.5">{desc}</p>}
           </div>
         </div>
         <ChevronDown className={`h-4 w-4 text-white/30 transition-transform ${open[id] ? "rotate-180" : ""}`} />
@@ -92,16 +92,16 @@ export default function RobotsGenerator() {
   const Toggle = ({ checked, onChange }) => (
     <button
       onClick={() => onChange(!checked)}
-      className={`relative h-5 w-9 rounded-full transition ${checked ? "bg-indigo-600" : "bg-white/10"}`}
+      className={`stool-switch ${checked ? "on" : ""}`}
     >
       <span className={`absolute top-0.5 h-4 w-4 rounded-full bg-white transition ${checked ? "left-4" : "left-0.5"}`} />
     </button>
   );
 
   const RuleRow = ({ title, desc, checked, onChange }) => (
-    <div className="flex items-center justify-between rounded-lg border border-white/[0.06] bg-[#010409] px-3 py-2.5">
+    <div className="stool-well flex items-center justify-between">
       <div>
-        <p className="text-xs font-semibold text-white/70">{title}</p>
+        <p className="stool-strong">{title}</p>
         <p className="text-[10px] text-white/35">{desc}</p>
       </div>
       <Toggle checked={checked} onChange={onChange} />
@@ -109,15 +109,15 @@ export default function RobotsGenerator() {
   );
 
   const BotRow = ({ name, value, onChange }) => (
-    <div className="flex items-center justify-between rounded-lg border border-white/[0.06] bg-[#010409] px-3 py-2.5">
-      <span className="text-xs font-semibold text-white/70">{name}</span>
-      <div className="flex items-center gap-1 rounded-md bg-white/[0.03] p-0.5">
+    <div className="stool-well flex items-center justify-between">
+      <span className="stool-strong">{name}</span>
+      <div className="ctool-seg">
         {["allow", "disallow", "off"].map((v) => (
           <button
             key={v}
             onClick={() => onChange(v)}
-            className={`rounded px-2 py-0.5 text-[10px] font-bold capitalize transition ${
-              (value || "off") === v ? "bg-white/15 text-white" : "text-white/35 hover:text-white/55"
+            className={`ui-button ctool-seg-btn stool-seg-xs capitalize ${
+              (value || "off") === v ? "active" : ""
             }`}
           >{v}</button>
         ))}
@@ -132,10 +132,10 @@ export default function RobotsGenerator() {
       <div className="grid gap-4 lg:grid-cols-[1fr_420px]">
         {/* Left column */}
         <div className="space-y-3">
-          <div className="rounded-2xl border border-white/[0.08] bg-[#0d1117] p-5">
+          <div className="stool-card">
             <h2 className="font-display text-lg font-black text-white">Robots.txt Generator</h2>
             <p className="text-xs text-white/40 mt-0.5">Create an optimized robots.txt file for your website</p>
-            <button className="mt-3 flex items-center gap-1.5 rounded-lg bg-gradient-to-r from-indigo-600 to-violet-600 px-4 py-2 text-xs font-bold text-white shadow-md shadow-indigo-600/20">
+            <button className="ui-button ui-button-primary mt-3">
               <Shield className="h-3.5 w-3.5" /> Generate Recommended
             </button>
           </div>
@@ -146,9 +146,7 @@ export default function RobotsGenerator() {
                 <button
                   key={d.value}
                   onClick={() => setWp(d.value)}
-                  className={`flex-1 rounded-lg px-3 py-2 text-xs font-bold transition ${
-                    wp === d.value ? "bg-gradient-to-r from-indigo-600 to-violet-600 text-white" : "border border-white/[0.08] bg-white/[0.03] text-white/55 hover:text-white/80"
-                  }`}
+                  className={`ui-button ctool-seg-btn flex-1 ${wp === d.value ? "active" : ""}`}
                 >{d.label}</button>
               ))}
             </div>
@@ -167,10 +165,10 @@ export default function RobotsGenerator() {
           </Section>
 
           <Section id="sitemap" icon={FileCode2} title="Add Sitemaps" desc="Add your sitemap URLs to help search engines discover your content." color="cyan">
-            <label className="text-[10px] font-bold uppercase tracking-wider text-white/40">Sitemap URLs</label>
-            <input value={sitemap} onChange={(e) => setSitemap(e.target.value)} className="mt-1 w-full rounded-lg border border-white/[0.06] bg-[#010409] px-3 py-2 text-sm text-white/60 placeholder:text-white/20 focus:outline-none" placeholder="https://example.com/sitemap.xml" />
-            <label className="text-[10px] font-bold uppercase tracking-wider text-white/40 mt-2 block">News Sitemap URL (optional)</label>
-            <input value={newsSitemap} onChange={(e) => setNewsSitemap(e.target.value)} className="mt-1 w-full rounded-lg border border-white/[0.06] bg-[#010409] px-3 py-2 text-sm text-white/60 placeholder:text-white/20 focus:outline-none" placeholder="https://example.com/sitemap-news.xml" />
+            <label className="stool-label">Sitemap URLs</label>
+            <input value={sitemap} onChange={(e) => setSitemap(e.target.value)} className="schema-input mt-1" placeholder="https://example.com/sitemap.xml" />
+            <label className="stool-label mt-2 block">News Sitemap URL (optional)</label>
+            <input value={newsSitemap} onChange={(e) => setNewsSitemap(e.target.value)} className="schema-input mt-1" placeholder="https://example.com/sitemap-news.xml" />
           </Section>
 
           <Section id="search" icon={Search} title="Search Engine Crawlers" desc="Control which search engines can crawl your website." color="blue">
@@ -188,29 +186,29 @@ export default function RobotsGenerator() {
 
         {/* Right column - Sticky Preview */}
         <div className="space-y-3 lg:sticky lg:top-4 lg:self-start">
-          <div className="rounded-2xl border border-white/[0.08] bg-[#0d1117] overflow-hidden">
-            <div className="flex items-center justify-between border-b border-white/[0.06] px-4 py-3">
+          <div className="stool-card stool-card-flush">
+            <div className="stool-panel-head">
               <div className="flex items-center gap-2">
-                <FileCode2 className="h-4 w-4 text-indigo-400" />
-                <span className="text-sm font-bold text-white/80">robots.txt Preview</span>
+                <FileCode2 className="h-4 w-4 ctool-accent" />
+                <span className="stool-title">robots.txt Preview</span>
               </div>
               <div className="flex gap-1.5">
-                <button onClick={() => navigator.clipboard.writeText(preview)} className="flex items-center gap-1 rounded-md bg-gradient-to-r from-indigo-600 to-violet-600 px-2.5 py-1 text-[10px] font-bold text-white">
+                <button onClick={() => navigator.clipboard.writeText(preview)} className="ui-button ctool-tool-btn">
                   <Copy className="h-3 w-3" /> Copy
                 </button>
-                <button className="flex items-center gap-1 rounded-md border border-white/[0.08] bg-white/[0.03] px-2.5 py-1 text-[10px] font-bold text-white/55">
+                <button className="ui-button ctool-tool-btn">
                   <Download className="h-3 w-3" /> Download
                 </button>
               </div>
             </div>
-            <pre className="max-h-[300px] overflow-y-auto bg-black/40 p-4 text-[11px] text-cyan-200/80 font-mono whitespace-pre-wrap">{preview}</pre>
+            <pre className="stool-code stool-code-block max-h-[300px] overflow-y-auto whitespace-pre-wrap">{preview}</pre>
           </div>
 
-          <div className="rounded-2xl border border-indigo-500/20 bg-indigo-500/[0.04] p-4">
-            <h4 className="flex items-center gap-1.5 text-sm font-bold text-indigo-300 mb-2">
+          <div className="ctool-note">
+            <h4 className="ctool-note-lead flex items-center gap-1.5 mb-2">
               <Lightbulb className="h-4 w-4" /> Quick Tips
             </h4>
-            <ul className="space-y-1 text-[11px] text-white/50">
+            <ul className="space-y-1 ctool-help-text">
               <li>• Place robots.txt in your website root directory</li>
               <li>• Test with Google Search Console before deploying</li>
               <li>• Remember: robots.txt is a suggestion, not a security measure</li>

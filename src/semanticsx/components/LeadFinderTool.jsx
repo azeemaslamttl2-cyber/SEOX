@@ -483,10 +483,10 @@ const LeadFinderTool = () => {
   }, [filteredLeads]);
 
   const stats = useMemo(() => ([
-    { label: 'Hot Leads', value: leads.filter((lead) => lead.priority === 'hot').length, icon: IcoFlame, color: '#f43f5e', bg: 'rgba(244,63,94,0.1)' },
-    { label: 'No Website', value: needCounts.website, icon: IcoGlobe, color: '#0ea5e9', bg: 'rgba(14,165,233,0.1)' },
-    { label: 'Weak SEO', value: needCounts.seo, icon: IcoTarget, color: '#f59e0b', bg: 'rgba(245,158,11,0.1)' },
-    { label: 'Few Reviews', value: needCounts.reviews, icon: IcoStar, color: '#8b5cf6', bg: 'rgba(139,92,246,0.1)' },
+    { label: 'Hot Leads', value: leads.filter((lead) => lead.priority === 'hot').length, icon: IcoFlame, tone: 'error' },
+    { label: 'No Website', value: needCounts.website, icon: IcoGlobe, tone: 'info' },
+    { label: 'Weak SEO', value: needCounts.seo, icon: IcoTarget, tone: 'warning' },
+    { label: 'Few Reviews', value: needCounts.reviews, icon: IcoStar, tone: 'brand' },
   ]), [leads, needCounts]);
 
   const emailsFound = leads.filter((lead) => lead.hasDirectEmail).length;
@@ -573,13 +573,15 @@ const LeadFinderTool = () => {
         <div className="lead-homepage">
           <div className="lead-homepage-hero">
             <div className="lead-homepage-icon">
-              <IcoSparkles size={36} />
+              <IcoSparkles size={20} />
             </div>
-            <h1 className="lead-homepage-title">AI Lead Finder</h1>
-            <p className="lead-homepage-desc">
-              Describe the businesses you want to find. The finder searches Google Places,
-              scores opportunities, and surfaces contacts that are ready to pitch.
-            </p>
+            <div className="lead-homepage-hero-text">
+              <h1 className="lead-homepage-title">AI Lead Finder</h1>
+              <p className="lead-homepage-desc">
+                Describe the businesses you want to find. The finder searches Google Places,
+                scores opportunities, and surfaces contacts that are ready to pitch.
+              </p>
+            </div>
           </div>
 
           <div className="lead-homepage-search">
@@ -693,9 +695,9 @@ const LeadFinderTool = () => {
 
       <div className="lead-stats-grid">
         {stats.map((stat) => (
-          <div key={stat.label} className="lead-stat-card">
-            <div className="lead-stat-icon" style={{ background: stat.bg }}>
-              <stat.icon size={18} style={{ color: stat.color }} />
+          <div key={stat.label} className="lead-stat-card" data-tone={stat.tone}>
+            <div className="lead-stat-icon">
+              <stat.icon size={18} />
             </div>
             <div>
               <div className="lead-stat-value">{stat.value}</div>

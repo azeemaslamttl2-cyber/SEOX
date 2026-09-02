@@ -1245,7 +1245,7 @@ const ContentWriter = () => {
                             {competitors.length > 1 && (
                                 <button
                                     onClick={() => removeCompetitor(index)}
-                                    className="p-3 text-red-500 hover:bg-red-500/10 rounded-xl transition"
+                                    className="ui-button schema-remove"
                                 >
                                     <Trash2 className="w-5 h-5" />
                                 </button>
@@ -1255,7 +1255,7 @@ const ContentWriter = () => {
                 </div>
                 <button
                     onClick={addCompetitor}
-                    className="mt-4 flex items-center gap-2 px-4 py-2 text-brand-500 hover:bg-brand-500/150/10 rounded-xl transition font-medium"
+                    className="ui-button ctool-tool-btn mt-4"
                 >
                     <Plus className="w-5 h-5" />
                     Add Competitor
@@ -1263,23 +1263,23 @@ const ContentWriter = () => {
             </div>
 
             {/* SERP Checker - Full Implementation */}
-            <div className="bg-gradient-to-br from-brand-50 to-brand-50 rounded-2xl border border-brand-200 overflow-hidden">
+            <div className="ctool-card scw-serp">
                 <button
                     onClick={() => setSerpExpanded(!serpExpanded)}
-                    className="w-full p-4 flex items-center justify-between hover:bg-brand-500/20/50 transition"
+                    className="scw-serp-head"
                 >
-                    <h3 className="text-lg font-semibold text-brand-300 flex items-center gap-2">
+                    <h3 className="scw-serp-title flex items-center gap-2">
                         <Search className="w-5 h-5" />
                         Find Competitors via SERP
                     </h3>
-                    {serpExpanded ? <ChevronUp className="w-5 h-5 text-brand-500" /> : <ChevronDown className="w-5 h-5 text-brand-500" />}
+                    {serpExpanded ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
                 </button>
 
                 {serpExpanded && (
                     <div className="px-4 pb-4 space-y-4">
                         {/* Search Keyword */}
                         <div>
-                            <label className="text-sm font-medium text-white/75 mb-1.5 block">Search Keyword</label>
+                            <label className="schema-label">Search Keyword</label>
                             <div className="relative" ref={kwInputRef}>
                                 <input
                                     type="text"
@@ -1311,7 +1311,7 @@ const ContentWriter = () => {
 
                         {/* Country & Language */}
                         <div>
-                            <label className="text-sm font-medium text-white/75 mb-1.5 block">Country & Language</label>
+                            <label className="schema-label">Country & Language</label>
                             <div className="relative" ref={regionRef}>
                                 <input
                                     type="text"
@@ -1343,7 +1343,7 @@ const ContentWriter = () => {
 
                         {/* Location */}
                         <div>
-                            <label className="text-sm font-medium text-white/75 mb-1.5 block">Location <span className="text-white/50 font-normal">(optional - for hyper-local results)</span></label>
+                            <label className="schema-label">Location <span className="text-white/50 font-normal">(optional - for hyper-local results)</span></label>
                             <div className="flex gap-2">
                                 <input
                                     type="text"
@@ -3269,7 +3269,7 @@ Return JSON: {"ngrams": ["unique phrase 1", "unique phrase 2", ...]}`,
                     <div className="bg-gradient-to-r from-brand-500 to-amber-600 rounded-2xl p-1">
                         <div className="rounded-xl bg-white/[0.03] p-6">
                             <div className="flex items-center justify-between mb-4">
-                                <h3 className="text-lg font-semibold text-brand-300 flex items-center gap-2">
+                                <h3 className="scw-serp-title flex items-center gap-2">
                                     <Brain className="w-5 h-5" />
                                     AI Suggested Keywords ({aiPickedKeywords.length})
                                 </h3>
@@ -5308,60 +5308,45 @@ BEGIN WRITING THE ARTICLE NOW:`;
     // If no mode selected, show mode selector (new article screen)
     if (!writerMode) {
         return (
-            <div className="space-y-6">
+            <div className="ctool-page space-y-5">
                 {/* Back Navigation Bar */}
-                <div className="flex items-center justify-between px-5 py-3 rounded-2xl border border-white/10 bg-slate-900/90 shadow-sm">
+                <div className="scw-backbar">
                     <button
                         onClick={() => navigate('/content/semantic-writer')}
-                        className="flex items-center gap-2 text-xs font-bold text-brand-400 hover:text-brand-300 transition group px-3 py-1.5 rounded-lg bg-brand-500/10 hover:bg-brand-500/20 border border-brand-500/20"
+                        className="ui-button ctool-tool-btn"
                     >
-                        <ArrowLeft className="w-4 h-4 group-hover:-translate-x-0.5 transition-transform" />
+                        <ArrowLeft className="w-3.5 h-3.5" />
                         Back to Articles
                     </button>
-                    <span className="text-xs text-slate-400 font-semibold">New Article Setup</span>
+                    <span className="stool-label">New Article Setup</span>
                 </div>
 
-                {/* Hero Banner matching EeatAudit */}
-                <div className="eeat-hero relative overflow-hidden rounded-3xl border border-brand-600 bg-brand-500 p-8 text-white shadow-xl">
-                    <div className="pointer-events-none absolute inset-0">
-                        <div className="absolute -right-20 -top-20 h-80 w-80 rounded-full bg-brand-500/[0.08] blur-[100px]" />
-                        <div className="absolute -bottom-10 -left-10 h-60 w-60 rounded-full bg-amber-500/[0.05] blur-[80px]" />
-                        <div
-                            className="absolute inset-0 opacity-[0.03]"
-                            style={{
-                                backgroundImage:
-                                    "radial-gradient(circle at 1px 1px, white 1px, transparent 0)",
-                                backgroundSize: "24px 24px",
-                            }}
-                        />
-                    </div>
-                    <div className="relative z-10 flex items-center gap-4">
-                        <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/10 ring-1 ring-white/20">
-                            <Sparkles className="h-6 w-6 text-amber-300" />
-                        </div>
-                        <div>
-                            <h1 className="font-display text-2xl font-black text-white">Start New Article</h1>
-                            <p className="text-xs text-white/80">Choose your AI content creation & optimization workflow</p>
+                {/* Hero Banner */}
+                <div className="ctool-hero">
+                    <div className="ctool-hero-row">
+                        <span className="ctool-hero-icon">
+                            <Sparkles className="h-5 w-5" />
+                        </span>
+                        <div className="min-w-0">
+                            <h1 className="ctool-title font-display">Start New Article</h1>
+                            <p className="ctool-subtitle">Choose your AI content creation &amp; optimization workflow</p>
                         </div>
                     </div>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
                     {/* Quick Mode Card */}
-                    <button
-                        onClick={() => startNewArticle('quick')}
-                        className="group relative rounded-2xl border border-white/10 bg-slate-900/90 hover:border-amber-500/60 p-8 text-left transition-all hover:bg-slate-800/90 hover:shadow-2xl hover:shadow-amber-500/10"
-                    >
-                        <div className="absolute top-4 right-4 px-3 py-1 bg-amber-500/20 text-amber-300 text-xs font-bold rounded-full uppercase ring-1 ring-amber-500/40">Fast</div>
-                        <div className="w-12 h-12 rounded-xl bg-amber-500/20 text-amber-400 ring-1 ring-amber-500/40 flex items-center justify-center mb-5 group-hover:scale-110 transition-transform">
-                            <Zap className="w-6 h-6" />
-                        </div>
-                        <h3 className="font-display text-xl font-bold text-white mb-2">⚡ Quick Mode</h3>
-                        <p className="text-slate-300 text-xs leading-relaxed mb-5">Generate a focused article in 4 streamlined steps. Ideal for rapid content creation.</p>
-                        <div className="space-y-2.5">
+                    <button onClick={() => startNewArticle('quick')} className="scw-mode">
+                        <span className="app-badge app-badge-neutral scw-mode-badge">Fast</span>
+                        <span className="ctool-hero-icon scw-mode-icon">
+                            <Zap className="w-5 h-5" />
+                        </span>
+                        <h3 className="scw-mode-title font-display">Quick Mode</h3>
+                        <p className="scw-mode-desc">Generate a focused article in 4 streamlined steps. Ideal for rapid content creation.</p>
+                        <div className="scw-mode-list">
                             {['Competitor Research + Keywords', 'Outline Creation', 'Word Count Configuration', 'AI Content Editor'].map(t => (
-                                <div key={t} className="flex items-center gap-2 text-xs text-slate-200">
-                                    <CheckCircle className="w-4 h-4 text-amber-400 flex-shrink-0" />
+                                <div key={t} className="scw-mode-item">
+                                    <CheckCircle className="w-4 h-4 flex-shrink-0" />
                                     <span>{t}</span>
                                 </div>
                             ))}
@@ -5369,20 +5354,17 @@ BEGIN WRITING THE ARTICLE NOW:`;
                     </button>
 
                     {/* Express Mode Card */}
-                    <button
-                        onClick={() => startNewArticle('express')}
-                        className="group relative rounded-2xl border border-white/10 bg-slate-900/90 hover:border-brand-500/60 p-8 text-left transition-all hover:bg-slate-800/90 hover:shadow-2xl hover:shadow-brand-500/10"
-                    >
-                        <div className="absolute top-4 right-4 px-3 py-1 bg-brand-500/20 text-brand-300 text-xs font-bold rounded-full uppercase ring-1 ring-brand-500/40">Full</div>
-                        <div className="w-12 h-12 rounded-xl bg-brand-500/20 text-brand-400 ring-1 ring-brand-500/40 flex items-center justify-center mb-5 group-hover:scale-110 transition-transform">
-                            <Layers className="w-6 h-6" />
-                        </div>
-                        <h3 className="font-display text-xl font-bold text-white mb-2">🔬 Express Mode</h3>
-                        <p className="text-slate-300 text-xs leading-relaxed mb-5">Deep semantic optimization with all 13 steps for maximum organic search impact.</p>
-                        <div className="space-y-2.5">
+                    <button onClick={() => startNewArticle('express')} className="scw-mode">
+                        <span className="app-badge app-badge-brand scw-mode-badge">Full</span>
+                        <span className="ctool-hero-icon scw-mode-icon">
+                            <Layers className="w-5 h-5" />
+                        </span>
+                        <h3 className="scw-mode-title font-display">Express Mode</h3>
+                        <p className="scw-mode-desc">Deep semantic optimization with all 13 steps for maximum organic search impact.</p>
+                        <div className="scw-mode-list">
                             {['Full competitor analysis', 'Entities, N-Grams, NLP Keywords', 'Grammar, SEO rules, AI instructions', 'Master prompt + Content editor'].map(t => (
-                                <div key={t} className="flex items-center gap-2 text-xs text-slate-200">
-                                    <CheckCircle className="w-4 h-4 text-brand-400 flex-shrink-0" />
+                                <div key={t} className="scw-mode-item">
+                                    <CheckCircle className="w-4 h-4 flex-shrink-0" />
                                     <span>{t}</span>
                                 </div>
                             ))}
@@ -5661,7 +5643,7 @@ BEGIN WRITING THE ARTICLE NOW:`;
                 <button
                     onClick={prevStep}
                     disabled={currentStep === 1 && !showWordCount}
-                    className="ui-button eeat-secondary-button rounded-xl"
+                    className="ui-button ctool-tool-btn scw-nav-btn"
                 >
                     <ChevronLeft className="w-4 h-4" />
                     Previous
@@ -5669,17 +5651,17 @@ BEGIN WRITING THE ARTICLE NOW:`;
                 {currentStep < 13 && !showWordCount && (
                     <button
                         onClick={skipStep}
-                        className="ui-button eeat-secondary-button rounded-xl text-amber-300 border-amber-500/30"
+                        className="ui-button ctool-tool-btn scw-nav-btn"
                         title="Skip this step and mark as done"
                     >
-                        <SkipForward className="w-4 h-4 text-amber-400" />
+                        <SkipForward className="w-4 h-4" />
                         Skip Step
                     </button>
                 )}
                 <button
                     onClick={nextStep}
                     disabled={(currentStep === 13 && !showWordCount) || (!showWordCount && !isStepComplete(currentStep))}
-                    className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-brand-500 to-amber-500 px-6 py-2.5 text-xs font-bold text-white shadow-lg shadow-brand-500/25 transition hover:shadow-brand-500/40 disabled:opacity-40 disabled:cursor-not-allowed"
+                    className="ui-button ui-button-primary scw-nav-btn"
                 >
                     {showWordCount && writerMode === 'quick' ? 'Start Writing' : 'Next Step'}
                     <ChevronRight className="w-4 h-4" />

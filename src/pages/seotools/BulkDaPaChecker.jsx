@@ -16,44 +16,44 @@ export default function BulkDaPaChecker() {
   }
 
   return (
-    <div className="space-y-4">
+    <div className="ctool-page space-y-4">
       <ToolHeader title="Bulk DA/PA Checker" Icon={ArrowUpDown} gradient="from-slate-800 via-blue-800 to-indigo-700" subtitle="Check Domain Authority and Page Authority in bulk" />
 
-      <div className="rounded-2xl border border-white/[0.08] bg-[#0d1117] p-5">
-        <div className="flex items-start gap-2 rounded-xl border border-amber-500/15 bg-amber-500/[0.03] px-4 py-3 mb-4">
-          <AlertCircle className="h-4 w-4 text-amber-400/80 mt-0.5 flex-shrink-0" />
-          <p className="text-xs text-white/55"><span className="font-bold text-amber-300/90">Note:</span> DA/PA checking requires Moz API integration.</p>
+      <div className="stool-card">
+        <div className="app-alert app-alert-warning mb-4">
+          <AlertCircle className="h-4 w-4 mt-0.5 flex-shrink-0" />
+          <p className="ctool-help-text"><span className="font-bold">Note:</span> DA/PA checking requires Moz API integration.</p>
         </div>
 
         <textarea
           value={text}
           onChange={(e) => setText(e.target.value)}
           rows={9}
-          className="w-full rounded-xl border border-white/[0.08] bg-[#010409] px-4 py-3 font-mono text-sm text-white/70 placeholder:text-white/15 focus:outline-none focus:border-blue-500/30 resize-none"
+          className="ctool-textarea"
           placeholder="Enter domains (one per line)..."
         />
 
         <button
           onClick={check}
-          className="mt-4 w-full rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 px-5 py-3 text-sm font-bold text-white shadow-md shadow-blue-600/20 transition hover:shadow-blue-600/30"
+          className="ui-button ui-button-primary mt-4 w-full"
         >
           Estimate DA/PA
         </button>
 
         {results && (
-          <div className="mt-5 overflow-hidden rounded-xl border border-white/[0.06]">
-            <div className="grid grid-cols-[2fr_0.6fr_0.6fr_0.6fr] gap-3 bg-white/[0.02] px-4 py-2.5 border-b border-white/[0.06]">
-              <span className="text-[10px] font-bold uppercase tracking-wider text-white/30">Domain</span>
-              <span className="text-[10px] font-bold uppercase tracking-wider text-white/30">DA</span>
-              <span className="text-[10px] font-bold uppercase tracking-wider text-white/30">PA</span>
-              <span className="text-[10px] font-bold uppercase tracking-wider text-white/30">Spam</span>
+          <div className="stool-table mt-5">
+            <div className="stool-thead dapa-row">
+              <span className="stool-label">Domain</span>
+              <span className="stool-label dapa-num">DA</span>
+              <span className="stool-label dapa-num">PA</span>
+              <span className="stool-label dapa-num">Spam</span>
             </div>
             {results.map((r, i) => (
-              <div key={i} className={`grid grid-cols-[2fr_0.6fr_0.6fr_0.6fr] gap-3 px-4 py-3 ${i < results.length - 1 ? "border-b border-white/[0.03]" : ""}`}>
-                <span className="text-sm text-blue-300 font-mono">{r.domain}</span>
-                <span className="text-sm text-emerald-300 font-bold">{r.da}</span>
-                <span className="text-sm text-cyan-300 font-bold">{r.pa}</span>
-                <span className={`text-sm font-bold ${r.spam < 2 ? "text-emerald-300" : r.spam < 4 ? "text-amber-300" : "text-rose-300"}`}>{r.spam}</span>
+              <div key={i} className="dapa-row stool-tr">
+                <span className="dapa-domain">{r.domain}</span>
+                <span className="dapa-num dapa-score">{r.da}</span>
+                <span className="dapa-num dapa-score">{r.pa}</span>
+                <span className={`dapa-num dapa-score ${r.spam < 2 ? "is-low" : r.spam < 4 ? "is-mid" : "is-high"}`}>{r.spam}</span>
               </div>
             ))}
           </div>
