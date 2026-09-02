@@ -1,4 +1,0 @@
-Source URL,Destination,Status Code,Content Type,Anchor Text
-https://example.com/,https://www.google.com/,200,text/html,Google
-https://example.com/about,https://example.org/redirect,301,text/html,Partner website
-https://example.com/services,https://example.net/missing,404,text/html,External resource
