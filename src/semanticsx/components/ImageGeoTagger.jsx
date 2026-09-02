@@ -500,7 +500,7 @@ const ImageGeoTagger = () => {
             // Custom icon for better visibility
             const customIcon = L.divIcon({
                 className: 'custom-marker',
-                html: '<div style="background: linear-gradient(135deg, #14b8a6, #06b6d4); width: 30px; height: 30px; border-radius: 50% 50% 50% 0; transform: rotate(-45deg); border: 3px solid white; box-shadow: 0 2px 10px rgba(0,0,0,0.3);"></div>',
+                html: '<div style="background: #df3c27; width: 30px; height: 30px; border-radius: 50% 50% 50% 0; transform: rotate(-45deg); border: 3px solid white; box-shadow: 0 2px 10px rgba(0,0,0,0.3);"></div>',
                 iconSize: [30, 30],
                 iconAnchor: [15, 30]
             });
@@ -811,23 +811,23 @@ const ImageGeoTagger = () => {
 
     return (
         <div className="flex flex-col h-full overflow-hidden">
-            <div className="flex-1 flex flex-col overflow-auto p-6">
+            <div className="flex-1 flex flex-col overflow-auto ctool-page px-1 py-1">
                 {/* Header */}
-                <div className="bg-gradient-to-r from-brand-500 via-amber-500 to-amber-600 rounded-2xl p-6 text-white mb-6 shadow-xl">
-                    <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-4">
-                            <div className="w-14 h-14 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm">
-                                <MapPin className="w-7 h-7" />
-                            </div>
-                            <div>
-                                <h1 className="text-2xl font-bold">Image Geo Tagger</h1>
-                                <p className="text-white/70">Add GPS EXIF data to your images for Local SEO</p>
+                <div className="ctool-hero mb-6">
+                    <div className="flex flex-wrap items-center justify-between gap-4">
+                        <div className="ctool-hero-row">
+                            <span className="ctool-hero-icon">
+                                <MapPin className="w-5 h-5" />
+                            </span>
+                            <div className="min-w-0">
+                                <h1 className="ctool-title font-display">Image Geo Tagger</h1>
+                                <p className="ctool-subtitle">Add GPS EXIF data to your images for Local SEO</p>
                             </div>
                         </div>
                         <button
                             onClick={clearAll}
                             disabled={images.length === 0}
-                            className="flex items-center gap-2 px-4 py-2 bg-white/15 hover:bg-white/25 border border-white/20 rounded-xl text-sm font-medium transition backdrop-blur-sm disabled:opacity-50"
+                            className="ui-button ctool-tool-btn"
                         >
                             <RefreshCw className="w-4 h-4" />
                             Clear All
@@ -839,15 +839,15 @@ const ImageGeoTagger = () => {
                     {/* Left Panel - Location Settings */}
                     <div className="space-y-6">
                         {/* GPS Coordinates Input */}
-                        <div className="rounded-2xl border border-white/[0.08] bg-[#0d1117] p-6">
-                            <h3 className="text-lg font-semibold text-white/90 mb-4 flex items-center gap-2">
-                                <Globe className="w-5 h-5 text-brand-400" />
+                        <div className="ctool-card">
+                            <h3 className="schema-card-title mb-4 flex items-center gap-2">
+                                <Globe className="w-5 h-5 ctool-accent" />
                                 GPS Coordinates
                             </h3>
 
                             <div className="space-y-4">
                                 <div>
-                                    <label className="block text-sm font-medium text-white/60 mb-1">
+                                    <label className="schema-label">
                                         Latitude
                                     </label>
                                     <input
@@ -855,13 +855,13 @@ const ImageGeoTagger = () => {
                                         value={latitude}
                                         onChange={(e) => setLatitude(e.target.value)}
                                         placeholder="e.g., 40.7128"
-                                        className="w-full px-4 py-2 border border-white/[0.08] rounded-lg bg-[#010409] text-white/70 placeholder:text-white/20 focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500/40"
+                                        className="schema-input"
                                     />
-                                    <p className="text-xs text-white/40 mt-1">Range: -90 to 90</p>
+                                    <p className="schema-hint">Range: -90 to 90</p>
                                 </div>
 
                                 <div>
-                                    <label className="block text-sm font-medium text-white/60 mb-1">
+                                    <label className="schema-label">
                                         Longitude
                                     </label>
                                     <input
@@ -869,13 +869,13 @@ const ImageGeoTagger = () => {
                                         value={longitude}
                                         onChange={(e) => setLongitude(e.target.value)}
                                         placeholder="e.g., -74.0060"
-                                        className="w-full px-4 py-2 border border-white/[0.08] rounded-lg bg-[#010409] text-white/70 placeholder:text-white/20 focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500/40"
+                                        className="schema-input"
                                     />
-                                    <p className="text-xs text-white/40 mt-1">Range: -180 to 180</p>
+                                    <p className="schema-hint">Range: -180 to 180</p>
                                 </div>
 
                                 <div>
-                                    <label className="block text-sm font-medium text-white/60 mb-1">
+                                    <label className="schema-label">
                                         Altitude (meters)
                                     </label>
                                     <input
@@ -883,32 +883,32 @@ const ImageGeoTagger = () => {
                                         value={altitude}
                                         onChange={(e) => setAltitude(e.target.value)}
                                         placeholder="e.g., 10"
-                                        className="w-full px-4 py-2 border border-white/[0.08] rounded-lg bg-[#010409] text-white/70 placeholder:text-white/20 focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500/40"
+                                        className="schema-input"
                                     />
                                 </div>
 
                                 {/* Primary Keyword - Optional */}
-                                <div className="pt-2 border-t border-white/[0.06] mt-2">
-                                    <label className="block text-sm font-medium text-white/60 mb-1 flex items-center gap-2">
-                                        <Tag className="w-4 h-4 text-amber-500" />
+                                <div className="pt-2 border-t border-line mt-2">
+                                    <label className="schema-label flex items-center gap-2">
+                                        <Tag className="w-4 h-4" />
                                         Primary Keyword
-                                        <span className="text-xs text-white/30 font-normal">(Optional)</span>
+                                        <span className="schema-hint">(Optional)</span>
                                     </label>
                                     <input
                                         type="text"
                                         value={primaryKeyword}
                                         onChange={(e) => setPrimaryKeyword(e.target.value)}
                                         placeholder="e.g., Best Coffee Shop NYC"
-                                        className="w-full px-4 py-2 border border-white/[0.08] rounded-lg bg-[#010409] text-white/70 placeholder:text-white/20 focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500/40"
+                                        className="schema-input"
                                     />
-                                    <p className="text-xs text-white/40 mt-1">
+                                    <p className="schema-hint">
                                         Fills: Title, Subject, Tags, Description, Author
                                     </p>
                                 </div>
 
                                 <button
                                     onClick={() => setShowMap(!showMap)}
-                                    className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-white/[0.06] hover:bg-white/[0.10] rounded-lg text-sm font-medium text-white/60 transition"
+                                    className="ui-button ctool-tool-btn w-full"
                                 >
                                     <Map className="w-4 h-4" />
                                     {showMap ? 'Hide Map' : 'Pick from Map'}
@@ -920,21 +920,21 @@ const ImageGeoTagger = () => {
                                         <div className="relative">
                                             <div className="flex gap-2">
                                                 <div className="relative flex-1">
-                                                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30" />
+                                                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 sres-search-icon" />
                                                     <input
                                                         type="text"
                                                         value={locationSearch}
                                                         onChange={(e) => handleSearchChange(e.target.value)}
                                                         placeholder="Search for a location..."
-                                                        className="w-full pl-10 pr-4 py-2 border border-white/[0.08] rounded-lg bg-[#010409] text-white/70 placeholder:text-white/20 focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500/40 text-sm"
+                                                        className="schema-input pl-10"
                                                     />
                                                     {isSearching && (
-                                                        <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-brand-400 animate-spin" />
+                                                        <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 ctool-accent animate-spin" />
                                                     )}
                                                 </div>
                                                 <button
                                                     onClick={getCurrentLocation}
-                                                    className="px-3 py-2 bg-teal-100 hover:bg-teal-200 text-brand-300 rounded-lg transition"
+                                                    className="ui-button ctool-tool-btn"
                                                     title="Use my current location"
                                                 >
                                                     <Crosshair className="w-4 h-4" />
@@ -943,20 +943,20 @@ const ImageGeoTagger = () => {
 
                                             {/* Search Results Dropdown */}
                                             {searchResults.length > 0 && (
-                                                <div className="absolute z-50 w-full mt-1 bg-[#0d1117] border border-white/[0.12] rounded-lg shadow-lg max-h-60 overflow-auto">
+                                                <div className="igt-suggest">
                                                     {searchResults.map((result, index) => (
                                                         <button
                                                             key={index}
                                                             onClick={() => selectLocation(result)}
-                                                            className="w-full px-4 py-3 text-left hover:bg-brand-500/10 border-b border-white/[0.06] last:border-0 transition"
+                                                            className="igt-suggest-item"
                                                         >
                                                             <div className="flex items-start gap-2">
-                                                                <MapPin className="w-4 h-4 text-brand-400 mt-0.5 flex-shrink-0" />
+                                                                <MapPin className="w-4 h-4 ctool-accent mt-0.5 flex-shrink-0" />
                                                                 <div>
-                                                                    <p className="text-sm font-medium text-white/90 line-clamp-1">
+                                                                    <p className="igt-suggest-name line-clamp-1">
                                                                         {result.display_name.split(',')[0]}
                                                                     </p>
-                                                                    <p className="text-xs text-white/40 line-clamp-1">
+                                                                    <p className="schema-hint line-clamp-1">
                                                                         {result.display_name.split(',').slice(1).join(',').trim()}
                                                                     </p>
                                                                 </div>
@@ -970,21 +970,21 @@ const ImageGeoTagger = () => {
                                         {/* Map Container */}
                                         <div
                                             ref={mapContainerRef}
-                                            className="h-72 rounded-lg border border-white/[0.08] overflow-hidden"
+                                            className="igt-map"
                                             style={{ zIndex: 1 }}
                                         />
 
                                         {/* Selected Address Display */}
                                         {selectedAddress && (
-                                            <div className="p-3 bg-brand-500/[0.06] border border-brand-500/20 rounded-lg">
+                                            <div className="ctool-note p-3">
                                                 <div className="flex items-start gap-2">
-                                                    <MapPin className="w-4 h-4 text-brand-400 mt-0.5 flex-shrink-0" />
-                                                    <p className="text-sm text-brand-200 line-clamp-2">{selectedAddress}</p>
+                                                    <MapPin className="w-4 h-4 ctool-accent mt-0.5 flex-shrink-0" />
+                                                    <p className="ctool-note-text line-clamp-2">{selectedAddress}</p>
                                                 </div>
                                             </div>
                                         )}
 
-                                        <p className="text-xs text-white/40 text-center">
+                                        <p className="schema-hint text-center">
                                             Click on the map or drag the marker to select a location
                                         </p>
                                     </div>
@@ -993,7 +993,7 @@ const ImageGeoTagger = () => {
                                 <button
                                     onClick={applyGPSToSelected}
                                     disabled={!latitude || !longitude || images.length === 0 || isProcessing}
-                                    className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-brand-500 to-amber-600 text-white rounded-lg font-medium hover:shadow-lg transition disabled:opacity-50"
+                                    className="ui-button ui-button-primary w-full"
                                 >
                                     {isProcessing ? (
                                         <Loader2 className="w-4 h-4 animate-spin" />
@@ -1006,26 +1006,26 @@ const ImageGeoTagger = () => {
                         </div>
 
                         {/* Quick Stats */}
-                        <div className="rounded-2xl border border-white/[0.08] bg-[#0d1117] p-6">
-                            <h3 className="text-lg font-semibold text-white/90 mb-4">Statistics</h3>
+                        <div className="ctool-card">
+                            <h3 className="schema-card-title mb-4">Statistics</h3>
                             <div className="grid grid-cols-2 gap-4">
-                                <div className="text-center p-4 bg-white/[0.03] rounded-xl">
-                                    <div className="text-2xl font-bold text-white/90">{images.length}</div>
-                                    <div className="text-sm text-white/40">Total Images</div>
+                                <div className="igt-stat">
+                                    <div className="schema-stat">{images.length}</div>
+                                    <div className="schema-hint">Total Images</div>
                                 </div>
-                                <div className="text-center p-4 bg-emerald-500/[0.06] rounded-xl">
+                                <div className="igt-stat igt-stat-ok">
                                     <div className="text-2xl font-bold text-emerald-400">{images.filter(i => i.processed).length}</div>
-                                    <div className="text-sm text-white/40">Geo-Tagged</div>
+                                    <div className="schema-hint">Geo-Tagged</div>
                                 </div>
                                 <div className="text-center p-4 bg-blue-500/[0.06] rounded-xl">
                                     <div className="text-2xl font-bold text-brand-400">{selectedImages.size}</div>
-                                    <div className="text-sm text-white/40">Selected</div>
+                                    <div className="schema-hint">Selected</div>
                                 </div>
                                 <div className="text-center p-4 bg-purple-500/[0.06] rounded-xl">
                                     <div className="text-2xl font-bold text-purple-400">
                                         {images.filter(i => i.processedDataUrl).length}
                                     </div>
-                                    <div className="text-sm text-white/40">Ready</div>
+                                    <div className="schema-hint">Ready</div>
                                 </div>
                             </div>
                         </div>
@@ -1033,7 +1033,7 @@ const ImageGeoTagger = () => {
                         {/* Info Box */}
                         <div className="bg-brand-500/[0.06] rounded-xl border border-brand-500/20 p-4">
                             <div className="flex items-start gap-3">
-                                <AlertCircle className="w-5 h-5 text-brand-400 flex-shrink-0 mt-0.5" />
+                                <AlertCircle className="w-5 h-5 ctool-accent flex-shrink-0 mt-0.5" />
                                 <div className="text-sm text-brand-200">
                                     <p className="font-medium mb-1">How it works:</p>
                                     <ol className="list-decimal list-inside space-y-1 text-brand-300">
@@ -1068,7 +1068,7 @@ const ImageGeoTagger = () => {
                             <p className="text-lg font-medium text-white/60 mb-1">
                                 Drop images here or click to upload
                             </p>
-                            <p className="text-sm text-white/40">
+                            <p className="schema-hint">
                                 Supports JPEG, PNG, WebP images. Bulk upload supported.
                             </p>
                         </div>
@@ -1079,13 +1079,13 @@ const ImageGeoTagger = () => {
                                 <div className="flex items-center gap-2">
                                     <button
                                         onClick={selectAll}
-                                        className="px-3 py-1.5 bg-white/[0.06] hover:bg-white/[0.10] rounded-lg text-sm font-medium text-white/60 transition"
+                                        className="ui-button ctool-tool-btn"
                                     >
                                         Select All
                                     </button>
                                     <button
                                         onClick={deselectAll}
-                                        className="px-3 py-1.5 bg-white/[0.06] hover:bg-white/[0.10] rounded-lg text-sm font-medium text-white/60 transition"
+                                        className="ui-button ctool-tool-btn"
                                     >
                                         Deselect All
                                     </button>
@@ -1093,7 +1093,7 @@ const ImageGeoTagger = () => {
                                 <button
                                     onClick={downloadAll}
                                     disabled={images.filter(i => i.processedDataUrl).length === 0}
-                                    className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-emerald-500 to-emerald-600 text-white rounded-lg font-medium hover:from-emerald-600 hover:to-emerald-700 transition disabled:opacity-50"
+                                    className="ui-button ui-button-primary"
                                 >
                                     <Download className="w-4 h-4" />
                                     Download All Geo-Tagged
@@ -1106,14 +1106,11 @@ const ImageGeoTagger = () => {
                             {images.map((image) => (
                                 <div
                                     key={image.id}
-                                    className={`relative bg-[#0d1117] rounded-xl border-2 overflow-hidden transition cursor-pointer ${selectedImages.has(image.id)
-                                        ? 'border-brand-500 ring-2 ring-brand-500/30'
-                                        : 'border-white/[0.08] hover:border-white/[0.15]'
-                                        }`}
+                                    className={`igt-tile ${selectedImages.has(image.id) ? 'selected' : ''}`}
                                     onClick={() => toggleSelection(image.id)}
                                 >
                                     {/* Image Preview */}
-                                    <div className="aspect-square bg-white/[0.03] relative">
+                                    <div className="aspect-square igt-thumb relative">
                                         <img
                                             src={image.preview}
                                             alt={image.name}

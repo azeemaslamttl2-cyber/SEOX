@@ -81,60 +81,52 @@ export default function AiChatConsole() {
     <div className="flex flex-col" style={{ height: "calc(100vh - 120px)" }}>
 
       {/* Header */}
-      <div className="relative overflow-hidden rounded-2xl border border-white/[0.06] bg-ink-800 mb-4 flex-shrink-0">
-        <div className="pointer-events-none absolute inset-0">
-          <div className="absolute -right-20 -top-20 h-60 w-60 rounded-full bg-emerald-500/[0.08] blur-[80px]" />
-          <div className="absolute -bottom-10 -left-10 h-40 w-40 rounded-full bg-blue-500/[0.05] blur-[60px]" />
-        </div>
-        <div className="relative z-10 flex items-center justify-between p-5">
+      <div className="ctool-hero mb-4 flex-shrink-0">
+        <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-500/20 ring-1 ring-emerald-500/30">
-              <MessageSquare className="h-5 w-5 text-emerald-400" />
+            <div className="ctool-hero-icon">
+              <MessageSquare className="h-5 w-5 ctool-accent" />
             </div>
             <div>
-              <h1 className="font-display text-xl font-black tracking-tight text-white">AI Chat Console</h1>
-              <p className="text-xs text-white/40">Discuss and analyze your Search Console data with AI</p>
+              <h1 className="ctool-title font-display">AI Chat Console</h1>
+              <p className="ctool-help-text">Discuss and analyze your Search Console data with AI</p>
             </div>
           </div>
-          <button onClick={handleReset} className="flex items-center gap-1.5 rounded-lg border border-white/10 bg-white/[0.04] px-3 py-1.5 text-[11px] font-bold text-white/50 transition hover:bg-white/[0.08]">
+          <button onClick={handleReset} className="ui-button ctool-tool-btn">
             <RotateCcw className="h-3 w-3" /> New Chat
           </button>
         </div>
       </div>
 
       {/* Chat Messages */}
-      <div className="flex-1 overflow-y-auto rounded-2xl border border-white/[0.06] bg-white/[0.01] p-4 space-y-4 mb-4">
+      <div className="chat-transcript mb-4">
         {messages.map((msg, i) => (
           <div key={i} className={`flex gap-3 ${msg.role === "user" ? "justify-end" : ""}`}>
             {msg.role === "assistant" && (
-              <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-500 to-cyan-500 shadow-lg">
-                <Sparkles className="h-4 w-4 text-white" />
+              <div className="ctool-empty-icon h-8 w-8">
+                <Sparkles className="h-4 w-4" />
               </div>
             )}
-            <div className={`relative max-w-[80%] rounded-2xl px-4 py-3 ${
-              msg.role === "user"
-                ? "bg-gradient-to-r from-blue-500/20 to-indigo-500/20 border border-blue-500/20"
-                : "bg-white/[0.03] border border-white/[0.06]"
-            }`}>
-              <div className="text-[13px] leading-relaxed text-white/75 whitespace-pre-wrap">
+            <div className={`chat-bubble ${msg.role === "user" ? "chat-bubble-user" : ""}`}>
+              <div className="chat-text whitespace-pre-wrap">
                 {msg.content.split(/(\*\*.*?\*\*)/).map((part, pi) =>
                   part.startsWith("**") && part.endsWith("**")
-                    ? <strong key={pi} className="text-white/90">{part.slice(2, -2)}</strong>
+                    ? <strong key={pi} className="chat-strong">{part.slice(2, -2)}</strong>
                     : part
                 )}
               </div>
               {msg.role === "assistant" && i > 0 && (
                 <button
                   onClick={() => handleCopy(msg.content, i)}
-                  className="absolute top-2 right-2 flex h-6 w-6 items-center justify-center rounded-md bg-white/[0.06] text-white/30 transition hover:bg-white/10 hover:text-white/60"
+                  className="chat-copy"
                 >
-                  {copiedIdx === i ? <Check className="h-3 w-3 text-emerald-400" /> : <Copy className="h-3 w-3" />}
+                  {copiedIdx === i ? <Check className="h-3 w-3 chat-copied" /> : <Copy className="h-3 w-3" />}
                 </button>
               )}
             </div>
             {msg.role === "user" && (
-              <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-blue-500 to-indigo-500 shadow-lg">
-                <span className="text-xs font-bold text-white">U</span>
+              <div className="chat-avatar">
+                <span className="chat-avatar-initial">U</span>
               </div>
             )}
           </div>
@@ -142,14 +134,14 @@ export default function AiChatConsole() {
 
         {isTyping && (
           <div className="flex gap-3">
-            <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-500 to-cyan-500 shadow-lg">
-              <Sparkles className="h-4 w-4 text-white" />
+            <div className="ctool-empty-icon h-8 w-8">
+              <Sparkles className="h-4 w-4" />
             </div>
-            <div className="rounded-2xl bg-white/[0.03] border border-white/[0.06] px-4 py-3">
+            <div className="chat-bubble">
               <div className="flex items-center gap-1.5">
-                <span className="h-2 w-2 animate-bounce rounded-full bg-emerald-400/60" style={{ animationDelay: "0ms" }} />
-                <span className="h-2 w-2 animate-bounce rounded-full bg-emerald-400/60" style={{ animationDelay: "150ms" }} />
-                <span className="h-2 w-2 animate-bounce rounded-full bg-emerald-400/60" style={{ animationDelay: "300ms" }} />
+                <span className="h-2 w-2 animate-bounce rounded-full bg-brand-500" style={{ animationDelay: "0ms" }} />
+                <span className="h-2 w-2 animate-bounce rounded-full bg-brand-500" style={{ animationDelay: "150ms" }} />
+                <span className="h-2 w-2 animate-bounce rounded-full bg-brand-500" style={{ animationDelay: "300ms" }} />
               </div>
             </div>
           </div>
@@ -168,10 +160,10 @@ export default function AiChatConsole() {
                 <button
                   key={i}
                   onClick={() => handleSend(sp.prompt)}
-                  className="flex items-start gap-2.5 rounded-xl border border-white/[0.06] bg-white/[0.02] p-3 text-left transition hover:bg-white/[0.04] hover:border-emerald-500/20"
+                  className="chat-suggestion"
                 >
-                  <Icon className="h-4 w-4 text-emerald-400 flex-shrink-0 mt-0.5" />
-                  <span className="text-[12px] text-white/60 leading-relaxed">{sp.label}</span>
+                  <Icon className="h-4 w-4 flex-shrink-0 mt-0.5" />
+                  <span className="chat-suggestion-text">{sp.label}</span>
                 </button>
               );
             })}
@@ -180,18 +172,18 @@ export default function AiChatConsole() {
       )}
 
       {/* Input Area */}
-      <div className="flex-shrink-0 flex items-center gap-2 rounded-2xl border border-white/[0.08] bg-ink-800 p-2">
+      <div className="chat-composer flex-shrink-0">
         <input
           value={input}
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && handleSend()}
-          className="flex-1 bg-transparent px-3 py-2 text-sm text-white placeholder:text-white/25 focus:outline-none"
+          className="stool-bare-input flex-1 px-3 py-2"
           placeholder="Ask about your Search Console data..."
         />
         <button
           onClick={() => handleSend()}
           disabled={!input.trim()}
-          className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-r from-emerald-500 to-cyan-500 text-white shadow-lg shadow-emerald-500/25 transition hover:shadow-emerald-500/40 disabled:opacity-40 disabled:cursor-not-allowed"
+          className="ui-button ui-button-primary chat-send"
         >
           <Send className="h-4 w-4" />
         </button>

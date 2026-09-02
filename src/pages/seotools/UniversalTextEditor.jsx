@@ -29,47 +29,47 @@ export default function UniversalTextEditor() {
     setText(out.join("\n"));
   }
 
-  const Step = ({ n, label, color }) => (
-    <div className="flex items-center gap-2 mb-2.5">
-      <span className={`flex h-5 w-5 items-center justify-center rounded-md bg-${color}-500/15 text-[10px] font-bold text-${color}-300`}>{n}</span>
-      <span className="text-xs font-bold text-white/70">{label}</span>
+  const Step = ({ n, label }) => (
+    <div className="stool-step">
+      <span className="stool-step-num">{n}</span>
+      <span className="stool-step-label">{label}</span>
     </div>
   );
 
   return (
-    <div className="space-y-4">
+    <div className="ctool-page space-y-4">
       <ToolHeader title="Universal Text Editor" Icon={Type} gradient="from-slate-800 via-violet-800 to-purple-700" subtitle="Powerful text transformations and cleanup" />
 
-      <div className="rounded-2xl border border-white/[0.08] bg-[#0d1117] p-5">
+      <div className="stool-card">
         <textarea
           value={text}
           onChange={(e) => setText(e.target.value)}
           rows={8}
-          className="w-full rounded-xl border border-white/[0.08] bg-[#010409] px-4 py-3 font-mono text-sm text-white/70 placeholder:text-white/15 focus:outline-none focus:border-violet-500/30 resize-none"
+          className="ctool-textarea"
           placeholder="Paste your text here..."
         />
 
         {/* Step 1: Cleanup */}
         <div className="mt-5">
-          <Step n="1" label="Cleanup Operations" color="violet" />
+          <Step n="1" label="Cleanup Operations" />
           <div className="flex flex-wrap gap-2">
             {[["dedupe", "Remove Duplicate Lines"], ["brackets", "Remove Brackets"], ["empty", "Remove Empty Lines"]].map(([k, l]) => (
-              <button key={k} onClick={() => run(k)} className="rounded-lg bg-gradient-to-r from-violet-600 to-purple-600 px-4 py-2 text-xs font-bold text-white shadow-md shadow-violet-600/20 transition hover:shadow-violet-600/30">{l}</button>
+              <button key={k} onClick={() => run(k)} className="ui-button stool-action">{l}</button>
             ))}
           </div>
         </div>
 
         {/* Step 2: Filter */}
         <div className="mt-5">
-          <Step n="2" label="Filter Lines" color="indigo" />
-          <div className="flex gap-2 rounded-xl bg-indigo-500/[0.04] border border-indigo-500/15 p-2">
+          <Step n="2" label="Filter Lines" />
+          <div className="stool-inline-panel">
             <input
               value={filter}
               onChange={(e) => setFilter(e.target.value)}
-              className="flex-1 rounded-lg bg-transparent px-3 py-2 text-sm text-white/60 placeholder:text-white/20 focus:outline-none"
+              className="stool-bare-input flex-1"
               placeholder="Enter keyword to filter..."
             />
-            <button onClick={() => run("keep")} className="rounded-lg bg-gradient-to-r from-indigo-600 to-blue-600 px-4 py-2 text-xs font-bold text-white hover:shadow-md hover:shadow-indigo-600/30 transition">
+            <button onClick={() => run("keep")} className="ui-button ui-button-primary stool-apply">
               Keep Lines Containing
             </button>
           </div>
@@ -77,37 +77,37 @@ export default function UniversalTextEditor() {
 
         {/* Step 3: Case */}
         <div className="mt-5">
-          <Step n="3" label="Case Transformation" color="teal" />
+          <Step n="3" label="Case Transformation" />
           <div className="flex flex-wrap gap-2">
             {[["upper", "UPPERCASE"], ["lower", "lowercase"], ["title", "Title Case"], ["single", "Single Line"]].map(([k, l]) => (
-              <button key={k} onClick={() => run(k)} className="rounded-lg bg-gradient-to-r from-teal-600 to-cyan-600 px-4 py-2 text-xs font-bold text-white shadow-md shadow-teal-600/20 transition hover:shadow-teal-600/30">{l}</button>
+              <button key={k} onClick={() => run(k)} className="ui-button stool-action">{l}</button>
             ))}
           </div>
         </div>
 
         {/* Step 4: Add & Replace */}
         <div className="mt-5">
-          <Step n="4" label="Add & Replace" color="sky" />
+          <Step n="4" label="Add & Replace" />
           <div className="grid gap-3 md:grid-cols-3">
-            <div className="rounded-xl border border-sky-500/15 bg-sky-500/[0.04] p-3">
-              <label className="text-[10px] font-bold uppercase tracking-wider text-sky-300/80">Replace Newlines With</label>
+            <div className="stool-well">
+              <label className="stool-label">Replace Newlines With</label>
               <div className="mt-1.5 flex gap-2">
-                <input value={replaceWith} onChange={(e) => setReplaceWith(e.target.value)} className="flex-1 rounded-md bg-[#010409] border border-white/[0.06] px-2 py-1.5 text-xs text-white/60 focus:outline-none" />
-                <button onClick={() => run("replace")} className="rounded-md bg-gradient-to-r from-sky-600 to-blue-600 px-3 py-1.5 text-xs font-bold text-white">Apply</button>
+                <input value={replaceWith} onChange={(e) => setReplaceWith(e.target.value)} className="schema-input flex-1" />
+                <button onClick={() => run("replace")} className="ui-button ui-button-primary stool-apply">Apply</button>
               </div>
             </div>
-            <div className="rounded-xl border border-emerald-500/15 bg-emerald-500/[0.04] p-3">
-              <label className="text-[10px] font-bold uppercase tracking-wider text-emerald-300/80">Add to Start of Lines</label>
+            <div className="stool-well">
+              <label className="stool-label">Add to Start of Lines</label>
               <div className="mt-1.5 flex gap-2">
-                <input value={prefix} onChange={(e) => setPrefix(e.target.value)} placeholder="Prefix..." className="flex-1 rounded-md bg-[#010409] border border-white/[0.06] px-2 py-1.5 text-xs text-white/60 placeholder:text-white/20 focus:outline-none" />
-                <button onClick={() => run("prefix")} className="rounded-md bg-gradient-to-r from-emerald-600 to-teal-600 px-3 py-1.5 text-xs font-bold text-white">Add</button>
+                <input value={prefix} onChange={(e) => setPrefix(e.target.value)} placeholder="Prefix..." className="schema-input flex-1" />
+                <button onClick={() => run("prefix")} className="ui-button ui-button-primary stool-apply">Add</button>
               </div>
             </div>
-            <div className="rounded-xl border border-violet-500/15 bg-violet-500/[0.04] p-3">
-              <label className="text-[10px] font-bold uppercase tracking-wider text-violet-300/80">Add to End of Lines</label>
+            <div className="stool-well">
+              <label className="stool-label">Add to End of Lines</label>
               <div className="mt-1.5 flex gap-2">
-                <input value={suffix} onChange={(e) => setSuffix(e.target.value)} placeholder="Suffix..." className="flex-1 rounded-md bg-[#010409] border border-white/[0.06] px-2 py-1.5 text-xs text-white/60 placeholder:text-white/20 focus:outline-none" />
-                <button onClick={() => run("suffix")} className="rounded-md bg-gradient-to-r from-violet-600 to-purple-600 px-3 py-1.5 text-xs font-bold text-white">Add</button>
+                <input value={suffix} onChange={(e) => setSuffix(e.target.value)} placeholder="Suffix..." className="schema-input flex-1" />
+                <button onClick={() => run("suffix")} className="ui-button ui-button-primary stool-apply">Add</button>
               </div>
             </div>
           </div>
@@ -115,10 +115,10 @@ export default function UniversalTextEditor() {
 
         {/* Footer */}
         <div className="mt-5 grid grid-cols-2 gap-2">
-          <button onClick={() => navigator.clipboard.writeText(text)} className="flex items-center justify-center gap-1.5 rounded-xl border border-white/[0.08] bg-white/[0.03] px-4 py-3 text-sm font-semibold text-white/60 hover:text-white/80 transition">
+          <button onClick={() => navigator.clipboard.writeText(text)} className="ui-button ctool-tool-btn stool-footer-btn">
             <Copy className="h-4 w-4" /> Copy Text
           </button>
-          <button onClick={() => setText("")} className="flex items-center justify-center gap-1.5 rounded-xl bg-gradient-to-r from-rose-700 to-rose-600 px-4 py-3 text-sm font-bold text-white shadow-md shadow-rose-700/20 transition hover:shadow-rose-700/30">
+          <button onClick={() => setText("")} className="ui-button stool-danger">
             <Trash2 className="h-4 w-4" /> Clear All
           </button>
         </div>

@@ -9,11 +9,13 @@ import {
 } from "lucide-react";
 
 const platformColors = {
-  OpenAI: { bg: "bg-emerald-500/10", border: "border-emerald-500/20", text: "text-emerald-300", header: "bg-gradient-to-r from-emerald-500/20 to-emerald-500/5" },
-  Gemini: { bg: "bg-blue-500/10", border: "border-blue-500/20", text: "text-blue-300", header: "bg-gradient-to-r from-blue-500/20 to-blue-500/5" },
-  Claude: { bg: "bg-amber-500/10", border: "border-amber-500/20", text: "text-amber-300", header: "bg-gradient-to-r from-amber-500/20 to-amber-500/5" },
-  Perplexity: { bg: "bg-violet-500/10", border: "border-violet-500/20", text: "text-violet-300", header: "bg-gradient-to-r from-violet-500/20 to-violet-500/5" },
-  Grok: { bg: "bg-rose-500/10", border: "border-rose-500/20", text: "text-rose-300", header: "bg-gradient-to-r from-rose-500/20 to-rose-500/5" },
+  /* One column per model, so the hue is data — but these were dark-theme
+     values (text-*-300 on a 10% tint), unreadable on a light card. */
+  OpenAI: { bg: "bg-emerald-50", border: "border-emerald-200", text: "text-emerald-700", dot: "bg-emerald-500" },
+  Gemini: { bg: "bg-blue-50", border: "border-blue-200", text: "text-blue-700", dot: "bg-blue-500" },
+  Claude: { bg: "bg-amber-50", border: "border-amber-200", text: "text-amber-700", dot: "bg-amber-500" },
+  Perplexity: { bg: "bg-violet-50", border: "border-violet-200", text: "text-violet-700", dot: "bg-violet-500" },
+  Grok: { bg: "bg-rose-50", border: "border-rose-200", text: "text-rose-700", dot: "bg-rose-500" },
 };
 
 const mockCompetitors = {
@@ -74,62 +76,57 @@ export default function CompetitorResearch() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="ctool-page space-y-5">
 
       {/* Hero */}
-      <div className="relative overflow-hidden rounded-3xl border border-white/[0.06] bg-ink-800">
-        <div className="pointer-events-none absolute inset-0">
-          <div className="absolute -right-20 -top-20 h-80 w-80 rounded-full bg-orange-500/[0.08] blur-[100px]" />
-          <div className="absolute -bottom-10 -left-10 h-60 w-60 rounded-full bg-amber-500/[0.05] blur-[80px]" />
-          <div className="absolute inset-0 opacity-[0.03]" style={{ backgroundImage: "radial-gradient(circle at 1px 1px, white 1px, transparent 0)", backgroundSize: "24px 24px" }} />
-        </div>
-        <div className="relative z-10 p-6 lg:p-8">
+      <div className="ctool-hero geo-hero">
+        <div className="geo-hero-body">
           <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-orange-500/20 ring-1 ring-orange-500/30">
-              <Swords className="h-5 w-5 text-orange-400" />
+            <div className="ctool-hero-icon">
+              <Swords className="h-5 w-5" />
             </div>
             <div>
-              <h1 className="font-display text-2xl font-black tracking-tight text-white">Competitor Research</h1>
-              <p className="text-xs text-white/40">Compare your project against competitors across AI platforms</p>
+              <h1 className="ctool-title font-display">Competitor Research</h1>
+              <p className="ctool-help-text">Compare your project against competitors across AI platforms</p>
             </div>
           </div>
         </div>
       </div>
 
       {/* Project & Competitors Form */}
-      <div className="rounded-2xl border border-white/[0.06] bg-white/[0.015] p-5">
+      <div className="ctool-card">
         <div className="flex items-center gap-2 mb-4">
-          <Sparkles className="h-4 w-4 text-orange-400" />
-          <h2 className="text-sm font-bold text-white/90">Project & Competitors</h2>
+          <Sparkles className="h-4 w-4 ctool-accent" />
+          <h2 className="stool-title">Project & Competitors</h2>
         </div>
 
-        <div className="flex items-center gap-2 rounded-xl border border-white/[0.08] bg-ink-900/80 px-4 py-2.5 mb-4">
-          <Globe className="h-4 w-4 text-orange-400/60" />
+        <div className="ctool-field mb-4">
+          <Globe className="h-4 w-4" />
           <input
             value={projectUrl} onChange={(e) => setProjectUrl(e.target.value)}
-            className="flex-1 bg-transparent text-sm text-white placeholder:text-white/25 focus:outline-none"
+            className="stool-bare-input flex-1"
             placeholder="https://your-website.com"
           />
         </div>
-        <p className="text-[11px] text-white/25 mb-4">No saved projects found. Enter your website URL manually to compare it against competitors.</p>
+        <p className="ctool-help-text mb-4">No saved projects found. Enter your website URL manually to compare it against competitors.</p>
 
         <div className="mb-4">
-          <h3 className="text-[12px] font-semibold text-white/60">Competitor URLs</h3>
-          <p className="text-[11px] text-white/25">Add up to 5 competitor websites to compare against your project.</p>
+          <h3 className="stool-title">Competitor URLs</h3>
+          <p className="ctool-help-text">Add up to 5 competitor websites to compare against your project.</p>
         </div>
 
         <div className="space-y-2 mb-4">
           {competitors.map((comp, i) => (
             <div key={i} className="flex items-center gap-2">
-              <div className="flex flex-1 items-center gap-2 rounded-xl border border-white/[0.08] bg-ink-900/80 px-4 py-2.5">
-                <Globe className="h-4 w-4 text-white/20" />
+              <div className="ctool-field flex-1">
+                <Globe className="h-4 w-4" />
                 <input
                   value={comp} onChange={(e) => updateCompetitor(i, e.target.value)}
-                  className="flex-1 bg-transparent text-sm text-white placeholder:text-white/25 focus:outline-none"
+                  className="stool-bare-input flex-1"
                   placeholder="https://competitor.com"
                 />
               </div>
-              <button onClick={() => removeCompetitor(i)} className="flex h-9 w-9 items-center justify-center rounded-lg border border-rose-500/20 bg-rose-500/10 text-rose-400 transition hover:bg-rose-500/20">
+              <button onClick={() => removeCompetitor(i)} className="ui-button schema-remove">
                 <Trash2 className="h-4 w-4" />
               </button>
             </div>
@@ -137,42 +134,42 @@ export default function CompetitorResearch() {
         </div>
 
         <div className="flex items-center justify-between">
-          <button onClick={addCompetitor} className="flex items-center gap-1.5 text-[12px] font-semibold text-emerald-400 hover:text-emerald-300">
+          <button onClick={addCompetitor} className="schema-addlink">
             <Plus className="h-3.5 w-3.5" /> Add another competitor
           </button>
-          <button className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-orange-500 to-amber-500 px-5 py-2.5 text-sm font-bold text-white shadow-lg shadow-orange-500/25 transition hover:shadow-orange-500/40">
+          <button className="ui-button ui-button-primary">
             <Sparkles className="h-4 w-4" /> Analyze Competitors
           </button>
         </div>
       </div>
 
       {hasResult && (
-        <div className="rounded-2xl border border-white/[0.06] bg-white/[0.015] p-5">
-          <h2 className="font-display text-lg font-bold text-white/90 mb-1">OpenAI vs Gemini vs Claude vs Perplexity vs Grok</h2>
-          <p className="text-[12px] text-white/30 mb-5">Comparison of AI platform visibility for each domain</p>
+        <div className="ctool-card">
+          <h2 className="geo-section-title font-display mb-1">OpenAI vs Gemini vs Claude vs Perplexity vs Grok</h2>
+          <p className="ctool-help-text mb-5">Comparison of AI platform visibility for each domain</p>
 
           <div className="space-y-6">
             {mockCompetitors.results.map((result, ri) => (
               <div key={ri}>
-                <h3 className="text-sm font-bold text-white/70 mb-3">{result.domain}</h3>
-                <div className="grid grid-cols-5 gap-2">
+                <h3 className="geo-domain">{result.domain}</h3>
+                <div className="geo-plat-grid">
                   {result.platforms.map((plat, pi) => {
                     const c = platformColors[plat.name];
                     return (
-                      <div key={pi} className={`rounded-xl border ${c.border} ${c.bg} p-3`}>
-                        <div className={`text-[11px] font-bold ${c.text} mb-2`}>{plat.name}</div>
+                      <div key={pi} className={`geo-plat-card ${c.border} ${c.bg}`}>
+                        <div className={`geo-plat-title ${c.text}`}>{plat.name}</div>
                         <div className="space-y-1 text-[11px]">
-                          <div className="flex justify-between text-white/50">
-                            <span>Keywords:</span><span className="font-semibold text-white/70">{plat.keywords}</span>
+                          <div className="flex justify-between ctool-help-text">
+                            <span>Keywords:</span><span className="stool-strong">{plat.keywords}</span>
                           </div>
-                          <div className="flex justify-between text-white/50">
-                            <span>Top 10:</span><span className="font-semibold text-white/70">{plat.top10}</span>
+                          <div className="flex justify-between ctool-help-text">
+                            <span>Top 10:</span><span className="stool-strong">{plat.top10}</span>
                           </div>
-                          <div className="flex justify-between text-white/50">
-                            <span>Visibility:</span><span className="font-semibold text-white/70">{plat.visibility}</span>
+                          <div className="flex justify-between ctool-help-text">
+                            <span>Visibility:</span><span className="stool-strong">{plat.visibility}</span>
                           </div>
-                          <div className="flex justify-between text-white/50">
-                            <span>Avg Pos:</span><span className="font-semibold text-white/70">{plat.avgPos}</span>
+                          <div className="flex justify-between ctool-help-text">
+                            <span>Avg Pos:</span><span className="stool-strong">{plat.avgPos}</span>
                           </div>
                         </div>
                       </div>

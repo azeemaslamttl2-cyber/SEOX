@@ -35,12 +35,12 @@ export default function UltimateUrlEditor() {
     <div className="space-y-4">
       <ToolHeader title="Ultimate URL Editor" Icon={Link2} gradient="from-slate-800 via-cyan-800 to-cyan-700" subtitle="Clean, trim, and manipulate URLs in bulk" />
 
-      <div className="rounded-2xl border border-white/[0.08] bg-[#0d1117] p-5">
+      <div className="stool-card">
         <textarea
           value={text}
           onChange={(e) => setText(e.target.value)}
           rows={10}
-          className="w-full rounded-xl border border-white/[0.08] bg-[#010409] px-4 py-3 font-mono text-sm text-white/70 placeholder:text-white/15 focus:outline-none focus:border-cyan-500/30 resize-none"
+          className="ctool-textarea"
           placeholder="Enter URLs (one per line)..."
         />
 
@@ -49,7 +49,7 @@ export default function UltimateUrlEditor() {
             <button
               key={op.key}
               onClick={() => apply(op.key)}
-              className="rounded-lg bg-gradient-to-r from-cyan-600 to-sky-600 px-4 py-2 text-xs font-bold text-white shadow-md shadow-cyan-600/20 transition hover:shadow-cyan-600/30"
+              className="ui-button stool-action"
             >
               {op.label}
             </button>
@@ -59,13 +59,13 @@ export default function UltimateUrlEditor() {
         <div className="mt-3 flex gap-2">
           <button
             onClick={() => navigator.clipboard.writeText(text)}
-            className="flex items-center gap-1.5 rounded-lg border border-white/[0.08] bg-white/[0.03] px-4 py-2 text-xs font-semibold text-white/55 hover:text-white/80 transition"
+            className="ui-button ctool-tool-btn"
           >
             <Copy className="h-3.5 w-3.5" /> Copy
           </button>
           <button
             onClick={() => setText("")}
-            className="flex items-center gap-1.5 rounded-lg border border-rose-500/20 bg-rose-500/[0.04] px-4 py-2 text-xs font-semibold text-rose-300 hover:bg-rose-500/[0.08] transition"
+            className="ui-button stool-danger stool-danger-sm text-rose-300 hover:bg-rose-500/[0.08] transition"
           >
             <Trash2 className="h-3.5 w-3.5" /> Clear
           </button>

@@ -91,7 +91,7 @@ const ZoomControls = ({ isDarkMode }) => {
                 onClick={() => map.zoomIn()}
                 className={`w-9 h-9 backdrop-blur-sm border rounded-md flex items-center justify-center transition-colors ${isDarkMode
                     ? 'bg-[#0f0f0f]/90 border-[#1f1f1f] hover:bg-[#1a1a1a]'
-                    : 'bg-white/90 border-gray-200 hover:bg-gray-100'
+                    : 'bg-white/90 border-gray-200 hover:bg-surface-sunken'
                     }`}
             >
                 <Plus className={`w-4 h-4 ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`} />
@@ -100,7 +100,7 @@ const ZoomControls = ({ isDarkMode }) => {
                 onClick={() => map.zoomOut()}
                 className={`w-9 h-9 backdrop-blur-sm border rounded-md flex items-center justify-center transition-colors ${isDarkMode
                     ? 'bg-[#0f0f0f]/90 border-[#1f1f1f] hover:bg-[#1a1a1a]'
-                    : 'bg-white/90 border-gray-200 hover:bg-gray-100'
+                    : 'bg-white/90 border-gray-200 hover:bg-surface-sunken'
                     }`}
             >
                 <Minus className={`w-4 h-4 ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`} />
@@ -108,7 +108,7 @@ const ZoomControls = ({ isDarkMode }) => {
             <div className="mt-2">
                 <button className={`w-9 h-9 backdrop-blur-sm border rounded-md flex items-center justify-center transition-colors ${isDarkMode
                     ? 'bg-[#0f0f0f]/90 border-[#1f1f1f] hover:bg-[#1a1a1a]'
-                    : 'bg-white/90 border-gray-200 hover:bg-gray-100'
+                    : 'bg-white/90 border-gray-200 hover:bg-surface-sunken'
                     }`}>
                     <Layers className={`w-4 h-4 ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`} />
                 </button>
@@ -161,7 +161,7 @@ const InsightRenderer = ({ text }) => {
     const lines = text.split('\n').filter(line => line.trim() !== '');
 
     return (
-        <div className="w-full text-left text-sm text-gray-700 leading-relaxed max-h-[280px] overflow-y-auto space-y-3 pr-2">
+        <div className="w-full text-left text-sm text-content-secondary leading-relaxed max-h-[280px] overflow-y-auto space-y-3 pr-2">
             {lines.map((line, i) => {
                 const trimmed = line.trim();
 
@@ -174,7 +174,7 @@ const InsightRenderer = ({ text }) => {
 
                 const renderedContent = parts.map((part, j) => {
                     if (part.startsWith('**') && part.endsWith('**')) {
-                        return <strong key={j} className="font-semibold text-gray-900">{part.slice(2, -2)}</strong>;
+                        return <strong key={j} className="schema-card-title">{part.slice(2, -2)}</strong>;
                     }
                     return part;
                 });
@@ -182,7 +182,7 @@ const InsightRenderer = ({ text }) => {
                 if (isBullet) {
                     return (
                         <div key={i} className="flex gap-2 items-start">
-                            <span className="text-gray-400 mt-1.5 w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0" />
+                            <span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-brand-500 shrink-0" />
                             <span>{renderedContent}</span>
                         </div>
                     );
@@ -996,7 +996,7 @@ const RankGridPro = () => {
 
 
     // Theme-aware accent color (#312e81 indigo scheme)
-    const accentColor = isDarkMode ? '#818cf8' : '#312e81';
+    const accentColor = isDarkMode ? '#818cf8' : '#df3c27';
     const accentColorHover = isDarkMode ? '#a5b4fc' : '#3730a3';
     const markerAccentColor = (isLoading || showResultsView) ? '#8b5cf6' : accentColor;
     const boundaryColor = (isLoading || showResultsView) ? '#8b5cf6' : accentColor;
@@ -1114,7 +1114,7 @@ const RankGridPro = () => {
     };
 
     return (
-        <div className={`h-[calc(100vh-4rem)] flex relative overflow-hidden ${isDarkMode ? 'bg-[#0a0a0a]' : 'bg-gray-100'}`}>
+        <div className={`h-[calc(100vh-4rem)] flex relative overflow-hidden ${isDarkMode ? 'bg-[#0a0a0a]' : 'bg-surface-sunken'}`}>
             {/* Pulse animation keyframes for center marker */}
             <style>{`
                 @keyframes pulse-expand {
@@ -1300,14 +1300,14 @@ const RankGridPro = () => {
 
                 {showResultsView && (
                     <>
-                        <div data-rankgrid-print="true" className="absolute inset-y-0 left-0 z-[1002] w-[min(58vw,980px)] bg-white/95 border-r border-gray-200 backdrop-blur-sm overflow-y-auto shadow-xl">
-                            <div className="p-4 border-b border-gray-200">
+                        <div data-rankgrid-print="true" className="absolute inset-y-0 left-0 z-[1002] w-[min(58vw,980px)] rgp-drawer overflow-y-auto">
+                            <div className="p-4 border-b border-line">
                                 <div className="flex items-start justify-between gap-4">
                                     <div className="min-w-0">
-                                        <p className="text-xl font-bold text-gray-900 truncate">
+                                        <p className="ctool-title truncate">
                                             {selectedBusiness?.name || 'RankGrid Results'}
                                         </p>
-                                        <p className="text-xs text-gray-500 mt-1">
+                                        <p className="schema-hint mt-1">
                                             "{keyword || 'N/A'}" · {totalPoints}x19 · {radius}mi
                                         </p>
                                     </div>
@@ -1321,7 +1321,7 @@ const RankGridPro = () => {
                                                     document.body.classList.remove('rankgrid-printing');
                                                 }, 100);
                                             }}
-                                            className="h-10 px-3 rounded border border-gray-200 bg-white text-sm text-gray-700 inline-flex items-center gap-2 hover:bg-gray-50 shadow-sm"
+                                            className="ui-button ctool-tool-btn h-10"
                                         >
                                             <FileDown className="w-4 h-4" />
                                             Export PDF
@@ -1329,7 +1329,7 @@ const RankGridPro = () => {
                                         <button
                                             type="button"
                                             onClick={() => { setShowHistory(true); setShowResultsView(false); }}
-                                            className="h-10 px-3 rounded border border-gray-200 bg-white text-sm text-gray-700 inline-flex items-center gap-2 hover:bg-gray-50 shadow-sm"
+                                            className="ui-button ctool-tool-btn h-10"
                                         >
                                             <History className="w-4 h-4" />
                                             History
@@ -1337,7 +1337,7 @@ const RankGridPro = () => {
                                         <button
                                             type="button"
                                             onClick={resetToSetupMode}
-                                            className="h-10 px-4 rounded bg-[#312e81] text-white text-sm font-bold uppercase tracking-wider inline-flex items-center gap-2 hover:bg-[#3730a3] shadow-sm"
+                                            className="ui-button ui-button-primary h-10"
                                         >
                                             <RefreshCcw className="w-4 h-4" />
                                             New Analysis
@@ -1348,41 +1348,41 @@ const RankGridPro = () => {
 
                             <div className="p-3 space-y-3">
                                 <div className="grid grid-cols-4 gap-2">
-                                    <div className="rounded-lg border border-gray-200 bg-gray-50 p-3">
-                                        <p className="text-[10px] uppercase tracking-wide text-gray-400 flex items-center gap-1">
+                                    <div className="rgp-stat">
+                                        <p className="rgp-stat-label flex items-center gap-1">
                                             <BarChart3 className="w-3 h-3" />
                                             Average Rank
                                         </p>
                                         <p className="text-3xl font-bold text-indigo-500 mt-1">
                                             {averageRank ? averageRank.toFixed(1) : '0.0'}
                                         </p>
-                                        <p className="text-xs text-gray-400 mt-1">
+                                        <p className="schema-hint">
                                             {averageRank && averageRank <= 3 ? 'Excellent' : averageRank && averageRank <= 10 ? 'Competitive' : 'Needs work'}
                                         </p>
                                     </div>
-                                    <div className="rounded-lg border border-gray-200 bg-gray-50 p-3">
-                                        <p className="text-[10px] uppercase tracking-wide text-gray-400 flex items-center gap-1">
+                                    <div className="rgp-stat">
+                                        <p className="rgp-stat-label flex items-center gap-1">
                                             <Target className="w-3 h-3" />
                                             Proximity Score
                                         </p>
                                         <p className="text-3xl font-bold text-pink-500 mt-1">{proximityScore}</p>
-                                        <p className="text-xs text-gray-400 mt-1">Local only</p>
+                                        <p className="schema-hint">Local only</p>
                                     </div>
-                                    <div className="rounded-lg border border-gray-200 bg-gray-50 p-3">
-                                        <p className="text-[10px] uppercase tracking-wide text-gray-400 flex items-center gap-1">
+                                    <div className="rgp-stat">
+                                        <p className="rgp-stat-label flex items-center gap-1">
                                             <MapPinned className="w-3 h-3" />
                                             Coverage
                                         </p>
                                         <p className="text-3xl font-bold text-rose-500 mt-1">{coveragePercent}%</p>
-                                        <p className="text-xs text-gray-400 mt-1">{rankedResults.length}/{results?.length || 0} points</p>
+                                        <p className="schema-hint">{rankedResults.length}/{results?.length || 0} points</p>
                                     </div>
-                                    <div className="rounded-lg border border-gray-200 bg-gray-50 p-3">
-                                        <p className="text-[10px] uppercase tracking-wide text-gray-400 flex items-center gap-1">
+                                    <div className="rgp-stat">
+                                        <p className="rgp-stat-label flex items-center gap-1">
                                             <Clock3 className="w-3 h-3" />
                                             Report Time
                                         </p>
                                         <p className="text-2xl font-bold text-gray-700 mt-1">{reportTimeText}</p>
-                                        <p className="text-xs text-gray-400 mt-1">in less than a minute</p>
+                                        <p className="schema-hint">in less than a minute</p>
                                     </div>
                                 </div>
 
@@ -1392,7 +1392,7 @@ const RankGridPro = () => {
                                             type="button"
                                             onClick={() => setSelectedResultPointIndex((prev) => Math.max(0, prev - 1))}
                                             disabled={selectedResultPointIndex <= 0}
-                                            className="w-8 h-8 rounded border border-gray-200 text-gray-600 disabled:opacity-40 disabled:cursor-not-allowed inline-flex items-center justify-center hover:bg-gray-100"
+                                            className="w-8 h-8 rounded border border-gray-200 text-gray-600 disabled:opacity-40 disabled:cursor-not-allowed inline-flex items-center justify-center hover:bg-surface-sunken"
                                         >
                                             <ChevronLeft className="w-4 h-4" />
                                         </button>
@@ -1403,7 +1403,7 @@ const RankGridPro = () => {
                                             type="button"
                                             onClick={() => setSelectedResultPointIndex((prev) => Math.min((results?.length || 1) - 1, prev + 1))}
                                             disabled={selectedResultPointIndex >= (results?.length || 1) - 1}
-                                            className="w-8 h-8 rounded border border-gray-200 text-gray-600 disabled:opacity-40 disabled:cursor-not-allowed inline-flex items-center justify-center hover:bg-gray-100"
+                                            className="w-8 h-8 rounded border border-gray-200 text-gray-600 disabled:opacity-40 disabled:cursor-not-allowed inline-flex items-center justify-center hover:bg-surface-sunken"
                                         >
                                             <ChevronRight className="w-4 h-4" />
                                         </button>
@@ -1426,7 +1426,7 @@ const RankGridPro = () => {
                                     <div className="rounded-lg border border-gray-200 bg-white overflow-hidden shadow-sm">
                                         <div className="px-3 py-2 border-b border-gray-200 flex items-center justify-between">
                                             <span className="text-gray-800 font-semibold text-sm">Leaderboard</span>
-                                            <div className="flex items-center gap-1 bg-gray-100 rounded p-0.5">
+                                            <div className="flex items-center gap-1 bg-surface-sunken rounded p-0.5">
                                                 <button
                                                     type="button"
                                                     onClick={() => setLeaderboardTab('global')}
@@ -1453,7 +1453,7 @@ const RankGridPro = () => {
                                             <table className="w-full text-xs">
                                                 <thead className="text-gray-400 uppercase text-[10px] sticky top-0 bg-white z-10">
                                                     {leaderboardTab === 'global' ? (
-                                                        <tr className="border-b border-gray-100">
+                                                        <tr className="border-b border-line-subtle">
                                                             <th className="px-2 py-2 text-left w-10">#</th>
                                                             <th className="px-2 py-2 text-left">Business</th>
                                                             <th className="px-2 py-2 text-right w-16">Avg Rank</th>
@@ -1461,7 +1461,7 @@ const RankGridPro = () => {
                                                             <th className="px-2 py-2 text-right w-12">Pts</th>
                                                         </tr>
                                                     ) : (
-                                                        <tr className="border-b border-gray-100">
+                                                        <tr className="border-b border-line-subtle">
                                                             <th className="px-2 py-2 text-left w-10">#</th>
                                                             <th className="px-2 py-2 text-left">Business</th>
                                                             <th className="px-2 py-2 text-right w-16">Rating</th>
@@ -1475,7 +1475,7 @@ const RankGridPro = () => {
                                                         globalLeaderboard.length > 0 ? globalLeaderboard.map((item, index) => {
                                                             const medal = index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : (index + 1);
                                                             return (
-                                                                <tr key={`global-${item.title}-${index}`} className="border-b border-gray-100 text-gray-700 hover:bg-gray-50">
+                                                                <tr key={`global-${item.title}-${index}`} className="border-b border-line-subtle text-gray-700 hover:bg-gray-50">
                                                                     <td className="px-2 py-1.5 font-medium">{medal}</td>
                                                                     <td className="px-2 py-1.5 truncate max-w-[200px]">{item.title}</td>
                                                                     <td className="px-2 py-1.5 text-right">{item.avgRank.toFixed(1)}</td>
@@ -1485,7 +1485,7 @@ const RankGridPro = () => {
                                                             );
                                                         }) : (
                                                             <tr>
-                                                                <td className="px-2 py-4 text-gray-400" colSpan={5}>No data available.</td>
+                                                                <td className="px-2 py-4 schema-hint" colSpan={5}>No data available.</td>
                                                             </tr>
                                                         )
                                                     ) : (
@@ -1498,7 +1498,7 @@ const RankGridPro = () => {
                                                             const pointLng = currentPointResult?.lng;
                                                             const dist = haversineDistanceMiles(pointLat, pointLng, item.latitude, item.longitude);
                                                             return (
-                                                                <tr key={`point-${rowTitle}-${index}`} className="border-b border-gray-100 text-gray-700 hover:bg-gray-50">
+                                                                <tr key={`point-${rowTitle}-${index}`} className="border-b border-line-subtle text-gray-700 hover:bg-gray-50">
                                                                     <td className="px-2 py-1.5 font-medium">{medal}</td>
                                                                     <td className="px-2 py-1.5"><span className="truncate block max-w-[200px]">{rowTitle}</span></td>
                                                                     <td className="px-2 py-1.5 text-right">
@@ -1509,13 +1509,13 @@ const RankGridPro = () => {
                                                                             </span>
                                                                         ) : '—'}
                                                                     </td>
-                                                                    <td className="px-2 py-1.5 text-right text-gray-500">{reviews}</td>
-                                                                    <td className="px-2 py-1.5 text-right text-gray-500">{dist != null ? `${dist.toFixed(1)}mi` : '—'}</td>
+                                                                    <td className="px-2 py-1.5 text-right schema-hint">{reviews}</td>
+                                                                    <td className="px-2 py-1.5 text-right schema-hint">{dist != null ? `${dist.toFixed(1)}mi` : '—'}</td>
                                                                 </tr>
                                                             );
                                                         }) : (
                                                             <tr>
-                                                                <td className="px-2 py-4 text-gray-400" colSpan={5}>No SERP rows found for this point.</td>
+                                                                <td className="px-2 py-4 schema-hint" colSpan={5}>No SERP rows found for this point.</td>
                                                             </tr>
                                                         )
                                                     )}
@@ -1532,7 +1532,7 @@ const RankGridPro = () => {
                                                     type="button"
                                                     onClick={generateInsights}
                                                     disabled={isGeneratingInsights}
-                                                    className="mt-4 h-9 px-4 rounded bg-gray-100 text-gray-600 font-semibold text-xs uppercase tracking-wider hover:bg-gray-200 inline-flex items-center gap-2 disabled:opacity-50"
+                                                    className="mt-4 h-9 px-4 rounded bg-surface-sunken text-gray-600 font-semibold text-xs uppercase tracking-wider hover:bg-gray-200 inline-flex items-center gap-2 disabled:opacity-50"
                                                 >
                                                     <RefreshCcw className="w-3 h-3" />
                                                     Regenerate
@@ -1546,7 +1546,7 @@ const RankGridPro = () => {
                                                     type="button"
                                                     onClick={generateInsights}
                                                     disabled={isGeneratingInsights}
-                                                    className="mt-4 h-10 px-5 rounded bg-[#312e81] text-white font-bold uppercase tracking-wider hover:bg-[#3730a3] disabled:opacity-50 inline-flex items-center gap-2"
+                                                    className="ui-button ui-button-primary mt-4 h-10"
                                                 >
                                                     {isGeneratingInsights ? (
                                                         <>
@@ -1572,7 +1572,7 @@ const RankGridPro = () => {
                                         <button
                                             type="button"
                                             onClick={() => setShowTrafficHeatmap((prev) => !prev)}
-                                            className={`w-14 h-7 rounded-full relative transition-colors ${showTrafficHeatmap ? 'bg-[#312e81]' : 'bg-gray-200'}`}
+                                            className={`w-14 h-7 rounded-full relative transition-colors ${showTrafficHeatmap ? 'bg-brand-500' : 'bg-line-strong'}`}
                                         >
                                             <span className={`absolute top-1 w-5 h-5 bg-white rounded-full shadow transition-all ${showTrafficHeatmap ? 'left-8' : 'left-1'}`} />
                                         </button>
@@ -1588,25 +1588,25 @@ const RankGridPro = () => {
                             <div className="absolute top-0 right-0 w-52 rounded-lg border border-gray-200 bg-white/95 p-3 backdrop-blur-sm shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200">
                                 <div className="flex items-center justify-between">
                                     <p className="text-xs uppercase tracking-wide text-gray-400">Data Layers</p>
-                                    <Grid3X3 className="w-4 h-4 text-gray-400" />
+                                    <Grid3X3 className="w-4 h-4 text-content-muted" />
                                 </div>
                                 <div className="mt-3 space-y-3 text-sm">
-                                    <label className="flex items-center justify-between text-gray-700">
+                                    <label className="flex items-center justify-between text-content-secondary">
                                         <span>Grid Points</span>
                                         <input
                                             type="checkbox"
                                             checked={showResultGridPoints}
                                             onChange={(e) => setShowResultGridPoints(e.target.checked)}
-                                            className="accent-[#312e81]"
+                                            className="accent-brand-500"
                                         />
                                     </label>
-                                    <label className="flex items-center justify-between text-gray-700">
+                                    <label className="flex items-center justify-between text-content-secondary">
                                         <span>Traffic Heatmap</span>
                                         <input
                                             type="checkbox"
                                             checked={showTrafficHeatmap}
                                             onChange={(e) => setShowTrafficHeatmap(e.target.checked)}
-                                            className="accent-[#312e81]"
+                                            className="accent-brand-500"
                                         />
                                     </label>
                                     <div className="space-y-1">
@@ -1621,13 +1621,13 @@ const RankGridPro = () => {
                                             <option>Household Income</option>
                                         </select>
                                     </div>
-                                    <label className="flex items-center justify-between text-gray-700">
+                                    <label className="flex items-center justify-between text-content-secondary">
                                         <span>Ad Badges</span>
                                         <input
                                             type="checkbox"
                                             checked={showBadgesLayer}
                                             onChange={(e) => setShowBadgesLayer(e.target.checked)}
-                                            className="accent-[#312e81]"
+                                            className="accent-brand-500"
                                         />
                                     </label>
                                 </div>
@@ -1642,7 +1642,7 @@ const RankGridPro = () => {
                         <div className="max-w-3xl mx-auto px-6 py-8 space-y-6">
                             <div className="flex items-center justify-between">
                                 <div>
-                                    <h1 className={`text-2xl font-bold flex items-center gap-2 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                                    <h1 className={`text-2xl font-bold flex items-center gap-2 ${isDarkMode ? 'text-white' : 'text-content-primary'}`}>
                                         <Grid3X3 className="w-6 h-6 text-indigo-500" />
                                         RankGrid Pro History
                                     </h1>
@@ -1654,7 +1654,7 @@ const RankGridPro = () => {
                                         onClick={() => { setShowHistory(false); resetToSetupMode(); }}
                                         className={`h-10 px-4 rounded text-sm font-bold uppercase tracking-wider inline-flex items-center gap-2 shadow-sm ${isDarkMode
                                             ? 'bg-[#c8ff00] text-black hover:bg-[#d4ff33]'
-                                            : 'bg-[#312e81] text-white hover:bg-[#3730a3]'
+                                            : 'ui-button ui-button-primary'
                                         }`}
                                     >
                                         <Grid3X3 className="w-4 h-4" />
@@ -1692,7 +1692,7 @@ const RankGridPro = () => {
                                                 <div className="p-5">
                                                     <div className="flex items-start justify-between">
                                                         <div>
-                                                            <h3 className={`text-lg font-semibold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                                                            <h3 className={`text-lg font-semibold ${isDarkMode ? 'text-white' : 'text-content-primary'}`}>
                                                                 {entry.businessName}
                                                             </h3>
                                                             <p className="text-sm text-gray-500 flex items-center gap-1.5 mt-1">
@@ -1763,24 +1763,24 @@ const RankGridPro = () => {
                             <div className="flex items-center gap-3">
                                 <div className={`w-10 h-10 rounded-lg border inline-flex items-center justify-center ${isDarkMode
                                     ? 'bg-indigo-400/10 border-indigo-400/30'
-                                    : 'bg-indigo-50 border-indigo-200'
+                                    : 'rgp-cost'
                                     }`}>
-                                    <Grid3X3 className={`w-5 h-5 ${isDarkMode ? 'text-indigo-400' : 'text-[#312e81]'}`} />
+                                    <Grid3X3 className={`w-5 h-5 ${isDarkMode ? 'text-indigo-400' : 'ctool-accent'}`} />
                                 </div>
                                 <div>
-                                    <p className={`text-sm font-semibold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Analyzing Grid</p>
+                                    <p className={`text-sm font-semibold ${isDarkMode ? 'text-white' : 'text-content-primary'}`}>Analyzing Grid</p>
                                     <p className={`text-xs ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>{analysisProgress.message}</p>
                                 </div>
                             </div>
                             <div className={`mt-3 h-2 w-full rounded-full overflow-hidden ${isDarkMode ? 'bg-[#1b2130]' : 'bg-gray-200'}`}>
                                 <div
-                                    className={`h-full transition-all duration-300 ${isDarkMode ? 'bg-indigo-400' : 'bg-[#312e81]'}`}
+                                    className={`h-full transition-all duration-300 ${isDarkMode ? 'bg-indigo-400' : 'bg-brand-500'}`}
                                     style={{ width: `${analysisProgress.percent}%` }}
                                 />
                             </div>
                             <div className="mt-2 flex items-center justify-between text-xs">
                                 <span className={isDarkMode ? 'text-gray-400' : 'text-gray-500'}>{analysisProgress.completed} of {analysisProgress.total} points</span>
-                                <span className={`font-semibold ${isDarkMode ? 'text-indigo-400' : 'text-[#312e81]'}`}>{analysisProgress.percent}%</span>
+                                <span className={`font-semibold ${isDarkMode ? 'text-indigo-400' : 'ctool-accent'}`}>{analysisProgress.percent}%</span>
                             </div>
                         </div>
 
@@ -1791,26 +1791,26 @@ const RankGridPro = () => {
                                 }`}>
                                 <div className={`mx-auto w-20 h-20 rounded-2xl border inline-flex items-center justify-center ${isDarkMode
                                     ? 'bg-indigo-400/10 border-indigo-400/30'
-                                    : 'bg-indigo-50 border-indigo-200'
+                                    : 'rgp-cost'
                                     }`}>
-                                    <Grid3X3 className={`w-9 h-9 ${isDarkMode ? 'text-indigo-400' : 'text-[#312e81]'}`} />
+                                    <Grid3X3 className={`w-9 h-9 ${isDarkMode ? 'text-indigo-400' : 'ctool-accent'}`} />
                                 </div>
-                                <h3 className={`mt-6 text-3xl font-bold ${isDarkMode ? 'text-gray-100' : 'text-gray-900'}`}>Analyzing Your Grid</h3>
+                                <h3 className={`mt-6 text-3xl font-bold ${isDarkMode ? 'text-gray-100' : 'text-content-primary'}`}>Analyzing Your Grid</h3>
                                 <div className={`mt-6 h-3 w-full rounded-full overflow-hidden ${isDarkMode ? 'bg-[#1b2130]' : 'bg-gray-200'}`}>
                                     <div
-                                        className={`h-full transition-all duration-300 ${isDarkMode ? 'bg-indigo-400' : 'bg-[#312e81]'}`}
+                                        className={`h-full transition-all duration-300 ${isDarkMode ? 'bg-indigo-400' : 'bg-brand-500'}`}
                                         style={{ width: `${analysisProgress.percent}%` }}
                                     />
                                 </div>
                                 <div className="mt-3 flex items-center justify-between">
                                     <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>{analysisProgress.completed} of {analysisProgress.total} points</p>
-                                    <p className={`text-3xl font-bold ${isDarkMode ? 'text-indigo-400' : 'text-[#312e81]'}`}>{analysisProgress.percent}%</p>
+                                    <p className={`text-3xl font-bold ${isDarkMode ? 'text-indigo-400' : 'ctool-accent'}`}>{analysisProgress.percent}%</p>
                                 </div>
                                 <div className={`mt-5 h-12 rounded-lg border px-4 flex items-center gap-3 ${isDarkMode
                                     ? 'border-[#1f2330] bg-[#0b1018]'
                                     : 'border-gray-200 bg-gray-50'
                                     }`}>
-                                    <Search className={`w-4 h-4 ${isDarkMode ? 'text-indigo-400' : 'text-[#312e81]'}`} />
+                                    <Search className={`w-4 h-4 ${isDarkMode ? 'text-indigo-400' : 'ctool-accent'}`} />
                                     <p className={`text-sm text-left truncate ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>{analysisProgress.message}</p>
                                 </div>
                             </div>
@@ -1830,7 +1830,7 @@ const RankGridPro = () => {
                     <div className="absolute top-4 right-4 z-[1000]">
                         <button className={`w-10 h-10 backdrop-blur-sm border rounded-md flex items-center justify-center transition-colors ${isDarkMode
                             ? 'bg-[#0f0f0f]/90 border-[#1f1f1f] hover:bg-[#1a1a1a]'
-                            : 'bg-white/90 border-gray-200 hover:bg-gray-100'
+                            : 'bg-white/90 border-gray-200 hover:bg-surface-sunken'
                             }`}>
                             <HelpCircle className={`w-4 h-4 ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`} />
                         </button>
@@ -1856,8 +1856,8 @@ const RankGridPro = () => {
                     <button
                         onClick={() => setShowMobileSidebar(!showMobileSidebar)}
                         className={`fixed bottom-6 right-6 z-[1001] md:hidden p-4 rounded-full shadow-lg transition-all ${isDarkMode
-                            ? 'bg-[#312e81] text-white hover:bg-[#3730a3]'
-                            : 'bg-[#312e81] text-white hover:bg-[#3730a3]'
+                            ? 'ui-button ui-button-primary'
+                            : 'ui-button ui-button-primary'
                             }`}
                     >
                         {showMobileSidebar ? <PanelLeftClose className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
@@ -1881,23 +1881,23 @@ const RankGridPro = () => {
                         onClick={() => setIsCollapsed(!isCollapsed)}
                     >
                         <div className="flex items-center gap-3">
-                            <div className={`p-2 rounded-lg ${isDarkMode ? 'bg-[#312e81]/10' : 'bg-indigo-100'}`}>
-                                <Hexagon className={`w-5 h-5 ${isDarkMode ? 'text-indigo-400' : 'text-[#312e81]'}`} />
+                            <div className={`p-2 rounded-lg ${isDarkMode ? 'bg-[#312e81]/10' : 'rgp-tile'}`}>
+                                <Hexagon className={`w-5 h-5 ${isDarkMode ? 'text-indigo-400' : 'ctool-accent'}`} />
                             </div>
                             <div>
-                                <h2 className={`font-semibold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>RankGrid Pro</h2>
-                                <p className="text-xs text-gray-500">Configure analysis</p>
+                                <h2 className={`font-semibold ${isDarkMode ? 'text-white' : 'text-content-primary'}`}>RankGrid Pro</h2>
+                                <p className="schema-hint">Configure analysis</p>
                             </div>
                         </div>
                         <div className="flex items-center gap-1">
                             <button
-                                className={`p-2 rounded transition-colors ${isDarkMode ? 'hover:bg-[#1a1a1a]' : 'hover:bg-gray-100'}`}
+                                className={`p-2 rounded transition-colors ${isDarkMode ? 'hover:bg-[#1a1a1a]' : 'hover:bg-surface-sunken'}`}
                                 onClick={(e) => { e.stopPropagation(); setShowHistory(true); setHistoryEntries(loadHistory()); }}
                             >
-                                <History className="w-4 h-4 text-gray-400" />
+                                <History className="w-4 h-4 text-content-muted" />
                             </button>
-                            <button className={`p-2 rounded transition-colors ${isDarkMode ? 'hover:bg-[#1a1a1a]' : 'hover:bg-gray-100'}`}>
-                                {isCollapsed ? <ChevronDown className="w-4 h-4 text-gray-400" /> : <ChevronUp className="w-4 h-4 text-gray-400" />}
+                            <button className={`p-2 rounded transition-colors ${isDarkMode ? 'hover:bg-[#1a1a1a]' : 'hover:bg-surface-sunken'}`}>
+                                {isCollapsed ? <ChevronDown className="w-4 h-4 text-content-muted" /> : <ChevronUp className="w-4 h-4 text-content-muted" />}
                             </button>
                         </div>
                     </div>
@@ -1907,7 +1907,7 @@ const RankGridPro = () => {
                         <form className="p-4 space-y-5" onSubmit={(e) => { e.preventDefault(); runAnalysis(); }}>
                             {/* Business Search */}
                             <div className="space-y-2">
-                                <label className="text-xs font-medium text-gray-500 uppercase tracking-wide flex items-center justify-between">
+                                <label className="rgp-stat-label flex items-center justify-between">
                                     <span>Your Business</span>
                                     {googleMapsLoaded && (
                                         <span className={`text-[10px] px-1.5 py-0.5 rounded ${isDarkMode ? 'bg-green-500/20 text-green-400' : 'bg-green-100 text-green-600'}`}>
@@ -1922,7 +1922,7 @@ const RankGridPro = () => {
                                         type="text"
                                         className={`w-full h-10 pl-9 pr-9 border rounded text-sm transition-colors focus:outline-none focus:ring-1 ${isDarkMode
                                             ? 'bg-[#1a1a1a] border-[#2a2a2a] text-white placeholder:text-gray-500 focus:border-gray-500 focus:ring-gray-500/30'
-                                            : 'bg-gray-50 border-gray-200 text-gray-900 placeholder:text-gray-400 focus:border-[#312e81] focus:ring-[#312e81]/30'
+                                            : 'schema-input'
                                             }`}
                                         placeholder="Search for your Google Business..."
                                         value={businessSearch}
@@ -1960,10 +1960,7 @@ const RankGridPro = () => {
                                                 <button
                                                     key={suggestion.place_id || idx}
                                                     type="button"
-                                                    className={`w-full px-3 py-2.5 text-left flex items-start gap-2 transition-colors ${isDarkMode
-                                                        ? 'hover:bg-[#2a2a2a] border-b border-[#2a2a2a] last:border-0'
-                                                        : 'hover:bg-gray-50 border-b border-gray-100 last:border-0'
-                                                        }`}
+                                                    className={`rgp-suggest-item ${isDarkMode ? 'is-dark' : ''}`}
                                                     onClick={() => {
                                                         if (suggestion._nominatim) {
                                                             handleSelectBusinessFallback(suggestion);
@@ -1972,12 +1969,12 @@ const RankGridPro = () => {
                                                         }
                                                     }}
                                                 >
-                                                    <MapPin className={`w-4 h-4 mt-0.5 flex-shrink-0 ${isDarkMode ? 'text-gray-500' : 'text-gray-400'}`} />
+                                                    <MapPin className="rgp-suggest-icon w-4 h-4 mt-0.5 flex-shrink-0" />
                                                     <div className="min-w-0">
-                                                        <p className={`text-sm font-medium truncate ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                                                        <p className="rgp-suggest-name truncate">
                                                             {suggestion.structured_formatting?.main_text || suggestion.description?.split(',')[0]}
                                                         </p>
-                                                        <p className={`text-xs truncate ${isDarkMode ? 'text-gray-500' : 'text-gray-500'}`}>
+                                                        <p className="rgp-suggest-sub truncate">
                                                             {suggestion.structured_formatting?.secondary_text || suggestion.description?.split(',').slice(1).join(',').trim()}
                                                         </p>
                                                     </div>
@@ -1988,12 +1985,12 @@ const RankGridPro = () => {
                                 </div>
                                 {selectedBusiness && (
                                     <div className={`p-2 border rounded-lg ${isDarkMode
-                                        ? 'bg-[#312e81]/10 border-[#312e81]/20'
-                                        : 'bg-indigo-50 border-indigo-200'
+                                        ? 'rgp-well'
+                                        : 'rgp-cost'
                                         }`}>
                                         <div className="flex items-start justify-between">
                                             <div className="min-w-0 flex-1">
-                                                <p className={`text-sm font-medium ${isDarkMode ? 'text-indigo-400' : 'text-[#312e81]'}`}>{selectedBusiness.name}</p>
+                                                <p className={`text-sm font-medium ${isDarkMode ? 'text-indigo-400' : 'ctool-accent'}`}>{selectedBusiness.name}</p>
                                                 <p className={`text-xs truncate ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>{selectedBusiness.address}</p>
                                             </div>
                                             {selectedBusiness.rating && (
@@ -2013,10 +2010,7 @@ const RankGridPro = () => {
                                         setIsServiceAreaMode((prev) => !prev);
                                         setServiceAreaError('');
                                     }}
-                                    className={`text-xs transition-colors ${isDarkMode
-                                        ? 'text-gray-500 hover:text-indigo-400'
-                                        : 'text-gray-500 hover:text-[#312e81]'
-                                        }`}
+                                    className="rgp-link"
                                 >
                                     Can't find your business? (Service Area Business)
                                 </button>
@@ -2045,7 +2039,7 @@ const RankGridPro = () => {
                                                 type="text"
                                                 className={`flex-1 h-10 px-3 border rounded text-sm transition-colors focus:outline-none focus:ring-1 ${isDarkMode
                                                     ? 'bg-[#0f0f0f] border-[#2a2a2a] text-white placeholder:text-gray-500 focus:border-gray-500 focus:ring-gray-500/30'
-                                                    : 'bg-gray-50 border-gray-200 text-gray-900 placeholder:text-gray-400 focus:border-[#312e81] focus:ring-[#312e81]/30'
+                                                    : 'schema-input'
                                                     }`}
                                                 placeholder="Paste Google Maps URL..."
                                                 value={serviceAreaUrl}
@@ -2056,8 +2050,8 @@ const RankGridPro = () => {
                                                 onClick={handleResolveServiceAreaBusiness}
                                                 disabled={isResolvingServiceAreaUrl}
                                                 className={`h-10 px-4 rounded text-sm font-bold uppercase tracking-wider transition-colors disabled:opacity-50 ${isDarkMode
-                                                    ? 'bg-[#312e81] text-white hover:bg-[#3730a3]'
-                                                    : 'bg-[#312e81] text-white hover:bg-[#3730a3]'
+                                                    ? 'ui-button ui-button-primary'
+                                                    : 'ui-button ui-button-primary'
                                                     }`}
                                             >
                                                 {isResolvingServiceAreaUrl ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Resolve'}
@@ -2065,16 +2059,16 @@ const RankGridPro = () => {
                                         </div>
 
                                         {serviceAreaError && (
-                                            <p className="text-xs text-red-400">{serviceAreaError}</p>
+                                            <p className="rgp-error">{serviceAreaError}</p>
                                         )}
 
                                         {selectedBusiness && (
                                             <div className="flex items-center gap-1.5 text-xs">
-                                                <CheckCircle className="w-3 h-3 text-indigo-500" />
-                                                <span className={`truncate ${isDarkMode ? 'text-indigo-400' : 'text-indigo-700'}`}>
+                                                <CheckCircle className="w-3 h-3 text-success-600" />
+                                                <span className={`truncate ${isDarkMode ? 'text-indigo-400' : 'text-content-secondary'}`}>
                                                     {selectedBusiness.name}
                                                 </span>
-                                                <span className={`ml-1 px-1.5 py-0.5 rounded text-[10px] font-semibold ${isDarkMode ? 'bg-gray-800 text-gray-300' : 'bg-gray-200 text-gray-700'}`}>
+                                                <span className={`ml-1 px-1.5 py-0.5 rounded text-[10px] font-semibold ${isDarkMode ? 'bg-gray-800 text-gray-300' : 'app-badge'}`}>
                                                     SAB
                                                 </span>
                                             </div>
@@ -2085,10 +2079,7 @@ const RankGridPro = () => {
                                     <button
                                         type="button"
                                         onClick={() => setShowApiKeyModal(true)}
-                                        className={`text-xs transition-colors flex items-center gap-1 ${isDarkMode
-                                            ? 'text-gray-500 hover:text-indigo-400'
-                                            : 'text-gray-500 hover:text-[#312e81]'
-                                            }`}
+                                        className="rgp-link"
                                     >
                                         <Key className="w-3 h-3" />
                                         Add Google API key for better results
@@ -2098,14 +2089,14 @@ const RankGridPro = () => {
 
                             {/* Search Keyword */}
                             <div className="space-y-2">
-                                <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">
+                                <label className="rgp-stat-label">
                                     Search Keyword
                                 </label>
                                 <input
                                     type="text"
                                     className={`w-full h-10 px-3 border rounded text-sm transition-colors focus:outline-none focus:ring-1 ${isDarkMode
                                         ? 'bg-[#1a1a1a]/50 border-[#2a2a2a] text-white placeholder:text-gray-500 focus:border-gray-500 focus:ring-gray-500/30'
-                                        : 'bg-gray-50 border-gray-200 text-gray-900 placeholder:text-gray-400 focus:border-[#312e81] focus:ring-[#312e81]/30'
+                                        : 'schema-input'
                                         }`}
                                     placeholder="e.g., plumber near me"
                                     value={keyword}
@@ -2115,7 +2106,7 @@ const RankGridPro = () => {
 
                             {/* Website (Optional) */}
                             <div className="space-y-2">
-                                <label className="text-xs font-medium text-gray-500 uppercase tracking-wide flex items-center gap-1.5">
+                                <label className="rgp-stat-label flex items-center gap-1.5">
                                     <Globe className="w-3 h-3" />
                                     Website (Optional)
                                 </label>
@@ -2123,7 +2114,7 @@ const RankGridPro = () => {
                                     type="text"
                                     className={`w-full h-10 px-3 border rounded text-sm transition-colors focus:outline-none focus:ring-1 ${isDarkMode
                                         ? 'bg-[#1a1a1a]/50 border-[#2a2a2a] text-white placeholder:text-gray-500 focus:border-gray-500 focus:ring-gray-500/30'
-                                        : 'bg-gray-50 border-gray-200 text-gray-900 placeholder:text-gray-400 focus:border-[#312e81] focus:ring-[#312e81]/30'
+                                        : 'schema-input'
                                         }`}
                                     placeholder="https://yourbusiness.com"
                                     value={website}
@@ -2134,16 +2125,16 @@ const RankGridPro = () => {
                             {/* Analysis Settings */}
                             <div className={`space-y-4 p-3 rounded-xl border ${isDarkMode
                                 ? 'bg-[#1a1a1a]/50 border-[#2a2a2a]'
-                                : 'bg-gray-50 border-gray-200'
+                                : 'rgp-well'
                                 }`}>
                                 {/* Analysis Rings */}
                                 <div className="space-y-3">
                                     <div className="flex items-center justify-between">
-                                        <label className="text-xs font-medium text-gray-500 uppercase tracking-wide flex items-center gap-1.5">
+                                        <label className="rgp-stat-label flex items-center gap-1.5">
                                             <Hexagon className="w-3 h-3" />
                                             Analysis Rings
                                         </label>
-                                        <span className={`text-sm font-mono font-bold ${isDarkMode ? 'text-indigo-400' : 'text-[#312e81]'}`}>
+                                        <span className={`text-sm font-mono font-bold ${isDarkMode ? 'text-indigo-400' : 'ctool-accent'}`}>
                                             {rings} {rings === 1 ? 'ring' : 'rings'}
                                         </span>
                                     </div>
@@ -2153,31 +2144,24 @@ const RankGridPro = () => {
                                                 key={r}
                                                 type="button"
                                                 onClick={() => setRings(r)}
-                                                className={`flex-1 h-9 rounded text-sm font-medium transition-colors ${rings === r
-                                                    ? isDarkMode
-                                                        ? 'bg-[#312e81] text-white'
-                                                        : 'bg-[#312e81] text-white'
-                                                    : isDarkMode
-                                                        ? 'bg-transparent text-gray-400 hover:bg-[#1f1f1f]'
-                                                        : 'bg-transparent text-gray-500 hover:bg-gray-200'
-                                                    }`}
+                                                className={`rgp-ring ${rings === r ? 'active' : ''}`}
                                             >
                                                 {r}
                                             </button>
                                         ))}
                                     </div>
-                                    <p className="text-xs text-gray-500">
-                                        <span className={`font-semibold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{totalPoints}</span> analysis points in honeycomb pattern
+                                    <p className="schema-hint">
+                                        <span className={`font-semibold ${isDarkMode ? 'text-white' : 'text-content-primary'}`}>{totalPoints}</span> analysis points in honeycomb pattern
                                     </p>
                                 </div>
 
                                 {/* Coverage Radius */}
                                 <div className="space-y-3">
                                     <div className="flex items-center justify-between">
-                                        <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">
+                                        <label className="rgp-stat-label">
                                             Coverage Radius
                                         </label>
-                                        <span className={`text-sm font-mono font-bold ${isDarkMode ? 'text-indigo-400' : 'text-[#312e81]'}`}>
+                                        <span className={`text-sm font-mono font-bold ${isDarkMode ? 'text-indigo-400' : 'ctool-accent'}`}>
                                             {radius} mi
                                         </span>
                                     </div>
@@ -2189,7 +2173,7 @@ const RankGridPro = () => {
                                         onChange={(e) => setRadius(parseInt(e.target.value))}
                                         className="w-full h-2 rounded-full appearance-none cursor-pointer"
                                         style={{
-                                            background: `linear-gradient(to right, ${accentColor} 0%, ${accentColor} ${(radius - 1) / 49 * 100}%, ${isDarkMode ? '#2a2a2a' : '#d1d5db'} ${(radius - 1) / 49 * 100}%, ${isDarkMode ? '#2a2a2a' : '#d1d5db'} 100%)`
+                                            background: `linear-gradient(to right, ${accentColor} 0%, ${accentColor} ${(radius - 1) / 49 * 100}%, ${isDarkMode ? '#2a2a2a' : '#e2e5ee'} ${(radius - 1) / 49 * 100}%, ${isDarkMode ? '#2a2a2a' : '#e2e5ee'} 100%)`
                                         }}
                                     />
                                 </div>
@@ -2198,13 +2182,13 @@ const RankGridPro = () => {
                             {/* Cost Display */}
                             <div className="space-y-2">
                                 <div className={`flex items-center justify-between p-3 border rounded-xl ${isDarkMode
-                                    ? 'bg-[#312e81]/5 border-[#312e81]/20'
-                                    : 'bg-indigo-50 border-indigo-200'
+                                    ? 'rgp-cost'
+                                    : 'rgp-cost'
                                     }`}>
-                                    <span className={`text-sm font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Total Cost</span>
+                                    <span className={`text-sm font-medium ${isDarkMode ? 'text-white' : 'text-content-primary'}`}>Total Cost</span>
                                     <div className="flex items-center gap-2">
-                                        <Zap className={`w-4 h-4 ${isDarkMode ? 'text-indigo-400' : 'text-[#312e81]'}`} />
-                                        <span className={`font-mono font-bold text-lg ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{totalPoints}</span>
+                                        <Zap className={`w-4 h-4 ${isDarkMode ? 'text-indigo-400' : 'ctool-accent'}`} />
+                                        <span className={`font-mono font-bold text-lg ${isDarkMode ? 'text-white' : 'text-content-primary'}`}>{totalPoints}</span>
                                         <span className="text-sm text-gray-500">credits</span>
                                     </div>
                                 </div>
@@ -2213,9 +2197,9 @@ const RankGridPro = () => {
 
                             {/* Error Message */}
                             {error && (
-                                <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-lg flex items-start gap-2">
+                                <div className="app-alert app-alert-error">
                                     <AlertCircle className="w-4 h-4 text-red-500 flex-shrink-0 mt-0.5" />
-                                    <p className="text-sm text-red-400">{error}</p>
+                                    <p className="flex-1">{error}</p>
                                 </div>
                             )}
 
@@ -2223,10 +2207,7 @@ const RankGridPro = () => {
                             <button
                                 type="submit"
                                 disabled={isLoading || !selectedBusiness || !keyword}
-                                className={`w-full h-12 font-semibold uppercase tracking-widest rounded disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2 ${isDarkMode
-                                    ? 'bg-[#312e81] text-white shadow-[0_0_20px_rgba(49,46,129,0.4)] hover:bg-[#3730a3]'
-                                    : 'bg-[#312e81] text-white shadow-lg shadow-[#312e81]/30 hover:bg-[#3730a3]'
-                                    }`}
+                                className="ui-button ui-button-primary rgp-submit"
                             >
                                 {isLoading ? (
                                     <>

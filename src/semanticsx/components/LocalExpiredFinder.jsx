@@ -437,25 +437,25 @@ export default function LocalExpiredFinder() {
         <div className="lef-field lef-field-cta"><button className="lef-cta" type="button" onClick={isLoading ? cancelSearch : handleSearch}>{isLoading ? <><XCircle size={15} /> Cancel Scan</> : <><Search size={15} /> Find Opportunities</>}</button></div>
       </section>
 
-      {!googlePlacesApiKey && <div className="mx-6 mb-5 flex items-center gap-2 rounded-lg border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-200"><AlertCircle size={16} /> Add your Google Places API key in <Link className="underline font-semibold" to="/settings">Settings</Link> to search live businesses.</div>}
-      {error && <div className="mx-6 mb-5 flex items-center gap-2 rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-200"><AlertCircle size={16} /> {error}</div>}
-      {notice && <div className="mx-6 mb-5 flex items-center gap-2 rounded-lg border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-200"><AlertCircle size={16} /> {notice}</div>}
+      {!googlePlacesApiKey && <div className="app-alert app-alert-warning mb-5"><AlertCircle size={16} /> Add your Google Places API key in <Link className="underline font-semibold" to="/settings">Settings</Link> to search live businesses.</div>}
+      {error && <div className="app-alert app-alert-error mb-5"><AlertCircle size={16} /> {error}</div>}
+      {notice && <div className="app-alert app-alert-warning mb-5"><AlertCircle size={16} /> {notice}</div>}
 
-      {(scanProgress || searchMeta) && <div className="mx-7 mb-5 rounded-xl border border-slate-700/70 bg-slate-900/60 p-4">
-        <div className="mb-2 flex items-center justify-between gap-3 text-xs text-slate-300"><span className="flex items-center gap-2">{scanProgress?.phase === 'complete' ? <CheckCircle size={14} className="text-emerald-400" /> : <TrendingUp size={14} className="text-blue-400" />}{scanProgress?.message || 'Preparing scan…'}</span><span>{progressPercent}%</span></div>
-        <div className="mb-4 h-2 overflow-hidden rounded-full bg-slate-800"><div className="h-full rounded-full bg-gradient-to-r from-blue-500 to-emerald-400 transition-all duration-300" style={{ width: `${progressPercent}%` }} /></div>
+      {(scanProgress || searchMeta) && <div className="lef-progress-panel mb-5">
+        <div className="mb-2 flex items-center justify-between gap-3 schema-hint"><span className="flex items-center gap-2">{scanProgress?.phase === 'complete' ? <CheckCircle size={14} className="text-success-600" /> : <TrendingUp size={14} className="text-info-600" />}{scanProgress?.message || 'Preparing scan…'}</span><span>{progressPercent}%</span></div>
+        <div className="lef-progress mb-4"><div className="lef-progress-bar" style={{ width: `${progressPercent}%` }} /></div>
         {searchMeta && <div className="grid grid-cols-2 gap-3 text-center sm:grid-cols-3 xl:grid-cols-6">{[
           [searchMeta.placesFound, 'Places found'], [searchMeta.websitesFound, 'Websites'],
           [searchMeta.uniqueDomains, 'Unique domains'], [searchMeta.checked, 'Domains checked'],
           [searchMeta.unknown, 'Unresolved'], [searchMeta.opportunities, 'Opportunities'],
-        ].map(([value, label]) => <div key={label} className="rounded-lg bg-slate-950/50 px-3 py-2"><div className="text-base font-bold text-slate-100">{value || 0}</div><div className="text-[10px] uppercase tracking-wide text-slate-500">{label}</div></div>)}</div>}
+        ].map(([value, label]) => <div key={label} className="lef-progress-stat"><div className="lef-progress-value">{value || 0}</div><div className="rgp-stat-label">{label}</div></div>)}</div>}
       </div>}
 
-      {hasSearched && !isLoading && leads.length === 0 && <div className="mx-6 mb-5 flex items-center gap-2 rounded-lg border border-slate-500/30 bg-slate-500/10 px-4 py-3 text-sm text-slate-300"><AlertCircle size={16} /> No confirmed expired or near-expiry domains were found among {searchMeta?.checked || 0} checked domains. {searchMeta?.unknown ? `${searchMeta.unknown} remained unresolved.` : ''}</div>}
+      {hasSearched && !isLoading && leads.length === 0 && <div className="app-alert app-alert-info mb-5"><AlertCircle size={16} /> No confirmed expired or near-expiry domains were found among {searchMeta?.checked || 0} checked domains. {searchMeta?.unknown ? `${searchMeta.unknown} remained unresolved.` : ''}</div>}
 
       {leads.length > 0 && <>
         <div className="lef-stats-row">
-          {[[stats.total, 'Opportunities Found', Globe, '#3b82f6'], [stats.available, 'Available Now', CheckCircle, '#10b981'], [stats.expired, 'Expired / Grace', AlertCircle, '#ef4444'], [stats.expiring, 'Expiring Soon', TrendingUp, '#f59e0b']].map(([value, label, Icon, color]) => <div key={label} className="lef-stat-card"><div className="lef-stat-icon-wrap" style={{ background: `${color}18` }}><Icon size={20} style={{ color }} /></div><div className="lef-stat-info"><div className="lef-stat-value" style={{ color }}>{value}</div><div className="lef-stat-label">{label}</div></div></div>)}
+          {[[stats.total, 'Opportunities Found', Globe, 'info'], [stats.available, 'Available Now', CheckCircle, 'success'], [stats.expired, 'Expired / Grace', AlertCircle, 'error'], [stats.expiring, 'Expiring Soon', TrendingUp, 'warning']].map(([value, label, Icon, tone]) => <div key={label} className="lef-stat-card" data-tone={tone}><div className="lef-stat-icon-wrap"><Icon size={20} /></div><div className="lef-stat-info"><div className="lef-stat-value">{value}</div><div className="lef-stat-label">{label}</div></div></div>)}
         </div>
         <div className="lef-results-grid">
           <div className="lef-panel lef-map-panel"><div className="lef-panel-header"><div className="lef-panel-header-left"><MapIcon size={14} /><span>Map Preview</span></div></div><div className="lef-map-body"><MapContainer key={`${mapCenter[0]}-${mapCenter[1]}`} center={mapCenter} zoom={mapLeads.length ? 11 : 3} className="lef-map-leaflet" zoomControl={false}><TileLayer url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png" attribution="© CARTO" />{mapLeads.map((lead, index) => <Marker key={lead.domain} position={[lead.coordinates.lat, lead.coordinates.lng]} icon={createPinIcon(index)}><Popup>{lead.business}<br />{lead.domain}<br />{getStatusLabel(lead)}</Popup></Marker>)}<ZoomControls /></MapContainer></div></div>
