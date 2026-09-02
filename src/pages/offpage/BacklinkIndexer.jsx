@@ -30,47 +30,42 @@ export default function BacklinkIndexer() {
   return (
     <div className="">
       {/* ─── Hero ─── */}
-      <div className="relative overflow-hidden rounded-3xl border border-white/[0.06] bg-gradient-to-br from-ink-800 via-ink-800 to-indigo-950/40">
-        <div className="pointer-events-none absolute inset-0">
-          <div className="absolute -right-24 -top-24 h-72 w-72 rounded-full bg-violet-500/[0.06] blur-[80px]" />
-          <div className="absolute -bottom-16 left-1/4 h-56 w-56 rounded-full bg-blue-500/[0.05] blur-[70px]" />
-        </div>
-
-        <div className="relative z-10 p-6 lg:p-8">
-          <div className="flex items-center justify-between">
-            <div>
-              <span className="inline-flex items-center gap-1 rounded-full bg-amber-400/15 px-2.5 py-0.5 text-[10px] font-bold text-amber-300">
-                <Zap className="h-3 w-3" /> FAST INDEXING
-              </span>
-              <div className="mt-2 flex items-center gap-3">
-                <Zap className="h-8 w-8 text-violet-400" />
-                <h1 className="font-display text-2xl font-black text-white">Backlink Indexer</h1>
-                <HelpCircle className="h-4 w-4 text-white/20" />
+      <div className="edf-hero">
+        <div>
+          <div className="flex flex-wrap items-center justify-between gap-4">
+            <div className="bi-title-block">
+              <div className="bi-title-row">
+                <span className="edf-tile">
+                  <Zap className="h-5 w-5" />
+                </span>
+                <div>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <h1 className="edf-title font-display">Backlink Indexer</h1>
+                    <span className="admin-badge badge-warning">Fast indexing</span>
+                    <HelpCircle className="bi-help h-4 w-4" />
+                  </div>
+                  <p className="edf-description">Get your backlinks discovered and indexed faster by search engines</p>
+                </div>
               </div>
-              <p className="mt-1 text-sm text-white/40">Get your backlinks discovered and indexed faster by search engines</p>
             </div>
-            <div className="flex items-center gap-3">
-              <IndexStat value={urlCount} label="URLs" color="border-blue-500/30 text-blue-400" />
-              <IndexStat value={0} label="Pinged" color="border-emerald-500/30 text-emerald-400" />
-              <IndexStat value={0} label="Google API" color="border-violet-500/30 text-violet-400" />
+            <div className="bi-stats">
+              <IndexStat value={urlCount} label="URLs" tone="info" />
+              <IndexStat value={0} label="Pinged" tone="success" />
+              <IndexStat value={0} label="Google API" tone="neutral" />
             </div>
           </div>
         </div>
       </div>
 
       {/* ─── Tabs ─── */}
-      <div className="mt-5 flex items-center gap-1 overflow-x-auto rounded-xl border border-white/[0.06] bg-white/[0.02] p-1">
+      <div className="admin-tabs bi-tabs mt-5">
         {d.tabs.map((tab, i) => {
           const Icon = tabIcons[i];
           return (
             <button
               key={tab}
               onClick={() => setActiveTab(i)}
-              className={`flex items-center gap-2 whitespace-nowrap rounded-lg px-4 py-2.5 text-xs font-bold transition ${
-                activeTab === i
-                  ? "bg-violet-500 text-white shadow-lg shadow-violet-500/20"
-                  : "text-white/40 hover:bg-white/[0.04] hover:text-white/60"
-              }`}
+              className={`admin-tab ${activeTab === i ? "active" : ""}`}
             >
               <Icon className="h-3.5 w-3.5" /> {tab}
             </button>
@@ -212,11 +207,11 @@ export default function BacklinkIndexer() {
   );
 }
 
-function IndexStat({ value, label, color }) {
+function IndexStat({ value, label, tone = "neutral" }) {
   return (
-    <div className={`rounded-xl border ${color.split(" ")[0]} bg-white/[0.02] px-4 py-2 text-center`}>
-      <div className={`font-display text-xl font-black ${color.split(" ")[1]}`}>{value}</div>
-      <div className="text-[9px] text-white/35">{label}</div>
+    <div className={`bi-stat bi-stat-${tone}`}>
+      <div className="bi-stat-label">{label}</div>
+      <div className="bi-stat-value">{value}</div>
     </div>
   );
 }

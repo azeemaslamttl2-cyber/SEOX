@@ -1,39 +1,5 @@
 import { useState, useCallback } from "react";
-import {
-  Search,
-  Download,
-  Upload,
-  ArrowLeft,
-  ExternalLink,
-  Copy,
-  ChevronDown,
-  Monitor,
-  User,
-  Building2,
-  Wrench,
-  Star,
-  MessageCircle,
-  GraduationCap,
-  Landmark,
-  MessagesSquare,
-  Bookmark,
-  PenTool,
-  FolderOpen,
-  Tag,
-  Briefcase,
-  Megaphone,
-  Link,
-  MapPin,
-  Globe,
-  FileUp,
-  Rocket,
-  BarChart3,
-  Newspaper,
-  Users,
-  Ticket,
-  Coins,
-  Globe2,
-} from "lucide-react";
+import { ArrowLeft, BarChart3, Bookmark, Briefcase, Building2, ChevronDown, Coins, Copy, Download, ExternalLink, FileUp, FolderOpen, Globe, Globe2, GraduationCap, Landmark, Link, Link2, MapPin, Megaphone, MessageCircle, MessagesSquare, Monitor, Newspaper, PenTool, Rocket, Search, Star, Tag, Ticket, Upload, User, Users, Wrench } from "lucide-react";
 import { allBacklinkCategories, totalOpportunities, totalCategories } from "../../data/backlinksData/index.js";
 
 const iconMap = {
@@ -224,27 +190,43 @@ export default function BacklinkDirectory() {
   return (
     <div className="">
       {/* ─── Hero Header ─── */}
-      <div className="dashboard-welcome backlink-directory-welcome relative overflow-hidden rounded-2xl border border-brand-600 bg-brand-500 p-6 sm:p-8">
-        <div className="pointer-events-none absolute -right-16 -top-16 h-56 w-56 animate-float-slow rounded-full bg-college-blue/20 blur-3xl" />
-        <div className="pointer-events-none absolute -bottom-20 -left-12 h-56 w-56 animate-float rounded-full bg-college-yellow/20 blur-3xl" />
-        <div className="relative">
-          <div className="flex items-center justify-between">
+      <div className="edf-hero bd-hero">
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <div className="bd-title-row">
+            <span className="edf-tile">
+              <Link2 className="h-5 w-5" />
+            </span>
             <div>
-              <h1 className="font-display text-2xl font-bold tracking-tight sm:text-3xl">Backlink Directory</h1>
-              <p className="mt-1 text-sm text-white">{totalOpportunities.toLocaleString()} opportunities across {totalCategories} categories</p>
-            </div>
-            <div className="flex items-center gap-3">
-              <span className="rounded-full bg-white/20 px-3 py-1.5 text-xs font-bold text-white">
-                Progress {totalDone}/{totalOpportunities.toLocaleString()} ({Math.round((totalDone / totalOpportunities) * 100)}%)
-              </span>
-              <button className="ui-button ui-button-secondary">
-                <Download className="h-3.5 w-3.5" /> Export
-              </button>
+              <h1 className="edf-title font-display">Backlink Directory</h1>
+              <p className="edf-description">
+                {totalOpportunities.toLocaleString()} opportunities across {totalCategories} categories
+              </p>
             </div>
           </div>
-          <button className="ui-button ui-button-secondary mt-5">
-            <Upload className="h-3.5 w-3.5" /> Import Backlink Report
-          </button>
+          <div className="bd-actions">
+            <button className="ui-button bd-secondary-button">
+              <Upload className="h-3.5 w-3.5" /> Import Backlink Report
+            </button>
+            <button className="ui-button bd-secondary-button">
+              <Download className="h-3.5 w-3.5" /> Export
+            </button>
+          </div>
+        </div>
+
+        <div className="bd-progress">
+          <span className="bd-progress-label">Progress</span>
+          <span className="bd-progress-value">
+            {totalDone}/{totalOpportunities.toLocaleString()}
+          </span>
+          <span className="bd-progress-track">
+            <span
+              className="bd-progress-fill"
+              style={{ width: `${Math.round((totalDone / totalOpportunities) * 100)}%` }}
+            />
+          </span>
+          <span className="bd-progress-pct">
+            {Math.round((totalDone / totalOpportunities) * 100)}%
+          </span>
         </div>
       </div>
 

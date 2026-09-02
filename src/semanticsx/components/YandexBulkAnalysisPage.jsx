@@ -416,7 +416,7 @@ const SiteDetailView = ({ site, accessToken, yandexUserId, onBack }) => {
     const displayName = site.unicode_host_url || site.ascii_host_url || 'Unknown';
 
     return (
-        <div className="bing-connect-page">
+        <div className="bulk-page">
             {/* Header */}
             <div className="bg-white border-b border-gray-100 sticky top-0 z-10">
                 <div className="px-4 sm:px-6 lg:px-8 py-4">
@@ -1082,7 +1082,7 @@ const YandexBulkAnalysisPage = () => {
 
     // Main Sites Grid
     return (
-        <div className="bing-connect-page">
+        <div className="bulk-page">
             {/* Header */}
             <div className="bg-white border-b border-gray-100">
                 <div className="px-4 sm:px-6 lg:px-8 py-6">

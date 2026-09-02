@@ -122,7 +122,7 @@ export default function SeoToolsHub() {
   }, [selectedCategory, searchQuery]);
 
   return (
-    <div className="seo-tools-hub-workspace mx-auto max-w-6xl space-y-6 pb-8">
+    <div className="seo-tools-hub-workspace space-y-6 pb-8">
       {/* Hero Header */}
       <div className="seo-hub-hero relative overflow-hidden rounded-3xl p-6 sm:p-8 shadow-xl">
         <div className="pointer-events-none absolute inset-0">
