@@ -70,6 +70,14 @@ CREATE TABLE IF NOT EXISTS `admin_payments` (
 
 -- Dumping structure for table code-step-mysql.admin_settings
 CREATE TABLE IF NOT EXISTS `admin_settings` (
+
+  CREATE TABLE IF NOT EXISTS `deepseek_api_settings` (
+    `user_id` varchar(128) NOT NULL,
+    `api_key` text,
+    `updated_at` datetime NOT NULL,
+    PRIMARY KEY (`user_id`),
+    CONSTRAINT `fk_deepseek_api_settings_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
+  ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
   `id` bigint unsigned NOT NULL AUTO_INCREMENT,
   `setting_key` varchar(100) NOT NULL,
   `setting_value` json DEFAULT NULL,

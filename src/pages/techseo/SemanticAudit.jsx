@@ -981,7 +981,7 @@ export default function SemanticAudit() {
                 onClick={() => window.print()}
                 className="flex items-center gap-1.5 rounded-lg bg-blue-500/15 px-3 py-1.5 text-[11px] font-bold text-blue-300 ring-1 ring-blue-500/25"
               >
-                <FileDown className="h-3 w-3" /> PDF
+                <FileDown className="h-3 w-3" /> Print
               </button>
             </div>
             <div className="overflow-x-auto">

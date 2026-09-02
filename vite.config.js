@@ -3,9 +3,11 @@ import react from "@vitejs/plugin-react";
 import fs from "node:fs";
 import { onRequest as autocompleteOnRequest } from "./functions/api/autocomplete.js";
 import { onRequest as gscTokenOnRequest } from "./functions/api/gsc-token.js";
+import { onRequest as deepseekSettingsOnRequest } from "./functions/api/deepseek-settings.js";
 import { onRequest as pagespeedOnRequest } from "./functions/api/pagespeed.js";
 import { onRequest as screamingFrogOnRequest } from "./functions/api/tech-seo/screaming-frog.js";
 import { onRequest as screamingFrogReportDownloadOnRequest } from "./functions/api/tech-seo/screaming-frog/report-download.js";
+import { onRequest as screamingFrogUrlReportsOnRequest } from "./functions/api/tech-seo/screaming-frog/url-reports.js";
 import { onRequest as projectsOnRequest } from "./functions/api/projects.js";
 import { onRequest as projectDetailsOnRequest } from "./functions/api/project-details.js";
 import { onRequest as backlinksAnalyzeOnRequest } from "./functions/api/tech-seo/backlinks/analyze.js";
@@ -280,6 +282,33 @@ function deepseekApiPlugin() {
           sendJson(res, 500, {
             error: error?.message || "Failed to call DeepSeek API",
           });
+        }
+      });
+    },
+  };
+}
+
+function deepseekSettingsApiPlugin() {
+  return {
+    name: "seox-deepseek-settings-api",
+    configureServer(server) {
+      server.middlewares.use("/api/deepseek-settings", async (req, res) => {
+        try {
+          const rawBody = await readRawBody(req);
+          const headers = new Headers();
+          Object.entries(req.headers || {}).forEach(([key, value]) => {
+            if (Array.isArray(value)) headers.set(key, value.join(", "));
+            else if (value !== undefined) headers.set(key, String(value));
+          });
+          const request = new Request(mountedUrl(req, "/api/deepseek-settings"), {
+            method: req.method || "GET",
+            headers,
+            body: rawBody || undefined,
+          });
+          const response = await deepseekSettingsOnRequest({ request, env: loadDevApiEnv() });
+          await sendWebResponse(res, response);
+        } catch (error) {
+          sendJson(res, error?.status || 500, { error: error?.message || "DeepSeek settings request failed" });
         }
       });
     },
@@ -572,6 +601,15 @@ function registerPagespeedMiddleware(server) {
 }
 
 function registerScreamingFrogMiddleware(server) {
+  server.middlewares.use("/api/tech-seo/screaming-frog/url-reports", async (req, res) => {
+    try {
+      const request = await createWebRequest(req, "/api/tech-seo/screaming-frog/url-reports");
+      const response = await screamingFrogUrlReportsOnRequest({ request, env: loadDevApiEnv() });
+      await sendWebResponse(res, response);
+    } catch (error) {
+      sendJson(res, error?.status || 500, { success: false, error: error?.message || "Screaming Frog URL report storage failed." });
+    }
+  });
   server.middlewares.use("/api/tech-seo/screaming-frog/report-download", async (req, res) => {
     try {
       const request = await createWebRequest(req, "/api/tech-seo/screaming-frog/report-download");
@@ -1193,7 +1231,7 @@ function sendJson(res, status, payload) {
 }
 
 export default defineConfig({
-  plugins: [react(), proxyApiPlugin(), deepseekApiPlugin(), fetchUrlMetaApiPlugin(), pagespeedApiPlugin(), screamingFrogApiPlugin(), webmasterApiPlugin(), autocompleteApiPlugin(), gscTokenApiPlugin(), projectsApiPlugin(), projectDetailsApiPlugin(), backlinksAnalyzeApiPlugin(), w3cValidationApiPlugin(), expiredDomainsCheckApiPlugin(), backlinkCleanerApiPlugin(), backlinkIndexerApiPlugin(), keywordResearchApiPlugin(), ubersuggestApiPlugin(), authApiPlugin(), contentOutlineApiPlugin(), crawlerApiPlugin()],
+  plugins: [react(), proxyApiPlugin(), deepseekApiPlugin(), deepseekSettingsApiPlugin(), fetchUrlMetaApiPlugin(), pagespeedApiPlugin(), screamingFrogApiPlugin(), webmasterApiPlugin(), autocompleteApiPlugin(), gscTokenApiPlugin(), projectsApiPlugin(), projectDetailsApiPlugin(), backlinksAnalyzeApiPlugin(), w3cValidationApiPlugin(), expiredDomainsCheckApiPlugin(), backlinkCleanerApiPlugin(), backlinkIndexerApiPlugin(), keywordResearchApiPlugin(), ubersuggestApiPlugin(), authApiPlugin(), contentOutlineApiPlugin(), crawlerApiPlugin()],
   server: {
     port: 3000,
     host: true,

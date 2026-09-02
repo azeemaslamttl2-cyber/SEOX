@@ -1,7 +1,8 @@
 import { requireAuthenticatedUser } from "../_lib/request-auth.js";
+import { queryOne } from "../_lib/mysql.js";
 
 // Shared Node-style handler used by the Cloudflare Pages Function wrapper.
-// API key is stored server-side via environment variable: DEEPSEEK_API_KEY.
+// User-specific keys come from MySQL; DEEPSEEK_API_KEY remains the fallback.
 // Mirrors the old Gemini endpoint shape so existing tools can switch providers cleanly.
 
 const DEEPSEEK_API_URL = 'https://api.deepseek.com/chat/completions';
@@ -23,13 +24,23 @@ export default async function handler(req, res) {
         return res.status(405).json({ error: 'Method not allowed' });
     }
 
+    let user;
     try {
-        await requireAuthenticatedUser(req);
+        user = await requireAuthenticatedUser(req);
     } catch (error) {
         return res.status(error?.status || 401).json({ error: error?.message || 'Unauthorized' });
     }
 
-    const apiKey = process.env.DEEPSEEK_API_KEY;
+    let savedSettings = null;
+    try {
+        savedSettings = await queryOne(
+            'SELECT api_key FROM deepseek_api_settings WHERE user_id = ? ORDER BY id DESC LIMIT 1',
+            [user.uid]
+        );
+    } catch (error) {
+        if (error?.code !== 'ER_NO_SUCH_TABLE') throw error;
+    }
+    const apiKey = savedSettings?.api_key || process.env.DEEPSEEK_API_KEY;
 
     if (!apiKey) {
         return res.status(500).json({ error: 'DeepSeek API key not configured on server' });

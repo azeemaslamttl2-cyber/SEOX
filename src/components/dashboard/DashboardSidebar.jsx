@@ -31,6 +31,7 @@ import {
   Users,
   Network,
   CreditCard,
+  BrainCircuit,
 } from "lucide-react";
 
 const nav = [
@@ -118,6 +119,7 @@ const nav = [
     section: "Settings",
     items: [
       { label: "Stripe", to: "/settings/stripe", icon: CreditCard },
+      { label: "DeepSeek API", to: "/settings/deepseek", icon: BrainCircuit },
     ],
   },
 ];

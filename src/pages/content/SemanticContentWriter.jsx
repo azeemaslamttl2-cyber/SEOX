@@ -5494,11 +5494,10 @@ BEGIN WRITING THE ARTICLE NOW:`;
                             <div className="flex items-center gap-3">
                                 <AlertCircle className="w-5 h-5 text-amber-600 flex-shrink-0" />
                                 <div>
-                                    <p className="status-title text-sm font-bold">No API key configured — Using DeepSeek Chat</p>
-                                    <p className="status-desc text-xs font-medium">Add your OpenAI, OpenRouter, or Claude API key in Settings for enhanced performance</p>
+                                    <p className="status-title text-sm font-bold">Using DeepSeek Chat</p>
+                                    <p className="status-desc text-xs font-medium">DeepSeek API is configured server-side and ready for AI generation.</p>
                                 </div>
                             </div>
-                            <a href="/settings" className="btn-add-key px-4 py-2 text-xs font-bold rounded-xl transition shadow-md flex-shrink-0">Add API Key</a>
                         </div>
                     );
                 }
