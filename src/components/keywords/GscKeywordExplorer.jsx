@@ -247,10 +247,10 @@ export default function GscKeywordExplorer({ kind }) {
             <select
               value={gsc.selectedSite}
               onChange={(event) => gsc.setSelectedSite(event.target.value)}
-              className="w-full bg-black text-sm text-white/60 focus:outline-none"
+              className="gke-site-select"
             >
               {gsc.sites.map((site) => (
-                <option key={site.siteUrl} value={site.siteUrl} className="bg-black text-white">
+                <option key={site.siteUrl} value={site.siteUrl}>
                   {site.siteUrl}
                 </option>
               ))}

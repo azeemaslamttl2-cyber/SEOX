@@ -483,13 +483,13 @@ export default function AIContentHelper() {
 
         {/* Editor area with Paper Canvas */}
         <div className="flex-1 overflow-y-auto px-8 py-5">
-          <div className="max-w-[760px] mx-auto">
+          <div className="w-full">
             <div
               ref={editorRef}
               contentEditable
               suppressContentEditableWarning
               onInput={handleInput}
-              className="min-h-[520px] w-full rounded-2xl border border-slate-200/80 bg-white p-8 text-sm text-slate-800 leading-relaxed shadow-[0_4px_25px_-5px_rgba(45,43,111,0.06)] focus:outline-none prose-headings:text-college-blue prose-headings:font-bold prose-h1:text-2xl prose-h2:text-xl prose-p:text-slate-700"
+              className="ach-canvas"
               data-placeholder="Start typing or pasting your content here..."
             />
           </div>

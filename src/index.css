@@ -1984,9 +1984,12 @@ button [class*="text-stone"] {
 .backlink-category-card p {
   color: var(--text-secondary) !important;
 }
-.backlink-category-card > div:first-child {
+/* The card's leading child is the icon tile. This rule predates .bd-card-icon
+   and out-specifies it (0,1,1 vs 0,1,0), so it kept painting the tile grey
+   with an indigo glyph. Scoped to tiles that are NOT the brand plate. */
+.backlink-category-card > div:first-child:not(.bd-card-icon) {
   background: var(--surface-muted) !important;
-  color: #4f46e5 !important;
+  color: var(--text-secondary) !important;
 }
 .backlink-category-card .bg-blue-500\/15 {
   background: #dbeafe !important;
@@ -3435,7 +3438,7 @@ table:not(.admin-table) tbody tr {
 /* Form controls are handled separately, below: they mark focus with the
    brand border + ring, so adding this navy outline on top drew two
    competing rings around every focused field. */
-.focus\:outline-none:focus-visible,
+.focus\:outline-none:focus-visible:not(input):not(textarea):not(select),
 [contenteditable="true"]:focus-visible {
   outline: var(--focus-width) solid var(--focus-ring) !important;
   outline-offset: var(--focus-offset) !important;
@@ -8336,7 +8339,10 @@ aside.w3c-card {
    ================================================================== */
 .bd-card-icon {
   align-items: center;
-  background: var(--brand-red-subtle) !important;
+  /* --brand-red-subtle is only ~2% off white, so the tile disappeared on the
+     white card. --tile-bg is the visible tile fill used by every other icon
+     plate in the app. */
+  background: var(--tile-bg) !important;
   border: 1px solid var(--brand-red-border);
   border-radius: var(--radius-lg);
   color: var(--brand-red) !important;
@@ -15020,3 +15026,528 @@ html:not(.dark) .lead-action-btn:hover {
 .scw-serp-head:hover:not(:disabled) svg { color: var(--brand-red) !important; }
 .scw-serp-title { color: var(--brand-blue) !important; font-size: 0.9375rem; font-weight: 700; }
 .scw-serp > div:not(.scw-serp-head) { padding: 18px; }
+
+/* --- Semantic Writer: SERP panel fields and menus -------------------------
+   The inputs were `bg-gray-800/50` — a translucent near-black that composites
+   to solid mid-grey over the white card, with `text-white` on top. The menus
+   were bare <button> rows on `bg-gray-800`, so the app's default primary
+   filled every option brand red. */
+.scw-menu {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-overlay);
+  left: 0;
+  margin-top: 4px;
+  overflow: hidden;
+  padding: 6px;
+  position: absolute;
+  right: 0;
+  top: 100%;
+  z-index: 60;
+}
+.scw-menu-item {
+  align-items: center;
+  background: transparent !important;
+  border: 0 !important;
+  border-radius: var(--radius-sm) !important;
+  color: var(--text-secondary) !important;
+  --btn-fg: var(--text-secondary);
+  display: flex;
+  font-size: 13px;
+  gap: 8px;
+  padding: 8px 10px !important;
+  text-align: left;
+  width: 100%;
+}
+.scw-menu-item-split { justify-content: space-between; }
+.scw-menu-item:hover:not(:disabled) {
+  background: var(--surface-sunken) !important;
+  color: var(--text-primary) !important;
+  --btn-fg: var(--text-primary);
+}
+.scw-menu-label { color: var(--text-primary); }
+.scw-menu-meta { color: var(--text-muted); font-size: 11px; font-weight: 600; }
+.scw-menu-icon { color: var(--text-muted) !important; }
+.scw-field-icon { color: var(--text-muted) !important; }
+.scw-geo-btn { min-height: var(--control-h-lg); padding: 0 16px !important; }
+.scw-latlng {
+  color: var(--text-primary);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 13px;
+}
+.scw-label-note { color: var(--text-muted); font-weight: 400; }
+
+/* ===========================================================================
+   SEMANTIC WRITER — content editor
+   The editor and its sidebar were still the original dark theme: slate-900
+   chrome, a slate-950 writing canvas with `prose-invert`, and slate-800
+   controls. Everything else in the app is light, so the step read as a
+   different application embedded in the page.
+   =========================================================================== */
+.scw-editor,
+.scw-panel {
+  background: var(--surface) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-xs);
+  overflow: hidden;
+}
+.scw-panel-pad { padding: 16px; }
+
+.scw-toolbar {
+  align-items: center;
+  background: var(--surface-sunken);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  gap: 6px;
+  padding: 10px 14px;
+}
+.scw-actionbar {
+  align-items: center;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border-subtle);
+  display: flex;
+  gap: 8px;
+  padding: 12px 14px;
+}
+.scw-tool {
+  align-items: center;
+  background: transparent !important;
+  border: 1px solid transparent !important;
+  border-radius: var(--radius-sm) !important;
+  color: var(--text-secondary) !important;
+  --btn-fg: var(--text-secondary);
+  display: inline-flex;
+  height: 32px;
+  justify-content: center;
+  padding: 0 !important;
+  width: 32px;
+}
+.scw-tool-sm { height: 26px; width: 26px; }
+.scw-tool:hover:not(:disabled) {
+  background: var(--surface) !important;
+  border-color: var(--border) !important;
+  color: var(--brand-red) !important;
+  --btn-fg: var(--brand-red);
+}
+.scw-tool-sep { background: var(--border); height: 22px; margin: 0 4px; width: 1px; }
+.scw-tool-select { min-height: 32px !important; padding: 0 10px !important; width: auto; }
+
+.scw-title-input {
+  background: transparent !important;
+  border: 0;
+  color: var(--brand-blue) !important;
+  font-size: 1.5rem;
+  font-weight: 700;
+  letter-spacing: -0.018em;
+  outline: none;
+  width: 100%;
+}
+.scw-title-input::placeholder { color: var(--text-disabled) !important; }
+
+/* The writing canvas is the one place a plain white sheet is right. */
+.scw-canvas {
+  background: var(--surface) !important;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  color: var(--text-primary);
+  margin: 16px;
+  max-height: 650px;
+  min-height: 450px;
+  overflow-y: auto;
+  padding: 24px;
+}
+.scw-canvas:focus { outline: none; }
+.scw-canvas h1 { color: var(--brand-blue); font-size: 1.75rem; font-weight: 700; margin: 16px 0; }
+.scw-canvas h2 { color: var(--brand-blue); font-size: 1.375rem; font-weight: 700; margin: 14px 0; }
+.scw-canvas h3 { color: var(--text-primary); font-size: 1.125rem; font-weight: 700; margin: 12px 0; }
+.scw-canvas p  { color: var(--text-secondary); margin: 8px 0; }
+.scw-canvas ul { list-style: disc; padding-left: 24px; }
+.scw-canvas ol { list-style: decimal; padding-left: 24px; }
+
+.scw-editor-foot {
+  align-items: center;
+  background: var(--surface-sunken);
+  border-top: 1px solid var(--border);
+  color: var(--text-muted);
+  display: flex;
+  font-size: 12px;
+  justify-content: space-between;
+  padding: 10px 20px;
+}
+.scw-dot {
+  background: var(--success);
+  border-radius: var(--radius-pill);
+  height: 7px;
+  width: 7px;
+}
+.scw-foot-note { color: var(--text-disabled); }
+
+.scw-tabs { border-bottom: 1px solid var(--border); display: flex; }
+.scw-tab { border-radius: 0 !important; flex: 1 1 0; justify-content: center; min-height: 42px; }
+
+.scw-stat {
+  background: var(--surface-sunken);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  padding: 10px;
+  text-align: center;
+}
+.scw-stat-label { color: var(--text-muted); font-size: 9px; }
+.scw-stat-sub { color: var(--text-secondary); font-size: 10px; font-weight: 700; margin-top: 2px; }
+
+.scw-listrow {
+  align-items: center;
+  background: var(--surface-sunken);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  display: flex;
+  gap: 8px;
+  padding: 5px 9px;
+}
+.scw-listrow-text { color: var(--text-secondary); }
+.scw-chip {
+  background: var(--surface-sunken);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xs);
+  color: var(--text-secondary);
+  cursor: pointer;
+  font-size: 10px;
+  padding: 2px 8px;
+  transition: background-color var(--motion-fast), color var(--motion-fast);
+}
+.scw-chip:hover {
+  background: var(--tile-bg);
+  border-color: var(--brand-red-border);
+  color: var(--brand-red-hover);
+}
+.scw-modal {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-overlay);
+}
+.scw-card-sm { padding: 16px !important; }
+.scw-score { color: var(--brand-blue); font-size: 1.75rem; font-weight: 700; }
+.scw-score-max { color: var(--text-muted); font-size: 13px; }
+
+/* The AI helper's writing canvas was capped at 760px and centred inside a
+   pane that already has its own width, so it floated as a narrow sheet with
+   dead space either side. It fills the pane like every other block. */
+.ach-canvas {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-xs);
+  color: var(--text-primary);
+  font-size: 13px;
+  line-height: 1.7;
+  min-height: 520px;
+  padding: 28px 32px;
+  width: 100%;
+}
+.ach-canvas:focus { outline: none; }
+.ach-canvas h1 { color: var(--brand-blue); font-size: 1.5rem; font-weight: 700; margin: 16px 0; }
+.ach-canvas h2 { color: var(--brand-blue); font-size: 1.25rem; font-weight: 700; margin: 14px 0; }
+.ach-canvas h3 { color: var(--text-primary); font-size: 1.0625rem; font-weight: 700; margin: 12px 0; }
+.ach-canvas p  { color: var(--text-secondary); margin: 8px 0; }
+.ach-canvas:empty:before {
+  color: var(--text-disabled);
+  content: attr(data-placeholder);
+}
+
+/* --- Grammar generator results -------------------------------------------
+   The eight category cards sat on a grey #f4f4f5 plate with a custom shadow,
+   a blurred coloured glow bleeding out of the top-left corner, a coloured dot
+   and a tinted count chip — eight palettes for eight lists of words. */
+.gram-summary { padding: 16px !important; }
+.gram-summary-title { color: var(--brand-blue); font-size: 0.875rem; font-weight: 700; }
+.gram-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-xs);
+  padding: 16px;
+  transition: border-color var(--motion-fast), box-shadow var(--motion-fast);
+}
+.gram-card:hover { border-color: var(--border-strong); box-shadow: var(--shadow-sm); }
+.gram-card-head {
+  align-items: center;
+  border-bottom: 1px solid var(--border-subtle);
+  display: flex;
+  gap: 12px;
+  justify-content: space-between;
+  margin-bottom: 12px;
+  padding-bottom: 10px;
+}
+.gram-card-title {
+  color: var(--brand-blue);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+/* ---------------------------------------------------------------------------
+   Keyword field surfaces
+   `.kw-input` declared a white fill, but a page-scoped rule
+   (`.keyword-suggest-page input`) at higher specificity forced text inputs to
+   the sunken fill — so on /keywords/suggest the text field rendered sunken
+   while the country select's shell stayed white and the two did not match.
+   Fields in this app are sunken, so both are pinned to that.
+   --------------------------------------------------------------------------- */
+.kw-input,
+.kw-static-field,
+.kw-select-shell {
+  background: var(--surface-sunken) !important;
+  border-color: var(--border) !important;
+}
+.kw-select-shell:focus-within {
+  border-color: var(--brand-red) !important;
+  box-shadow: var(--focus-ring-brand);
+}
+/* The select inside the shell must stay transparent, or the page rule paints
+   a second sunken block inside the one the shell already draws. */
+.kw-select-shell select,
+.kw-select-shell .kw-bare-select {
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+}
+
+/* ---------------------------------------------------------------------------
+   Ubersuggest field surfaces — same collision as the keyword pages
+   `.ub-field` / `.ub-region-trigger` draw the white shell, while a page rule
+   (`.ubersuggest-page input`) forces the inner control to the sunken fill, so
+   a sunken block rendered inside a white shell with the shell's focus ring
+   drawn around both.
+   --------------------------------------------------------------------------- */
+.ub-field,
+.ub-region-trigger {
+  background: var(--surface) !important;
+  border-color: var(--border) !important;
+}
+.ubersuggest-page .ub-field .ub-input,
+.ubersuggest-page .ub-field input,
+.ubersuggest-page .ub-region-trigger input {
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  outline: none !important;
+}
+
+/* The region selector is a <button>, and no rule declared its hover state, so
+   the app's default primary took it and the whole control turned brand red on
+   hover with its label left white. */
+.ub-region-trigger:hover:not(:disabled) {
+  background: var(--surface-sunken) !important;
+  border-color: var(--border-strong) !important;
+  color: var(--text-primary) !important;
+  --btn-fg: var(--text-primary);
+}
+.ub-region-trigger > svg,
+.ub-region-trigger:hover:not(:disabled) > svg { color: var(--text-muted) !important; }
+
+/* ---------------------------------------------------------------------------
+   GSC site selector
+   The <select> and each <option> carried `bg-black text-white`. A native
+   option list is painted by the OS from the control's own background, so the
+   menu rendered as a black panel with dark labels regardless of the app
+   theme. The control is a normal field; the popup follows the page.
+   --------------------------------------------------------------------------- */
+.gke-site-select {
+  background: transparent !important;
+  border: 0 !important;
+  color: var(--text-primary) !important;
+  color-scheme: light;
+  font-size: 13px;
+  min-width: 0;
+  outline: none;
+  width: 100%;
+}
+.gke-site-select option {
+  background: var(--surface);
+  color: var(--text-primary);
+}
+
+/* ---------------------------------------------------------------------------
+   Date/time controls
+   These sit inside a field shell that already shows focus (.gke-field and
+   friends react via :focus-within), and the browser was still drawing the
+   global navy focus ring around the control itself — a second ring inside the
+   brand one. Covers the shell, the control and its inner segments.
+   --------------------------------------------------------------------------- */
+input[type="date"],
+input[type="time"],
+input[type="datetime-local"],
+input[type="month"],
+input[type="week"] {
+  color-scheme: light;
+}
+input[type="date"]:focus,
+input[type="date"]:focus-visible,
+input[type="time"]:focus,
+input[type="time"]:focus-visible,
+input[type="datetime-local"]:focus,
+input[type="datetime-local"]:focus-visible,
+input[type="month"]:focus,
+input[type="month"]:focus-visible,
+input[type="week"]:focus,
+input[type="week"]:focus-visible {
+  border-color: transparent !important;
+  box-shadow: none !important;
+  outline: none !important;
+}
+/* Anything focused inside one of the field shells: the shell owns the ring. */
+.gke-field :focus,
+.gke-field :focus-visible,
+.gke-datefield :focus,
+.gke-datefield :focus-visible,
+.ctool-field :focus,
+.ctool-field :focus-visible,
+.lef-input-wrap :focus,
+.lef-input-wrap :focus-visible,
+.kw-search :focus,
+.kw-search :focus-visible,
+.kw-select-shell :focus,
+.kw-select-shell :focus-visible,
+.ub-field :focus,
+.ub-field :focus-visible,
+.lead-search-bar :focus,
+.lead-search-bar :focus-visible {
+  box-shadow: none !important;
+  outline: none !important;
+}
+
+/* ---------------------------------------------------------------------------
+   Cannibalization table cells
+   The page-count badge is a grid item, so it stretched to the full row height
+   — and because the keyword cell can hold four page links, that made it a
+   tall pill running the height of the row. It sizes to its own content now.
+   --------------------------------------------------------------------------- */
+.kc-pages {
+  align-self: start;
+  background: var(--tile-bg);
+  border: 1px solid var(--brand-red-border);
+  border-radius: var(--radius-pill);
+  color: var(--brand-red-hover);
+  display: inline-flex;
+  font-size: 10px;
+  font-weight: 700;
+  justify-self: start;
+  padding: 2px 9px;
+  width: fit-content;
+}
+.kc-keyword { color: var(--text-primary); font-size: 13px; font-weight: 500; }
+.kc-page-link { color: var(--text-muted); font-size: 10px; }
+.kc-page-link:hover { color: var(--brand-red-hover); }
+.kc-num {
+  align-self: start;
+  color: var(--text-secondary);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+.kc-delta { align-self: start; color: var(--text-muted); font-size: 10px; font-weight: 700; }
+.kc-delta.is-up { color: var(--success-text); }
+.kc-delta.is-down { color: var(--error-text); }
+
+/* ===========================================================================
+   GSC BULK ANALYSIS — toolbar
+   The engine switcher's inactive pills declared only a text colour, so the
+   app's default primary painted Bing and Yandex solid brand red while the
+   active pill (which carries bg-white) stayed white. The view, refresh,
+   sign-out and metric buttons had the same problem.
+   =========================================================================== */
+.bulk-topbar,
+.bulk-metricbar {
+  background: var(--surface) !important;
+  border-bottom: 1px solid var(--border);
+}
+.bulk-engine-switch {
+  align-items: center;
+  background: var(--surface-muted);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-pill);
+  display: flex;
+  gap: 2px;
+  padding: 3px;
+}
+.bulk-engine-btn {
+  align-items: center;
+  background: transparent !important;
+  border: 1px solid transparent !important;
+  border-radius: var(--radius-pill) !important;
+  color: var(--text-secondary) !important;
+  --btn-fg: var(--text-secondary);
+  display: inline-flex;
+  font-size: 13px;
+  font-weight: 600;
+  gap: 8px;
+  min-height: 30px;
+  padding: 0 14px !important;
+  white-space: nowrap;
+}
+.bulk-engine-btn:hover:not(:disabled) {
+  background: var(--surface) !important;
+  color: var(--text-primary) !important;
+  --btn-fg: var(--text-primary);
+}
+.bulk-engine-btn.active,
+.bulk-engine-btn.active:hover {
+  background: var(--surface) !important;
+  border-color: var(--border) !important;
+  box-shadow: var(--shadow-xs);
+  color: var(--text-primary) !important;
+  --btn-fg: var(--text-primary);
+}
+
+.bulk-sort { min-height: var(--control-h); width: auto; }
+.bulk-viewswitch { padding: 3px; }
+.bulk-icon-btn {
+  height: 32px;
+  padding: 0 !important;
+  width: 32px;
+}
+.bulk-metric-btn {
+  background: transparent !important;
+  border: 1px solid transparent !important;
+  border-radius: var(--radius-md) !important;
+  color: var(--text-muted) !important;
+  --btn-fg: var(--text-muted);
+  height: 32px;
+  padding: 0 !important;
+  width: 32px;
+}
+.bulk-metric-btn:hover:not(:disabled) {
+  background: var(--surface-sunken) !important;
+  color: var(--text-primary) !important;
+  --btn-fg: var(--text-primary);
+}
+.bulk-metric-btn.active,
+.bulk-metric-btn.active:hover {
+  background: var(--tile-bg) !important;
+  border-color: var(--brand-red-border) !important;
+  color: var(--brand-red) !important;
+  --btn-fg: var(--brand-red);
+}
+.bulk-date-btn { min-height: var(--control-h); padding: 0 12px !important; }
+.bulk-datemenu {
+  left: auto;
+  min-width: 320px;
+  padding: 0;
+  right: 0;
+  top: calc(100% + 8px);
+}
+.bulk-tip {
+  bottom: -30px;
+  left: 50%;
+  opacity: 0;
+  pointer-events: none;
+  position: absolute;
+  transform: translateX(-50%);
+  transition: opacity var(--motion-fast);
+  z-index: 60;
+}
+.group:hover > .bulk-tip { opacity: 1; }
