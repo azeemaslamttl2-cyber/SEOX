@@ -30,7 +30,7 @@ function dateFromInput(value, fallback) {
   return Number.isNaN(date.getTime()) ? fallback : date;
 }
 
-export function useGscKeywordData(source = "keyword-tools", { onAutoFetchSuccess } = {}) {
+export function useGscKeywordData(source = "keyword-tools", { onAutoFetchSuccess, autoFetch = true } = {}) {
   const { user, loading: authLoading } = useAuth();
   const userId = getUserId(user);
   const onAutoFetchSuccessRef = useRef(onAutoFetchSuccess);
@@ -318,10 +318,10 @@ export function useGscKeywordData(source = "keyword-tools", { onAutoFetchSuccess
   ]);
 
   useEffect(() => {
-    if (selectedSite && accessToken) {
+    if (autoFetch && selectedSite && accessToken) {
       fetchAllData({ onSuccess: onAutoFetchSuccessRef.current });
     }
-  }, [selectedSite, accessToken, fetchAllData]);
+  }, [accessToken, autoFetch, fetchAllData, selectedSite]);
 
   return {
     accessToken,

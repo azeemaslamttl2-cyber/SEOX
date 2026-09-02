@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   AlertCircle,
   Calendar,
@@ -17,7 +17,9 @@ import {
 } from "lucide-react";
 import { useGscKeywordData } from "../../hooks/useGscKeywordData.js";
 import { useAuth } from "../../context/AuthContext.jsx";
-import { useSelectedProjectDomain } from "../../hooks/useSelectedProjectDomain.js";
+import { useSyncedKeywordProjectSite } from "../../hooks/useSyncedKeywordProjectSite.js";
+import { useSavedKeywordAnalysis } from "../../hooks/useSavedKeywordAnalysis.js";
+import KeywordPagination from "../../components/keywords/KeywordPagination.jsx";
 import {
   buildCannibalizationRows,
   downloadCsv,
@@ -30,17 +32,27 @@ import { saveProjectData } from "../../lib/projectsApi.js";
 
 export default function KeywordCannibalization() {
   const { user } = useAuth();
-  const { project } = useSelectedProjectDomain();
-  const gsc = useGscKeywordData("keyword-cannibalization");
+  const savedAnalysis = useSavedKeywordAnalysis("cannibalization");
+  const gsc = useGscKeywordData("keyword-cannibalization", {
+    autoFetch: !savedAnalysis.isLoading && !savedAnalysis.hasSavedData,
+  });
+  const { project, syncProjectForSite } = useSyncedKeywordProjectSite(gsc);
   const [searchTerm, setSearchTerm] = useState("");
   const [sortField, setSortField] = useState("impressions");
   const [sortDirection, setSortDirection] = useState("desc");
   const [showInfo, setShowInfo] = useState(true);
   const [saveStatus, setSaveStatus] = useState("");
+  const [page, setPage] = useState(1);
+  const savedRows = Array.isArray(savedAnalysis.saved) ? savedAnalysis.saved : [];
+  const sourceCurrentRows = gsc.currentRows.length ? gsc.currentRows : savedAnalysis.saved?.currentRows || [];
+  const sourcePreviousRows = gsc.previousRows.length ? gsc.previousRows : savedAnalysis.saved?.previousRows || [];
+  const selectedSite = gsc.selectedSite || savedAnalysis.saved?.selectedSite || "";
 
   const rows = useMemo(
-    () => buildCannibalizationRows(gsc.currentRows, gsc.previousRows, gsc.selectedSite),
-    [gsc.currentRows, gsc.previousRows, gsc.selectedSite]
+    () => savedRows.length && !sourceCurrentRows.length
+      ? savedRows
+      : buildCannibalizationRows(sourceCurrentRows, sourcePreviousRows, selectedSite),
+    [savedRows, selectedSite, sourceCurrentRows, sourcePreviousRows]
   );
   const filteredRows = useMemo(() => {
     const query = searchTerm.trim().toLowerCase();
@@ -52,6 +64,16 @@ export default function KeywordCannibalization() {
         return (Number(a[sortField] || 0) - Number(b[sortField] || 0)) * direction;
       });
   }, [rows, searchTerm, sortDirection, sortField]);
+  const totalPages = Math.max(1, Math.ceil(filteredRows.length / 20));
+  const visibleRows = filteredRows.slice((page - 1) * 20, page * 20);
+
+  useEffect(() => {
+    setPage(1);
+  }, [project?.id, searchTerm, sortField, sortDirection]);
+
+  useEffect(() => {
+    if (page > totalPages) setPage(totalPages);
+  }, [page, totalPages]);
 
   async function persistCannibalization(current, previous, selectedSite) {
     const userId = user?.uid || user?.id || "";
@@ -104,7 +126,7 @@ export default function KeywordCannibalization() {
     ]);
   }
 
-  if (gsc.isCheckingConnection) {
+  if (savedAnalysis.isLoading || gsc.isCheckingConnection) {
     return (
       <div className="keyword-cannibalization-page kw-page space-y-5">
         <Hero />
@@ -116,7 +138,7 @@ export default function KeywordCannibalization() {
     );
   }
 
-  if (!gsc.isSignedIn) {
+  if (!gsc.isSignedIn && !savedAnalysis.hasSavedData) {
     return (
       <div className="keyword-cannibalization-page kw-page space-y-5">
         <Hero />
@@ -187,7 +209,7 @@ export default function KeywordCannibalization() {
             <Globe className="h-4 w-4 text-blue-400" />
             <select
               value={gsc.selectedSite}
-              onChange={(event) => gsc.setSelectedSite(event.target.value)}
+              onChange={(event) => syncProjectForSite(event.target.value)}
               className="w-full bg-transparent text-sm text-white/60 focus:outline-none"
             >
               {gsc.sites.map((site) => (
@@ -281,7 +303,7 @@ export default function KeywordCannibalization() {
             <Loader2 className="h-6 w-6 animate-spin text-blue-400" />
           </div>
         ) : filteredRows.length ? (
-          filteredRows.map((row, index) => (
+          visibleRows.map((row, index) => (
             <div
               key={row.keyword}
               className={`keyword-cannibalization-row grid grid-cols-[2fr_0.5fr_0.9fr_0.8fr_0.7fr_0.7fr_0.7fr_0.8fr] gap-2 px-5 py-3 transition hover:bg-white/[0.02] ${
@@ -321,10 +343,11 @@ export default function KeywordCannibalization() {
           <div className="py-16 text-center">
             <AlertCircle className="mx-auto h-8 w-8 text-white/[0.06]" />
             <p className="mt-3 text-sm text-white/25">
-              {gsc.currentRows.length ? "No keyword cannibalization found." : "Connect a property and apply a date range to analyze cannibalization."}
+              {sourceCurrentRows.length ? "No keyword cannibalization found." : "Connect a property and apply a date range to analyze cannibalization."}
             </p>
           </div>
         )}
+        <KeywordPagination page={page} setPage={setPage} totalPages={totalPages} total={filteredRows.length} />
       </div>
     </div>
   );

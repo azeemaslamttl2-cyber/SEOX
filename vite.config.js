@@ -6,6 +6,7 @@ import { onRequest as gscTokenOnRequest } from "./functions/api/gsc-token.js";
 import { onRequest as pagespeedOnRequest } from "./functions/api/pagespeed.js";
 import { onRequest as screamingFrogOnRequest } from "./functions/api/tech-seo/screaming-frog.js";
 import { onRequest as screamingFrogReportDownloadOnRequest } from "./functions/api/tech-seo/screaming-frog/report-download.js";
+import { onRequest as screamingFrogUrlReportsOnRequest } from "./functions/api/tech-seo/screaming-frog/url-reports.js";
 import { onRequest as projectsOnRequest } from "./functions/api/projects.js";
 import { onRequest as projectDetailsOnRequest } from "./functions/api/project-details.js";
 import { onRequest as backlinksAnalyzeOnRequest } from "./functions/api/tech-seo/backlinks/analyze.js";
@@ -572,6 +573,15 @@ function registerPagespeedMiddleware(server) {
 }
 
 function registerScreamingFrogMiddleware(server) {
+  server.middlewares.use("/api/tech-seo/screaming-frog/url-reports", async (req, res) => {
+    try {
+      const request = await createWebRequest(req, "/api/tech-seo/screaming-frog/url-reports");
+      const response = await screamingFrogUrlReportsOnRequest({ request, env: loadDevApiEnv() });
+      await sendWebResponse(res, response);
+    } catch (error) {
+      sendJson(res, error?.status || 500, { success: false, error: error?.message || "Screaming Frog URL report storage failed." });
+    }
+  });
   server.middlewares.use("/api/tech-seo/screaming-frog/report-download", async (req, res) => {
     try {
       const request = await createWebRequest(req, "/api/tech-seo/screaming-frog/report-download");

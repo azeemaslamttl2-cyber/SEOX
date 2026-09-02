@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   AlertCircle,
   ArrowDown,
@@ -19,7 +19,10 @@ import {
 } from "lucide-react";
 import { useAuth } from "../../context/AuthContext.jsx";
 import { useGscKeywordData } from "../../hooks/useGscKeywordData.js";
+import { useSyncedKeywordProjectSite } from "../../hooks/useSyncedKeywordProjectSite.js";
 import { useSelectedProjectDomain } from "../../hooks/useSelectedProjectDomain.js";
+import { useSavedKeywordAnalysis } from "../../hooks/useSavedKeywordAnalysis.js";
+import KeywordPagination from "./KeywordPagination.jsx";
 import {
   buildKeywordRows,
   downloadCsv,
@@ -76,9 +79,12 @@ export default function GscKeywordExplorer({ kind }) {
   const userId = user?.uid || user?.id || "";
   const { project } = useSelectedProjectDomain();
   const projectId = project?.id || project?.project_id || "";
+  const savedAnalysis = useSavedKeywordAnalysis(kind);
+  const brandStem = getBrandStem(project?.fullUrl || project?.domain || "");
   const [searchTerm, setSearchTerm] = useState("");
   const [sortField, setSortField] = useState("clicks");
   const [sortDirection, setSortDirection] = useState("desc");
+  const [page, setPage] = useState(1);
 
   const persistKeywordSnapshot = useCallback(
     async ({ current, previous, selectedSite, currentStart, currentEnd, previousStart, previousEnd }) => {
@@ -94,7 +100,9 @@ export default function GscKeywordExplorer({ kind }) {
               ? keywordRows.filter((row) => brandStem && row.keyword.toLowerCase().includes(brandStem))
               : undefined;
 
-        const projectDataKey = kind === "branded"
+        const projectDataKey = kind === "new"
+          ? "new-keywords"
+          : kind === "branded"
           ? "branded-keywords"
           : kind === "low-hanging"
             ? "low-hanging-keywords"
@@ -115,7 +123,7 @@ export default function GscKeywordExplorer({ kind }) {
                 previousEnd,
               },
               fetchedAt: new Date().toISOString(),
-              rows: kind === "branded" ? persistedRows || [] : current || [],
+              rows: persistedRows || current || [],
               ...(kind === "low-hanging" && persistedRows ? { lowHangingRows: persistedRows } : {}),
               ...(kind === "lost" && persistedRows ? { lostRows: persistedRows } : {}),
           },
@@ -125,27 +133,36 @@ export default function GscKeywordExplorer({ kind }) {
         throw error;
       }
     },
-    [kind, projectId, userId]
+    [brandStem, kind, projectId, userId]
   );
 
   const gsc = useGscKeywordData(`keywords-${kind}`, {
-    onAutoFetchSuccess: ["low-hanging", "lost", "branded"].includes(kind) ? persistKeywordSnapshot : undefined,
+    onAutoFetchSuccess: persistKeywordSnapshot,
+    autoFetch: !savedAnalysis.isLoading && !savedAnalysis.hasSavedData,
   });
+  const { syncProjectForSite } = useSyncedKeywordProjectSite(gsc);
+
+  const savedSnapshot = savedAnalysis.saved && !Array.isArray(savedAnalysis.saved)
+    ? savedAnalysis.saved
+    : null;
+  const sourceCurrentRows = gsc.currentRows.length ? gsc.currentRows : savedSnapshot?.currentRows || [];
+  const sourcePreviousRows = gsc.previousRows.length ? gsc.previousRows : savedSnapshot?.previousRows || [];
+  const selectedSite = gsc.selectedSite || savedSnapshot?.selectedSite || "";
 
   const allRows = useMemo(
-    () => buildKeywordRows(gsc.currentRows, gsc.previousRows, gsc.selectedSite),
-    [gsc.currentRows, gsc.previousRows, gsc.selectedSite]
+    () => buildKeywordRows(sourceCurrentRows, sourcePreviousRows, selectedSite),
+    [selectedSite, sourceCurrentRows, sourcePreviousRows]
   );
-  const brandStem = getBrandStem(gsc.selectedSite);
+  const liveBrandStem = getBrandStem(selectedSite);
   const rows = useMemo(() => {
     if (kind === "new") return allRows.filter((row) => row.isNew);
     if (kind === "low-hanging") return allRows.filter((row) => row.isLowHanging);
     if (kind === "lost") return allRows.filter((row) => row.isLost);
     if (kind === "branded") {
-      return allRows.filter((row) => brandStem && row.keyword.toLowerCase().includes(brandStem));
+      return allRows.filter((row) => liveBrandStem && row.keyword.toLowerCase().includes(liveBrandStem));
     }
     return allRows;
-  }, [allRows, brandStem, kind]);
+  }, [allRows, kind, liveBrandStem]);
   const filteredRows = useMemo(() => {
     const query = searchTerm.trim().toLowerCase();
     const direction = sortDirection === "asc" ? 1 : -1;
@@ -157,6 +174,16 @@ export default function GscKeywordExplorer({ kind }) {
         return (Number(a[sortField] || 0) - Number(b[sortField] || 0)) * direction;
       });
   }, [rows, searchTerm, sortDirection, sortField]);
+  const totalPages = Math.max(1, Math.ceil(filteredRows.length / 20));
+  const visibleRows = filteredRows.slice((page - 1) * 20, page * 20);
+
+  useEffect(() => {
+    setPage(1);
+  }, [projectId, kind, searchTerm, sortField, sortDirection]);
+
+  useEffect(() => {
+    if (page > totalPages) setPage(totalPages);
+  }, [page, totalPages]);
   const totals = useMemo(
     () => ({
       clicks: rows.reduce((sum, row) => sum + row.clicks, 0),
@@ -192,11 +219,11 @@ export default function GscKeywordExplorer({ kind }) {
     ]);
   }
 
-  if (gsc.isCheckingConnection) {
+  if (savedAnalysis.isLoading || gsc.isCheckingConnection) {
     return <LoadingState config={config} label="Checking Search Console connection..." />;
   }
 
-  if (!gsc.isSignedIn) {
+  if (!gsc.isSignedIn && !savedAnalysis.hasSavedData) {
     return (
       <ConnectState
         config={config}
@@ -246,7 +273,7 @@ export default function GscKeywordExplorer({ kind }) {
             <Globe className="h-4 w-4" />
             <select
               value={gsc.selectedSite}
-              onChange={(event) => gsc.setSelectedSite(event.target.value)}
+              onChange={(event) => syncProjectForSite(event.target.value)}
               className="w-full bg-black text-sm text-white/60 focus:outline-none"
             >
               {gsc.sites.map((site) => (
@@ -358,7 +385,7 @@ export default function GscKeywordExplorer({ kind }) {
             <Loader2 className="h-6 w-6 animate-spin text-blue-400" />
           </div>
         ) : filteredRows.length ? (
-          filteredRows.map((row, index) => (
+          visibleRows.map((row, index) => (
             <div
               key={`${row.keyword}-${index}`}
               className={`gsc-keyword-row grid grid-cols-[2fr_1fr_0.7fr_0.7fr_0.7fr_0.7fr_0.8fr_0.8fr] gap-2 px-5 py-3 transition hover:bg-white/[0.02] ${
@@ -381,6 +408,7 @@ export default function GscKeywordExplorer({ kind }) {
             <p className="mt-3 text-sm text-white/25">{gsc.currentRows.length || gsc.previousRows.length ? config.empty : "Connect a property and apply a date range to load keyword data."}</p>
           </div>
         )}
+        <KeywordPagination page={page} setPage={setPage} totalPages={totalPages} total={filteredRows.length} />
       </div>
     </div>
   );
