@@ -36,3 +36,5 @@ mysql_tables_with_data.sql
 scripts/add-dummy-user.sql
 scripts/seed-login-user.mjs
 src/app/api/save-project.js
+.next/
+/.next/

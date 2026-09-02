@@ -15,3 +15,4 @@ CREATE TABLE IF NOT EXISTS screaming_frog_url_reports (
   KEY idx_sf_user_scan (user_id, scan_id),
   KEY idx_sf_url (url(512))
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+p

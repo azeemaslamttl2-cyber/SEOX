@@ -4,15 +4,18 @@ import { grammarData } from "../../data/contentData.js";
 import { generateGrammarRelations } from "../../lib/contentTools.js";
 import { generateGrammarRelationsDeepSeek } from "../../lib/deepseekContent.js";
 
+/* Eight categories, previously eight hues driving a coloured dot, a tinted
+   count badge and a blurred glow behind each card. The label already names
+   the category, so the colour was decoration. */
 const CATEGORIES = [
-  { key: "properNouns", label: "Proper Nouns", color: "#3b82f6", bg: "rgba(59,130,246,0.12)" },
-  { key: "commonNouns", label: "Common Nouns", color: "#22c55e", bg: "rgba(34,197,94,0.12)" },
-  { key: "synonyms", label: "Synonyms", color: "#a78bfa", bg: "rgba(167,139,250,0.12)" },
-  { key: "antonyms", label: "Antonyms", color: "#f43f5e", bg: "rgba(244,63,94,0.12)" },
-  { key: "hyponyms", label: "Hyponyms", color: "#f59e0b", bg: "rgba(245,158,11,0.12)" },
-  { key: "hypernyms", label: "Hypernyms", color: "#06b6d4", bg: "rgba(6,182,212,0.12)" },
-  { key: "meronyms", label: "Meronyms", color: "#6366f1", bg: "rgba(99,102,241,0.12)" },
-  { key: "holonyms", label: "Holonyms", color: "#ec4899", bg: "rgba(236,72,153,0.12)" },
+  { key: "properNouns", label: "Proper Nouns" },
+  { key: "commonNouns", label: "Common Nouns" },
+  { key: "synonyms", label: "Synonyms" },
+  { key: "antonyms", label: "Antonyms" },
+  { key: "hyponyms", label: "Hyponyms" },
+  { key: "hypernyms", label: "Hypernyms" },
+  { key: "meronyms", label: "Meronyms" },
+  { key: "holonyms", label: "Holonyms" },
 ];
 
 export default function GrammarGenerator() {
@@ -144,16 +147,16 @@ export default function GrammarGenerator() {
 
       {results && (
         <div ref={resultsRef} className="space-y-4">
-          <div className="flex flex-col gap-3 rounded-[22px] border border-[#dfe3e8] bg-[#f4f4f5] p-4 shadow-[0_4px_14px_rgba(15,23,42,0.04)] sm:flex-row sm:items-center sm:justify-between">
+          <div className="ctool-card gram-summary flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex items-center gap-3">
               <div className="ctool-empty-icon h-9 w-9">
                 <Tag className="ctool-card-icon h-4 w-4" />
               </div>
               <div>
-                <h2 className="text-sm font-bold text-[#1f2b3d]">
+                <h2 className="gram-summary-title">
                   Results for "<span className="ctool-group-keyword">{topic}</span>"
                 </h2>
-                <p className="text-[11px] text-slate-500">{totalWords} words across {CATEGORIES.length} categories</p>
+                <p className="ctool-help-text">{totalWords} words across {CATEGORIES.length} categories</p>
               </div>
             </div>
             <button
@@ -165,25 +168,16 @@ export default function GrammarGenerator() {
             </button>
           </div>
 
-          <div className="grid gap-3 md:grid-cols-2">
-            {CATEGORIES.map(({ key, label, color, bg }, catIdx) => {
+          <div className="grid gap-4 md:grid-cols-2">
+            {CATEGORIES.map(({ key, label }) => {
               const words = results[key] || [];
               if (words.length === 0) return null;
               return (
-                <div
-                  key={key}
-                  className="group relative overflow-hidden rounded-[18px] border border-[#dfe3e8] bg-[#f4f4f5] p-4 shadow-[0_4px_14px_rgba(15,23,42,0.04)] transition-all duration-300"
-                  style={{ animationDelay: `${catIdx * 60}ms` }}
-                >
-                  <div className="pointer-events-none absolute -left-8 -top-8 h-24 w-24 rounded-full blur-2xl opacity-20" style={{ background: color }} />
-
-                  <div className="relative mb-3 flex items-center justify-between gap-3">
-                    <div className="flex items-center gap-2">
-                      <span className="inline-block h-2.5 w-2.5 rounded-full" style={{ background: color }} />
-                      <h4 className="text-[12px] font-black uppercase tracking-[0.08em] text-[#1f2b3d]">{label}</h4>
-                      <span className="rounded-full px-1.5 py-0.5 text-[9px] font-bold text-[#1f2b3d]" style={{ background: bg }}>
-                        {words.length}
-                      </span>
+                <div key={key} className="gram-card group">
+                  <div className="gram-card-head">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <h4 className="gram-card-title">{label}</h4>
+                      <span className="ctool-count-badge">{words.length}</span>
                     </div>
                     <button
                       onClick={() => copyCategoryWords(key, words)}
@@ -191,14 +185,14 @@ export default function GrammarGenerator() {
                       title="Copy all words"
                     >
                       {copiedCategory === key ? (
-                        <><Check className="h-3 w-3 text-emerald-500" /> Copied</>
+                        <><Check className="h-3 w-3 chat-copied" /> Copied</>
                       ) : (
                         <><Copy className="h-3 w-3" /> Copy all</>
                       )}
                     </button>
                   </div>
 
-                  <div className="relative flex flex-wrap gap-1.5">
+                  <div className="flex flex-wrap gap-1.5">
                     {words.map((word, i) => (
                       <button
                         key={i}
