@@ -1,5 +1,5 @@
 import { SignJWT, jwtVerify } from 'jose';
-import { queryOne } from './mysql.js';
+import { configureMysqlConnection, queryOne } from './mysql.js';
 
 function secret(env = process.env) {
   const value = String(env.AUTH_JWT_SECRET || '');
@@ -17,6 +17,7 @@ export async function issueAccessToken(user, env = process.env) {
 }
 
 export async function requireUser(request, env = process.env) {
+  configureMysqlConnection(env);
   const token = String(request.headers.get('authorization') || '').replace(/^Bearer\s+/i, '').trim();
   if (!token) { const error = new Error('Unauthorized'); error.status = 401; throw error; }
   try {
@@ -34,6 +35,15 @@ export async function requireUser(request, env = process.env) {
   } catch (cause) {
     if (cause.status) throw cause;
     if (String(cause?.message || '').includes('AUTH_JWT_SECRET')) throw cause;
+    if (cause?.code || cause?.originalError) {
+      console.error('Authentication user lookup failed:', {
+        code: cause.code || cause.originalError?.code,
+        message: cause.message || String(cause),
+      });
+      const error = new Error('Authentication service temporarily unavailable.');
+      error.status = 503;
+      throw error;
+    }
     const error = new Error('Invalid or expired session.'); error.status = 401; throw error;
   }
 }

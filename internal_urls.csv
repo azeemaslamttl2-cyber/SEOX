@@ -1,0 +1,4 @@
+Address,Status Code,Indexability,Title 1,Title 1 Length,Meta Description 1,Meta Description 1 Length,H1-1,Canonical Link Element 1,Word Count
+https://example.com/,200,Indexable,Example Home,12,Example website homepage,24,Welcome to Example,https://example.com/,420
+https://example.com/about,200,Indexable,About Example,12,Learn more about Example,23,About us,https://example.com/about,180
+https://example.com/services,200,Indexable,,0,Our services and solutions,26,,https://example.com/services,75

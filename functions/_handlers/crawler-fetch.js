@@ -86,7 +86,7 @@ function isTextContent(contentType = "") {
   return TEXT_TYPES.some((type) => lowered.includes(type));
 }
 
-function parseCrawlText(text, contentType, baseUrl) {
+export function parseCrawlText(text, contentType, baseUrl) {
   const lowered = contentType.toLowerCase();
   if (!text) return { links: [], resources: [], sitemaps: [], disallow: [] };
   if (lowered.includes("xml")) {
