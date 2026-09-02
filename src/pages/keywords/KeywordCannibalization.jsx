@@ -289,7 +289,7 @@ export default function KeywordCannibalization() {
               }`}
             >
               <div className="min-w-0">
-                <span className="block truncate text-sm text-blue-300" title={row.keyword}>{row.keyword}</span>
+                <span className="kc-keyword block truncate" title={row.keyword}>{row.keyword}</span>
                 <div className="mt-1 space-y-0.5">
                   {row.pages.slice(0, 4).map((page) => (
                     <a
@@ -297,7 +297,7 @@ export default function KeywordCannibalization() {
                       href={page.url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="flex min-w-0 items-center gap-1 truncate text-[10px] text-white/35 hover:text-blue-300"
+                      className="kc-page-link flex min-w-0 items-center gap-1 truncate"
                       title={page.url}
                     >
                       <span className="truncate">{page.display}</span>
@@ -306,14 +306,14 @@ export default function KeywordCannibalization() {
                   ))}
                 </div>
               </div>
-              <span className="w-fit rounded-full bg-amber-500/15 px-2 py-0.5 text-[10px] font-bold text-amber-300">{row.pageCount}</span>
-              <span className="font-mono text-xs text-white/60">{formatNumber(row.impressions)}</span>
+              <span className="kc-pages">{row.pageCount}</span>
+              <span className="kc-num">{formatNumber(row.impressions)}</span>
               <Pct value={row.impressionsPct} />
-              <span className="font-mono text-xs text-white/60">{row.position.toFixed(1)}</span>
-              <span className={`text-[10px] font-bold ${row.positionChange > 0 ? "text-emerald-400" : row.positionChange < 0 ? "text-rose-400" : "text-white/30"}`}>
+              <span className="kc-num">{row.position.toFixed(1)}</span>
+              <span className={`kc-delta ${row.positionChange > 0 ? "is-up" : row.positionChange < 0 ? "is-down" : ""}`}>
                 {row.positionChange > 0 ? "+" : ""}{row.positionChange.toFixed(1)}
               </span>
-              <span className="font-mono text-xs text-white/60">{formatNumber(row.clicks)}</span>
+              <span className="kc-num">{formatNumber(row.clicks)}</span>
               <Pct value={row.clicksPct} />
             </div>
           ))

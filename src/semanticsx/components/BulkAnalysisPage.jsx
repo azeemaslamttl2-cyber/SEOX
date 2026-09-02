@@ -845,7 +845,7 @@ const SiteDetailView = ({ site, getValidAccessToken, onBack }) => {
         <div className="space-y-6">
             {/* Header */}
             <div className="flex items-center gap-4">
-                <button onClick={onBack} className="p-2 hover:bg-white/[0.06] rounded-lg transition-colors">
+                <button onClick={onBack} className="ui-button ctool-tool-btn bulk-icon-btn">
                     <ArrowLeft className="w-5 h-5 text-stone-400" />
                 </button>
                 <div className="flex items-center gap-3">
@@ -1055,7 +1055,7 @@ const SiteDetailView = ({ site, getValidAccessToken, onBack }) => {
                     )}
                 </div>
 
-                <button onClick={fetchDetailData} className="p-2 hover:bg-white/[0.06] rounded-lg transition-colors">
+                <button onClick={fetchDetailData} className="ui-button ctool-tool-btn bulk-icon-btn">
                     <RefreshCw className={`w-5 h-5 text-stone-400 ${isLoading ? 'animate-spin' : ''}`} />
                 </button>
             </div>
@@ -2095,8 +2095,8 @@ const BulkAnalysisPage = () => {
     return (
         <div className="bulk-page">
             {/* Header */}
-            <div className="bg-[#0d1117] border-b border-white/[0.08] sticky top-0 z-40">
-                <div className="px-6 py-4">
+            <div className="bulk-topbar sticky top-0 z-40">
+                <div className="py-4">
                     <div className="flex items-center justify-between relative">
                         <div className="flex items-center gap-4 min-w-[140px]" />
 
@@ -2110,7 +2110,7 @@ const BulkAnalysisPage = () => {
                             <select
                                 value={sortBy}
                                 onChange={(e) => setSortBy(e.target.value)}
-                                className="px-4 py-2 border border-white/[0.1] rounded-lg text-sm font-medium bg-white/[0.04] text-stone-300"
+                                className="schema-input bulk-sort"
                             >
                                 <option value="impressions">Sort by Impressions</option>
                                 <option value="clicks">Sort by Clicks</option>
@@ -2118,16 +2118,16 @@ const BulkAnalysisPage = () => {
                             </select>
 
                             {/* View Toggle */}
-                            <div className="flex items-center bg-white/[0.06] rounded-lg p-1">
+                            <div className="ctool-seg bulk-viewswitch">
                                 <button
                                     onClick={() => setViewMode('grid')}
-                                    className={`p-2 rounded-md transition-colors ${viewMode === 'grid' ? 'bg-white/[0.1] shadow-sm text-white' : 'text-stone-500 hover:text-stone-300'}`}
+                                    className={`ui-button ctool-seg-btn bulk-icon-btn ${viewMode === 'grid' ? 'active' : ''}`}
                                 >
                                     <LayoutGrid className="w-4 h-4" />
                                 </button>
                                 <button
                                     onClick={() => setViewMode('list')}
-                                    className={`p-2 rounded-md transition-colors ${viewMode === 'list' ? 'bg-white/[0.1] shadow-sm text-white' : 'text-stone-500 hover:text-stone-300'}`}
+                                    className={`ui-button ctool-seg-btn bulk-icon-btn ${viewMode === 'list' ? 'active' : ''}`}
                                 >
                                     <List className="w-4 h-4" />
                                 </button>
@@ -2137,7 +2137,7 @@ const BulkAnalysisPage = () => {
                             <button
                                 onClick={fetchSites}
                                 disabled={isLoadingSites}
-                                className="p-2 hover:bg-white/[0.06] rounded-lg transition-colors"
+                                className="ui-button ctool-tool-btn bulk-icon-btn"
                             >
                                 <RefreshCw className={`w-5 h-5 text-stone-400 ${isLoadingSites ? 'animate-spin' : ''}`} />
                             </button>
@@ -2145,7 +2145,7 @@ const BulkAnalysisPage = () => {
                             {/* Sign Out */}
                             <button
                                 onClick={handleSignOut}
-                                className="p-2 hover:bg-red-500/10 text-stone-400 hover:text-red-400 rounded-lg transition-colors"
+                                className="ui-button schema-remove bulk-icon-btn"
                                 title="Disconnect GSC"
                             >
                                 <LogOut className="w-5 h-5" />
@@ -2157,19 +2157,19 @@ const BulkAnalysisPage = () => {
             </div>
 
             {/* Metric Toolbar */}
-            <div className="bg-[#0d1117] border-b border-white/[0.06]">
-                <div className="px-6 py-3">
+            <div className="bulk-metricbar">
+                <div className="py-3">
                     <div className="flex items-center gap-3">
                         {/* Search */}
                         <div className="relative flex-1 flex justify-center">
                             <div className="relative w-full max-w-md">
-                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-stone-500" />
+                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 sres-search-icon" />
                                 <input
                                     type="text"
                                     placeholder="Search websites..."
                                     value={searchQuery}
                                     onChange={(e) => setSearchQuery(e.target.value)}
-                                    className="w-full pl-10 pr-4 py-2 border border-white/[0.1] rounded-lg text-sm focus:outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 bg-white/[0.04] text-stone-200 placeholder-stone-500"
+                                    className="schema-input pl-10"
                                 />
                             </div>
                         </div>
@@ -2191,14 +2191,11 @@ const BulkAnalysisPage = () => {
                                     <button
                                         key={metric.id}
                                         onClick={toggleMetric}
-                                        className={`p-2 rounded-lg transition-all group relative ${isActive
-                                            ? 'bg-brand-500/15 text-brand-400'
-                                            : 'text-stone-500 hover:text-stone-300 hover:bg-white/[0.06]'
-                                            }`}
+                                        className={`ui-button bulk-metric-btn group relative ${isActive ? 'active' : ''}`}
                                         title={metric.label}
                                     >
                                         <metric.icon className="w-4 h-4" />
-                                        <span className="absolute -bottom-8 left-1/2 -translate-x-1/2 bg-gray-900 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">
+                                        <span className="app-tooltip bulk-tip">
                                             {metric.label}
                                         </span>
                                     </button>
@@ -2207,13 +2204,13 @@ const BulkAnalysisPage = () => {
                         </div>
 
                         {/* Divider */}
-                        <div className="w-px h-6 bg-white/[0.1]" />
+                        <div className="scw-tool-sep" />
 
                         {/* Advanced Date Range Picker */}
                         <div className="relative" ref={mainDatePickerRef}>
                             <button
                                 onClick={() => setShowMainDatePicker(!showMainDatePicker)}
-                                className="flex items-center gap-2 px-3 py-1.5 border border-white/[0.1] rounded-lg text-sm font-medium bg-white/[0.04] hover:bg-white/[0.08] text-stone-300 transition-colors"
+                                className="ui-button ctool-tool-btn bulk-date-btn"
                             >
                                 <Calendar className="w-4 h-4 text-stone-500" />
                                 <span>{getMainDateRangeLabel}</span>
@@ -2222,7 +2219,7 @@ const BulkAnalysisPage = () => {
 
                             {/* Advanced Date Picker Dropdown */}
                             {showMainDatePicker && (
-                                <div className="absolute right-0 top-full mt-2 bg-stone-900 rounded-xl shadow-xl border border-white/[0.1] z-50 min-w-[320px]">
+                                <div className="scw-menu bulk-datemenu">
                                     {/* Tabs */}
                                     <div className="flex border-b border-white/[0.08]">
                                         {['day', 'week', 'month'].map((tab) => (
@@ -2361,7 +2358,7 @@ const BulkAnalysisPage = () => {
             </div>
 
             {/* Content */}
-            <div className="px-6 py-8">
+            <div className="py-6">
                 {error && (
                     <div className="mb-6 p-4 bg-red-500/10 border border-red-500/20 rounded-xl flex items-center gap-3 text-red-400">
                         <AlertCircle className="w-5 h-5" />

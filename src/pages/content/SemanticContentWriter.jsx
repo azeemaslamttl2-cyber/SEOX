@@ -651,7 +651,7 @@ const ContentWriter = () => {
 
         return (
             <div className="space-y-6">
-                <div className="rounded-2xl border border-white/10 bg-gradient-to-b from-white/[0.04] to-white/[0.01] p-6">
+                <div className="ctool-card">
                     <div className="flex items-center justify-between mb-2">
                         <h3 className="text-lg font-semibold text-white flex items-center gap-2">
                             <Gauge className="w-5 h-5 text-brand-500" />
@@ -784,7 +784,7 @@ const ContentWriter = () => {
         if (showNewArticle) {
             return (
                 <div className="flex flex-col h-screen bg-ink-900 overflow-hidden">
-                    <div className="flex items-center gap-3 px-6 py-3 bg-ink-800 border-b border-white/10 shrink-0">
+                    <div className="scw-toolbar shrink-0">
                         <button
                             onClick={() => setShowNewArticle(false)}
                             className="flex items-center gap-2 text-sm font-medium text-brand-500 hover:text-brand-300 transition group"
@@ -854,7 +854,7 @@ const ContentWriter = () => {
         return (
             <div className="flex flex-col h-screen bg-ink-900 overflow-hidden">
                 {/* Back Navigation Bar */}
-                <div className="flex items-center gap-3 px-6 py-3 bg-ink-800 border-b border-white/10 shrink-0">
+                <div className="scw-toolbar shrink-0">
                     <RouterLink
                         to="/"
                         className="flex items-center gap-2 text-sm font-medium text-brand-500 hover:text-brand-300 transition group"
@@ -1209,7 +1209,7 @@ const ContentWriter = () => {
     const renderStep1 = () => (
         <div className="space-y-6">
             {/* Main Keyword */}
-            <div className="rounded-2xl border border-white/10 bg-gradient-to-b from-white/[0.04] to-white/[0.01] p-6">
+            <div className="ctool-card">
                 <h3 className="text-lg font-semibold text-white flex items-center gap-2 mb-4">
                     <Target className="w-5 h-5 text-brand-500" />
                     Main Keyword
@@ -1224,7 +1224,7 @@ const ContentWriter = () => {
             </div>
 
             {/* Competitor URLs - MOVED ABOVE SERP */}
-            <div className="rounded-2xl border border-white/10 bg-gradient-to-b from-white/[0.04] to-white/[0.01] p-6">
+            <div className="ctool-card">
                 <h3 className="text-lg font-semibold text-white flex items-center gap-2 mb-4">
                     <Globe className="w-5 h-5 text-brand-500" />
                     Competitor URLs
@@ -1287,20 +1287,20 @@ const ContentWriter = () => {
                                     onChange={(e) => handleSerpKeywordChange(e.target.value)}
                                     onFocus={() => kwSuggestions.length > 0 && setShowSuggestions(true)}
                                     placeholder="Enter your search keyword"
-                                    className="w-full px-4 py-3 border border-gray-600 rounded-xl bg-gray-800/50 text-white placeholder-gray-500 focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none"
+                                    className="schema-input schema-input-lg"
                                 />
                                 {isLoadingSuggestions && (
-                                    <Loader2 className="absolute right-3 top-3.5 w-5 h-5 text-white/40 animate-spin" />
+                                    <Loader2 className="absolute right-3 top-3.5 w-5 h-5 scw-field-icon animate-spin" />
                                 )}
                                 {showSuggestions && kwSuggestions.length > 0 && (
-                                    <div className="absolute z-50 w-full mt-1 bg-gray-800 rounded-xl border border-gray-600 shadow-lg max-h-60 overflow-y-auto">
+                                    <div className="scw-menu max-h-60 overflow-y-auto">
                                         {kwSuggestions.map((suggestion, idx) => (
                                             <button
                                                 key={idx}
                                                 onClick={() => selectSuggestion(suggestion)}
-                                                className="w-full px-4 py-2.5 text-left text-sm text-gray-200 hover:bg-gray-700 flex items-center gap-2"
+                                                className="scw-menu-item"
                                             >
-                                                <Search className="w-3.5 h-3.5 text-white/50" />
+                                                <Search className="w-3.5 h-3.5 scw-menu-icon" />
                                                 {suggestion}
                                             </button>
                                         ))}
@@ -1319,20 +1319,20 @@ const ContentWriter = () => {
                                     onChange={(e) => { setRegionSearch(e.target.value); setShowRegions(true); }}
                                     onFocus={() => { setShowRegions(true); setRegionSearch(''); }}
                                     placeholder="United States - English"
-                                    className="w-full px-4 py-3 border border-gray-600 rounded-xl bg-gray-800/50 text-white placeholder-gray-500 focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none cursor-text"
+                                    className="schema-input schema-input-lg cursor-text"
                                 />
-                                <ChevronDown className={`absolute right-3 top-3.5 w-5 h-5 text-white/40 transition pointer-events-none ${showRegions ? 'rotate-180' : ''}`} />
+                                <ChevronDown className={`absolute right-3 top-3.5 w-5 h-5 scw-field-icon transition pointer-events-none ${showRegions ? 'rotate-180' : ''}`} />
                                 {showRegions && (
-                                    <div className="absolute z-50 w-full mt-1 bg-gray-800 rounded-xl border border-gray-600 shadow-lg">
+                                    <div className="scw-menu">
                                         <div className="max-h-48 overflow-y-auto">
                                             {filteredRegions.map((site, idx) => (
                                                 <button
                                                     key={idx}
                                                     onClick={() => handleRegion(site)}
-                                                    className="w-full px-4 py-2.5 text-left text-sm hover:bg-gray-700 flex items-center justify-between"
+                                                    className="scw-menu-item scw-menu-item-split"
                                                 >
-                                                    <span className="text-gray-200">{site.name} - {site.lang}</span>
-                                                    <span className="text-white/50 text-xs">{site.gl}</span>
+                                                    <span className="scw-menu-label">{site.name} - {site.lang}</span>
+                                                    <span className="scw-menu-meta">{site.gl}</span>
                                                 </button>
                                             ))}
                                         </div>
@@ -1343,7 +1343,7 @@ const ContentWriter = () => {
 
                         {/* Location */}
                         <div>
-                            <label className="schema-label">Location <span className="text-white/50 font-normal">(optional - for hyper-local results)</span></label>
+                            <label className="schema-label">Location <span className="scw-label-note">(optional - for hyper-local results)</span></label>
                             <div className="flex gap-2">
                                 <input
                                     type="text"
@@ -1351,12 +1351,12 @@ const ContentWriter = () => {
                                     onChange={(e) => setSerpLoc(e.target.value)}
                                     onKeyDown={(e) => e.key === 'Enter' && geocodeLocation()}
                                     placeholder="e.g. 1600 Amphitheatre Pkwy, Mountain View, CA"
-                                    className="flex-1 px-4 py-3 border border-brand-500/20 rounded-xl bg-white/[0.04] focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 outline-none"
+                                    className="schema-input schema-input-lg flex-1"
                                 />
                                 <button
                                     onClick={geocodeLocation}
                                     disabled={!serpLoc.trim() || isGeo}
-                                    className="px-4 py-3 bg-gray-700 text-white rounded-xl font-medium disabled:opacity-50 hover:bg-gray-600 transition flex items-center gap-2"
+                                    className="ui-button ctool-tool-btn scw-geo-btn"
                                 >
                                     {isGeo ? <Loader2 className="w-4 h-4 animate-spin" /> : <Target className="w-4 h-4" />}
                                     Geocode
@@ -1366,16 +1366,16 @@ const ContentWriter = () => {
 
                         {/* Current Location Display */}
                         {(serpLat && serpLng) && (
-                            <div className="flex items-center justify-between px-4 py-3 bg-teal-50 border border-teal-200 rounded-xl">
+                            <div className="app-alert app-alert-info justify-between">
                                 <div>
-                                    <span className="text-xs text-teal-600 font-semibold uppercase">Current Location</span>
-                                    <div className="text-sm text-teal-800 font-mono">
+                                    <span className="stool-label">Current Location</span>
+                                    <div className="scw-latlng">
                                         Lat: {serpLat} | Lng: {serpLng}
                                     </div>
                                 </div>
                                 <button
                                     onClick={clearLocation}
-                                    className="px-3 py-1.5 bg-gray-700 text-white text-sm rounded-lg hover:bg-gray-600 transition"
+                                    className="ui-button ctool-tool-btn"
                                 >
                                     Clear
                                 </button>
@@ -1385,7 +1385,7 @@ const ContentWriter = () => {
                         {/* Advanced Settings Toggle */}
                         <button
                             onClick={() => setShowAdvanced(!showAdvanced)}
-                            className="flex items-center gap-2 text-sm text-brand-600 hover:text-brand-300 transition"
+                            className="schema-addlink"
                         >
                             <Settings className="w-4 h-4" />
                             Advanced Settings
@@ -1393,27 +1393,27 @@ const ContentWriter = () => {
                         </button>
 
                         {showAdvanced && (
-                            <div className="p-4 bg-gray-800/30 rounded-xl border border-gray-700 space-y-4">
+                            <div className="geo-well space-y-4">
                                 {/* Lat/Lng Inputs */}
                                 <div className="grid grid-cols-2 gap-3">
                                     <div>
-                                        <label className="text-xs text-white/40 uppercase mb-1 block">Latitude</label>
+                                        <label className="stool-label mb-1 block">Latitude</label>
                                         <input
                                             type="text"
                                             value={serpLat}
                                             onChange={(e) => setSerpLat(e.target.value)}
                                             placeholder="e.g. 37.4210000"
-                                            className="w-full px-3 py-2 border border-gray-600 bg-gray-800/50 rounded-lg text-sm font-mono text-white placeholder-gray-500"
+                                            className="schema-input font-mono"
                                         />
                                     </div>
                                     <div>
-                                        <label className="text-xs text-white/40 uppercase mb-1 block">Longitude</label>
+                                        <label className="stool-label mb-1 block">Longitude</label>
                                         <input
                                             type="text"
                                             value={serpLng}
                                             onChange={(e) => setSerpLng(e.target.value)}
                                             placeholder="e.g. -122.0840000"
-                                            className="w-full px-3 py-2 border border-gray-600 bg-gray-800/50 rounded-lg text-sm font-mono text-white placeholder-gray-500"
+                                            className="schema-input font-mono"
                                         />
                                     </div>
                                 </div>
@@ -1432,7 +1432,7 @@ const ContentWriter = () => {
                                     <div className="relative">
                                         <div
                                             ref={mapContainerRef}
-                                            className="w-full h-64 rounded-lg border border-gray-600 overflow-hidden"
+                                            className="igt-map w-full"
                                             style={{ background: '#1f2937' }}
                                         />
                                         <p className="text-xs text-white/50 mt-2">Click on the map or drag the marker to set location.</p>
@@ -1741,7 +1741,7 @@ const ContentWriter = () => {
         return (
             <div className="space-y-6">
                 {/* Extract from competitors */}
-                <div className="rounded-2xl border border-white/10 bg-gradient-to-b from-white/[0.04] to-white/[0.01] p-6">
+                <div className="ctool-card">
                     <h3 className="text-lg font-semibold text-white flex items-center gap-2 mb-4">
                         <List className="w-5 h-5 text-emerald-600" />
                         Extract Outlines from Competitors
@@ -1890,7 +1890,7 @@ const ContentWriter = () => {
 
                 {/* Extracted Outlines Display */}
                 {outlinesList.length > 0 && (
-                    <div className="rounded-2xl border border-white/10 bg-gradient-to-b from-white/[0.04] to-white/[0.01] p-6">
+                    <div className="ctool-card">
                         <h3 className="text-lg font-semibold text-white flex items-center gap-2 mb-4">
                             <FileText className="w-5 h-5 text-brand-500" />
                             Extracted Outlines ({outlinesList.length})
@@ -2146,7 +2146,7 @@ const ContentWriter = () => {
                 </div>
 
                 {/* Extract from Competitor URLs */}
-                <div className="rounded-2xl border border-white/10 bg-gradient-to-b from-white/[0.04] to-white/[0.01] p-6">
+                <div className="ctool-card">
                     <h4 className="font-semibold text-white flex items-center gap-2 mb-4">
                         <Globe className="w-4 h-4 text-brand-400" />
                         Extract Content from Competitors
@@ -2190,7 +2190,7 @@ const ContentWriter = () => {
                 </div>
 
                 {/* Manual Paste Area */}
-                <div className="rounded-2xl border border-white/10 bg-gradient-to-b from-white/[0.04] to-white/[0.01] p-6">
+                <div className="ctool-card">
                     <div className="flex items-center justify-between mb-4">
                         <h4 className="font-semibold text-white flex items-center gap-2">
                             <FileEdit className="w-4 h-4 text-brand-400" />
@@ -2234,7 +2234,7 @@ const ContentWriter = () => {
                 </div>
 
                 {/* Content Input */}
-                <div className="rounded-2xl border border-white/10 bg-gradient-to-b from-white/[0.04] to-white/[0.01] p-6">
+                <div className="ctool-card">
                     <div className="flex items-center justify-between mb-4">
                         <h4 className="font-semibold text-white flex items-center gap-2">
                             <Edit3 className="w-4 h-4 text-brand-400" />
@@ -2288,7 +2288,7 @@ const ContentWriter = () => {
 
                 {/* What AI Will Extract */}
                 {competitorContent && wordCount >= 100 && (
-                    <div className="rounded-2xl border border-white/10 bg-gradient-to-b from-white/[0.04] to-white/[0.01] p-6">
+                    <div className="ctool-card">
                         <h4 className="font-semibold text-white mb-4 flex items-center gap-2">
                             <Sparkles className="w-4 h-4 text-brand-400" />
                             AI Will Analyze
@@ -2681,7 +2681,7 @@ Return JSON: {"ngrams": ["unique phrase 1", "unique phrase 2", ...]}`,
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     {/* Competitor Entities */}
-                    <div className="rounded-2xl border border-white/10 bg-gradient-to-b from-white/[0.04] to-white/[0.01] p-4">
+                    <div className="ctool-card scw-card-sm">
                         <h4 className="font-semibold text-white flex items-center gap-2 mb-3">
                             <Layers className="w-4 h-4 text-brand-500" />
                             Competitor Entities
@@ -2712,7 +2712,7 @@ Return JSON: {"ngrams": ["unique phrase 1", "unique phrase 2", ...]}`,
                     </div>
 
                     {/* AI Generated Entities */}
-                    <div className="rounded-2xl border border-white/10 bg-gradient-to-b from-white/[0.04] to-white/[0.01] p-4">
+                    <div className="ctool-card scw-card-sm">
                         <h4 className="font-semibold text-white flex items-center gap-2 mb-3">
                             <Sparkles className="w-4 h-4 text-brand-500" />
                             AI-Generated Entities
@@ -2817,7 +2817,7 @@ Return JSON: {"ngrams": ["unique phrase 1", "unique phrase 2", ...]}`,
                 {/* N-Gram Sections */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {/* Competitor N-Grams (default: unchecked/excluded) */}
-                    <div className="rounded-2xl border border-white/10 bg-gradient-to-b from-white/[0.04] to-white/[0.01] p-4">
+                    <div className="ctool-card scw-card-sm">
                         <h4 className="font-semibold text-white flex items-center gap-2 mb-2">
                             <Layers className="w-4 h-4 text-blue-400" />
                             Competitor N-Grams
@@ -2879,7 +2879,7 @@ Return JSON: {"ngrams": ["unique phrase 1", "unique phrase 2", ...]}`,
                     </div>
 
                     {/* AI Generated N-Grams */}
-                    <div className="rounded-2xl border border-white/10 bg-gradient-to-b from-white/[0.04] to-white/[0.01] p-4">
+                    <div className="ctool-card scw-card-sm">
                         <h4 className="font-semibold text-white flex items-center gap-2 mb-2">
                             <Sparkles className="w-4 h-4 text-brand-500" />
                             AI Generated N-Grams
@@ -2987,7 +2987,7 @@ Return JSON: {"ngrams": ["unique phrase 1", "unique phrase 2", ...]}`,
                     <X className="w-3 h-3" /> Click a keyword to exclude it • <Check className="w-3 h-3 text-emerald-600" /> All included by default
                 </p>
 
-                <div className="rounded-2xl border border-white/10 bg-gradient-to-b from-white/[0.04] to-white/[0.01] p-6">
+                <div className="ctool-card">
                     <h4 className="font-semibold text-white flex items-center gap-2 mb-4">
                         <Brain className="w-5 h-5 text-emerald-600" />
                         NLP Keywords (LSI Terms)
@@ -3050,7 +3050,7 @@ Return JSON: {"ngrams": ["unique phrase 1", "unique phrase 2", ...]}`,
                     <X className="w-3 h-3" /> Click a word pair to exclude it • <Check className="w-3 h-3 text-rose-600" /> All included by default
                 </p>
 
-                <div className="rounded-2xl border border-white/10 bg-gradient-to-b from-white/[0.04] to-white/[0.01] p-6">
+                <div className="ctool-card">
                     <h4 className="font-semibold text-white flex items-center gap-2 mb-4">
                         <Type className="w-5 h-5 text-rose-600" />
                         Skip-Gram Dominant Words
@@ -3221,7 +3221,7 @@ Return JSON: {"ngrams": ["unique phrase 1", "unique phrase 2", ...]}`,
         return (
             <div className="space-y-6">
                 {/* Header with Generate Button */}
-                <div className="rounded-2xl border border-white/10 bg-gradient-to-b from-white/[0.04] to-white/[0.01] p-6">
+                <div className="ctool-card">
                     <div className="flex items-center justify-between mb-4">
                         <h3 className="text-lg font-semibold text-white flex items-center gap-2">
                             <Sparkles className="w-5 h-5 text-emerald-400" />
@@ -3308,7 +3308,7 @@ Return JSON: {"ngrams": ["unique phrase 1", "unique phrase 2", ...]}`,
 
                 {/* Base Suggestions Section */}
                 {baseKeywords.length > 0 && (
-                    <div className="rounded-2xl shadow-lg border border-white/10 bg-ink-800 overflow-hidden">
+                    <div className="scw-editor">
                         <div className="px-4 py-3 bg-green-500 text-white font-bold flex items-center justify-between">
                             <span className="flex items-center gap-2">
                                 <Search className="w-5 h-5" />
@@ -3316,7 +3316,7 @@ Return JSON: {"ngrams": ["unique phrase 1", "unique phrase 2", ...]}`,
                             </span>
                             <button
                                 onClick={() => navigator.clipboard.writeText(baseKeywords.join('\n'))}
-                                className="p-1 hover:bg-white/10 rounded transition"
+                                className="scw-tool scw-tool-sm"
                                 title="Copy all"
                             >
                                 <Copy className="w-4 h-4" />
@@ -3340,7 +3340,7 @@ Return JSON: {"ngrams": ["unique phrase 1", "unique phrase 2", ...]}`,
 
                 {/* A-Z Letter Variations */}
                 {Object.keys(autoSuggestKeywords).some(k => ALPHABET.includes(k.toLowerCase()) && autoSuggestKeywords[k]?.length > 0) && (
-                    <div className="rounded-2xl shadow-lg border border-white/10 bg-ink-800 overflow-hidden">
+                    <div className="scw-editor">
                         <div
                             onClick={() => setExpandedSuggestSections(prev => ({ ...prev, letters: !prev.letters }))}
                             className="p-4 bg-gradient-to-r from-green-500 to-emerald-500 text-white cursor-pointer flex items-center justify-between"
@@ -3363,14 +3363,14 @@ Return JSON: {"ngrams": ["unique phrase 1", "unique phrase 2", ...]}`,
                                                 <div className="flex items-center gap-1">
                                                     <button
                                                         onClick={() => toggleColumnCheck(keywords)}
-                                                        className="p-1 hover:bg-white/10 rounded transition"
+                                                        className="scw-tool scw-tool-sm"
                                                         title="Toggle all"
                                                     >
                                                         <Check className="w-3 h-3" />
                                                     </button>
                                                     <button
                                                         onClick={() => navigator.clipboard.writeText(keywords.join('\n'))}
-                                                        className="p-1 hover:bg-white/10 rounded transition"
+                                                        className="scw-tool scw-tool-sm"
                                                         title="Copy column"
                                                     >
                                                         <Copy className="w-3 h-3" />
@@ -3400,7 +3400,7 @@ Return JSON: {"ngrams": ["unique phrase 1", "unique phrase 2", ...]}`,
 
                 {/* 0-9 Number Variations */}
                 {Object.keys(autoSuggestKeywords).some(k => NUMBERS.includes(k) && autoSuggestKeywords[k]?.length > 0) && (
-                    <div className="rounded-2xl shadow-lg border border-white/10 bg-ink-800 overflow-hidden">
+                    <div className="scw-editor">
                         <div
                             onClick={() => setExpandedSuggestSections(prev => ({ ...prev, numbers: !prev.numbers }))}
                             className="p-4 bg-gradient-to-r from-blue-500 to-cyan-500 text-white cursor-pointer flex items-center justify-between"
@@ -3423,14 +3423,14 @@ Return JSON: {"ngrams": ["unique phrase 1", "unique phrase 2", ...]}`,
                                                 <div className="flex items-center gap-1">
                                                     <button
                                                         onClick={() => toggleColumnCheck(keywords)}
-                                                        className="p-1 hover:bg-white/10 rounded transition"
+                                                        className="scw-tool scw-tool-sm"
                                                         title="Toggle all"
                                                     >
                                                         <Check className="w-3 h-3" />
                                                     </button>
                                                     <button
                                                         onClick={() => navigator.clipboard.writeText(keywords.join('\n'))}
-                                                        className="p-1 hover:bg-white/10 rounded transition"
+                                                        className="scw-tool scw-tool-sm"
                                                         title="Copy column"
                                                     >
                                                         <Copy className="w-3 h-3" />
@@ -3579,7 +3579,7 @@ Return JSON: {"ngrams": ["unique phrase 1", "unique phrase 2", ...]}`,
                 )}
 
                 {grammarResults && (
-                    <div className="rounded-2xl border border-white/10 bg-gradient-to-b from-white/[0.04] to-white/[0.01] p-6">
+                    <div className="ctool-card">
                         <div className="flex items-center justify-between mb-4">
                             <h3 className="text-lg font-semibold text-white">Results for "{grammarResults.term}"</h3>
                             <p className="text-xs text-white/50 flex items-center gap-1">
@@ -3884,7 +3884,7 @@ Start with a clear Yes or No, then elaborate with supporting details.`
         };
 
         return (
-            <div className="rounded-2xl border border-white/10 bg-gradient-to-b from-white/[0.04] to-white/[0.01] p-6">
+            <div className="ctool-card">
                 <div className="flex items-center justify-between mb-4">
                     <h3 className="text-lg font-semibold text-white flex items-center gap-2">
                         <Settings className="w-5 h-5 text-amber-400" />
@@ -4628,7 +4628,7 @@ BEGIN WRITING THE ARTICLE NOW:`;
 
         return (
             <div className="space-y-4">
-                <div className="rounded-2xl border border-white/10 bg-gradient-to-b from-white/[0.04] to-white/[0.01] p-6">
+                <div className="ctool-card">
                     <div className="flex items-center justify-between mb-4">
                         <h3 className="text-lg font-semibold text-white flex items-center gap-2">
                             <FileText className="w-5 h-5 text-brand-500" />
@@ -4877,52 +4877,52 @@ BEGIN WRITING THE ARTICLE NOW:`;
                 {/* Main Editor - Left Side */}
                 <div className="lg:col-span-2 space-y-4">
                     {/* Toolbar & Editor Card */}
-                    <div className="rounded-2xl border border-white/10 bg-slate-900/90 shadow-xl overflow-hidden">
+                    <div className="scw-panel">
                         <div
-                            className="flex items-center gap-1 p-3 border-b border-white/10 flex-wrap bg-slate-900"
+                            className="scw-toolbar flex-wrap"
                             onMouseDownCapture={saveSelection}
                         >
                             {/* Font dropdown */}
-                            <select className="px-3 py-1.5 border border-white/10 rounded-lg text-sm bg-slate-800 text-white focus:outline-none" onChange={(e) => execCommand('fontName', e.target.value)}>
+                            <select className="schema-input scw-tool-select" onChange={(e) => execCommand('fontName', e.target.value)}>
                                 <option value="">Font</option>
                                 <option value="serif">Serif</option>
                                 <option value="sans-serif">Sans-serif</option>
                                 <option value="monospace">Monospace</option>
                             </select>
 
-                            <div className="w-px h-6 bg-white/15 mx-1" />
+                            <div className="scw-tool-sep" />
 
                             {/* Text formatting */}
-                            <button onClick={() => execCommand('bold')} className="p-2 hover:bg-white/10 text-white rounded-lg font-bold" title="Bold">B</button>
-                            <button onClick={() => execCommand('italic')} className="p-2 hover:bg-white/10 text-white rounded-lg italic" title="Italic">I</button>
-                            <button onClick={() => execCommand('underline')} className="p-2 hover:bg-white/10 text-white rounded-lg underline" title="Underline">U</button>
-                            <button onClick={() => execCommand('strikeThrough')} className="p-2 hover:bg-white/10 text-white rounded-lg line-through" title="Strikethrough">S</button>
+                            <button onClick={() => execCommand('bold')} className="scw-tool font-bold" title="Bold">B</button>
+                            <button onClick={() => execCommand('italic')} className="scw-tool italic" title="Italic">I</button>
+                            <button onClick={() => execCommand('underline')} className="scw-tool underline" title="Underline">U</button>
+                            <button onClick={() => execCommand('strikeThrough')} className="scw-tool line-through" title="Strikethrough">S</button>
 
-                            <div className="w-px h-6 bg-white/15 mx-1" />
+                            <div className="scw-tool-sep" />
 
                             {/* Alignment */}
-                            <button onClick={() => execCommand('justifyLeft')} className="p-2 hover:bg-white/10 text-white rounded-lg" title="Align Left">
+                            <button onClick={() => execCommand('justifyLeft')} className="scw-tool" title="Align Left">
                                 <AlignLeft className="w-4 h-4" />
                             </button>
-                            <button onClick={() => execCommand('justifyCenter')} className="p-2 hover:bg-white/10 text-white rounded-lg" title="Align Center">
+                            <button onClick={() => execCommand('justifyCenter')} className="scw-tool" title="Align Center">
                                 <AlignCenter className="w-4 h-4" />
                             </button>
 
-                            <div className="w-px h-6 bg-white/15 mx-1" />
+                            <div className="scw-tool-sep" />
 
                             {/* Lists */}
-                            <button onClick={() => execCommand('insertUnorderedList')} className="p-2 hover:bg-white/10 text-white rounded-lg" title="Bullet List">
+                            <button onClick={() => execCommand('insertUnorderedList')} className="scw-tool" title="Bullet List">
                                 <List className="w-4 h-4" />
                             </button>
-                            <button onClick={() => execCommand('insertOrderedList')} className="p-2 hover:bg-white/10 text-white rounded-lg" title="Numbered List">
+                            <button onClick={() => execCommand('insertOrderedList')} className="scw-tool" title="Numbered List">
                                 <ListOrdered className="w-4 h-4" />
                             </button>
 
-                            <div className="w-px h-6 bg-white/15 mx-1" />
+                            <div className="scw-tool-sep" />
 
                             {/* Headings */}
                             <select
-                                className="px-2 py-1.5 border border-white/10 rounded-lg text-sm bg-slate-800 text-white cursor-pointer focus:outline-none"
+                                className="schema-input scw-tool-select"
                                 onMouseDown={(e) => {
                                     saveSelection();
                                 }}
@@ -4944,28 +4944,28 @@ BEGIN WRITING THE ARTICLE NOW:`;
                                 <option value="H6">H6</option>
                             </select>
 
-                            <div className="w-px h-6 bg-white/15 mx-1" />
+                            <div className="scw-tool-sep" />
 
                             {/* Links & Media */}
-                            <button onClick={insertLink} className="p-2 hover:bg-white/10 text-white rounded-lg" title="Insert Link">
+                            <button onClick={insertLink} className="scw-tool" title="Insert Link">
                                 <Link2 className="w-4 h-4" />
                             </button>
-                            <button onClick={insertImage} className="p-2 hover:bg-white/10 text-white rounded-lg" title="Insert Image">
+                            <button onClick={insertImage} className="scw-tool" title="Insert Image">
                                 <ImageIcon className="w-4 h-4" />
                             </button>
 
-                            <div className="w-px h-6 bg-white/15 mx-1" />
+                            <div className="scw-tool-sep" />
 
                             {/* Undo/Redo */}
-                            <button onClick={() => execCommand('undo')} className="p-2 hover:bg-white/10 text-white rounded-lg" title="Undo">
+                            <button onClick={() => execCommand('undo')} className="scw-tool" title="Undo">
                                 <Undo className="w-4 h-4" />
                             </button>
-                            <button onClick={() => execCommand('redo')} className="p-2 hover:bg-white/10 text-white rounded-lg" title="Redo">
+                            <button onClick={() => execCommand('redo')} className="scw-tool" title="Redo">
                                 <Redo className="w-4 h-4" />
                             </button>
                         </div>
 
-                        <div className="flex items-center gap-2 px-4 py-3 border-b border-white/10 flex-wrap bg-slate-900/60">
+                        <div className="scw-actionbar flex-wrap">
                             {/* Left: Generate with AI + View Prompt + Writer Outline */}
                             <button
                                 onClick={generateContent}
@@ -5017,7 +5017,7 @@ BEGIN WRITING THE ARTICLE NOW:`;
                         {/* Mega Prompt Modal */}
                         {showPromptModal && (
                             <div className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
-                                <div className="rounded-2xl shadow-2xl bg-slate-900 border border-white/10 max-w-4xl w-full max-h-[80vh] overflow-hidden">
+                                <div className="scw-modal max-w-4xl w-full max-h-[80vh] overflow-hidden">
                                     <div className="flex items-center justify-between p-4 border-b border-white/10">
                                         <h3 className="text-lg font-bold text-white flex items-center gap-2">
                                             <FileText className="w-5 h-5 text-brand-400" />
@@ -5030,13 +5030,13 @@ BEGIN WRITING THE ARTICLE NOW:`;
                                             >
                                                 <Copy className="w-3.5 h-3.5" /> Copy
                                             </button>
-                                            <button onClick={() => setShowPromptModal(false)} className="p-2 hover:bg-white/10 rounded-lg text-slate-400 hover:text-white">
+                                            <button onClick={() => setShowPromptModal(false)} className="scw-tool">
                                                 <X className="w-5 h-5" />
                                             </button>
                                         </div>
                                     </div>
                                     <div className="p-4 overflow-y-auto max-h-[calc(80vh-80px)]">
-                                        <pre className="whitespace-pre-wrap text-xs text-slate-300 font-mono bg-slate-950 p-4 rounded-xl border border-white/10">
+                                        <pre className="stool-code whitespace-pre-wrap">
                                             {megaPrompt}
                                         </pre>
                                     </div>
@@ -5057,7 +5057,7 @@ BEGIN WRITING THE ARTICLE NOW:`;
                                 value={articleTitle}
                                 onChange={(e) => setArticleTitle(e.target.value)}
                                 placeholder="Article Title..."
-                                className="w-full text-3xl font-black text-white border-none outline-none placeholder:text-slate-500 bg-transparent"
+                                className="scw-title-input"
                             />
                         </div>
 
@@ -5074,17 +5074,17 @@ BEGIN WRITING THE ARTICLE NOW:`;
                             onSelect={saveSelection}
                             onMouseUp={saveSelection}
                             onKeyUp={saveSelection}
-                            className="min-h-[450px] max-h-[650px] overflow-y-auto p-6 focus:outline-none text-slate-100 bg-slate-950/60 rounded-xl m-4 border border-white/5 prose prose-invert max-w-none [&_h1]:block [&_h1]:text-3xl [&_h1]:font-black [&_h1]:text-white [&_h1]:my-4 [&_h2]:block [&_h2]:text-2xl [&_h2]:font-bold [&_h2]:text-white [&_h2]:my-3 [&_h3]:block [&_h3]:text-xl [&_h3]:font-bold [&_h3]:text-slate-200 [&_h3]:my-3 [&_p]:text-slate-300 [&_p]:my-2 [&_ul]:list-disc [&_ul]:pl-6 [&_ol]:list-decimal [&_ol]:pl-6"
+                            className="scw-canvas prose max-w-none"
                             style={{ lineHeight: '1.8' }}
                         />
 
                         {/* Footer */}
-                        <div className="flex items-center justify-between px-6 py-3 border-t border-white/10 text-xs text-slate-400 bg-slate-900/80">
+                        <div className="scw-editor-foot">
                             <div className="flex items-center gap-2">
-                                <span className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse" />
+                                <span className="scw-dot" />
                                 Connected • Editing Mode
                             </div>
-                            <span className="text-slate-500">Auto-saved to local database</span>
+                            <span className="scw-foot-note">Auto-saved to local database</span>
                         </div>
                     </div>
                 </div>
@@ -5092,13 +5092,13 @@ BEGIN WRITING THE ARTICLE NOW:`;
                 {/* Sidebar - Right Side */}
                 <div className="space-y-4">
                     {/* Tab Navigation */}
-                    <div className="rounded-2xl border border-white/10 bg-slate-900/90 shadow-xl overflow-hidden">
-                        <div className="flex border-b border-white/10">
+                    <div className="scw-panel">
+                        <div className="scw-tabs">
                             {['guidelines', 'outline', 'brief'].map(tab => (
                                 <button
                                     key={tab}
                                     onClick={() => setSidebarTab(tab)}
-                                    className={`flex-1 py-3 text-xs font-bold uppercase tracking-wider transition ${sidebarTab === tab ? 'text-brand-300 border-b-2 border-brand-500 bg-brand-500/10' : 'text-slate-400 hover:text-white'}`}
+                                    className={`ui-button ctool-tab scw-tab ${sidebarTab === tab ? 'active' : ''}`}
                                 >
                                     {tab}
                                 </button>
@@ -5110,7 +5110,7 @@ BEGIN WRITING THE ARTICLE NOW:`;
                                 <>
                                     {/* Content Score Gauge */}
                                     <div className="text-center mb-6">
-                                        <p className="text-xs text-slate-400 mb-3 flex items-center justify-center gap-1 font-semibold">
+                                        <p className="stool-label mb-3 flex items-center justify-center gap-1">
                                             Content Score <AlertCircle className="w-3.5 h-3.5 text-brand-400" />
                                         </p>
                                         <div className="relative w-32 h-32 mx-auto">
@@ -5128,11 +5128,11 @@ BEGIN WRITING THE ARTICLE NOW:`;
                                                 />
                                             </svg>
                                             <div className="absolute inset-0 flex items-center justify-center">
-                                                <span className="text-3xl font-black text-white">{contentScore}</span>
-                                                <span className="text-sm text-slate-400">/100</span>
+                                                <span className="scw-score">{contentScore}</span>
+                                                <span className="scw-score-max">/100</span>
                                             </div>
                                         </div>
-                                        <div className="flex justify-center gap-4 mt-3 text-xs text-slate-400">
+                                        <div className="flex justify-center gap-4 mt-3 ctool-help-text">
                                             <span>Avg ↓ 70</span>
                                             <span>Top ↗ 79</span>
                                         </div>
@@ -5144,25 +5144,25 @@ BEGIN WRITING THE ARTICLE NOW:`;
                                             <h4 className="font-bold text-white text-xs uppercase tracking-wider">Content Structure</h4>
                                         </div>
                                         <div className="grid grid-cols-4 gap-2 text-center">
-                                            <div className="p-2 rounded-xl bg-slate-800/60 border border-white/5">
+                                            <div className="scw-stat">
                                                 <div className="text-base font-black text-emerald-400">{wordCount.toLocaleString()}</div>
-                                                <div className="text-[9px] text-slate-400">Target</div>
-                                                <div className="text-[10px] font-bold text-slate-300 mt-0.5">WORDS</div>
+                                                <div className="scw-stat-label">Target</div>
+                                                <div className="scw-stat-sub">WORDS</div>
                                             </div>
-                                            <div className="p-2 rounded-xl bg-slate-800/60 border border-white/5">
+                                            <div className="scw-stat">
                                                 <div className="text-base font-black text-amber-400">{headingCount}</div>
-                                                <div className="text-[9px] text-slate-400">Target</div>
-                                                <div className="text-[10px] font-bold text-slate-300 mt-0.5">HEADINGS</div>
+                                                <div className="scw-stat-label">Target</div>
+                                                <div className="scw-stat-sub">HEADINGS</div>
                                             </div>
-                                            <div className="p-2 rounded-xl bg-slate-800/60 border border-white/5">
+                                            <div className="scw-stat">
                                                 <div className="text-base font-black text-emerald-400">{paragraphCount}</div>
-                                                <div className="text-[9px] text-slate-400">Target</div>
-                                                <div className="text-[10px] font-bold text-slate-300 mt-0.5">PARAGRAPHS</div>
+                                                <div className="scw-stat-label">Target</div>
+                                                <div className="scw-stat-sub">PARAGRAPHS</div>
                                             </div>
-                                            <div className="p-2 rounded-xl bg-slate-800/60 border border-white/5">
+                                            <div className="scw-stat">
                                                 <div className="text-base font-black text-brand-400">{imageCount}</div>
-                                                <div className="text-[9px] text-slate-400">Target</div>
-                                                <div className="text-[10px] font-bold text-slate-300 mt-0.5">IMAGES</div>
+                                                <div className="scw-stat-label">Target</div>
+                                                <div className="scw-stat-sub">IMAGES</div>
                                             </div>
                                         </div>
                                     </div>
@@ -5172,18 +5172,18 @@ BEGIN WRITING THE ARTICLE NOW:`;
                             {sidebarTab === 'outline' && (
                                 <div className="space-y-1.5 text-xs max-h-96 overflow-y-auto">
                                     {combinedOutline.length > 0 ? combinedOutline.map((h, i) => (
-                                        <div key={i} className="flex items-center gap-2 py-1 px-2 rounded-lg bg-slate-800/50 border border-white/5" style={{ paddingLeft: `${(h.level - 1) * 12 + 8}px` }}>
+                                        <div key={i} className="scw-listrow" style={{ paddingLeft: `${(h.level - 1) * 12 + 8}px` }}>
                                             <span className="text-[10px] font-bold text-brand-400 uppercase">H{h.level}</span>
-                                            <span className="text-slate-200">{h.text}</span>
+                                            <span className="scw-listrow-text">{h.text}</span>
                                         </div>
                                     )) : (
-                                        <p className="text-slate-500 text-xs text-center py-4">No outline created yet</p>
+                                        <p className="ctool-help-text text-center py-4">No outline created yet</p>
                                     )}
                                 </div>
                             )}
 
                             {sidebarTab === 'brief' && (
-                                <div className="space-y-3 text-xs text-slate-300">
+                                <div className="space-y-3 ctool-help-text">
                                     <p><strong className="text-white">Main Keyword:</strong> {mainKeyword || 'Not set'}</p>
                                     <p><strong className="text-white">Mode:</strong> {writerMode === 'quick' ? '⚡ Quick' : '🔬 Express'}</p>
                                     <p><strong className="text-white">Active Rules:</strong> {selectedRules.length} enabled</p>
@@ -5193,7 +5193,7 @@ BEGIN WRITING THE ARTICLE NOW:`;
                     </div>
 
                     {/* Extracted Data Panels */}
-                    <div className="rounded-2xl border border-white/10 bg-slate-900/90 p-4 space-y-4 max-h-[600px] overflow-y-auto shadow-xl">
+                    <div className="scw-panel scw-panel-pad space-y-4 max-h-[600px] overflow-y-auto">
                         <h4 className="font-bold text-white text-xs uppercase tracking-wider">Extracted Data & Keywords</h4>
 
                         {/* Entities Box */}
@@ -5207,7 +5207,7 @@ BEGIN WRITING THE ARTICLE NOW:`;
                                         <span className="text-[10px] font-bold text-amber-400 uppercase">Competitor ({keywordData.competitorEntities.length})</span>
                                         <div className="flex flex-wrap gap-1 mt-1">
                                             {keywordData.competitorEntities.slice(0, 15).map((e, i) => (
-                                                <span key={i} onClick={() => execCommand('insertText', ` ${e} `)} className="px-2 py-0.5 bg-slate-800 text-slate-200 border border-white/10 rounded text-[10px] cursor-pointer hover:bg-amber-500/20 hover:text-amber-300 transition">{e}</span>
+                                                <span key={i} onClick={() => execCommand('insertText', ` ${e} `)} className="scw-chip">{e}</span>
                                             ))}
                                         </div>
                                     </div>
@@ -5217,7 +5217,7 @@ BEGIN WRITING THE ARTICLE NOW:`;
                                         <span className="text-[10px] font-bold text-amber-400 uppercase">AI-Picked ({keywordData.aiEntities.length})</span>
                                         <div className="flex flex-wrap gap-1 mt-1">
                                             {keywordData.aiEntities.slice(0, 15).map((e, i) => (
-                                                <span key={i} onClick={() => execCommand('insertText', ` ${e} `)} className="px-2 py-0.5 bg-slate-800 text-slate-200 border border-white/10 rounded text-[10px] cursor-pointer hover:bg-amber-500/20 hover:text-amber-300 transition">{e}</span>
+                                                <span key={i} onClick={() => execCommand('insertText', ` ${e} `)} className="scw-chip">{e}</span>
                                             ))}
                                         </div>
                                     </div>
@@ -5236,7 +5236,7 @@ BEGIN WRITING THE ARTICLE NOW:`;
                                         <span className="text-[10px] font-bold text-blue-400 uppercase">AI-Picked ({keywordData.aiPickedNgrams.length})</span>
                                         <div className="flex flex-wrap gap-1 mt-1">
                                             {keywordData.aiPickedNgrams.slice(0, 12).map((n, i) => (
-                                                <span key={i} onClick={() => execCommand('insertText', ` ${n} `)} className="px-2 py-0.5 bg-slate-800 text-slate-200 border border-white/10 rounded text-[10px] cursor-pointer hover:bg-blue-500/20 hover:text-blue-300 transition">{n}</span>
+                                                <span key={i} onClick={() => execCommand('insertText', ` ${n} `)} className="scw-chip">{n}</span>
                                             ))}
                                         </div>
                                     </div>
@@ -5252,7 +5252,7 @@ BEGIN WRITING THE ARTICLE NOW:`;
                                 </h5>
                                 <div className="flex flex-wrap gap-1">
                                     {keywordData.nlpKeywords.slice(0, 25).map((kw, i) => (
-                                        <span key={i} onClick={() => execCommand('insertText', ` ${kw} `)} className="px-2 py-0.5 bg-slate-800 text-slate-200 border border-white/10 rounded text-[10px] cursor-pointer hover:bg-emerald-500/20 hover:text-emerald-300 transition">{kw}</span>
+                                        <span key={i} onClick={() => execCommand('insertText', ` ${kw} `)} className="scw-chip">{kw}</span>
                                     ))}
                                 </div>
                             </div>
@@ -5260,7 +5260,7 @@ BEGIN WRITING THE ARTICLE NOW:`;
 
                         {/* Empty State */}
                         {!keywordData.competitorEntities?.length && !keywordData.nlpKeywords?.length && !keywordData.skipGrams?.length && (
-                            <div className="text-center py-6 text-slate-500 text-xs">
+                            <div className="text-center py-6 ctool-help-text">
                                 <p>No extracted data yet.</p>
                                 <p className="text-[11px] mt-1">Complete previous steps to surface live keywords & entities.</p>
                             </div>
@@ -5522,7 +5522,7 @@ BEGIN WRITING THE ARTICLE NOW:`;
                                 <Search className="w-3.5 h-3.5 flex-shrink-0" />
                                 <span>Research</span>
                             </button>
-                            <ChevronRight className="w-4 h-4 text-slate-300 flex-shrink-0 hidden sm:block" />
+                            <ChevronRight className="w-4 h-4 text-content-muted flex-shrink-0 hidden sm:block" />
                             <button
                                 onClick={() => goToStep(2)}
                                 disabled={!isStepComplete(1)}
@@ -5536,7 +5536,7 @@ BEGIN WRITING THE ARTICLE NOW:`;
                                 <List className="w-3.5 h-3.5 flex-shrink-0" />
                                 <span>Outline</span>
                             </button>
-                            <ChevronRight className="w-4 h-4 text-slate-300 flex-shrink-0 hidden sm:block" />
+                            <ChevronRight className="w-4 h-4 text-content-muted flex-shrink-0 hidden sm:block" />
                             <button
                                 onClick={() => { if (isStepComplete(2)) { setCurrentStep(2); setShowWordCount(true); } }}
                                 disabled={!isStepComplete(2)}
@@ -5548,7 +5548,7 @@ BEGIN WRITING THE ARTICLE NOW:`;
                                 <Gauge className="w-3.5 h-3.5 flex-shrink-0" />
                                 <span>Word Count</span>
                             </button>
-                            <ChevronRight className="w-4 h-4 text-slate-300 flex-shrink-0 hidden sm:block" />
+                            <ChevronRight className="w-4 h-4 text-content-muted flex-shrink-0 hidden sm:block" />
                             <button
                                 onClick={() => { if (isStepComplete(2)) goToStep(13); }}
                                 disabled={!isStepComplete(2)}
@@ -5584,7 +5584,7 @@ BEGIN WRITING THE ARTICLE NOW:`;
                                         </button>
                                         {step.id === 2 && (
                                             <>
-                                                <ChevronRight className="w-3 h-3 text-slate-300 flex-shrink-0" />
+                                                <ChevronRight className="w-3 h-3 text-content-muted flex-shrink-0" />
                                                 <button
                                                     onClick={() => { if (isStepComplete(2)) { setCurrentStep(2); setShowWordCount(true); } }}
                                                     disabled={!isStepComplete(2)}
@@ -5599,7 +5599,7 @@ BEGIN WRITING THE ARTICLE NOW:`;
                                             </>
                                         )}
                                         {index < 6 && (
-                                            <ChevronRight className="w-3 h-3 text-slate-300 flex-shrink-0" />
+                                            <ChevronRight className="w-3 h-3 text-content-muted flex-shrink-0" />
                                         )}
                                     </React.Fragment>
                                 ))}
@@ -5623,7 +5623,7 @@ BEGIN WRITING THE ARTICLE NOW:`;
                                             <span className="inline">{step.name}</span>
                                         </button>
                                         {index < STEPS.slice(7).length - 1 && (
-                                            <ChevronRight className="w-3 h-3 text-slate-300 flex-shrink-0" />
+                                            <ChevronRight className="w-3 h-3 text-content-muted flex-shrink-0" />
                                         )}
                                     </React.Fragment>
                                 ))}
