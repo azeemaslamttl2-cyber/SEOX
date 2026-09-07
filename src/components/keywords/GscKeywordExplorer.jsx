@@ -273,8 +273,8 @@ export default function GscKeywordExplorer({ kind }) {
             <Globe className="h-4 w-4" />
             <select
               value={gsc.selectedSite}
-
               onChange={(event) => syncProjectForSite(event.target.value)}
+
               className="gke-site-select"
             >
               {gsc.sites.map((site) => (
