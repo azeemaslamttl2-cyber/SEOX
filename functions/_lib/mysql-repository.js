@@ -5,6 +5,7 @@ const STORAGE_TABLES = {
   adminSettings: { table: 'admin_settings', key: 'setting_key', value: 'setting_value' },
   stripeConnections: { table: 'stripe_connections', key: 'user_id' },
   'users/{uid}/gscConnection': { table: 'gsc_connections', key: 'user_id' },
+  'users/{uid}/projects/{projectId}/gscConnection': { table: 'gsc_connections', key: 'user_id' },
   'users/{uid}/yandexConnection': { table: 'yandex_connections', key: 'user_id' },
   'users/{uid}/projects': { table: 'user_projects', key: 'user_id' },
   'users/{uid}/meta': { table: 'user_meta', key: 'user_id' },
@@ -122,6 +123,10 @@ function parseStoragePath(collection) {
     return { key: 'users/{uid}/projects/{projectId}/toolResults', userId, projectId: tokens[3] };
   }
 
+  if (tokens.length === 5 && tokens[2] === 'projects' && tokens[4] === 'gscConnection') {
+    return { key: 'users/{uid}/projects/{projectId}/gscConnection', userId, projectId: tokens[3] };
+  }
+
   return null;
 }
 
@@ -155,6 +160,7 @@ export function resolveStorageTarget(collection, documentId) {
 
   if (template.table === 'gsc_connections' || template.table === 'yandex_connections') {
     target.userId = parsed?.userId || documentId || null;
+    target.projectId = parsed?.projectId || (typeof documentId === 'object' ? documentId?.projectId : null) || null;
     return target;
   }
 
@@ -233,9 +239,10 @@ export function buildRowPayload(collection, documentId, data) {
     };
   }
 
-  if (collectionKey === 'users/{uid}/gscConnection') {
+  if (collectionKey === 'users/{uid}/gscConnection' || collectionKey === 'users/{uid}/projects/{projectId}/gscConnection') {
     return {
       user_id: target.userId,
+      project_id: target.projectId || null,
       access_token: data?.accessToken || null,
       refresh_token: data?.refreshToken || null,
       expires_at: data?.expiresAt ? formatDateForMySQL(Number(data.expiresAt)) : null,
@@ -323,7 +330,7 @@ function serializeRow(row, collection) {
   if (collectionKey === 'users/{uid}/projects/{projectId}/toolResults') {
     return { ...row.result, projectUrl: row.project_url, updatedAt: row.updated_at };
   }
-  if (collectionKey === 'users/{uid}/gscConnection') {
+  if (collectionKey === 'users/{uid}/gscConnection' || collectionKey === 'users/{uid}/projects/{projectId}/gscConnection') {
     return {
       accessToken: row.access_token,
       refreshToken: row.refresh_token,
@@ -377,9 +384,11 @@ export async function listMySqlCollection(env, collection, pageSize = 500) {
     } else if (collectionKey === 'users/{uid}/projects/{projectId}/toolResults') {
       query = 'SELECT * FROM `tool_results` WHERE `user_id` = ? ORDER BY `updated_at` DESC LIMIT ?';
       params = [target.userId, pageSize];
-    } else if (collectionKey === 'users/{uid}/gscConnection') {
-      query = 'SELECT * FROM `gsc_connections` WHERE `user_id` = ? LIMIT 1';
-      params = [target.userId];
+    } else if (collectionKey === 'users/{uid}/gscConnection' || collectionKey === 'users/{uid}/projects/{projectId}/gscConnection') {
+      query = target.projectId
+        ? 'SELECT * FROM `gsc_connections` WHERE `user_id` = ? AND `project_id` = ? LIMIT 1'
+        : 'SELECT * FROM `gsc_connections` WHERE `user_id` = ? AND `project_id` IS NULL LIMIT 1';
+      params = target.projectId ? [target.userId, target.projectId] : [target.userId];
     } else if (collectionKey === 'users/{uid}/yandexConnection') {
       query = 'SELECT * FROM `yandex_connections` WHERE `user_id` = ? LIMIT 1';
       params = [target.userId];
@@ -429,9 +438,11 @@ export async function getMySqlDocument(env, collection, documentId) {
     } else if (collectionKey === 'users/{uid}/projects/{projectId}/toolResults') {
       query = 'SELECT * FROM `tool_results` WHERE `user_id` = ? AND `project_id` = ? AND `tool_key` = ? LIMIT 1';
       params = [target.userId, target.projectId || documentId?.projectId, target.toolKey || documentId?.toolKey];
-    } else if (collectionKey === 'users/{uid}/gscConnection') {
-      query = 'SELECT * FROM `gsc_connections` WHERE `user_id` = ? LIMIT 1';
-      params = [target.userId];
+    } else if (collectionKey === 'users/{uid}/gscConnection' || collectionKey === 'users/{uid}/projects/{projectId}/gscConnection') {
+      query = target.projectId
+        ? 'SELECT * FROM `gsc_connections` WHERE `user_id` = ? AND `project_id` = ? LIMIT 1'
+        : 'SELECT * FROM `gsc_connections` WHERE `user_id` = ? AND `project_id` IS NULL LIMIT 1';
+      params = target.projectId ? [target.userId, target.projectId] : [target.userId];
     } else if (collectionKey === 'users/{uid}/yandexConnection') {
       query = 'SELECT * FROM `yandex_connections` WHERE `user_id` = ? LIMIT 1';
       params = [target.userId];
@@ -532,10 +543,10 @@ export async function patchMySqlDocument(env, collection, documentId, fields) {
       query = `INSERT INTO \`tool_results\` (\`user_id\`, \`project_id\`, \`tool_key\`, \`project_url\`, \`result\`, \`created_at\`, \`updated_at\`) VALUES (?, ?, ?, ?, ?, ?, ?)
         ON DUPLICATE KEY UPDATE \`project_url\`=VALUES(\`project_url\`), \`result\`=VALUES(\`result\`), \`updated_at\`=VALUES(\`updated_at\`);`;
       params = [payload.user_id, payload.project_id, payload.tool_key, payload.project_url, JSON.stringify(payload.result), payload.created_at, payload.updated_at];
-    } else if (collectionKey === 'users/{uid}/gscConnection') {
-      query = `INSERT INTO \`gsc_connections\` (\`user_id\`, \`access_token\`, \`refresh_token\`, \`expires_at\`, \`google_email\`, \`updated_at\`) VALUES (?, ?, ?, ?, ?, ?)
+    } else if (collectionKey === 'users/{uid}/gscConnection' || collectionKey === 'users/{uid}/projects/{projectId}/gscConnection') {
+      query = `INSERT INTO \`gsc_connections\` (\`user_id\`, \`project_id\`, \`access_token\`, \`refresh_token\`, \`expires_at\`, \`google_email\`, \`updated_at\`) VALUES (?, ?, ?, ?, ?, ?, ?)
         ON DUPLICATE KEY UPDATE \`access_token\`=VALUES(\`access_token\`), \`refresh_token\`=VALUES(\`refresh_token\`), \`expires_at\`=VALUES(\`expires_at\`), \`google_email\`=VALUES(\`google_email\`), \`updated_at\`=VALUES(\`updated_at\`);`;
-      params = [payload.user_id, payload.access_token, payload.refresh_token, payload.expires_at, payload.google_email, payload.updated_at];
+      params = [payload.user_id, payload.project_id, payload.access_token, payload.refresh_token, payload.expires_at, payload.google_email, payload.updated_at];
     } else if (collectionKey === 'users/{uid}/yandexConnection') {
       query = `INSERT INTO \`yandex_connections\` (\`user_id\`, \`access_token\`, \`refresh_token\`, \`expires_at\`, \`yandex_email\`, \`yandex_user_id\`, \`updated_at\`) VALUES (?, ?, ?, ?, ?, ?, ?)
         ON DUPLICATE KEY UPDATE \`access_token\`=VALUES(\`access_token\`), \`refresh_token\`=VALUES(\`refresh_token\`), \`expires_at\`=VALUES(\`expires_at\`), \`yandex_email\`=VALUES(\`yandex_email\`), \`yandex_user_id\`=VALUES(\`yandex_user_id\`), \`updated_at\`=VALUES(\`updated_at\`);`;
@@ -588,9 +599,11 @@ export async function deleteMySqlDocument(env, collection, documentId) {
     } else if (collectionKey === 'users/{uid}/projects/{projectId}/toolResults') {
       query = 'DELETE FROM `tool_results` WHERE `user_id` = ? AND `project_id` = ? AND `tool_key` = ?';
       params = [target.userId, target.projectId || documentId?.projectId, target.toolKey || documentId?.toolKey];
-    } else if (collectionKey === 'users/{uid}/gscConnection') {
-      query = 'DELETE FROM `gsc_connections` WHERE `user_id` = ?';
-      params = [target.userId];
+    } else if (collectionKey === 'users/{uid}/gscConnection' || collectionKey === 'users/{uid}/projects/{projectId}/gscConnection') {
+      query = target.projectId
+        ? 'DELETE FROM `gsc_connections` WHERE `user_id` = ? AND `project_id` = ?'
+        : 'DELETE FROM `gsc_connections` WHERE `user_id` = ? AND `project_id` IS NULL';
+      params = target.projectId ? [target.userId, target.projectId] : [target.userId];
     } else if (collectionKey === 'users/{uid}/yandexConnection') {
       query = 'DELETE FROM `yandex_connections` WHERE `user_id` = ?';
       params = [target.userId];

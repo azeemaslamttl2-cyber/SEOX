@@ -80,12 +80,13 @@ CREATE TABLE IF NOT EXISTS stripe_connections (
 
 CREATE TABLE IF NOT EXISTS gsc_connections (
   user_id VARCHAR(128) NOT NULL,
+  project_id VARCHAR(255) NULL,
   access_token TEXT NULL,
   refresh_token TEXT NULL,
   expires_at DATETIME NULL,
   google_email VARCHAR(255) NULL,
   updated_at DATETIME NOT NULL,
-  PRIMARY KEY (user_id),
+  UNIQUE KEY uq_gsc_connections_user_project (user_id, project_id),
   CONSTRAINT fk_gsc_connections_user FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 

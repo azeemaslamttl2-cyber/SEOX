@@ -84,6 +84,7 @@ export async function getGscAuthUrl(payload = {}) {
       redirectUri: getGoogleRedirectUri(),
       returnTo: payload.returnTo || "/gsc",
       source: payload.source || "gsc-insights",
+      projectId: payload.projectId || null,
     }),
   });
   const data = await response.json().catch(() => ({}));

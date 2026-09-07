@@ -19,6 +19,7 @@ import {
 import Logo from "../../components/Logo.jsx";
 import { useCrawl } from "../../context/CrawlContext.jsx";
 import { useAuth } from "../../context/AuthContext.jsx";
+import { getGscAuthUrl } from "../../lib/googleOAuthConfig.js";
 
 const steps = [
   { num: 1, label: "Scope", Icon: Globe },
@@ -241,7 +242,14 @@ export default function NewProject() {
     try {
       await setProject(proj);
       if (checksMode) {
-        navigate("/dashboard");
+        const authUrl = await getGscAuthUrl({
+          returnTo: "/dashboard",
+          source: "project-creation",
+          projectId,
+          projectDomain: proj.domain,
+          projectUrl: proj.fullUrl,
+        });
+        window.location.assign(authUrl);
       } else {
         startCrawl(proj, { skipOnline: true });
         navigate("/auditor/log");

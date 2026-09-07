@@ -137,9 +137,14 @@ export async function fetchProjectGscPerformance(project, { userId, accessToken,
     };
   }
 
+  const cached = project?.project_data?.gsc || project?.projectData?.gsc;
+  if (!accessToken && cached?.status === "complete" && cached.metrics && cached.fetchedAt) {
+    return { ...cached, status: "complete", cached: true };
+  }
+
   const session = accessToken
     ? { connected: true, accessToken }
-    : await restoreGscSession({ userId, preferServer: true });
+    : await restoreGscSession({ userId, projectId: project?.id || "", preferServer: true });
 
   if (!session?.connected || !session.accessToken) {
     return {

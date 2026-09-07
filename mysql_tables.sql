@@ -111,6 +111,7 @@ DROP TABLE IF EXISTS `content_writer_profiles`;
 CREATE TABLE IF NOT EXISTS `content_writer_profiles` (
   `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT,
   `user_id` bigint UNSIGNED NOT NULL,
+  `project_id` varchar(255) DEFAULT NULL,
   `profile_data` json NOT NULL,
   `created_at` datetime NOT NULL,
   `updated_at` datetime NOT NULL,
@@ -134,7 +135,7 @@ CREATE TABLE IF NOT EXISTS `gsc_connections` (
   `google_email` varchar(255) DEFAULT NULL,
   `updated_at` datetime NOT NULL,
   PRIMARY KEY (`id`),
-  UNIQUE KEY `uq_gsc_connections_user` (`user_id`)
+  UNIQUE KEY `uq_gsc_connections_user_project` (`user_id`, `project_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
