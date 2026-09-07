@@ -35,6 +35,9 @@ export async function requireUser(request, env = process.env) {
   } catch (cause) {
     if (cause.status) throw cause;
     if (String(cause?.message || '').includes('AUTH_JWT_SECRET')) throw cause;
+    if (cause?.code?.startsWith('ERR_JWT_')) {
+      const error = new Error('Invalid or expired session.'); error.status = 401; throw error;
+    }
     if (cause?.code || cause?.originalError) {
       console.error('Authentication user lookup failed:', {
         code: cause.code || cause.originalError?.code,
