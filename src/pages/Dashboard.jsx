@@ -279,6 +279,12 @@ export default function Dashboard() {
               <RefreshCw className={`h-3.5 w-3.5 ${isRunning ? "animate-spin" : ""}`} />
               Run checks
             </button>
+            {gscMetrics.status === "skipped" && (
+              <Link to="/gsc" className="ui-button ui-button-secondary">
+                <Search className="h-3.5 w-3.5" />
+                Connect Google Search Console
+              </Link>
+            )}
           </div>
         </div>
       </div>

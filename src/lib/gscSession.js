@@ -48,7 +48,7 @@ export function clearStoredGscSession() {
   sessionStorage.removeItem(GSC_EMAIL_KEY);
 }
 
-export async function fetchServerGscSession(userId) {
+export async function fetchServerGscSession(userId, projectId = "") {
   if (!userId) return null;
 
   const headers = new Headers({ "Content-Type": "application/json" });
@@ -58,7 +58,7 @@ export async function fetchServerGscSession(userId) {
   const response = await fetch("/api/gsc-token", {
     method: "POST",
     headers,
-    body: JSON.stringify({ action: "get", userId }),
+    body: JSON.stringify({ action: "get", userId, projectId: projectId || null }),
   });
   const data = await response.json().catch(() => ({}));
 
@@ -78,14 +78,14 @@ export async function fetchServerGscSession(userId) {
   return session;
 }
 
-export async function restoreGscSession({ userId, preferServer = true } = {}) {
+export async function restoreGscSession({ userId, projectId = "", preferServer = true } = {}) {
   const localSession = readStoredGscSession();
 
   if (!preferServer && localSession) return localSession;
 
   if (userId) {
     try {
-      const serverSession = await fetchServerGscSession(userId);
+      const serverSession = await fetchServerGscSession(userId, projectId);
       if (serverSession?.connected) return serverSession;
     } catch (error) {
       if (!localSession) throw error;
@@ -95,11 +95,11 @@ export async function restoreGscSession({ userId, preferServer = true } = {}) {
   return localSession || { connected: false };
 }
 
-export async function ensureValidGscSession({ userId } = {}) {
+export async function ensureValidGscSession({ userId, projectId = "" } = {}) {
   const localSession = readStoredGscSession();
   if (localSession) return localSession;
   if (!userId) return null;
 
-  const serverSession = await fetchServerGscSession(userId);
+  const serverSession = await fetchServerGscSession(userId, projectId);
   return serverSession?.connected ? serverSession : null;
 }

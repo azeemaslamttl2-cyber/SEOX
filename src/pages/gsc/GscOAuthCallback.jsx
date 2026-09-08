@@ -5,6 +5,8 @@ import { useAuth } from "../../context/AuthContext.jsx";
 import { getGoogleRedirectUri, parseGscOAuthState } from "../../lib/googleOAuthConfig.js";
 import { writeStoredGscSession } from "../../lib/gscSession.js";
 import { getSessionToken } from "../../lib/authSession.js";
+import { fetchProjectGscPerformance } from "../../lib/gscPerformance.js";
+import { saveToolResult } from "../../lib/projectsApi.js";
 
 function getUserId(user) {
   return user?.uid || user?.id || "";
@@ -58,6 +60,7 @@ export default function GscOAuthCallback() {
             action: "exchange",
             code,
             userId,
+            projectId: state.projectId || null,
             redirectUri: getGoogleRedirectUri(),
           }),
         });
@@ -77,6 +80,20 @@ export default function GscOAuthCallback() {
           expiresAt: data.expiresAt,
           googleEmail: data.googleEmail,
         });
+        if (state.projectId) {
+          const result = await fetchProjectGscPerformance(
+            { id: state.projectId, domain: state.projectDomain, fullUrl: state.projectUrl },
+            { userId, accessToken: data.accessToken }
+          );
+          if (result.status === "complete") {
+            await saveToolResult(userId, {
+              projectId: state.projectId,
+              projectUrl: state.projectUrl || "",
+              toolKey: "gsc",
+              result,
+            });
+          }
+        }
         navigate(returnTo, { replace: true });
       } catch (err) {
         const errorMsg = err?.message || "Failed to connect Search Console.";

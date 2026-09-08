@@ -19,6 +19,14 @@ import { onRequest as backlinkIndexerOnRequest } from "./functions/api/off-page/
 import { onRequest as keywordResearchOnRequest } from "./functions/api/keywords/research.js";
 import { onRequest as ubersuggestOnRequest } from "./functions/api/keywords/ubersuggest.js";
 import { onRequest as contentOutlineOnRequest } from "./functions/api/content/outline.js";
+import { onRequest as textEditorOnRequest } from "./functions/api/seo-tools/text-editor.js";
+import { onRequest as domainSeparatorOnRequest } from "./functions/api/seo-tools/domain-separator.js";
+import { onRequest as wordCounterOnRequest } from "./functions/api/seo-tools/word-counter.js";
+import { onRequest as botViewerOnRequest } from "./functions/api/seo-tools/bot-viewer.js";
+import { onRequest as daPaCheckerOnRequest } from "./functions/api/seo-tools/da-pa-checker.js";
+import { onRequest as metaExtractorOnRequest } from "./functions/api/seo-tools/meta-extractor.js";
+import { onRequest as sitemapExtractorOnRequest } from "./functions/api/seo-tools/sitemap-extractor.js";
+import { onRequest as seoToolsOnRequest } from "./functions/api/seo-tools.js";
 import { onRequestGet as authOnRequestGet, onRequestPost as authOnRequestPost } from "./functions/api/auth.js";
 import fetchUrlMetaHandler from "./functions/_handlers/fetch-url-meta.js";
 import webmasterApiHandler from "./functions/_handlers/webmaster-api.js";
@@ -534,6 +542,102 @@ function contentOutlineApiPlugin() {
   };
 }
 
+function textEditorApiPlugin() {
+  return {
+    name: "seox-text-editor-api",
+    configureServer(server) {
+      registerTextEditorMiddleware(server);
+    },
+    configurePreviewServer(server) {
+      registerTextEditorMiddleware(server);
+    },
+  };
+}
+
+function domainSeparatorApiPlugin() {
+  return {
+    name: "seox-domain-separator-api",
+    configureServer(server) {
+      registerDomainSeparatorMiddleware(server);
+    },
+    configurePreviewServer(server) {
+      registerDomainSeparatorMiddleware(server);
+    },
+  };
+}
+
+function wordCounterApiPlugin() {
+  return {
+    name: "seox-word-counter-api",
+    configureServer(server) {
+      registerWordCounterMiddleware(server);
+    },
+    configurePreviewServer(server) {
+      registerWordCounterMiddleware(server);
+    },
+  };
+}
+
+function botViewerApiPlugin() {
+  return {
+    name: "seox-bot-viewer-api",
+    configureServer(server) {
+      registerBotViewerMiddleware(server);
+    },
+    configurePreviewServer(server) {
+      registerBotViewerMiddleware(server);
+    },
+  };
+}
+
+function daPaCheckerApiPlugin() {
+  return {
+    name: "seox-da-pa-checker-api",
+    configureServer(server) {
+      registerDaPaCheckerMiddleware(server);
+    },
+    configurePreviewServer(server) {
+      registerDaPaCheckerMiddleware(server);
+    },
+  };
+}
+
+function metaExtractorApiPlugin() {
+  return {
+    name: "seox-meta-extractor-api",
+    configureServer(server) {
+      registerMetaExtractorMiddleware(server);
+    },
+    configurePreviewServer(server) {
+      registerMetaExtractorMiddleware(server);
+    },
+  };
+}
+
+function sitemapExtractorApiPlugin() {
+  return {
+    name: "seox-sitemap-extractor-api",
+    configureServer(server) {
+      registerSitemapExtractorMiddleware(server);
+    },
+    configurePreviewServer(server) {
+      registerSitemapExtractorMiddleware(server);
+    },
+  };
+}
+
+function seoToolsApiPlugin() {
+  return {
+    name: "seox-seo-tools-api",
+    configureServer(server) {
+      registerSeoToolsMiddleware(server);
+    },
+    configurePreviewServer(server) {
+      registerSeoToolsMiddleware(server);
+    },
+  };
+}
+
 function mountedUrl(req, mountPath) {
   const forwardedHost = String(req.headers?.["x-forwarded-host"] || req.headers?.host || "").split(",")[0].trim();
   const host = /^[a-z0-9.:[\]-]+$/i.test(forwardedHost) ? forwardedHost : "127.0.0.1:3000";
@@ -843,6 +947,143 @@ function registerContentOutlineMiddleware(server) {
       sendJson(res, error?.status || 500, {
         success: false,
         message: error?.message || "Outline generation request failed.",
+      });
+    }
+  });
+}
+
+function registerTextEditorMiddleware(server) {
+  server.middlewares.use("/api/seo-tools/text-editor", async (req, res) => {
+    try {
+      const request = await createWebRequest(req, "/api/seo-tools/text-editor");
+      const response = await textEditorOnRequest({ request, env: loadDevApiEnv() });
+      await sendWebResponse(res, response);
+    } catch (error) {
+      sendJson(res, error?.status || 500, {
+        success: false,
+        status: "error",
+        message: error?.message || "Text editor request failed.",
+      });
+    }
+  });
+}
+
+function registerDomainSeparatorMiddleware(server) {
+  server.middlewares.use("/api/seo-tools/domain-separator", async (req, res) => {
+    try {
+      const request = await createWebRequest(req, "/api/seo-tools/domain-separator");
+      const response = await domainSeparatorOnRequest({ request, env: loadDevApiEnv() });
+      await sendWebResponse(res, response);
+    } catch (error) {
+      sendJson(res, error?.status || 500, {
+        success: false,
+        status: "error",
+        message: error?.message || "Domain separator request failed.",
+        data: null,
+      });
+    }
+  });
+}
+
+function registerWordCounterMiddleware(server) {
+  server.middlewares.use("/api/seo-tools/word-counter", async (req, res) => {
+    try {
+      const request = await createWebRequest(req, "/api/seo-tools/word-counter");
+      const response = await wordCounterOnRequest({ request, env: loadDevApiEnv() });
+      await sendWebResponse(res, response);
+    } catch (error) {
+      sendJson(res, error?.status || 500, {
+        success: false,
+        status: "error",
+        message: error?.message || "Word counter request failed.",
+        data: null,
+      });
+    }
+  });
+}
+
+function registerBotViewerMiddleware(server) {
+  server.middlewares.use("/api/seo-tools/bot-viewer", async (req, res) => {
+    try {
+      const request = await createWebRequest(req, "/api/seo-tools/bot-viewer");
+      const response = await botViewerOnRequest({ request, env: loadDevApiEnv() });
+      await sendWebResponse(res, response);
+    } catch (error) {
+      sendJson(res, error?.status || 500, {
+        success: false,
+        status: "error",
+        message: error?.message || "Bot viewer request failed.",
+        data: null,
+      });
+    }
+  });
+}
+
+function registerDaPaCheckerMiddleware(server) {
+  server.middlewares.use("/api/seo-tools/da-pa-checker", async (req, res) => {
+    try {
+      const request = await createWebRequest(req, "/api/seo-tools/da-pa-checker");
+      const response = await daPaCheckerOnRequest({ request, env: loadDevApiEnv() });
+      await sendWebResponse(res, response);
+    } catch (error) {
+      sendJson(res, error?.status || 500, {
+        success: false,
+        status: "error",
+        message: error?.message || "DA/PA checker request failed.",
+        data: null,
+      });
+    }
+  });
+}
+
+function registerMetaExtractorMiddleware(server) {
+  server.middlewares.use("/api/seo-tools/meta-extractor", async (req, res) => {
+    try {
+      const request = await createWebRequest(req, "/api/seo-tools/meta-extractor");
+      const response = await metaExtractorOnRequest({ request, env: loadDevApiEnv() });
+      await sendWebResponse(res, response);
+    } catch (error) {
+      sendJson(res, error?.status || 500, {
+        success: false,
+        status: "error",
+        message: error?.message || "Meta extractor request failed.",
+        data: null,
+      });
+    }
+  });
+}
+
+function registerSitemapExtractorMiddleware(server) {
+  server.middlewares.use("/api/seo-tools/sitemap-extractor", async (req, res) => {
+    try {
+      const request = await createWebRequest(req, "/api/seo-tools/sitemap-extractor");
+      const response = await sitemapExtractorOnRequest({ request, env: loadDevApiEnv() });
+      await sendWebResponse(res, response);
+    } catch (error) {
+      sendJson(res, error?.status || 500, {
+        success: false,
+        status: "error",
+        message: error?.message || "Sitemap extractor request failed.",
+        data: null,
+      });
+    }
+  });
+}
+
+function registerSeoToolsMiddleware(server) {
+  server.middlewares.use("/api/seo-tools", async (req, res, next) => {
+    if (req.url && req.url !== "/" && !req.url.startsWith("/?")) return next();
+    try {
+      const request = await createWebRequest(req, "/api/seo-tools");
+      const response = await seoToolsOnRequest({ request, env: loadDevApiEnv() });
+      await sendWebResponse(res, response);
+    } catch (error) {
+      sendJson(res, error?.status || 500, {
+        success: false,
+        status: "error",
+        message: error?.message || "SEO tools request failed.",
+        tool: null,
+        data: null,
       });
     }
   });
@@ -1231,7 +1472,7 @@ function sendJson(res, status, payload) {
 }
 
 export default defineConfig({
-  plugins: [react(), proxyApiPlugin(), deepseekApiPlugin(), deepseekSettingsApiPlugin(), fetchUrlMetaApiPlugin(), pagespeedApiPlugin(), screamingFrogApiPlugin(), webmasterApiPlugin(), autocompleteApiPlugin(), gscTokenApiPlugin(), projectsApiPlugin(), projectDetailsApiPlugin(), backlinksAnalyzeApiPlugin(), w3cValidationApiPlugin(), expiredDomainsCheckApiPlugin(), backlinkCleanerApiPlugin(), backlinkIndexerApiPlugin(), keywordResearchApiPlugin(), ubersuggestApiPlugin(), authApiPlugin(), contentOutlineApiPlugin(), crawlerApiPlugin()],
+  plugins: [react(), proxyApiPlugin(), deepseekApiPlugin(), deepseekSettingsApiPlugin(), fetchUrlMetaApiPlugin(), pagespeedApiPlugin(), screamingFrogApiPlugin(), webmasterApiPlugin(), autocompleteApiPlugin(), gscTokenApiPlugin(), projectsApiPlugin(), projectDetailsApiPlugin(), backlinksAnalyzeApiPlugin(), w3cValidationApiPlugin(), expiredDomainsCheckApiPlugin(), backlinkCleanerApiPlugin(), backlinkIndexerApiPlugin(), keywordResearchApiPlugin(), ubersuggestApiPlugin(), authApiPlugin(), contentOutlineApiPlugin(), textEditorApiPlugin(), domainSeparatorApiPlugin(), wordCounterApiPlugin(), botViewerApiPlugin(), daPaCheckerApiPlugin(), metaExtractorApiPlugin(), sitemapExtractorApiPlugin(), seoToolsApiPlugin(), crawlerApiPlugin()],
   server: {
     port: 3000,
     host: true,

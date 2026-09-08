@@ -1,18 +1,14 @@
 import { useState } from "react";
 import { ArrowUpDown, AlertCircle } from "lucide-react";
 import ToolHeader from "../../components/seotools/ToolHeader.jsx";
+import { estimateDaPa } from "../../../functions/_lib/seo-tools.js";
 
 export default function BulkDaPaChecker() {
   const [text, setText] = useState("");
   const [results, setResults] = useState(null);
 
   function check() {
-    const domains = text.split("\n").map((d) => d.trim()).filter(Boolean);
-    setResults(domains.map((domain) => {
-      const host = domain.replace(/^https?:\/\//, "").replace(/^www\./, "").split("/")[0];
-      const seed = Array.from(host).reduce((sum, char) => sum + char.charCodeAt(0), 0);
-      return { domain: host, da: 10 + (seed % 81), pa: 8 + ((seed * 7) % 83), spam: (seed * 3) % 6 };
-    }));
+    setResults(estimateDaPa({ text }).results);
   }
 
   return (
