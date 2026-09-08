@@ -150,6 +150,15 @@ export default function AuditorIssues() {
             </section>
           );
         })}
+
+        {!filtered.some((cat) => (cat.subgroups ? cat.subgroups.length > 0 : cat.items.length > 0)) && (
+          <div className="rounded-2xl border border-white/10 bg-ink-800/60 p-8 text-center backdrop-blur">
+            <p className="text-sm font-semibold text-white">No issues found in this view</p>
+            <p className="mt-1 text-xs text-white/50">
+              {searchQuery ? `No issues matching "${searchQuery}".` : "No audit issues found for this project filter."}
+            </p>
+          </div>
+        )}
       </div>
     </div>
   );

@@ -32,7 +32,13 @@ import {
   saveProjectWithMeta,
   deleteProject,
   saveProjectMeta,
+  saveProjectData,
 } from "../lib/projectsApi.js";
+import {
+  loadCrawlStorage,
+  saveCrawlProjectStates,
+  deleteCrawlProjectState,
+} from "../lib/crawlStorage.js";
 import { useAuth } from "./AuthContext.jsx";
 
 const CrawlContext = createContext(null);
@@ -125,11 +131,21 @@ function reviveProjectState(raw) {
 
 function readJson(key, fallback) {
   try {
-    const raw = sessionStorage.getItem(key);
+    const raw =
+      (typeof sessionStorage !== "undefined" ? sessionStorage.getItem(key) : null) ||
+      (typeof localStorage !== "undefined" ? localStorage.getItem(key) : null);
     return raw ? JSON.parse(raw) : fallback;
   } catch {
     return fallback;
   }
+}
+
+function writeJson(key, value) {
+  try {
+    const serialized = JSON.stringify(value);
+    if (typeof sessionStorage !== "undefined") sessionStorage.setItem(key, serialized);
+    if (typeof localStorage !== "undefined") localStorage.setItem(key, serialized);
+  } catch {}
 }
 
 function mergeProjects(...lists) {
@@ -364,8 +380,43 @@ export function CrawlProvider({ children }) {
             : null) ||
           restoredProjects[0]?.id ||
           null;
+        let localCrawlStorage = { projectStates: {} };
+        try {
+          localCrawlStorage = await loadCrawlStorage();
+        } catch {
+          // IndexedDB load is non-blocking
+        }
+
+        const serverProjectStates = {};
+        (dbData.projects || []).forEach((proj) => {
+          if (proj?.id && proj?.project_data) {
+            const auditorData = proj.project_data.auditor;
+            const rawState =
+              (auditorData && typeof auditorData === "object"
+                ? (auditorData.stats ? { status: auditorData.status || "complete", stats: auditorData.stats } : { status: "complete", stats: auditorData })
+                : null) ||
+              proj.project_data.crawlState ||
+              proj.project_data.auditState ||
+              (proj.project_data.auditIssues ? { status: "complete", stats: proj.project_data } : null);
+            if (rawState) {
+              serverProjectStates[proj.id] = reviveProjectState(rawState);
+            }
+          }
+        });
+
+        const idbStates = localCrawlStorage?.projectStates
+          ? Object.fromEntries(
+              Object.entries(localCrawlStorage.projectStates).map(([id, state]) => [
+                id,
+                reviveProjectState(state),
+              ])
+            )
+          : {};
+
         const mergedProjectStates = {
           ...initial.projectStates,
+          ...idbStates,
+          ...serverProjectStates,
           ...(hasRuntimeProjectStateChanges ? currentProjectStates : {}),
         };
 
@@ -426,6 +477,46 @@ export function CrawlProvider({ children }) {
   useEffect(() => {
     latestProjectStatesRef.current = projectStates;
   }, [projectStates]);
+
+  // Persist projectStates to IndexedDB, localStorage/sessionStorage, and debounced to MySQL
+  useEffect(() => {
+    if (!storageReady) return;
+
+    writeJson(LS_PROJECT_STATES, projectStates);
+
+    const entries = Object.entries(projectStates).filter(
+      ([, state]) => state?.stats?.crawledCount > 0 || state?.status === "crawling"
+    );
+    if (entries.length) {
+      saveCrawlProjectStates(entries).catch(() => {});
+    }
+
+    const uid = uidRef.current;
+    if (uid && project?.id && projectStates[project.id]) {
+      const activeState = projectStates[project.id];
+      if (activeState?.stats?.crawledCount > 0) {
+        clearTimeout(stateFlushTimerRef.current);
+        stateFlushTimerRef.current = setTimeout(() => {
+          const auditorPayload = {
+            status: activeState.status,
+            stats: activeState.stats,
+            totalUrls: activeState.stats?.crawledCount || 0,
+            updatedAt: new Date().toISOString(),
+          };
+          saveProjectData(uid, {
+            projectId: project.id,
+            key: "auditor",
+            value: auditorPayload,
+          }).catch(() => {});
+          saveProjectData(uid, {
+            projectId: project.id,
+            key: "crawlState",
+            value: activeState,
+          }).catch(() => {});
+        }, STATE_FLUSH_MS);
+      }
+    }
+  }, [projectStates, storageReady, project?.id]);
 
   // Keep the visible duration/scheduled count moving while real network requests run.
   useEffect(() => {
@@ -726,6 +817,7 @@ export function CrawlProvider({ children }) {
       setSelectedProjectId(nextSelectedProjectId);
       delete crawlerSessionsRef.current[projectId];
       dirtyProjectStatesRef.current.delete(projectId);
+      deleteCrawlProjectState(projectId).catch(() => {});
       setProjectStates((states) => {
         const { [projectId]: _deleted, ...rest } = states;
         latestProjectStatesRef.current = rest;

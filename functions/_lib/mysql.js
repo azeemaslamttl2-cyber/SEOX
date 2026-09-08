@@ -8,7 +8,12 @@ let connectionEnv = process.env;
 // into process.env.  API middleware supplies that loaded environment per
 // request, so retain it for the MySQL helpers used by the API handler.
 export function configureMysqlConnection(env) {
-  connectionEnv = env || process.env;
+  if (env && env !== connectionEnv) {
+    connectionEnv = env;
+    pool = null;
+  } else if (!connectionEnv && env) {
+    connectionEnv = env;
+  }
 }
 
 export function getPool(env = connectionEnv) {

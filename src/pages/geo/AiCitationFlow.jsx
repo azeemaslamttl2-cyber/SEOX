@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Quote,
   Search,
@@ -11,6 +11,8 @@ import {
   Target,
   Award,
 } from "lucide-react";
+import { useSelectedProjectDomain } from "../../hooks/useSelectedProjectDomain.js";
+import { getSessionToken } from "../../lib/authSession.js";
 
 const mockCitation = {
   keyword: "learnwirepro.com",
@@ -61,9 +63,49 @@ const mockCitation = {
 };
 
 export default function AiCitationFlow() {
-  const [keyword, setKeyword] = useState(mockCitation.keyword);
+  const { projectUrl } = useSelectedProjectDomain();
+  const [keyword, setKeyword] = useState(projectUrl);
   const [country, setCountry] = useState(mockCitation.country);
+  const [result, setResult] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
   const [hasResult, setHasResult] = useState(true);
+
+  useEffect(() => {
+    setKeyword(projectUrl);
+  }, [projectUrl]);
+
+  async function runCitationFlow() {
+    const targetUrl = keyword.trim();
+    if (!targetUrl) {
+      setError("Select a website from the top URL selector first.");
+      return;
+    }
+    const adminToken = getSessionToken();
+    if (!adminToken) {
+      setError("Your session has expired. Please sign in again.");
+      return;
+    }
+    setLoading(true);
+    setError("");
+    try {
+      const response = await fetch("/api/geo/citation-flow", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ admin_token: adminToken, url: targetUrl }),
+      });
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok || !payload.success) throw new Error(payload.message || "Citation Flow analysis failed.");
+      setResult(payload.data?.citation_flow || null);
+      setHasResult(true);
+    } catch (requestError) {
+      setError(requestError.message || "Citation Flow analysis failed.");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  const displayedCitation = result || mockCitation;
 
   return (
     <div className="ctool-page space-y-5">
@@ -91,7 +133,7 @@ export default function AiCitationFlow() {
               <Quote className="h-4 w-4 ctool-accent" />
               <h2 className="stool-title">Keyword Citation Analysis</h2>
             </div>
-            {hasResult && <span className="ctool-help-text flex items-center gap-1"><Clock className="h-3 w-3" /> Last analyzed: {mockCitation.analyzedAt}</span>}
+            {hasResult && <span className="ctool-help-text flex items-center gap-1"><Clock className="h-3 w-3" /> Last analyzed: {displayedCitation.analyzedAt}</span>}
           </div>
 
           <div className="mt-3 flex items-center gap-2">
@@ -103,10 +145,11 @@ export default function AiCitationFlow() {
                 placeholder="Enter keyword to analyze citation flow (e.g., artificial intelligence, machine learning)"
               />
             </div>
-            <button className="ui-button ui-button-primary">
-              <Search className="h-4 w-4" /> Search Citation Flow
+            <button onClick={runCitationFlow} disabled={loading} className="ui-button ui-button-primary">
+              <Search className="h-4 w-4" /> {loading ? "Analyzing..." : "Search Citation Flow"}
             </button>
           </div>
+          {error && <p className="mt-2 text-[11px] text-red-500">{error}</p>}
 
           <div className="mt-3">
             <div className="flex items-center gap-1.5 ctool-help-text">
@@ -131,9 +174,9 @@ export default function AiCitationFlow() {
           <div className="stool-label flex items-center gap-1.5 mb-3">
             <Clock className="h-3.5 w-3.5" /> Search history
           </div>
-          {mockCitation.searchHistory.length > 0 ? (
+          {displayedCitation.searchHistory.length > 0 ? (
             <div className="space-y-2">
-              {mockCitation.searchHistory.map((h, i) => (
+              {displayedCitation.searchHistory.map((h, i) => (
                 <div key={i} className="geo-history-item">
                   <div className="geo-history-url truncate">{h.url}</div>
                   <div className="ctool-help-text">{h.date}</div>
@@ -150,8 +193,8 @@ export default function AiCitationFlow() {
         <>
           {/* Metric Cards */}
           <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-            {mockCitation.metrics.map((m, i) => {
-              const Icon = m.icon;
+            {displayedCitation.metrics.map((m, i) => {
+              const Icon = m.icon || [Hash, Layers, Target, Award][i];
               return (
                 <div key={i} className="geo-metric">
                   <div className="flex items-center gap-3">
@@ -173,7 +216,7 @@ export default function AiCitationFlow() {
           <div className="ctool-card">
             <h2 className="geo-section-title font-display mb-4">Search Results Comparison</h2>
             <div className="grid gap-4 lg:grid-cols-5">
-              {mockCitation.platforms.map((plat, i) => (
+              {displayedCitation.platforms.map((plat, i) => (
                 <div key={i} className="geo-panel">
                   {/* Platform header */}
                   <div className="geo-plat-head">

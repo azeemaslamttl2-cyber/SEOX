@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Crosshair,
   Globe,
@@ -11,6 +11,8 @@ import {
   ChevronUp,
   Sparkles,
 } from "lucide-react";
+import { useSelectedProjectDomain } from "../../hooks/useSelectedProjectDomain.js";
+import { getSessionToken } from "../../lib/authSession.js";
 
 const mockResult = {
   url: "https://learnwirepro.com",
@@ -116,9 +118,50 @@ const llmColors = {
 };
 
 export default function PromptTracking() {
-  const [url, setUrl] = useState(mockResult.url);
+  const { projectUrl } = useSelectedProjectDomain();
+  const [url, setUrl] = useState(projectUrl);
+  const [result, setResult] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
   const [hasResult, setHasResult] = useState(true);
   const [openSections, setOpenSections] = useState({ 0: true, 1: true });
+
+  useEffect(() => {
+    if (projectUrl) setUrl(projectUrl);
+  }, [projectUrl]);
+
+  async function runPromptTracking() {
+    const targetUrl = url.trim();
+    if (!targetUrl) {
+      setError("Enter a website URL first.");
+      return;
+    }
+    const adminToken = getSessionToken();
+    if (!adminToken) {
+      setError("Your session has expired. Please sign in again.");
+      return;
+    }
+
+    setLoading(true);
+    setError("");
+    try {
+      const response = await fetch("/api/geo/prompt-tracking", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ admin_token: adminToken, url: targetUrl }),
+      });
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok || !payload.success) throw new Error(payload.message || "Prompt tracking failed.");
+      setResult(payload.data?.prompt_tracking || null);
+      setHasResult(true);
+    } catch (requestError) {
+      setError(requestError.message || "Prompt tracking failed.");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  const displayedResult = result || mockResult;
 
   return (
     <div className="mx-auto max-w-5xl space-y-6">
@@ -155,12 +198,14 @@ export default function PromptTracking() {
                 />
               </div>
               <button
-                onClick={() => setHasResult(true)}
+                onClick={runPromptTracking}
+                disabled={loading}
                 className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-emerald-500 to-cyan-500 px-5 py-2.5 text-sm font-bold text-white shadow-lg shadow-emerald-500/25 transition hover:shadow-emerald-500/40"
               >
-                <Search className="h-4 w-4" /> Scrape & predict prompts
+                <Search className="h-4 w-4" /> {loading ? "Analyzing..." : "Scrape & predict prompts"}
               </button>
             </div>
+            {error && <p className="mt-2 text-[11px] text-red-400">{error}</p>}
             <p className="mt-2 text-[11px] text-white/25">No saved projects found. Enter a page URL to analyze any public URL.</p>
           </div>
         </div>
@@ -180,11 +225,11 @@ export default function PromptTracking() {
             <div className="mt-4 rounded-xl border border-white/[0.06] bg-ink-900/40 p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <div className="text-sm font-semibold text-white/80">{mockResult.url}</div>
-                  <div className="text-[11px] text-white/35">{mockResult.siteName}</div>
+                  <div className="text-sm font-semibold text-white/80">{displayedResult.url}</div>
+                  <div className="text-[11px] text-white/35">{displayedResult.siteName}</div>
                 </div>
                 <div className="flex items-center gap-1.5 text-[11px] text-white/30">
-                  <Clock className="h-3 w-3" /> {mockResult.analyzedAt}
+                  <Clock className="h-3 w-3" /> {displayedResult.analyzedAt}
                 </div>
               </div>
 
@@ -194,7 +239,7 @@ export default function PromptTracking() {
                   <Tag className="h-3 w-3" /> Extracted Keywords
                 </h4>
                 <div className="mt-2 flex flex-wrap gap-1.5">
-                  {mockResult.extractedKeywords.map((kw, i) => (
+                  {displayedResult.extractedKeywords.map((kw, i) => (
                     <span key={i} className="rounded-full border border-emerald-500/20 bg-emerald-500/5 px-2.5 py-1 text-[11px] font-medium text-emerald-300/80">
                       {kw}
                     </span>
@@ -208,7 +253,7 @@ export default function PromptTracking() {
                   <FileText className="h-3 w-3" /> Page Text Sample (Stored)
                 </h4>
                 <div className="mt-2 max-h-[200px] overflow-y-auto rounded-lg border border-white/[0.04] bg-ink-900/60 p-3">
-                  <pre className="whitespace-pre-wrap text-[12px] leading-relaxed text-white/50 font-sans">{mockResult.pageTextSample}</pre>
+                  <pre className="whitespace-pre-wrap text-[12px] leading-relaxed text-white/50 font-sans">{displayedResult.pageTextSample}</pre>
                 </div>
               </div>
             </div>
@@ -223,7 +268,7 @@ export default function PromptTracking() {
             <p className="text-[12px] text-white/35 -mt-3 mb-5">Example user prompts per topic where this page might be relevant in each model.</p>
 
             <div className="space-y-5">
-              {mockResult.promptsByLlm.map((group, gi) => (
+              {displayedResult.promptsByLlm.map((group, gi) => (
                 <div key={gi} className="rounded-xl border border-white/[0.06] bg-ink-900/30">
                   <button
                     onClick={() => setOpenSections((p) => ({ ...p, [gi]: !p[gi] }))}

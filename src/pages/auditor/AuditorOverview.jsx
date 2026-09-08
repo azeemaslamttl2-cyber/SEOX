@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Code2, Download, Gauge, HelpCircle, Sparkles, Eye, BarChart3 } from "lucide-react";
+import { Code2, Download, Gauge, HelpCircle, Sparkles, Eye, BarChart3, Play, Loader2, Plus, AlertCircle } from "lucide-react";
 import Card from "../../components/auditor/Card.jsx";
 import DonutChart from "../../components/auditor/DonutChart.jsx";
 import HealthGauge from "../../components/auditor/HealthGauge.jsx";
@@ -8,7 +8,7 @@ import HorizontalBars from "../../components/auditor/HorizontalBars.jsx";
 import MiniBars from "../../components/auditor/MiniBars.jsx";
 import IssueTable from "../../components/auditor/IssueTable.jsx";
 import { useAuditData } from "../../hooks/useAuditData.js";
-import { useCrawl } from "../../context/CrawlContext.jsx";
+import { useCrawl, formatDuration } from "../../context/CrawlContext.jsx";
 import { downloadTextFile, rowsToCsv, slugForFilename } from "../../lib/auditorExport.js";
 
 /* Stacked bar chart for HTTP status by depth */
@@ -55,7 +55,7 @@ function DepthChart({ data }) {
 export default function AuditorOverview() {
   const [tab, setTab] = useState("whatsnew");
   const navigate = useNavigate();
-  const { stats } = useCrawl();
+  const { stats, status, startCrawl, stopCrawl } = useCrawl();
   const {
     crawledUrls,
     crawlStatus,
@@ -70,6 +70,11 @@ export default function AuditorOverview() {
     httpStatusByDepth,
     bulkExportSummary,
   } = useAuditData();
+
+  const isCrawling = status === "crawling";
+  const hasAuditData = crawledUrls.total > 0;
+  const displayName = project?.name || project?.domain || "this website";
+
   const rows = tab === "whatsnew" ? whatsNew : topIssues;
   const exportSummaryRow = (row) => {
     const latestUrls = stats?.latestUrls || [];
@@ -107,6 +112,15 @@ export default function AuditorOverview() {
             </div>
           </div>
           <div className="flex flex-shrink-0 items-center gap-2">
+            {!hasAuditData && !isCrawling && (
+              <button
+                type="button"
+                onClick={() => startCrawl(project)}
+                className="ui-button flex items-center gap-2 rounded-xl bg-gradient-to-r from-brand-500 to-amber-500 px-4 py-2 text-xs font-bold text-white shadow-brand-glow transition hover:scale-[1.02]"
+              >
+                <Play className="h-3.5 w-3.5 fill-current" /> Start Site Audit
+              </button>
+            )}
             <button
               type="button"
               title="Use Overview to spot crawl health, current issue counts, error patterns, and export the active project data."
@@ -125,6 +139,61 @@ export default function AuditorOverview() {
           </div>
         </div>
       </div>
+
+      {/* Crawling in progress banner */}
+      {isCrawling && (
+        <div className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-brand-500/30 bg-brand-500/10 p-4 text-white backdrop-blur">
+          <div className="flex items-center gap-3">
+            <span className="relative flex h-10 w-10 items-center justify-center rounded-xl bg-brand-500/20 text-brand-300">
+              <Loader2 className="h-5 w-5 animate-spin" />
+            </span>
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="font-display text-sm font-bold text-white">Crawling in progress...</span>
+                <span className="rounded-full bg-brand-500/20 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-brand-200">
+                  Live
+                </span>
+              </div>
+              <p className="text-xs text-white/60">
+                Crawled: <strong className="text-white">{stats?.crawledCount || 0}</strong> pages · Scheduled: <strong className="text-white">{stats?.scheduled || 0}</strong> · Elapsed: <strong className="text-white">{formatDuration(stats?.duration || 0)}</strong>
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={stopCrawl}
+              className="rounded-xl border border-rose-500/40 bg-rose-500/20 px-3 py-1.5 text-xs font-semibold text-rose-200 hover:bg-rose-500/30"
+            >
+              Stop Crawl
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Empty audit state banner if no data exists yet */}
+      {!hasAuditData && !isCrawling && (
+        <div className="rounded-2xl border border-white/10 bg-ink-800/60 p-8 text-center backdrop-blur">
+          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-brand-500/15 text-brand-300">
+            <Gauge className="h-7 w-7" />
+          </div>
+          <h2 className="mt-4 font-display text-lg font-bold text-white">
+            No audit data available for this project yet
+          </h2>
+          <p className="mx-auto mt-2 max-w-md text-sm text-white/50">
+            Run a site audit to discover crawl health, HTTP status codes, SEO issues, indexability, and page structure for {displayName}.
+          </p>
+          <div className="mt-6 flex justify-center gap-3">
+            <button
+              type="button"
+              onClick={() => startCrawl(project)}
+              className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-brand-500 to-amber-500 px-5 py-2.5 text-sm font-bold text-white shadow-brand-glow transition hover:shadow-[0_12px_36px_-8px_rgba(249,115,22,0.6)]"
+            >
+              <Play className="h-4 w-4 fill-current" /> Start Site Audit
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Top row: 3 columns (Crawled URLs · Health Score · Issues distribution) */}
       <div className="grid gap-4 xl:grid-cols-[1fr_1.1fr_1fr]">

@@ -30,6 +30,8 @@ const TOOL_RESULT_KEYS = new Set([
   "llmsTxt",
   "w3c",
   "w3c-validation",
+  "auditor",
+  "crawlState",
 ]);
 
 /**
@@ -642,13 +644,42 @@ async function saveProjectData(userId, projectId, key, value) {
     throw error;
   }
 
-  const merged = mergeProjectDataPreservingKeys(row?.project_data, normalizedKey, normalizedValue);
+  let valueToMerge = normalizedValue;
+  const existingProjectData = parseObjectField(row?.project_data);
+  if (normalizedKey === "auditor" && existingProjectData.auditor && typeof existingProjectData.auditor === "object" && typeof normalizedValue === "object") {
+    valueToMerge = {
+      ...existingProjectData.auditor,
+      ...normalizedValue,
+      stats: {
+        ...(existingProjectData.auditor.stats || {}),
+        ...(normalizedValue.stats || {}),
+      },
+    };
+  }
+
+  const merged = mergeProjectDataPreservingKeys(row?.project_data, normalizedKey, valueToMerge);
   const result = await update(
     `UPDATE user_projects
        SET project_data = ?, updated_at = NOW()
      WHERE user_id = ? AND project_id = ? AND owner_uid = ?`,
     [JSON.stringify(merged), userId, normalizedProjectId, userId]
   );
+
+  if (normalizedKey === "auditor" || normalizedKey === "crawlState") {
+    const crawledCount = Number(
+      valueToMerge?.crawledCount ||
+      valueToMerge?.stats?.crawledCount ||
+      0
+    );
+    if (crawledCount > 0) {
+      await update(
+        `UPDATE user_projects
+           SET total_urls = ?, crawled_on = NOW()
+         WHERE user_id = ? AND project_id = ? AND owner_uid = ?`,
+        [crawledCount, userId, normalizedProjectId, userId]
+      );
+    }
+  }
 
   return { success: true, projectId: normalizedProjectId, key: normalizedKey, projectData: merged };
 }

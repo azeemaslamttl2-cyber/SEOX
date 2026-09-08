@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Link2,
   Globe,
@@ -13,6 +13,8 @@ import {
   Unlink,
   BarChart3,
 } from "lucide-react";
+import { useSelectedProjectDomain } from "../../hooks/useSelectedProjectDomain.js";
+import { getSessionToken } from "../../lib/authSession.js";
 
 const mockCrawl = {
   url: "https://learnwirepro.com",
@@ -39,9 +41,49 @@ const mockCrawl = {
 };
 
 export default function InternalLinksCrawl() {
-  const [url, setUrl] = useState(mockCrawl.url);
+  const { projectUrl: selectedProjectUrl } = useSelectedProjectDomain();
+  const [url, setUrl] = useState(selectedProjectUrl);
+  const [result, setResult] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
   const [hasResult, setHasResult] = useState(true);
   const [activeTab, setActiveTab] = useState("Link Structure");
+
+  useEffect(() => {
+    setUrl(selectedProjectUrl);
+  }, [selectedProjectUrl]);
+
+  async function startCrawl() {
+    const targetUrl = url.trim();
+    if (!targetUrl) {
+      setError("Select a website from the top URL selector first.");
+      return;
+    }
+    const token = getSessionToken();
+    if (!token) {
+      setError("Your session has expired. Please sign in again.");
+      return;
+    }
+    setLoading(true);
+    setError("");
+    try {
+      const response = await fetch("/api/geo/internal-links", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ url: targetUrl }),
+      });
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok || !payload.success) throw new Error(payload.message || "Internal links analysis failed.");
+      setResult(payload.data || null);
+      setHasResult(true);
+    } catch (requestError) {
+      setError(requestError.message || "Internal links analysis failed.");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  const displayedCrawl = result || mockCrawl;
 
   return (
     <div className="ctool-page space-y-5">
@@ -70,10 +112,11 @@ export default function InternalLinksCrawl() {
                 placeholder="https://example.com"
               />
             </div>
-            <button className="ui-button ui-button-primary">
-              <Search className="h-4 w-4" /> Start Crawl
+            <button onClick={startCrawl} disabled={loading} className="ui-button ui-button-primary">
+              <Search className="h-4 w-4" /> {loading ? "Crawling..." : "Start Crawl"}
             </button>
           </div>
+          {error && <p className="ctool-help-text mt-2 text-red-500">{error}</p>}
           <p className="ctool-help-text mt-2">Enter a website URL. GEO Crawl will use the website sitemap to analyze the link structure. Analyzes up to 100 pages.</p>
         </div>
       </div>
@@ -84,7 +127,7 @@ export default function InternalLinksCrawl() {
           <div className="app-alert app-alert-success">
             <CheckCircle2 className="h-4 w-4" />
             <div className="flex-1">
-              <strong>Saved crawl results loaded from database</strong> — Crawl completed on {mockCrawl.completedAt}
+              <strong>Crawl results ready</strong> — Crawl completed on {displayedCrawl.completedAt}
             </div>
           </div>
 
@@ -94,12 +137,12 @@ export default function InternalLinksCrawl() {
               <div>
                 <h3 className="geo-acc-title">Crawl Analysis Completed</h3>
                 <p className="ctool-help-text mt-1">
-                  Crawled {mockCrawl.summary.pagesCrawled} pages • Found {mockCrawl.summary.internalLinks} internal links • {mockCrawl.summary.orphanPages} orphan pages
+                  Crawled {displayedCrawl.summary.pagesCrawled} pages • Found {displayedCrawl.summary.internalLinks} internal links • {displayedCrawl.summary.orphanPages} orphan pages
                 </p>
                 <p className="ctool-help-text">
-                  Max Depth: {mockCrawl.summary.maxDepth} • Avg Internal Links: {mockCrawl.summary.avgInternalLinks}
+                  Max Depth: {displayedCrawl.summary.maxDepth} • Avg Internal Links: {displayedCrawl.summary.avgInternalLinks}
                 </p>
-                <p className="ctool-help-text">Internal Linking Score: {mockCrawl.summary.linkingScore}</p>
+                <p className="ctool-help-text">Internal Linking Score: {displayedCrawl.summary.linkingScore}</p>
               </div>
               <div className="geo-summary-figure">
                 <span className="geo-summary-num font-display">{mockCrawl.summary.pagesCrawled}</span>
@@ -112,11 +155,11 @@ export default function InternalLinksCrawl() {
             <div className="flex items-center justify-between gap-4">
               <div>
                 <h3 className="geo-summary-title">Internal Linking Analysis Report</h3>
-                <p className="ctool-help-text mt-1">Comprehensive crawl analysis for {mockCrawl.url}</p>
-                <p className="ctool-help-text">Analyzed {mockCrawl.summary.pagesCrawled} pages • {mockCrawl.summary.internalLinks} internal links • {mockCrawl.summary.orphanPages} orphan pages detected</p>
+                <p className="ctool-help-text mt-1">Comprehensive crawl analysis for {displayedCrawl.url}</p>
+                <p className="ctool-help-text">Analyzed {displayedCrawl.summary.pagesCrawled} pages • {displayedCrawl.summary.internalLinks} internal links • {displayedCrawl.summary.orphanPages} orphan pages detected</p>
               </div>
               <div className="text-right">
-                <div className="geo-summary-num">{mockCrawl.summary.pagesCrawled}</div>
+                <div className="geo-summary-num">{displayedCrawl.summary.pagesCrawled}</div>
                 <div className="ctool-help-text">Pages Crawled</div>
               </div>
             </div>
@@ -140,11 +183,11 @@ export default function InternalLinksCrawl() {
                 <Network className="h-5 w-5 ctool-accent" />
                 <h2 className="geo-section-title font-display">Internal Link Structure</h2>
               </div>
-              <span className="ctool-help-text">{mockCrawl.summary.pagesCrawled} pages analyzed</span>
+              <span className="ctool-help-text">{displayedCrawl.summary.pagesCrawled} pages analyzed</span>
             </div>
 
             <div className="space-y-3">
-              {mockCrawl.pages.map((page, i) => (
+              {displayedCrawl.pages.map((page, i) => (
                 <div key={i} className="geo-well">
                   <div className="flex items-center justify-between mb-2">
                     <div className="geo-page-url truncate">{page.url}</div>

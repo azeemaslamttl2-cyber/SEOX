@@ -6,7 +6,7 @@ import {
   calculateModule,
   calculateBacklinks,
   calculatePlagiarism,
-} from './_lib/module-calculator.js';
+} from './module-calculator.js';
 
 // Test URL (publicly available for testing)
 const TEST_URL = 'https://example.com';

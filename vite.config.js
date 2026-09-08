@@ -5,6 +5,7 @@ import { onRequest as autocompleteOnRequest } from "./functions/api/autocomplete
 import { onRequest as gscTokenOnRequest } from "./functions/api/gsc-token.js";
 import { onRequest as deepseekSettingsOnRequest } from "./functions/api/deepseek-settings.js";
 import { onRequest as pagespeedOnRequest } from "./functions/api/pagespeed.js";
+import { onRequest as speedOnRequest } from "./functions/api/tech-seo/speed.js";
 import { onRequest as screamingFrogOnRequest } from "./functions/api/tech-seo/screaming-frog.js";
 import { onRequest as screamingFrogReportDownloadOnRequest } from "./functions/api/tech-seo/screaming-frog/report-download.js";
 import { onRequest as screamingFrogUrlReportsOnRequest } from "./functions/api/tech-seo/screaming-frog/url-reports.js";
@@ -27,6 +28,18 @@ import { onRequest as daPaCheckerOnRequest } from "./functions/api/seo-tools/da-
 import { onRequest as metaExtractorOnRequest } from "./functions/api/seo-tools/meta-extractor.js";
 import { onRequest as sitemapExtractorOnRequest } from "./functions/api/seo-tools/sitemap-extractor.js";
 import { onRequest as seoToolsOnRequest } from "./functions/api/seo-tools.js";
+import { onRequest as promptTrackingOnRequest } from "./functions/api/geo/prompt-tracking.js";
+import { onRequest as brandSentimentOnRequest } from "./functions/api/geo/brand-sentiment.js";
+import { onRequest as citationFlowOnRequest } from "./functions/api/geo/citation-flow.js";
+import { onRequest as competitorResearchOnRequest } from "./functions/api/geo/competitor-research.js";
+import { onRequest as internalLinksOnRequest } from "./functions/api/geo/internal-links.js";
+import { onRequest as aiChatOnRequest } from "./functions/api/geo/ai-chat.js";
+import { onRequest as llmsGeneratorOnRequest } from "./functions/api/geo/llms-generator.js";
+import { onRequest as aiModelCheckerOnRequest } from "./functions/api/geo/ai-model-checker.js";
+import { onRequest as aiCompatibilityOnRequest } from "./functions/api/geo/ai-compatibility.js";
+import { onRequest as semanticWriterEditorOnRequest } from "./functions/api/content/semantic-writer/editor.js";
+import { onRequest as contentWriterOnRequest } from "./functions/api/content-writer.js";
+import { onRequest as auditorOnRequest } from "./functions/api/auditor.js";
 import { onRequestGet as authOnRequestGet, onRequestPost as authOnRequestPost } from "./functions/api/auth.js";
 import fetchUrlMetaHandler from "./functions/_handlers/fetch-url-meta.js";
 import webmasterApiHandler from "./functions/_handlers/webmaster-api.js";
@@ -638,6 +651,150 @@ function seoToolsApiPlugin() {
   };
 }
 
+function promptTrackingApiPlugin() {
+  return {
+    name: "seox-prompt-tracking-api",
+    configureServer(server) {
+      registerPromptTrackingMiddleware(server);
+    },
+    configurePreviewServer(server) {
+      registerPromptTrackingMiddleware(server);
+    },
+  };
+}
+
+function brandSentimentApiPlugin() {
+  return {
+    name: "seox-brand-sentiment-api",
+    configureServer(server) {
+      registerBrandSentimentMiddleware(server);
+    },
+    configurePreviewServer(server) {
+      registerBrandSentimentMiddleware(server);
+    },
+  };
+}
+
+function citationFlowApiPlugin() {
+  return {
+    name: "seox-citation-flow-api",
+    configureServer(server) {
+      registerCitationFlowMiddleware(server);
+    },
+    configurePreviewServer(server) {
+      registerCitationFlowMiddleware(server);
+    },
+  };
+}
+
+function competitorResearchApiPlugin() {
+  return {
+    name: "seox-competitor-research-api",
+    configureServer(server) {
+      registerCompetitorResearchMiddleware(server);
+    },
+    configurePreviewServer(server) {
+      registerCompetitorResearchMiddleware(server);
+    },
+  };
+}
+
+function internalLinksApiPlugin() {
+  return {
+    name: "seox-internal-links-api",
+    configureServer(server) {
+      registerInternalLinksMiddleware(server);
+    },
+    configurePreviewServer(server) {
+      registerInternalLinksMiddleware(server);
+    },
+  };
+}
+
+function aiChatApiPlugin() {
+  return {
+    name: "seox-ai-chat-api",
+    configureServer(server) {
+      registerAiChatMiddleware(server);
+    },
+    configurePreviewServer(server) {
+      registerAiChatMiddleware(server);
+    },
+  };
+}
+
+function llmsGeneratorApiPlugin() {
+  return {
+    name: "seox-llms-generator-api",
+    configureServer(server) {
+      registerLlmsGeneratorMiddleware(server);
+    },
+    configurePreviewServer(server) {
+      registerLlmsGeneratorMiddleware(server);
+    },
+  };
+}
+
+function aiModelCheckerApiPlugin() {
+  return {
+    name: "seox-ai-model-checker-api",
+    configureServer(server) {
+      registerAiModelCheckerMiddleware(server);
+    },
+    configurePreviewServer(server) {
+      registerAiModelCheckerMiddleware(server);
+    },
+  };
+}
+
+function aiCompatibilityApiPlugin() {
+  return {
+    name: "seox-ai-compatibility-api",
+    configureServer(server) {
+      registerAiCompatibilityMiddleware(server);
+    },
+    configurePreviewServer(server) {
+      registerAiCompatibilityMiddleware(server);
+    },
+  };
+}
+
+function semanticWriterEditorApiPlugin() {
+  return {
+    name: "seox-semantic-writer-editor-api",
+    configureServer(server) {
+      registerSemanticWriterEditorMiddleware(server);
+    },
+    configurePreviewServer(server) {
+      registerSemanticWriterEditorMiddleware(server);
+    },
+  };
+}
+
+function contentWriterApiPlugin() {
+  return {
+    name: "seox-content-writer-api",
+    configureServer(server) {
+      registerContentWriterMiddleware(server);
+    },
+    configurePreviewServer(server) {
+      registerContentWriterMiddleware(server);
+    },
+  };
+}
+
+function auditorApiPlugin() {
+  return {
+    name: "seox-auditor-api",
+    configureServer(server) {
+      registerAuditorMiddleware(server);
+    },
+    configurePreviewServer(server) {
+      registerAuditorMiddleware(server);
+    },
+  };
+}
+
 function mountedUrl(req, mountPath) {
   const forwardedHost = String(req.headers?.["x-forwarded-host"] || req.headers?.host || "").split(",")[0].trim();
   const host = /^[a-z0-9.:[\]-]+$/i.test(forwardedHost) ? forwardedHost : "127.0.0.1:3000";
@@ -702,6 +859,23 @@ function registerPagespeedMiddleware(server) {
       });
     }
   });
+}
+
+function speedApiPlugin() {
+  return {
+    name: "seox-speed-api",
+    configureServer(server) {
+      server.middlewares.use("/api/tech-seo/speed", async (req, res) => {
+        try {
+          const request = await createWebRequest(req, "/api/tech-seo/speed");
+          const response = await speedOnRequest({ request, env: loadDevApiEnv() });
+          await sendWebResponse(res, response);
+        } catch (error) {
+          sendJson(res, error?.status || 500, { success: false, error: error?.message || "Speed test request failed" });
+        }
+      });
+    },
+  };
 }
 
 function registerScreamingFrogMiddleware(server) {
@@ -1089,6 +1263,160 @@ function registerSeoToolsMiddleware(server) {
   });
 }
 
+function registerPromptTrackingMiddleware(server) {
+  server.middlewares.use("/api/geo/prompt-tracking", async (req, res) => {
+    try {
+      const request = await createWebRequest(req, "/api/geo/prompt-tracking");
+      const response = await promptTrackingOnRequest({ request, env: loadDevApiEnv() });
+      await sendWebResponse(res, response);
+    } catch (error) {
+      sendJson(res, error?.status || 500, {
+        success: false,
+        status: "error",
+        message: error?.message || "Prompt tracking request failed.",
+        data: null,
+      });
+    }
+  });
+}
+
+function registerBrandSentimentMiddleware(server) {
+  server.middlewares.use("/api/geo/brand-sentiment", async (req, res) => {
+    try {
+      const request = await createWebRequest(req, "/api/geo/brand-sentiment");
+      const response = await brandSentimentOnRequest({ request, env: loadDevApiEnv() });
+      await sendWebResponse(res, response);
+    } catch (error) {
+      sendJson(res, error?.status || 500, {
+        success: false,
+        status: "error",
+        message: error?.message || "Brand sentiment request failed.",
+        data: null,
+      });
+    }
+  });
+}
+
+function registerCitationFlowMiddleware(server) {
+  server.middlewares.use("/api/geo/citation-flow", async (req, res) => {
+    try {
+      const request = await createWebRequest(req, "/api/geo/citation-flow");
+      const response = await citationFlowOnRequest({ request, env: loadDevApiEnv() });
+      await sendWebResponse(res, response);
+    } catch (error) {
+      sendJson(res, error?.status || 500, { success: false, status: "error", message: error?.message || "Citation Flow request failed.", data: null });
+    }
+  });
+}
+
+function registerCompetitorResearchMiddleware(server) {
+  server.middlewares.use("/api/geo/competitor-research", async (req, res) => {
+    try {
+      const request = await createWebRequest(req, "/api/geo/competitor-research");
+      const response = await competitorResearchOnRequest({ request, env: loadDevApiEnv() });
+      await sendWebResponse(res, response);
+    } catch (error) {
+      sendJson(res, error?.status || 500, { success: false, status: "error", message: error?.message || "Competitor research request failed.", data: null });
+    }
+  });
+}
+
+function registerInternalLinksMiddleware(server) {
+  server.middlewares.use("/api/geo/internal-links", async (req, res) => {
+    try {
+      const request = await createWebRequest(req, "/api/geo/internal-links");
+      const response = await internalLinksOnRequest({ request, env: loadDevApiEnv() });
+      await sendWebResponse(res, response);
+    } catch (error) {
+      sendJson(res, error?.status || 500, { success: false, status: "error", message: error?.message || "Internal links request failed.", data: null });
+    }
+  });
+}
+
+function registerAiChatMiddleware(server) {
+  server.middlewares.use("/api/geo/ai-chat", async (req, res) => {
+    try {
+      const request = await createWebRequest(req, "/api/geo/ai-chat");
+      const response = await aiChatOnRequest({ request, env: loadDevApiEnv() });
+      await sendWebResponse(res, response);
+    } catch (error) {
+      sendJson(res, error?.status || 500, { success: false, status: "error", message: error?.message || "AI chat request failed.", data: null });
+    }
+  });
+}
+
+function registerLlmsGeneratorMiddleware(server) {
+  server.middlewares.use("/api/geo/llms-generator", async (req, res) => {
+    try {
+      const request = await createWebRequest(req, "/api/geo/llms-generator");
+      const response = await llmsGeneratorOnRequest({ request, env: loadDevApiEnv() });
+      await sendWebResponse(res, response);
+    } catch (error) {
+      sendJson(res, error?.status || 500, { success: false, status: "error", message: error?.message || "LLMs Generator request failed.", data: null });
+    }
+  });
+}
+
+function registerAiModelCheckerMiddleware(server) {
+  server.middlewares.use("/api/geo/ai-model-checker", async (req, res) => {
+    try {
+      const request = await createWebRequest(req, "/api/geo/ai-model-checker");
+      const response = await aiModelCheckerOnRequest({ request, env: loadDevApiEnv() });
+      await sendWebResponse(res, response);
+    } catch (error) {
+      sendJson(res, error?.status || 500, { success: false, status: "error", message: error?.message || "AI Model Checker request failed.", data: null });
+    }
+  });
+}
+
+function registerAiCompatibilityMiddleware(server) {
+  server.middlewares.use("/api/geo/ai-compatibility", async (req, res) => {
+    try {
+      const request = await createWebRequest(req, "/api/geo/ai-compatibility");
+      const response = await aiCompatibilityOnRequest({ request, env: loadDevApiEnv() });
+      await sendWebResponse(res, response);
+    } catch (error) {
+      sendJson(res, error?.status || 500, { success: false, status: "error", message: error?.message || "AI Compatibility request failed.", data: null });
+    }
+  });
+}
+
+function registerSemanticWriterEditorMiddleware(server) {
+  server.middlewares.use("/api/content/semantic-writer/editor", async (req, res) => {
+    try {
+      const request = await createWebRequest(req, "/api/content/semantic-writer/editor");
+      const response = await semanticWriterEditorOnRequest({ request, env: loadDevApiEnv() });
+      await sendWebResponse(res, response);
+    } catch (error) {
+      sendJson(res, error?.status || 500, { success: false, status: "error", message: error?.message || "Semantic Writer Editor request failed.", data: null });
+    }
+  });
+}
+
+function registerContentWriterMiddleware(server) {
+  server.middlewares.use("/api/content-writer", async (req, res) => {
+    try {
+      const request = await createWebRequest(req, "/api/content-writer");
+      const response = await contentWriterOnRequest({ request, env: loadDevApiEnv() });
+      await sendWebResponse(res, response);
+    } catch (error) {
+      sendJson(res, error?.status || 500, { error: error?.message || "Content profile request failed." });
+    }
+  });
+}
+
+function registerAuditorMiddleware(server) {
+  server.middlewares.use("/api/auditor", async (req, res) => {
+    try {
+      const request = await createWebRequest(req, "/api/auditor");
+      const response = await auditorOnRequest({ request, env: loadDevApiEnv() });
+      await sendWebResponse(res, response);
+    } catch (error) {
+      sendJson(res, error?.status || 500, { success: false, status: "error", message: error?.message || "Auditor request failed.", data: null });
+    }
+  });
+}
+
 function registerWebmasterApiMiddleware(server) {
   server.middlewares.use("/api/webmaster-api", async (req, res) => {
     let decoded;
@@ -1472,7 +1800,7 @@ function sendJson(res, status, payload) {
 }
 
 export default defineConfig({
-  plugins: [react(), proxyApiPlugin(), deepseekApiPlugin(), deepseekSettingsApiPlugin(), fetchUrlMetaApiPlugin(), pagespeedApiPlugin(), screamingFrogApiPlugin(), webmasterApiPlugin(), autocompleteApiPlugin(), gscTokenApiPlugin(), projectsApiPlugin(), projectDetailsApiPlugin(), backlinksAnalyzeApiPlugin(), w3cValidationApiPlugin(), expiredDomainsCheckApiPlugin(), backlinkCleanerApiPlugin(), backlinkIndexerApiPlugin(), keywordResearchApiPlugin(), ubersuggestApiPlugin(), authApiPlugin(), contentOutlineApiPlugin(), textEditorApiPlugin(), domainSeparatorApiPlugin(), wordCounterApiPlugin(), botViewerApiPlugin(), daPaCheckerApiPlugin(), metaExtractorApiPlugin(), sitemapExtractorApiPlugin(), seoToolsApiPlugin(), crawlerApiPlugin()],
+  plugins: [react(), proxyApiPlugin(), deepseekApiPlugin(), deepseekSettingsApiPlugin(), fetchUrlMetaApiPlugin(), pagespeedApiPlugin(), speedApiPlugin(), screamingFrogApiPlugin(), webmasterApiPlugin(), autocompleteApiPlugin(), gscTokenApiPlugin(), projectsApiPlugin(), projectDetailsApiPlugin(), backlinksAnalyzeApiPlugin(), w3cValidationApiPlugin(), expiredDomainsCheckApiPlugin(), backlinkCleanerApiPlugin(), backlinkIndexerApiPlugin(), keywordResearchApiPlugin(), ubersuggestApiPlugin(), authApiPlugin(), contentOutlineApiPlugin(), textEditorApiPlugin(), domainSeparatorApiPlugin(), wordCounterApiPlugin(), botViewerApiPlugin(), daPaCheckerApiPlugin(), metaExtractorApiPlugin(), sitemapExtractorApiPlugin(), seoToolsApiPlugin(), promptTrackingApiPlugin(), brandSentimentApiPlugin(), citationFlowApiPlugin(), competitorResearchApiPlugin(), internalLinksApiPlugin(), aiChatApiPlugin(), llmsGeneratorApiPlugin(), aiModelCheckerApiPlugin(), aiCompatibilityApiPlugin(), semanticWriterEditorApiPlugin(), contentWriterApiPlugin(), auditorApiPlugin(), crawlerApiPlugin()],
   server: {
     port: 3000,
     host: true,

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Swords,
   Globe,
@@ -7,6 +7,8 @@ import {
   Trash2,
   Sparkles,
 } from "lucide-react";
+import { useSelectedProjectDomain } from "../../hooks/useSelectedProjectDomain.js";
+import { getSessionToken } from "../../lib/authSession.js";
 
 const platformColors = {
   OpenAI: { bg: "bg-emerald-500/10", border: "border-emerald-500/20", text: "text-emerald-300", header: "bg-gradient-to-r from-emerald-500/20 to-emerald-500/5" },
@@ -57,9 +59,54 @@ const mockCompetitors = {
 };
 
 export default function CompetitorResearch() {
-  const [projectUrl, setProjectUrl] = useState(mockCompetitors.project);
+  const { projectUrl: selectedProjectUrl } = useSelectedProjectDomain();
+  const [projectUrl, setProjectUrl] = useState(selectedProjectUrl);
+  const [result, setResult] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
   const [competitors, setCompetitors] = useState(mockCompetitors.competitors);
   const [hasResult, setHasResult] = useState(true);
+
+  useEffect(() => {
+    setProjectUrl(selectedProjectUrl);
+  }, [selectedProjectUrl]);
+
+  async function analyzeCompetitors() {
+    const targetUrl = projectUrl.trim();
+    const competitorUrls = competitors.map((value) => value.trim()).filter(Boolean);
+    if (!targetUrl) {
+      setError("Select a website from the top URL selector first.");
+      return;
+    }
+    if (competitorUrls.length > 5) {
+      setError("You can analyze up to 5 competitors.");
+      return;
+    }
+    const adminToken = getSessionToken();
+    if (!adminToken) {
+      setError("Your session has expired. Please sign in again.");
+      return;
+    }
+    setLoading(true);
+    setError("");
+    try {
+      const response = await fetch("/api/geo/competitor-research", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ admin_token: adminToken, project_url: targetUrl, competitors: competitorUrls }),
+      });
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok || !payload.success) throw new Error(payload.message || "Competitor research failed.");
+      setResult(payload.data || null);
+      setHasResult(true);
+    } catch (requestError) {
+      setError(requestError.message || "Competitor research failed.");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  const displayedResults = result?.results || mockCompetitors.results;
 
   const addCompetitor = () => {
     if (competitors.length < 5) setCompetitors([...competitors, ""]);
@@ -141,9 +188,11 @@ export default function CompetitorResearch() {
             <Plus className="h-3.5 w-3.5" /> Add another competitor
           </button>
           <button className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-orange-500 to-amber-500 px-5 py-2.5 text-sm font-bold text-white shadow-lg shadow-orange-500/25 transition hover:shadow-orange-500/40">
-            <Sparkles className="h-4 w-4" /> Analyze Competitors
+          <button onClick={analyzeCompetitors} disabled={loading} className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-pink-500 to-violet-500 px-5 py-2.5 text-sm font-bold text-white shadow-lg shadow-pink-500/20 transition hover:shadow-pink-500/30">
+            <Sparkles className="h-4 w-4" /> {loading ? "Analyzing..." : "Analyze Competitors"}
           </button>
         </div>
+        {error && <p className="mt-2 text-[11px] text-red-400">{error}</p>}
       </div>
 
       {hasResult && (
@@ -152,7 +201,7 @@ export default function CompetitorResearch() {
           <p className="text-[12px] text-white/30 mb-5">Comparison of AI platform visibility for each domain</p>
 
           <div className="space-y-6">
-            {mockCompetitors.results.map((result, ri) => (
+            {displayedResults.map((result, ri) => (
               <div key={ri}>
                 <h3 className="text-sm font-bold text-white/70 mb-3">{result.domain}</h3>
                 <div className="grid grid-cols-5 gap-2">

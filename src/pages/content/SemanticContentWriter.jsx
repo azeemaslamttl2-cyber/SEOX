@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { Link as RouterLink, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext.jsx';
+import { useSelectedProjectDomain } from '../../hooks/useSelectedProjectDomain.js';
 import { loadContentWriterProfile, updateContentWriterProfile } from '../../lib/contentWriterProfile.js';
 import {
     Search, FileText, Sparkles, Loader2, Copy, Check, ChevronDown, ChevronUp,
@@ -46,6 +47,38 @@ const htmlToPlainText = (html = '') => {
 };
 
 const countWords = (text = '') => text.trim().split(/\s+/).filter(Boolean).length;
+
+const normalizeCompetitorUrl = (urlStr, targetHostname = '') => {
+    let raw = String(urlStr || '').trim();
+    if (!raw) return null;
+    const mdMatch = raw.match(/\((https?:\/\/[^\s)]+)\)/i);
+    if (mdMatch) raw = mdMatch[1];
+    raw = raw.replace(/^[-*•\d.)\s]+/, '').trim();
+    raw = raw.replace(/[()\[\]'"`]/g, '').trim();
+    if (!raw) return null;
+    if (!/^https?:\/\//i.test(raw)) {
+        raw = `https://${raw}`;
+    }
+    try {
+        const u = new URL(raw);
+        const hostname = u.hostname.toLowerCase().replace(/^www\./i, '');
+        if (!hostname.includes('.')) return null;
+        if (targetHostname && hostname === targetHostname.toLowerCase().replace(/^www\./i, '')) return null;
+
+        const blockedDomains = [
+            'google.com', 'bing.com', 'yahoo.com', 'duckduckgo.com', 'baidu.com', 'yandex.com',
+            'facebook.com', 'twitter.com', 'x.com', 'instagram.com', 'linkedin.com', 'pinterest.com',
+            'youtube.com', 'tiktok.com', 'reddit.com', 'wikipedia.org', 'medium.com', 'quora.com',
+            'amazon.com', 'apple.com', 'microsoft.com'
+        ];
+        if (blockedDomains.some(b => hostname === b || hostname.endsWith(`.${b}`))) {
+            return null;
+        }
+        return u.origin;
+    } catch {
+        return null;
+    }
+};
 
 const formatManualContentToHtml = (text = '') => {
     const trimmed = text.trim();
@@ -197,6 +230,136 @@ const ContentWriter = () => {
 
     // Step 9: Grammar Generator
     const [grammarResults, setGrammarResults] = useState(() => loadFromStorage('grammarResults', null));
+
+    // Global Selected Project URL & DeepSeek Competitor Discovery
+    const { projectUrl, projectDomain } = useSelectedProjectDomain();
+    const [isDiscoveringCompetitors, setIsDiscoveringCompetitors] = useState(false);
+    const [competitorDiscoveryStatus, setCompetitorDiscoveryStatus] = useState(null);
+    const lastDiscoveredUrlRef = useRef(null);
+
+    // Fetch competitors from DeepSeek based on primary project URL
+    const fetchCompetitorsFromDeepSeek = useCallback(async (targetUrl, force = false) => {
+        if (!targetUrl || typeof targetUrl !== 'string') return;
+        const trimmed = targetUrl.trim();
+        if (!trimmed) return;
+
+        let targetOrigin = '';
+        let targetHostname = '';
+        try {
+            const parsed = new URL(/^https?:\/\//i.test(trimmed) ? trimmed : `https://${trimmed}`);
+            targetOrigin = parsed.origin;
+            targetHostname = parsed.hostname.toLowerCase().replace(/^www\./i, '');
+        } catch {
+            return;
+        }
+
+        if (!force && lastDiscoveredUrlRef.current === targetOrigin) {
+            return;
+        }
+
+        setIsDiscoveringCompetitors(true);
+        setCompetitorDiscoveryStatus({ type: 'loading', message: `Finding competitor websites for ${targetHostname}...` });
+
+        try {
+            const prompt = `Analyze the website:
+${targetOrigin}
+
+Identify 3 to 5 of the most relevant direct organic search and business competitor websites for this domain.
+
+Return ONLY a valid JSON object with this exact structure:
+{
+  "competitors": [
+    "https://competitor1.com",
+    "https://competitor2.com",
+    "https://competitor3.com"
+  ]
+}
+Do not return explanations, descriptions, social media profiles, directories, or search engines.
+Return a clean structured JSON list of competitor URLs starting with https://.`;
+
+            const response = await fetch('/api/deepseek', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    prompt,
+                    systemInstruction: 'You are an SEO and competitive intelligence expert. Return only JSON containing direct competitor website homepages.',
+                    responseMimeType: 'application/json',
+                    temperature: 0.3
+                })
+            });
+
+            if (!response.ok) {
+                throw new Error(`DeepSeek request failed (${response.status})`);
+            }
+
+            const data = await response.json();
+            let urls = [];
+
+            if (data?.text) {
+                try {
+                    const parsed = typeof data.text === 'string' ? JSON.parse(data.text) : data.text;
+                    if (Array.isArray(parsed?.competitors)) {
+                        urls = parsed.competitors;
+                    } else if (Array.isArray(parsed)) {
+                        urls = parsed;
+                    }
+                } catch {
+                    const found = data.text.match(/https?:\/\/[^\s"'<>)\]]+/gi) || [];
+                    urls = found;
+                }
+            }
+
+            const validUrls = urls
+                .map(u => normalizeCompetitorUrl(u, targetHostname))
+                .filter(Boolean);
+
+            const uniqueDiscovered = [...new Set(validUrls)];
+
+            if (uniqueDiscovered.length > 0) {
+                setCompetitors(prev => {
+                    const existing = (Array.isArray(prev) ? prev : [])
+                        .map(u => String(u || '').trim())
+                        .filter(Boolean);
+
+                    const merged = [...existing];
+                    uniqueDiscovered.forEach(u => {
+                        if (!merged.includes(u)) {
+                            merged.push(u);
+                        }
+                    });
+
+                    return merged.length > 0 ? merged : [''];
+                });
+
+                lastDiscoveredUrlRef.current = targetOrigin;
+                setCompetitorDiscoveryStatus({
+                    type: 'success',
+                    message: `${uniqueDiscovered.length} competitor website${uniqueDiscovered.length > 1 ? 's' : ''} found via DeepSeek`
+                });
+            } else {
+                lastDiscoveredUrlRef.current = targetOrigin;
+                setCompetitorDiscoveryStatus({
+                    type: 'info',
+                    message: 'No automatic competitors found for this URL. You can enter competitor URLs manually.'
+                });
+            }
+        } catch (err) {
+            console.error('Competitor discovery error:', err);
+            setCompetitorDiscoveryStatus({
+                type: 'error',
+                message: 'Unable to automatically find competitors. You can enter competitor URLs manually.'
+            });
+        } finally {
+            setIsDiscoveringCompetitors(false);
+        }
+    }, []);
+
+    // Trigger automatic competitor discovery when selected project URL is available or changes
+    useEffect(() => {
+        if (projectUrl && projectUrl !== lastDiscoveredUrlRef.current) {
+            fetchCompetitorsFromDeepSeek(projectUrl);
+        }
+    }, [projectUrl, fetchCompetitorsFromDeepSeek]);
 
     // Load saved articles from the local database, then session storage.
     useEffect(() => {
@@ -1225,13 +1388,78 @@ const ContentWriter = () => {
 
             {/* Competitor URLs - MOVED ABOVE SERP */}
             <div className="ctool-card">
-                <h3 className="text-lg font-semibold text-white flex items-center gap-2 mb-4">
-                    <Globe className="w-5 h-5 text-brand-500" />
-                    Competitor URLs
-                    {competitors.filter(c => c.trim()).length > 0 && (
-                        <span className="ml-auto text-sm text-white/50">{competitors.filter(c => c.trim()).length} added</span>
+                <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
+                    <h3 className="text-lg font-semibold text-white flex items-center gap-2">
+                        <Globe className="w-5 h-5 text-brand-500" />
+                        Competitor URLs
+                        {competitors.filter(c => c.trim()).length > 0 && (
+                            <span className="text-sm text-white/50">({competitors.filter(c => c.trim()).length} added)</span>
+                        )}
+                    </h3>
+                    {projectUrl && (
+                        <button
+                            onClick={() => fetchCompetitorsFromDeepSeek(projectUrl, true)}
+                            disabled={isDiscoveringCompetitors}
+                            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg bg-brand-500/10 text-brand-400 hover:bg-brand-500/20 disabled:opacity-50 transition"
+                            title={`Re-detect competitors for ${projectDomain || projectUrl}`}
+                        >
+                            {isDiscoveringCompetitors ? (
+                                <>
+                                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                                    Finding Competitors...
+                                </>
+                            ) : (
+                                <>
+                                    <Sparkles className="w-3.5 h-3.5" />
+                                    Auto-Find Competitors
+                                </>
+                            )}
+                        </button>
                     )}
-                </h3>
+                </div>
+
+                {/* Primary Website Information Banner */}
+                {projectUrl ? (
+                    <div className="mb-4 p-3 bg-white/[0.03] border border-white/10 rounded-xl flex items-center justify-between gap-3 text-xs">
+                        <div className="flex items-center gap-2 min-w-0">
+                            <span className="text-white/50 shrink-0">Primary Website:</span>
+                            <span className="font-medium text-brand-300 truncate">{projectUrl}</span>
+                        </div>
+                        <span className="text-white/40 shrink-0 hidden sm:inline">From Top Selector</span>
+                    </div>
+                ) : (
+                    <div className="mb-4 p-3 bg-white/[0.02] border border-dashed border-white/10 rounded-xl text-xs text-white/40 flex items-center justify-between">
+                        <span>Select a website in the top navigation dropdown to auto-detect competitors with DeepSeek.</span>
+                    </div>
+                )}
+
+                {/* Status / Discovery Notification Banner */}
+                {competitorDiscoveryStatus && (
+                    <div className={`mb-4 p-3 rounded-xl flex items-center gap-2.5 text-xs ${
+                        competitorDiscoveryStatus.type === 'loading'
+                            ? 'bg-brand-500/10 text-brand-300 border border-brand-500/20'
+                            : competitorDiscoveryStatus.type === 'success'
+                                ? 'bg-emerald-500/10 text-emerald-300 border border-emerald-500/20'
+                                : competitorDiscoveryStatus.type === 'error'
+                                    ? 'bg-red-500/10 text-red-300 border border-red-500/20'
+                                    : 'bg-white/[0.04] text-white/70 border border-white/10'
+                    }`}>
+                        {competitorDiscoveryStatus.type === 'loading' && <Loader2 className="w-4 h-4 animate-spin shrink-0 text-brand-400" />}
+                        {competitorDiscoveryStatus.type === 'success' && <CheckCircle className="w-4 h-4 shrink-0 text-emerald-400" />}
+                        {competitorDiscoveryStatus.type === 'error' && <AlertCircle className="w-4 h-4 shrink-0 text-red-400" />}
+                        {competitorDiscoveryStatus.type === 'info' && <Sparkles className="w-4 h-4 shrink-0 text-amber-400" />}
+                        <span className="flex-1">{competitorDiscoveryStatus.message}</span>
+                        {competitorDiscoveryStatus.type !== 'loading' && (
+                            <button
+                                onClick={() => setCompetitorDiscoveryStatus(null)}
+                                className="text-white/40 hover:text-white p-0.5"
+                            >
+                                <X className="w-3.5 h-3.5" />
+                            </button>
+                        )}
+                    </div>
+                )}
+
                 <div className="space-y-3">
                     {competitors.map((url, index) => (
                         <div key={index} className="flex gap-2">

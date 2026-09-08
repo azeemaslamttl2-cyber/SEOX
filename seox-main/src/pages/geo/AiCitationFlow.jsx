@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Quote,
   Search,
@@ -11,6 +11,8 @@ import {
   Target,
   Award,
 } from "lucide-react";
+import { useSelectedProjectDomain } from "../../hooks/useSelectedProjectDomain.js";
+import { getSessionToken } from "../../lib/authSession.js";
 
 const mockCitation = {
   keyword: "learnwirepro.com",
@@ -61,9 +63,49 @@ const mockCitation = {
 };
 
 export default function AiCitationFlow() {
-  const [keyword, setKeyword] = useState(mockCitation.keyword);
+  const { projectUrl } = useSelectedProjectDomain();
+  const [keyword, setKeyword] = useState(projectUrl);
   const [country, setCountry] = useState(mockCitation.country);
+  const [result, setResult] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
   const [hasResult, setHasResult] = useState(true);
+
+  useEffect(() => {
+    setKeyword(projectUrl);
+  }, [projectUrl]);
+
+  async function runCitationFlow() {
+    const targetUrl = keyword.trim();
+    if (!targetUrl) {
+      setError("Select a website from the top URL selector first.");
+      return;
+    }
+    const adminToken = getSessionToken();
+    if (!adminToken) {
+      setError("Your session has expired. Please sign in again.");
+      return;
+    }
+    setLoading(true);
+    setError("");
+    try {
+      const response = await fetch("/api/geo/citation-flow", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ admin_token: adminToken, url: targetUrl }),
+      });
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok || !payload.success) throw new Error(payload.message || "Citation Flow analysis failed.");
+      setResult(payload.data?.citation_flow || null);
+      setHasResult(true);
+    } catch (requestError) {
+      setError(requestError.message || "Citation Flow analysis failed.");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  const displayedCitation = result || mockCitation;
 
   return (
     <div className="mx-auto max-w-5xl space-y-6">
@@ -96,7 +138,7 @@ export default function AiCitationFlow() {
               <Quote className="h-4 w-4 text-violet-400" />
               <h2 className="text-sm font-bold text-white/90">Keyword Citation Analysis</h2>
             </div>
-            {hasResult && <span className="text-[11px] text-white/25 flex items-center gap-1"><Clock className="h-3 w-3" /> Last analyzed: {mockCitation.analyzedAt}</span>}
+            {hasResult && <span className="text-[11px] text-white/25 flex items-center gap-1"><Clock className="h-3 w-3" /> Last analyzed: {displayedCitation.analyzedAt}</span>}
           </div>
 
           <div className="mt-3 flex items-center gap-2">
@@ -108,10 +150,11 @@ export default function AiCitationFlow() {
                 placeholder="Enter keyword to analyze citation flow (e.g., artificial intelligence, machine learning)"
               />
             </div>
-            <button className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-violet-500 to-purple-500 px-5 py-2.5 text-sm font-bold text-white shadow-lg shadow-violet-500/25 transition hover:shadow-violet-500/40">
-              <Search className="h-4 w-4" /> Search Citation Flow
+            <button onClick={runCitationFlow} disabled={loading} className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-violet-500 to-purple-500 px-5 py-2.5 text-sm font-bold text-white shadow-lg shadow-violet-500/25 transition hover:shadow-violet-500/40">
+              <Search className="h-4 w-4" /> {loading ? "Analyzing..." : "Search Citation Flow"}
             </button>
           </div>
+          {error && <p className="mt-2 text-[11px] text-red-400">{error}</p>}
 
           <div className="mt-3">
             <div className="flex items-center gap-1.5 text-[11px] text-white/35">
@@ -136,9 +179,9 @@ export default function AiCitationFlow() {
           <div className="flex items-center gap-1.5 text-[12px] font-bold text-white/50 mb-3">
             <Clock className="h-3.5 w-3.5" /> Search history
           </div>
-          {mockCitation.searchHistory.length > 0 ? (
+          {displayedCitation.searchHistory.length > 0 ? (
             <div className="space-y-2">
-              {mockCitation.searchHistory.map((h, i) => (
+              {displayedCitation.searchHistory.map((h, i) => (
                 <div key={i} className="rounded-lg border border-violet-500/20 bg-violet-500/5 p-2.5">
                   <div className="text-[12px] font-semibold text-violet-300 truncate">{h.url}</div>
                   <div className="text-[10px] text-white/30">{h.date}</div>
@@ -155,8 +198,8 @@ export default function AiCitationFlow() {
         <>
           {/* Metric Cards */}
           <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-            {mockCitation.metrics.map((m, i) => {
-              const Icon = m.icon;
+            {displayedCitation.metrics.map((m, i) => {
+              const Icon = m.icon || [Hash, Layers, Target, Award][i];
               return (
                 <div key={i} className="relative overflow-hidden rounded-2xl border border-white/[0.06] bg-white/[0.015] p-4">
                   <div className="pointer-events-none absolute -right-4 -top-4 h-20 w-20 rounded-full bg-gradient-to-br opacity-10 blur-2xl" style={{ backgroundImage: `linear-gradient(to bottom right, var(--tw-gradient-stops))` }} />
@@ -179,7 +222,7 @@ export default function AiCitationFlow() {
           <div className="rounded-2xl border border-white/[0.06] bg-white/[0.015] p-5">
             <h2 className="font-display text-lg font-bold text-white/90 mb-4">Search Results Comparison</h2>
             <div className="grid gap-4 lg:grid-cols-5">
-              {mockCitation.platforms.map((plat, i) => (
+              {displayedCitation.platforms.map((plat, i) => (
                 <div key={i} className="rounded-xl border border-white/[0.06] bg-ink-900/40 overflow-hidden">
                   {/* Platform header */}
                   <div className="flex items-center justify-between px-3 py-2.5 border-b border-white/[0.04]">
