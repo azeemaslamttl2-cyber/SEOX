@@ -139,17 +139,12 @@ async function pageSpeed(target, strategy, env) {
 }
 
 export async function onRequest({ request, env }) {
-  const headers = { ...corsHeaders("GET, POST, OPTIONS"), "Cache-Control": "no-store" };
+  const headers = { ...corsHeaders("POST, OPTIONS"), "Cache-Control": "no-store" };
   if (request.method === "OPTIONS") return emptyResponse(204, headers);
-  if (request.method !== "GET" && request.method !== "POST") {
-    return jsonResponse({ success: false, error: "Method not allowed. Use GET." }, 405, headers);
-  }
+  if (request.method !== "POST") return jsonResponse({ success: false, error: "Method not allowed. Use POST." }, 405, headers);
 
   try {
-    const query = new URL(request.url).searchParams;
-    const body = request.method === "GET"
-      ? { admin_token: query.get("admin_token") || "", url: query.get("url") || "" }
-      : await readJson(request);
+    const body = await readJson(request);
     const user = await authenticate(request, body, env);
     if (!String(body?.url || "").trim()) fail("url is required.", 400);
     const target = parsePublicHttpUrl(normalizeSpeedUrl(body.url), "url");
