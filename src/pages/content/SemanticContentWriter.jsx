@@ -5638,7 +5638,7 @@ BEGIN WRITING THE ARTICLE NOW:`;
             </div>
 
             {/* Navigation Footer */}
-            <div className="flex justify-between items-center pt-2">
+            <div className="scw-navigation">
                 <button
                     onClick={prevStep}
                     disabled={currentStep === 1 && !showWordCount}
@@ -5658,11 +5658,11 @@ BEGIN WRITING THE ARTICLE NOW:`;
                     </button>
                 )}
                 <button
-                    onClick={nextStep}
-                    disabled={(currentStep === 13 && !showWordCount) || (!showWordCount && !isStepComplete(currentStep))}
+                    onClick={currentStep === 13 && !showWordCount ? goToLanding : nextStep}
+                    disabled={(currentStep === 13 && !showWordCount && !articleTitle.trim()) || (!showWordCount && currentStep !== 13 && !isStepComplete(currentStep))}
                     className="ui-button ui-button-primary scw-nav-btn"
                 >
-                    {showWordCount && writerMode === 'quick' ? 'Start Writing' : 'Next Step'}
+                    {currentStep === 13 && !showWordCount ? 'Finish Article' : showWordCount && writerMode === 'quick' ? 'Start Writing' : 'Next Step'}
                     <ChevronRight className="w-4 h-4" />
                 </button>
             </div>

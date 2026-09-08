@@ -1,18 +1,14 @@
 import { useState, useMemo } from "react";
 import { Hash } from "lucide-react";
 import ToolHeader from "../../components/seotools/ToolHeader.jsx";
+import { countWords } from "../../../functions/_lib/word-counter.js";
 
 export default function WordCounter() {
   const [text, setText] = useState("");
 
   const stats = useMemo(() => {
-    const t = text.trim();
-    const words = t ? t.split(/\s+/).length : 0;
-    const chars = text.length;
-    const sentences = t ? (t.match(/[.!?]+/g) || []).length : 0;
-    const paragraphs = t ? t.split(/\n\s*\n/).filter(Boolean).length : 0;
-    const reading = Math.max(0, Math.ceil(words / 200));
-    return { words, chars, sentences, paragraphs, reading };
+    const { words, characters, sentences, paragraphs, reading } = countWords(text);
+    return { words, chars: characters, sentences, paragraphs, reading };
   }, [text]);
 
   const cards = [

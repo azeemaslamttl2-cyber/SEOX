@@ -387,7 +387,7 @@ export async function listMySqlCollection(env, collection, pageSize = 500) {
     } else if (collectionKey === 'users/{uid}/gscConnection' || collectionKey === 'users/{uid}/projects/{projectId}/gscConnection') {
       query = target.projectId
         ? 'SELECT * FROM `gsc_connections` WHERE `user_id` = ? AND `project_id` = ? LIMIT 1'
-        : 'SELECT * FROM `gsc_connections` WHERE `user_id` = ? AND `project_id` IS NULL LIMIT 1';
+        : 'SELECT * FROM `gsc_connections` WHERE `user_id` = ? LIMIT 1';
       params = target.projectId ? [target.userId, target.projectId] : [target.userId];
     } else if (collectionKey === 'users/{uid}/yandexConnection') {
       query = 'SELECT * FROM `yandex_connections` WHERE `user_id` = ? LIMIT 1';
@@ -441,7 +441,7 @@ export async function getMySqlDocument(env, collection, documentId) {
     } else if (collectionKey === 'users/{uid}/gscConnection' || collectionKey === 'users/{uid}/projects/{projectId}/gscConnection') {
       query = target.projectId
         ? 'SELECT * FROM `gsc_connections` WHERE `user_id` = ? AND `project_id` = ? LIMIT 1'
-        : 'SELECT * FROM `gsc_connections` WHERE `user_id` = ? AND `project_id` IS NULL LIMIT 1';
+        : 'SELECT * FROM `gsc_connections` WHERE `user_id` = ? LIMIT 1';
       params = target.projectId ? [target.userId, target.projectId] : [target.userId];
     } else if (collectionKey === 'users/{uid}/yandexConnection') {
       query = 'SELECT * FROM `yandex_connections` WHERE `user_id` = ? LIMIT 1';
@@ -544,9 +544,15 @@ export async function patchMySqlDocument(env, collection, documentId, fields) {
         ON DUPLICATE KEY UPDATE \`project_url\`=VALUES(\`project_url\`), \`result\`=VALUES(\`result\`), \`updated_at\`=VALUES(\`updated_at\`);`;
       params = [payload.user_id, payload.project_id, payload.tool_key, payload.project_url, JSON.stringify(payload.result), payload.created_at, payload.updated_at];
     } else if (collectionKey === 'users/{uid}/gscConnection' || collectionKey === 'users/{uid}/projects/{projectId}/gscConnection') {
-      query = `INSERT INTO \`gsc_connections\` (\`user_id\`, \`project_id\`, \`access_token\`, \`refresh_token\`, \`expires_at\`, \`google_email\`, \`updated_at\`) VALUES (?, ?, ?, ?, ?, ?, ?)
-        ON DUPLICATE KEY UPDATE \`access_token\`=VALUES(\`access_token\`), \`refresh_token\`=VALUES(\`refresh_token\`), \`expires_at\`=VALUES(\`expires_at\`), \`google_email\`=VALUES(\`google_email\`), \`updated_at\`=VALUES(\`updated_at\`);`;
-      params = [payload.user_id, payload.project_id, payload.access_token, payload.refresh_token, payload.expires_at, payload.google_email, payload.updated_at];
+      if (payload.project_id) {
+        query = `INSERT INTO \`gsc_connections\` (\`user_id\`, \`project_id\`, \`access_token\`, \`refresh_token\`, \`expires_at\`, \`google_email\`, \`updated_at\`) VALUES (?, ?, ?, ?, ?, ?, ?)
+          ON DUPLICATE KEY UPDATE \`access_token\`=VALUES(\`access_token\`), \`refresh_token\`=VALUES(\`refresh_token\`), \`expires_at\`=VALUES(\`expires_at\`), \`google_email\`=VALUES(\`google_email\`), \`updated_at\`=VALUES(\`updated_at\`);`;
+        params = [payload.user_id, payload.project_id, payload.access_token, payload.refresh_token, payload.expires_at, payload.google_email, payload.updated_at];
+      } else {
+        query = `INSERT INTO \`gsc_connections\` (\`user_id\`, \`access_token\`, \`refresh_token\`, \`expires_at\`, \`google_email\`, \`updated_at\`) VALUES (?, ?, ?, ?, ?, ?)
+          ON DUPLICATE KEY UPDATE \`access_token\`=VALUES(\`access_token\`), \`refresh_token\`=VALUES(\`refresh_token\`), \`expires_at\`=VALUES(\`expires_at\`), \`google_email\`=VALUES(\`google_email\`), \`updated_at\`=VALUES(\`updated_at\`);`;
+        params = [payload.user_id, payload.access_token, payload.refresh_token, payload.expires_at, payload.google_email, payload.updated_at];
+      }
     } else if (collectionKey === 'users/{uid}/yandexConnection') {
       query = `INSERT INTO \`yandex_connections\` (\`user_id\`, \`access_token\`, \`refresh_token\`, \`expires_at\`, \`yandex_email\`, \`yandex_user_id\`, \`updated_at\`) VALUES (?, ?, ?, ?, ?, ?, ?)
         ON DUPLICATE KEY UPDATE \`access_token\`=VALUES(\`access_token\`), \`refresh_token\`=VALUES(\`refresh_token\`), \`expires_at\`=VALUES(\`expires_at\`), \`yandex_email\`=VALUES(\`yandex_email\`), \`yandex_user_id\`=VALUES(\`yandex_user_id\`), \`updated_at\`=VALUES(\`updated_at\`);`;
@@ -602,7 +608,7 @@ export async function deleteMySqlDocument(env, collection, documentId) {
     } else if (collectionKey === 'users/{uid}/gscConnection' || collectionKey === 'users/{uid}/projects/{projectId}/gscConnection') {
       query = target.projectId
         ? 'DELETE FROM `gsc_connections` WHERE `user_id` = ? AND `project_id` = ?'
-        : 'DELETE FROM `gsc_connections` WHERE `user_id` = ? AND `project_id` IS NULL';
+        : 'DELETE FROM `gsc_connections` WHERE `user_id` = ?';
       params = target.projectId ? [target.userId, target.projectId] : [target.userId];
     } else if (collectionKey === 'users/{uid}/yandexConnection') {
       query = 'DELETE FROM `yandex_connections` WHERE `user_id` = ?';

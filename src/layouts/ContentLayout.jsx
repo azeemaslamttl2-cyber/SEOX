@@ -5,7 +5,7 @@ import ContentTopBar from "../components/content/ContentTopBar.jsx";
 
 export default function ContentLayout() {
   return (
-    <div className="app-shell flex h-screen overflow-hidden bg-ink-900 text-white">
+    <div className="app-shell flex min-h-[100dvh] overflow-hidden bg-ink-900 text-white">
       <IconRail />
       <ContentSecondaryNav />
       <div className="flex flex-1 flex-col overflow-hidden">

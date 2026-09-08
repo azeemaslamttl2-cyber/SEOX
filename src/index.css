@@ -120,6 +120,9 @@
 html {
   font-size: 16px;
 }
+#root {
+  min-height: 100dvh;
+}
 body {
   background: var(--surface);
   color: var(--text-primary);
@@ -15007,6 +15010,16 @@ html:not(.dark) .lead-action-btn:hover {
    Previous/Skip buttons matched nothing and fell through to the app's default
    primary — three red buttons across the bottom bar. The SERP accordion head
    was a bare <button> and filled red the same way. */
+.scw-navigation {
+  align-items: center;
+  display: grid;
+  gap: 12px;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  margin-top: 8px;
+  width: 100%;
+}
+.scw-navigation > :first-child { justify-self: start; }
+.scw-navigation > :last-child { grid-column: 3; justify-self: end; }
 .scw-nav-btn { min-height: var(--control-h-lg); padding: 0 18px !important; }
 .scw-serp { padding: 0 !important; overflow: hidden; }
 .scw-serp-head {

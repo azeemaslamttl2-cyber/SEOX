@@ -1,17 +1,14 @@
 import { useState } from "react";
 import { Globe, Trash2, Filter } from "lucide-react";
 import ToolHeader from "../../components/seotools/ToolHeader.jsx";
+import { separateDomains } from "../../../functions/_lib/domain-separator.js";
 
 export default function DomainSeparator() {
   const [text, setText] = useState("");
   const [result, setResult] = useState(null);
 
   function filter() {
-    const lines = text.split("\n").map((l) => l.trim()).filter(Boolean);
-    const domains = lines.map((l) => {
-      try { return new URL(l.startsWith("http") ? l : "https://" + l).hostname.replace(/^www\./, ""); } catch { return l; }
-    });
-    setResult([...new Set(domains)]);
+    setResult(separateDomains({ text }).result);
   }
 
   return (

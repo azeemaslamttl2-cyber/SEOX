@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Eye, Globe } from "lucide-react";
 import ToolHeader from "../../components/seotools/ToolHeader.jsx";
+import { viewAsBot } from "../../../functions/_lib/seo-tools.js";
 
 const bots = ["Googlebot", "Bingbot", "Facebook", "Twitter", "Baidu", "Yandex", "DuckDuckGo", "GPTBot (OpenAI)"];
 
@@ -11,28 +12,7 @@ export default function BotViewer() {
 
   function viewAs() {
     if (!url.trim()) return;
-    setResult({
-      bot: selectedBot,
-      url,
-      userAgent: getUA(selectedBot),
-      status: 200,
-      title: "Example Page Title",
-      meta: "Page meta description as seen by the crawler.",
-    });
-  }
-
-  function getUA(bot) {
-    const map = {
-      "Googlebot": "Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)",
-      "Bingbot": "Mozilla/5.0 (compatible; bingbot/2.0; +http://www.bing.com/bingbot.htm)",
-      "Facebook": "facebookexternalhit/1.1",
-      "Twitter": "Twitterbot/1.0",
-      "Baidu": "Mozilla/5.0 (compatible; Baiduspider/2.0; +http://www.baidu.com/search/spider.html)",
-      "Yandex": "Mozilla/5.0 (compatible; YandexBot/3.0; +http://yandex.com/bots)",
-      "DuckDuckGo": "DuckDuckBot/1.0; (+http://duckduckgo.com/duckduckbot.html)",
-      "GPTBot (OpenAI)": "Mozilla/5.0 (compatible; GPTBot/1.0; +https://openai.com/gptbot)",
-    };
-    return map[bot] || "";
+    setResult(viewAsBot({ bot: selectedBot, url }));
   }
 
   return (
@@ -43,39 +23,25 @@ export default function BotViewer() {
         <label className="stool-label">Select Bot / Crawler</label>
         <div className="mt-2 flex flex-wrap gap-2">
           {bots.map((b) => (
-            <button
-              key={b}
-              onClick={() => setSelectedBot(b)}
-              className={`ui-button transition ${
-                selectedBot === b ? "ctool-seg-btn active" : "ctool-seg-btn"
-              }`}
-            >{b}</button>
+            <button key={b} onClick={() => setSelectedBot(b)} className={`ui-button transition ${selectedBot === b ? "ctool-seg-btn active" : "ctool-seg-btn"}`}>
+              {b}
+            </button>
           ))}
         </div>
 
         <div className="mt-4 flex gap-2">
           <div className="ctool-field flex-1">
             <Globe className="h-4 w-4" />
-            <input
-              value={url}
-              onChange={(e) => setUrl(e.target.value)}
-              className="stool-bare-input flex-1"
-              placeholder="Enter URL to view as bot (e.g., https://example.com)"
-            />
+            <input value={url} onChange={(e) => setUrl(e.target.value)} className="stool-bare-input flex-1" placeholder="Enter URL to view as bot (e.g., https://example.com)" />
           </div>
-          <button
-            onClick={viewAs}
-            className="ui-button ui-button-primary"
-          >
+          <button onClick={viewAs} className="ui-button ui-button-primary">
             <Eye className="h-4 w-4" /> View as {selectedBot.split(" ")[0]}
           </button>
         </div>
 
         {!result ? (
           <div className="ctool-empty mt-5">
-            <div className="ctool-empty-icon">
-              <Eye className="h-5 w-5 text-white" />
-            </div>
+            <div className="ctool-empty-icon"><Eye className="h-5 w-5 text-white" /></div>
             <h3 className="ctool-empty-title">Bot Viewer</h3>
             <p className="ctool-empty-text">Enter a URL and select a bot to see how search engine crawlers and social media bots view your website.</p>
           </div>
