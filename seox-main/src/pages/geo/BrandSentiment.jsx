@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   HeartPulse,
   Globe,
@@ -11,6 +11,8 @@ import {
   XCircle,
   Lightbulb,
 } from "lucide-react";
+import { useSelectedProjectDomain } from "../../hooks/useSelectedProjectDomain.js";
+import { getSessionToken } from "../../lib/authSession.js";
 
 const sentimentData = {
   url: "https://learnwirepro.com",
@@ -44,8 +46,48 @@ function Badge({ label, color }) {
 }
 
 export default function BrandSentiment() {
-  const [url, setUrl] = useState(sentimentData.url);
+  const { projectUrl } = useSelectedProjectDomain();
+  const [url, setUrl] = useState(projectUrl);
+  const [result, setResult] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
   const [hasResult, setHasResult] = useState(true);
+
+  useEffect(() => {
+    setUrl(projectUrl);
+  }, [projectUrl]);
+
+  async function analyzeBrandSentiment() {
+    const targetUrl = url.trim();
+    if (!targetUrl) {
+      setError("Select a website from the top URL selector first.");
+      return;
+    }
+    const adminToken = getSessionToken();
+    if (!adminToken) {
+      setError("Your session has expired. Please sign in again.");
+      return;
+    }
+    setLoading(true);
+    setError("");
+    try {
+      const response = await fetch("/api/geo/brand-sentiment", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ admin_token: adminToken, url: targetUrl }),
+      });
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok || !payload.success) throw new Error(payload.message || "Brand sentiment analysis failed.");
+      setResult(payload.data?.brand_sentiment || null);
+      setHasResult(true);
+    } catch (requestError) {
+      setError(requestError.message || "Brand sentiment analysis failed.");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  const displayedResult = result || sentimentData;
 
   return (
     <div className="mx-auto max-w-5xl space-y-6">
@@ -70,7 +112,7 @@ export default function BrandSentiment() {
 
           <div className="mt-6 rounded-2xl border border-white/[0.06] bg-ink-900/60 p-5">
             <p className="text-[11px] text-white/35">Project or Website URL</p>
-            {hasResult && <p className="text-[11px] text-white/25 mt-0.5">Last analyzed: {sentimentData.analyzedAt}</p>}
+            {hasResult && <p className="text-[11px] text-white/25 mt-0.5">Last analyzed: {displayedResult.analyzedAt}</p>}
             <div className="mt-3 flex items-center gap-2">
               <div className="flex flex-1 items-center gap-2 rounded-xl border border-white/[0.08] bg-ink-900/80 px-4 py-2.5">
                 <Globe className="h-4 w-4 text-pink-400/60" />
@@ -80,10 +122,11 @@ export default function BrandSentiment() {
                   placeholder="https://example.com"
                 />
               </div>
-              <button className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-pink-500 to-violet-500 px-5 py-2.5 text-sm font-bold text-white shadow-lg shadow-pink-500/25 transition hover:shadow-pink-500/40">
-                <Search className="h-4 w-4" /> Analyze Brand Sentiment
+              <button onClick={analyzeBrandSentiment} disabled={loading} className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-pink-500 to-violet-500 px-5 py-2.5 text-sm font-bold text-white shadow-lg shadow-pink-500/25 transition hover:shadow-pink-500/40">
+                <Search className="h-4 w-4" /> {loading ? "Analyzing..." : "Analyze Brand Sentiment"}
               </button>
             </div>
+            {error && <p className="mt-2 text-[11px] text-red-400">{error}</p>}
             <p className="mt-2 text-[11px] text-white/25">No saved projects found. Enter a website URL to analyze brand sentiment directly.</p>
           </div>
         </div>
@@ -95,10 +138,10 @@ export default function BrandSentiment() {
           <div className="rounded-2xl border border-white/[0.06] bg-white/[0.015] p-5">
             <div className="mb-1">
               <h2 className="font-display text-lg font-bold text-white/90">
-                Sentiment Analysis Results for <span className="text-pink-300">{sentimentData.brand}</span>
+                Sentiment Analysis Results for <span className="text-pink-300">{displayedResult.brand}</span>
               </h2>
               <p className="text-[11px] text-white/30 flex items-center gap-1">
-                <Clock className="h-3 w-3" /> Analyzed on {sentimentData.analyzedAt}
+                <Clock className="h-3 w-3" /> Analyzed on {displayedResult.analyzedAt}
               </p>
             </div>
 
@@ -116,7 +159,7 @@ export default function BrandSentiment() {
                   </tr>
                 </thead>
                 <tbody>
-                  {sentimentData.platforms.map((p, i) => (
+                  {displayedResult.platforms.map((p, i) => (
                     <tr key={i} className="border-b border-white/[0.03] transition hover:bg-white/[0.02]">
                       <td className="py-3 pr-3 text-[13px] font-semibold text-white/80">{p.name}</td>
                       <td className="py-3 text-center"><Badge label={p.visibility} color={p.visColor} /></td>
@@ -145,7 +188,7 @@ export default function BrandSentiment() {
             <p className="text-[12px] text-white/35 mb-4">Actionable steps to improve your brand's sentiment, visibility, trust, and authority.</p>
 
             <div className="space-y-3">
-              {sentimentData.recommendations.map((rec, i) => (
+              {displayedResult.recommendations.map((rec, i) => (
                 <div key={i} className="flex items-start gap-3 rounded-xl border border-white/[0.05] bg-ink-900/40 p-4 transition hover:bg-white/[0.02]">
                   <span className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full bg-emerald-500/15 text-[12px] font-bold text-emerald-300">
                     {i + 1}

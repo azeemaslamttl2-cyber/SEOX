@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Crosshair,
   Globe,
@@ -11,6 +11,8 @@ import {
   ChevronUp,
   Sparkles,
 } from "lucide-react";
+import { useSelectedProjectDomain } from "../../hooks/useSelectedProjectDomain.js";
+import { getSessionToken } from "../../lib/authSession.js";
 
 const mockResult = {
   url: "https://learnwirepro.com",
@@ -118,9 +120,50 @@ const llmColors = {
 };
 
 export default function PromptTracking() {
-  const [url, setUrl] = useState(mockResult.url);
+  const { projectUrl } = useSelectedProjectDomain();
+  const [url, setUrl] = useState(projectUrl);
+  const [result, setResult] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
   const [hasResult, setHasResult] = useState(true);
   const [openSections, setOpenSections] = useState({ 0: true, 1: true });
+
+  useEffect(() => {
+    setUrl(projectUrl);
+  }, [projectUrl]);
+
+  async function runPromptTracking() {
+    const targetUrl = url.trim();
+    if (!targetUrl) {
+      setError("Enter a website URL first.");
+      return;
+    }
+    const adminToken = getSessionToken();
+    if (!adminToken) {
+      setError("Your session has expired. Please sign in again.");
+      return;
+    }
+
+    setLoading(true);
+    setError("");
+    try {
+      const response = await fetch("/api/geo/prompt-tracking", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ admin_token: adminToken, url: targetUrl }),
+      });
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok || !payload.success) throw new Error(payload.message || "Prompt tracking failed.");
+      setResult(payload.data?.prompt_tracking || null);
+      setHasResult(true);
+    } catch (requestError) {
+      setError(requestError.message || "Prompt tracking failed.");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  const displayedResult = result || mockResult;
 
   return (
     <div className="ctool-page space-y-5">
@@ -152,12 +195,14 @@ export default function PromptTracking() {
                 />
               </div>
               <button
-                onClick={() => setHasResult(true)}
+                onClick={runPromptTracking}
+                disabled={loading}
                 className="ui-button ui-button-primary"
               >
-                <Search className="h-4 w-4" /> Scrape & predict prompts
+                <Search className="h-4 w-4" /> {loading ? "Analyzing..." : "Scrape & predict prompts"}
               </button>
             </div>
+            {error && <p className="mt-2 text-[11px] text-red-500">{error}</p>}
             <p className="ctool-help-text mt-2">No saved projects found. Enter a page URL to analyze any public URL.</p>
           </div>
         </div>
@@ -177,11 +222,11 @@ export default function PromptTracking() {
             <div className="geo-well mt-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <div className="stool-strong">{mockResult.url}</div>
-                  <div className="ctool-help-text">{mockResult.siteName}</div>
+                  <div className="stool-strong">{displayedResult.url}</div>
+                  <div className="ctool-help-text">{displayedResult.siteName}</div>
                 </div>
                 <div className="ctool-help-text flex items-center gap-1.5">
-                  <Clock className="h-3 w-3" /> {mockResult.analyzedAt}
+                  <Clock className="h-3 w-3" /> {displayedResult.analyzedAt}
                 </div>
               </div>
 
@@ -191,7 +236,7 @@ export default function PromptTracking() {
                   <Tag className="h-3 w-3" /> Extracted Keywords
                 </h4>
                 <div className="mt-2 flex flex-wrap gap-1.5">
-                  {mockResult.extractedKeywords.map((kw, i) => (
+                  {displayedResult.extractedKeywords.map((kw, i) => (
                     <span key={i} className="ctool-chip">
                       {kw}
                     </span>
@@ -205,7 +250,7 @@ export default function PromptTracking() {
                   <FileText className="h-3 w-3" /> Page Text Sample (Stored)
                 </h4>
                 <div className="geo-well geo-scroll mt-2 max-h-[200px] overflow-y-auto">
-                  <pre className="geo-sample">{mockResult.pageTextSample}</pre>
+                  <pre className="geo-sample">{displayedResult.pageTextSample}</pre>
                 </div>
               </div>
             </div>
@@ -220,7 +265,7 @@ export default function PromptTracking() {
             <p className="ctool-help-text -mt-3 mb-5">Example user prompts per topic where this page might be relevant in each model.</p>
 
             <div className="space-y-5">
-              {mockResult.promptsByLlm.map((group, gi) => (
+              {displayedResult.promptsByLlm.map((group, gi) => (
                 <div key={gi} className="geo-panel">
                   <button
                     onClick={() => setOpenSections((p) => ({ ...p, [gi]: !p[gi] }))}

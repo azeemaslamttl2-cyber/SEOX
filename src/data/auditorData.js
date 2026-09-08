@@ -1050,11 +1050,18 @@ function scaleHealthScore(block, factor) {
 }
 
 function liveAuditData(selectedProject, stats) {
-  const crawled = Math.max(0, stats?.crawledCount || 0);
+  const effectiveStats = (stats && (stats.crawledCount > 0 || (stats.latestUrls && stats.latestUrls.length > 0)))
+    ? stats
+    : selectedProject?.project_data?.crawlState?.stats ||
+      selectedProject?.project_data?.auditState?.stats ||
+      selectedProject?.project_data?.stats ||
+      null;
+
+  const crawled = Math.max(0, effectiveStats?.crawledCount || (effectiveStats?.latestUrls ? effectiveStats.latestUrls.length : 0));
   if (!crawled) return null;
 
-  const latestRows = stats?.latestUrls || [];
-  const byStatus = stats?.byStatus || {};
+  const latestRows = effectiveStats?.latestUrls || [];
+  const byStatus = effectiveStats?.byStatus || {};
   const errors = (byStatus["4xx"] || 0) + (byStatus["5xx"] || 0);
   const redirects = byStatus["3xx"] || 0;
   const warnings = redirects + Math.ceil(errors * 0.8);

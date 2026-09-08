@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   HeartPulse,
   Globe,
@@ -11,6 +11,8 @@ import {
   XCircle,
   Lightbulb,
 } from "lucide-react";
+import { useSelectedProjectDomain } from "../../hooks/useSelectedProjectDomain.js";
+import { getSessionToken } from "../../lib/authSession.js";
 
 const sentimentData = {
   url: "https://learnwirepro.com",
@@ -46,8 +48,48 @@ function Badge({ label, color }) {
 }
 
 export default function BrandSentiment() {
-  const [url, setUrl] = useState(sentimentData.url);
+  const { projectUrl } = useSelectedProjectDomain();
+  const [url, setUrl] = useState(projectUrl);
+  const [result, setResult] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
   const [hasResult, setHasResult] = useState(true);
+
+  useEffect(() => {
+    setUrl(projectUrl);
+  }, [projectUrl]);
+
+  async function analyzeBrandSentiment() {
+    const targetUrl = url.trim();
+    if (!targetUrl) {
+      setError("Select a website from the top URL selector first.");
+      return;
+    }
+    const adminToken = getSessionToken();
+    if (!adminToken) {
+      setError("Your session has expired. Please sign in again.");
+      return;
+    }
+    setLoading(true);
+    setError("");
+    try {
+      const response = await fetch("/api/geo/brand-sentiment", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ admin_token: adminToken, url: targetUrl }),
+      });
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok || !payload.success) throw new Error(payload.message || "Brand sentiment analysis failed.");
+      setResult(payload.data?.brand_sentiment || null);
+      setHasResult(true);
+    } catch (requestError) {
+      setError(requestError.message || "Brand sentiment analysis failed.");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  const displayedResult = result || sentimentData;
 
   return (
     <div className="ctool-page space-y-5">
@@ -67,7 +109,7 @@ export default function BrandSentiment() {
 
           <div className="geo-well mt-6">
             <p className="ctool-help-text">Project or Website URL</p>
-            {hasResult && <p className="ctool-help-text mt-0.5">Last analyzed: {sentimentData.analyzedAt}</p>}
+            {hasResult && <p className="ctool-help-text mt-0.5">Last analyzed: {displayedResult.analyzedAt}</p>}
             <div className="mt-3 flex items-center gap-2">
               <div className="ctool-field flex-1">
                 <Globe className="h-4 w-4" />
@@ -77,10 +119,11 @@ export default function BrandSentiment() {
                   placeholder="https://example.com"
                 />
               </div>
-              <button className="ui-button ui-button-primary">
-                <Search className="h-4 w-4" /> Analyze Brand Sentiment
+              <button onClick={analyzeBrandSentiment} disabled={loading} className="ui-button ui-button-primary">
+                <Search className="h-4 w-4" /> {loading ? "Analyzing..." : "Analyze Brand Sentiment"}
               </button>
             </div>
+            {error && <p className="mt-2 text-[11px] text-red-500">{error}</p>}
             <p className="ctool-help-text mt-2">No saved projects found. Enter a website URL to analyze brand sentiment directly.</p>
           </div>
         </div>
@@ -92,10 +135,10 @@ export default function BrandSentiment() {
           <div className="ctool-card">
             <div className="mb-1">
               <h2 className="geo-section-title font-display">
-                Sentiment Analysis Results for <span className="ctool-accent">{sentimentData.brand}</span>
+                Sentiment Analysis Results for <span className="ctool-accent">{displayedResult.brand}</span>
               </h2>
               <p className="ctool-help-text flex items-center gap-1">
-                <Clock className="h-3 w-3" /> Analyzed on {sentimentData.analyzedAt}
+                <Clock className="h-3 w-3" /> Analyzed on {displayedResult.analyzedAt}
               </p>
             </div>
 
@@ -113,7 +156,7 @@ export default function BrandSentiment() {
                   </tr>
                 </thead>
                 <tbody>
-                  {sentimentData.platforms.map((p, i) => (
+                  {displayedResult.platforms.map((p, i) => (
                     <tr key={i} className="geo-tr">
                       <td className="geo-td-name">{p.name}</td>
                       <td className="py-3 text-center"><Badge label={p.visibility} color={p.visColor} /></td>
@@ -142,7 +185,7 @@ export default function BrandSentiment() {
             <p className="ctool-help-text mb-4">Actionable steps to improve your brand's sentiment, visibility, trust, and authority.</p>
 
             <div className="space-y-3">
-              {sentimentData.recommendations.map((rec, i) => (
+              {displayedResult.recommendations.map((rec, i) => (
                 <div key={i} className="geo-rec">
                   <span className="geo-rec-num">
                     {i + 1}

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Link2,
   Globe,
@@ -13,6 +13,8 @@ import {
   Unlink,
   BarChart3,
 } from "lucide-react";
+import { useSelectedProjectDomain } from "../../hooks/useSelectedProjectDomain.js";
+import { getSessionToken } from "../../lib/authSession.js";
 
 const mockCrawl = {
   url: "https://learnwirepro.com",
@@ -39,9 +41,49 @@ const mockCrawl = {
 };
 
 export default function InternalLinksCrawl() {
-  const [url, setUrl] = useState(mockCrawl.url);
+  const { projectUrl: selectedProjectUrl } = useSelectedProjectDomain();
+  const [url, setUrl] = useState(selectedProjectUrl);
+  const [result, setResult] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
   const [hasResult, setHasResult] = useState(true);
   const [activeTab, setActiveTab] = useState("Link Structure");
+
+  useEffect(() => {
+    setUrl(selectedProjectUrl);
+  }, [selectedProjectUrl]);
+
+  async function startCrawl() {
+    const targetUrl = url.trim();
+    if (!targetUrl) {
+      setError("Select a website from the top URL selector first.");
+      return;
+    }
+    const token = getSessionToken();
+    if (!token) {
+      setError("Your session has expired. Please sign in again.");
+      return;
+    }
+    setLoading(true);
+    setError("");
+    try {
+      const response = await fetch("/api/geo/internal-links", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ url: targetUrl }),
+      });
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok || !payload.success) throw new Error(payload.message || "Internal links analysis failed.");
+      setResult(payload.data || null);
+      setHasResult(true);
+    } catch (requestError) {
+      setError(requestError.message || "Internal links analysis failed.");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  const displayedCrawl = result || mockCrawl;
 
   return (
     <div className="mx-auto max-w-5xl space-y-6">
@@ -75,10 +117,11 @@ export default function InternalLinksCrawl() {
                 placeholder="https://example.com"
               />
             </div>
-            <button className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-500 px-5 py-2.5 text-sm font-bold text-white shadow-lg shadow-cyan-500/25 transition hover:shadow-cyan-500/40">
-              <Search className="h-4 w-4" /> Start Crawl
+            <button onClick={startCrawl} disabled={loading} className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-500 px-5 py-2.5 text-sm font-bold text-white shadow-lg shadow-cyan-500/25 transition hover:shadow-cyan-500/40">
+              <Search className="h-4 w-4" /> {loading ? "Crawling..." : "Start Crawl"}
             </button>
           </div>
+          {error && <p className="mt-2 text-[11px] text-red-400">{error}</p>}
           <p className="mt-2 text-[11px] text-white/25">Enter a website URL. GEO Crawl will use the website sitemap to analyze the link structure. Analyzes up to 100 pages.</p>
         </div>
       </div>
@@ -89,7 +132,7 @@ export default function InternalLinksCrawl() {
           <div className="flex items-center gap-2 rounded-xl border border-emerald-500/20 bg-emerald-500/5 px-4 py-2.5">
             <CheckCircle2 className="h-4 w-4 text-emerald-400" />
             <div className="text-[12px] text-emerald-300/80">
-              <strong>Saved crawl results loaded from database</strong> — Crawl completed on {mockCrawl.completedAt}
+              <strong>Crawl results ready</strong> — Crawl completed on {displayedCrawl.completedAt}
             </div>
           </div>
 
@@ -100,12 +143,12 @@ export default function InternalLinksCrawl() {
               <div>
                 <h3 className="text-sm font-bold text-emerald-300">Crawl Analysis Completed</h3>
                 <p className="mt-1 text-[12px] text-white/50">
-                  Crawled {mockCrawl.summary.pagesCrawled} pages • Found {mockCrawl.summary.internalLinks} internal links • {mockCrawl.summary.orphanPages} orphan pages
+                  Crawled {displayedCrawl.summary.pagesCrawled} pages • Found {displayedCrawl.summary.internalLinks} internal links • {displayedCrawl.summary.orphanPages} orphan pages
                 </p>
                 <p className="text-[11px] text-white/35">
-                  Max Depth: {mockCrawl.summary.maxDepth} • Avg Internal Links: {mockCrawl.summary.avgInternalLinks}
+                  Max Depth: {displayedCrawl.summary.maxDepth} • Avg Internal Links: {displayedCrawl.summary.avgInternalLinks}
                 </p>
-                <p className="text-[11px] text-white/35">Internal Linking Score: {mockCrawl.summary.linkingScore}</p>
+                <p className="text-[11px] text-white/35">Internal Linking Score: {displayedCrawl.summary.linkingScore}</p>
               </div>
               <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-emerald-500/15">
                 <span className="font-display text-2xl font-black text-emerald-300">{mockCrawl.summary.pagesCrawled}</span>
@@ -119,11 +162,11 @@ export default function InternalLinksCrawl() {
             <div className="relative z-10 flex items-center justify-between">
               <div>
                 <h3 className="text-base font-bold text-white">Internal Linking Analysis Report</h3>
-                <p className="mt-1 text-[12px] text-white/60">Comprehensive crawl analysis for {mockCrawl.url}</p>
-                <p className="text-[11px] text-white/40">Analyzed {mockCrawl.summary.pagesCrawled} pages • {mockCrawl.summary.internalLinks} internal links • {mockCrawl.summary.orphanPages} orphan pages detected</p>
+                <p className="mt-1 text-[12px] text-white/60">Comprehensive crawl analysis for {displayedCrawl.url}</p>
+                <p className="text-[11px] text-white/40">Analyzed {displayedCrawl.summary.pagesCrawled} pages • {displayedCrawl.summary.internalLinks} internal links • {displayedCrawl.summary.orphanPages} orphan pages detected</p>
               </div>
               <div className="text-right">
-                <div className="text-3xl font-black text-white">{mockCrawl.summary.pagesCrawled}</div>
+                <div className="text-3xl font-black text-white">{displayedCrawl.summary.pagesCrawled}</div>
                 <div className="text-[11px] text-white/50">Pages Crawled</div>
               </div>
             </div>
@@ -147,11 +190,11 @@ export default function InternalLinksCrawl() {
                 <Network className="h-5 w-5 text-cyan-400" />
                 <h2 className="font-display text-lg font-bold text-white/90">Internal Link Structure</h2>
               </div>
-              <span className="text-[11px] text-white/30">{mockCrawl.summary.pagesCrawled} pages analyzed</span>
+              <span className="text-[11px] text-white/30">{displayedCrawl.summary.pagesCrawled} pages analyzed</span>
             </div>
 
             <div className="space-y-3">
-              {mockCrawl.pages.map((page, i) => (
+              {displayedCrawl.pages.map((page, i) => (
                 <div key={i} className="rounded-xl border border-white/[0.06] bg-ink-900/40 p-4">
                   <div className="flex items-center justify-between mb-2">
                     <div className="text-[13px] font-semibold text-white/80 truncate">{page.url}</div>
