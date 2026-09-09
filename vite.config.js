@@ -182,11 +182,8 @@ function proxyApiPlugin() {
 }
 
 /* ── DeepSeek API middleware (for AI-powered content tools) ── */
-function deepseekApiPlugin() {
-  return {
-    name: "seox-deepseek-api",
-    configureServer(server) {
-      server.middlewares.use("/api/deepseek", async (req, res) => {
+function registerDeepseekMiddleware(server) {
+  const handleDeepSeekRequest = async (req, res) => {
         // CORS headers
         res.setHeader("Access-Control-Allow-Origin", "*");
         res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
@@ -304,8 +301,17 @@ function deepseekApiPlugin() {
             error: error?.message || "Failed to call DeepSeek API",
           });
         }
-      });
-    },
+  };
+
+  server.middlewares.use("/api/deepseek", handleDeepSeekRequest);
+  server.middlewares.use("/api/connect-deepseek", handleDeepSeekRequest);
+}
+
+function deepseekApiPlugin() {
+  return {
+    name: "seox-deepseek-api",
+    configureServer: registerDeepseekMiddleware,
+    configurePreviewServer: registerDeepseekMiddleware,
   };
 }
 
@@ -861,20 +867,30 @@ function registerPagespeedMiddleware(server) {
   });
 }
 
-function speedApiPlugin() {
-  return {
-    name: "seox-speed-api",
-    configureServer(server) {
-      server.middlewares.use("/api/tech-seo/speed", async (req, res) => {
+function registerSpeedMiddleware(server) {
+  const handleSpeedRequest = async (req, res, path) => {
         try {
-          const request = await createWebRequest(req, "/api/tech-seo/speed");
+          const request = await createWebRequest(req, path);
           const response = await speedOnRequest({ request, env: loadDevApiEnv() });
           await sendWebResponse(res, response);
         } catch (error) {
           sendJson(res, error?.status || 500, { success: false, error: error?.message || "Speed test request failed" });
         }
-      });
-    },
+  };
+
+  server.middlewares.use("/api/tech-seo/speed", (req, res) =>
+    handleSpeedRequest(req, res, "/api/tech-seo/speed")
+  );
+  server.middlewares.use("/api/tech-seo/speed-test", (req, res) =>
+    handleSpeedRequest(req, res, "/api/tech-seo/speed-test")
+  );
+}
+
+function speedApiPlugin() {
+  return {
+    name: "seox-speed-api",
+    configureServer: registerSpeedMiddleware,
+    configurePreviewServer: registerSpeedMiddleware,
   };
 }
 

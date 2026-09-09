@@ -1,7 +1,38 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { buildSpeedResult, findProblemResources } from "../../../src/lib/speedTestResult.js";
-import { mergeSpeedProjectData } from "./speed.js";
+import { mergeSpeedProjectData, onRequest } from "./speed.js";
+
+function speedRequest(body, headers = {}) {
+  return new Request("https://example.com/api/tech-seo/speed-test", {
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...headers },
+    body: JSON.stringify(body),
+  });
+}
+
+test("speed requires admin_token and does not use Authorization authentication", async () => {
+  const response = await onRequest({
+    request: speedRequest({ url: "https://example.com" }, { Authorization: "Bearer stale-session" }),
+    env: { ADMIN_TOKEN: "valid-admin-token" },
+  });
+
+  assert.equal(response.status, 400);
+  assert.equal((await response.json()).error, "admin_token is required.");
+});
+
+test("speed accepts a valid body admin_token even with an unrelated Authorization header", async () => {
+  const response = await onRequest({
+    request: speedRequest(
+      { admin_token: "valid-admin-token" },
+      { Authorization: "Bearer stale-session" }
+    ),
+    env: { ADMIN_TOKEN: "valid-admin-token" },
+  });
+
+  assert.equal(response.status, 400);
+  assert.equal((await response.json()).error, "url is required.");
+});
 
 test("speed result exposes only resources with detected performance problems", () => {
   const result = buildSpeedResult(
@@ -72,14 +103,15 @@ test("all resource types are returned when a failed audit provides a URL", () =>
   assert.deepEqual(problems.all.map((item) => item.resource_type), ["font", "video", "html", "xhr"]);
 });
 
-test("speed project merge preserves unrelated project data", () => {
+test("speed project merge replaces only speed and preserves unrelated project data", () => {
   const result = { url: "https://example.com", resources: [{ url: "https://example.com/app.js" }] };
   const merged = mergeSpeedProjectData(
-    JSON.stringify({ eeat: { score: 80 }, robots: { status: "ok" }, speed: { old: true } }),
+    JSON.stringify({ eeat: { score: 80 }, robots: { status: "ok" }, speed: { old: true }, other_tool_data: { value: 1 } }),
     result
   );
 
   assert.deepEqual(merged.eeat, { score: 80 });
   assert.deepEqual(merged.robots, { status: "ok" });
   assert.deepEqual(merged.speed, result);
+  assert.deepEqual(merged.other_tool_data, { value: 1 });
 });

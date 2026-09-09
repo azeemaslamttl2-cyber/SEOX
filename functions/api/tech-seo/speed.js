@@ -1,6 +1,5 @@
 import { configureMysqlConnection, queryOne, update } from "../../_lib/mysql.js";
 import { corsHeaders, emptyResponse, jsonResponse, readJson } from "../../_lib/http.js";
-import { requireUser } from "../../_lib/auth-token.js";
 import { fetchPublicHttpUrl, parsePublicHttpUrl } from "../../_lib/url-security.js";
 import { parseCrawlText } from "../../_handlers/crawler-fetch.js";
 import { buildSpeedResult, normalizeSpeedUrl } from "../../../src/lib/speedTestResult.js";
@@ -27,25 +26,16 @@ export function mergeSpeedProjectData(existingProjectData, result) {
   return { ...parseProjectData(existingProjectData), speed: result };
 }
 
-function tokenFromRequest(request, body) {
-  return String(body?.admin_token || request.headers.get("authorization") || "")
-    .replace(/^Bearer\s+/i, "")
-    .trim();
+function tokenFromRequest(body) {
+  return String(body?.admin_token || "").trim();
 }
 
-async function authenticate(request, body, env) {
-  const authorization = String(request.headers.get("authorization") || "").replace(/^Bearer\s+/i, "").trim();
-  if (authorization) return requireUser(request, env);
-
-  const token = tokenFromRequest(request, body);
-  if (!token) return requireUser(request, env);
+async function authenticate(body, env) {
+  const token = tokenFromRequest(body);
+  if (!token) fail("admin_token is required.", 400);
 
   const configured = String(env?.ADMIN_TOKEN || "").trim();
   if (configured && token === configured) return { uid: null, id: null, admin: true };
-
-  if (token === "dev" || token === "admin" || process.env.NODE_ENV === "development" || process.env.VITE_DEV === "true") {
-    return { uid: null, id: "dev-user", admin: true };
-  }
 
   try {
     configureMysqlConnection(env);
@@ -54,11 +44,12 @@ async function authenticate(request, body, env) {
       [token]
     );
     if (tokenUser) return { uid: String(tokenUser.id), id: tokenUser.id, email: tokenUser.email, admin: true };
-  } catch {
-    // Fall through to JWT validation so deployments without the legacy token columns remain compatible.
+  } catch (error) {
+    console.error("Speed test admin-token lookup failed:", error);
+    fail("Authentication service temporarily unavailable.", 503);
   }
 
-  return requireUser(new Request(request.url, { headers: { authorization: `Bearer ${token}` } }), env);
+  fail("Invalid admin token.", 401);
 }
 
 function hostFor(url) {
@@ -145,7 +136,7 @@ export async function onRequest({ request, env }) {
 
   try {
     const body = await readJson(request);
-    const user = await authenticate(request, body, env);
+    const user = await authenticate(body, env);
     if (!String(body?.url || "").trim()) fail("url is required.", 400);
     const target = parsePublicHttpUrl(normalizeSpeedUrl(body.url), "url");
     configureMysqlConnection(env);

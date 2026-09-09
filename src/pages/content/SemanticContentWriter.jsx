@@ -277,7 +277,7 @@ Return ONLY a valid JSON object with this exact structure:
 Do not return explanations, descriptions, social media profiles, directories, or search engines.
 Return a clean structured JSON list of competitor URLs starting with https://.`;
 
-            const response = await fetch('/api/deepseek', {
+            const response = await fetch('/api/connect-deepseek', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -1824,7 +1824,7 @@ Return a clean structured JSON list of competitor URLs starting with https://.`;
                 return `--- Source ${i + 1}: ${o.url} ---\n${headingsList}`;
             }).join('\n\n');
 
-            const response = await fetch('/api/deepseek', {
+            const response = await fetch('/api/connect-deepseek', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -2558,7 +2558,7 @@ Return a clean structured JSON list of competitor URLs starting with https://.`;
             const textToAnalyze = competitorContent ||
                 Object.values(extractedOutlines).map(o => o.headings.map(h => h.text).join(' ')).join(' ');
 
-            const response = await fetch('/api/deepseek', {
+            const response = await fetch('/api/connect-deepseek', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -2598,7 +2598,7 @@ Extract at least 30-50 entities if the content supports it.`,
         if (!mainKeyword) return;
         setIsLoadingKeywords(prev => ({ ...prev, aiEntities: true }));
         try {
-            const response = await fetch('/api/deepseek', {
+            const response = await fetch('/api/connect-deepseek', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -2631,7 +2631,7 @@ Return JSON: {"entities": ["entity1", "entity2", ...]}`,
             const textToAnalyze = competitorContent ||
                 Object.values(extractedOutlines).map(o => o.headings.map(h => h.text).join(' ')).join(' ');
 
-            const response = await fetch('/api/deepseek', {
+            const response = await fetch('/api/connect-deepseek', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -2663,7 +2663,7 @@ Return JSON: {"ngrams": ["phrase 1", "phrase 2", ...]}`,
         if (keywordData.competitorNgrams.length === 0) return;
         setIsLoadingKeywords(prev => ({ ...prev, aiPickedNgrams: true }));
         try {
-            const response = await fetch('/api/deepseek', {
+            const response = await fetch('/api/connect-deepseek', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -2694,7 +2694,7 @@ Return JSON: {"picked": ["phrase 1", "phrase 2", ...]}`,
         if (!mainKeyword) return;
         setIsLoadingKeywords(prev => ({ ...prev, aiGeneratedNgrams: true }));
         try {
-            const response = await fetch('/api/deepseek', {
+            const response = await fetch('/api/connect-deepseek', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -2722,7 +2722,7 @@ Return JSON: {"ngrams": ["phrase 1", "phrase 2", ...]}`,
         if (!mainKeyword) return;
         setIsLoadingKeywords(prev => ({ ...prev, uniqueNgrams: true }));
         try {
-            const response = await fetch('/api/deepseek', {
+            const response = await fetch('/api/connect-deepseek', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -2755,7 +2755,7 @@ Return JSON: {"ngrams": ["unique phrase 1", "unique phrase 2", ...]}`,
         if (!mainKeyword) return;
         setIsLoadingKeywords(prev => ({ ...prev, ngrams: true }));
         try {
-            const response = await fetch('/api/deepseek', {
+            const response = await fetch('/api/connect-deepseek', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -2775,7 +2775,7 @@ Return JSON: {"ngrams": ["unique phrase 1", "unique phrase 2", ...]}`,
         if (!mainKeyword) return;
         setIsLoadingKeywords(prev => ({ ...prev, nlpKeywords: true }));
         try {
-            const response = await fetch('/api/deepseek', {
+            const response = await fetch('/api/connect-deepseek', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -2794,7 +2794,7 @@ Return JSON: {"ngrams": ["unique phrase 1", "unique phrase 2", ...]}`,
         if (!mainKeyword) return;
         setIsLoadingKeywords(prev => ({ ...prev, skipGrams: true }));
         try {
-            const response = await fetch('/api/deepseek', {
+            const response = await fetch('/api/connect-deepseek', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -2820,7 +2820,7 @@ Return JSON: {"ngrams": ["unique phrase 1", "unique phrase 2", ...]}`,
         if (!mainKeyword) return;
         setIsLoadingKeywords(prev => ({ ...prev, grammar: true }));
         try {
-            const response = await fetch('/api/deepseek', {
+            const response = await fetch('/api/connect-deepseek', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -2839,7 +2839,7 @@ Return JSON: {"ngrams": ["unique phrase 1", "unique phrase 2", ...]}`,
         if (!mainKeyword) return;
         setIsLoadingKeywords(prev => ({ ...prev, autoSuggest: true }));
         try {
-            const response = await fetch('/api/deepseek', {
+            const response = await fetch('/api/connect-deepseek', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -3376,7 +3376,7 @@ Return JSON: {"ngrams": ["unique phrase 1", "unique phrase 2", ...]}`,
         if (allAutoSuggestKeywords.length === 0) return;
         setIsAutoSuggestLoading(true);
         try {
-            const response = await fetch('/api/deepseek', {
+            const response = await fetch('/api/connect-deepseek', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -3724,7 +3724,7 @@ Return JSON: {"ngrams": ["unique phrase 1", "unique phrase 2", ...]}`,
         setIsGrammarLoading(true);
         setGrammarResults(null);
         try {
-            const response = await fetch('/api/deepseek', {
+            const response = await fetch('/api/connect-deepseek', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -4811,7 +4811,7 @@ BEGIN WRITING THE ARTICLE NOW:`;
                 generatedText = data.text || '';
             } else {
                 // Priority 4: DeepSeek Chat (server-based fallback)
-                const response = await fetch('/api/deepseek', {
+                const response = await fetch('/api/connect-deepseek', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
