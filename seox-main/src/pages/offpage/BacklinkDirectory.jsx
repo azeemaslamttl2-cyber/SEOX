@@ -1,39 +1,5 @@
 import { useState, useCallback } from "react";
-import {
-  Search,
-  Download,
-  Upload,
-  ArrowLeft,
-  ExternalLink,
-  Copy,
-  ChevronDown,
-  Monitor,
-  User,
-  Building2,
-  Wrench,
-  Star,
-  MessageCircle,
-  GraduationCap,
-  Landmark,
-  MessagesSquare,
-  Bookmark,
-  PenTool,
-  FolderOpen,
-  Tag,
-  Briefcase,
-  Megaphone,
-  Link,
-  MapPin,
-  Globe,
-  FileUp,
-  Rocket,
-  BarChart3,
-  Newspaper,
-  Users,
-  Ticket,
-  Coins,
-  Globe2,
-} from "lucide-react";
+import { ArrowLeft, BarChart3, Bookmark, Briefcase, Building2, ChevronDown, Coins, Copy, Download, ExternalLink, FileUp, FolderOpen, Globe, Globe2, GraduationCap, Landmark, Link, Link2, MapPin, Megaphone, MessageCircle, MessagesSquare, Monitor, Newspaper, PenTool, Rocket, Search, Star, Tag, Ticket, Upload, User, Users, Wrench } from "lucide-react";
 import { allBacklinkCategories, totalOpportunities, totalCategories } from "../../data/backlinksData/index.js";
 
 const iconMap = {
@@ -110,35 +76,34 @@ export default function BacklinkDirectory() {
     const cat = allBacklinkCategories[selectedCat];
     const Icon = iconMap[cat.icon] || FolderOpen;
     return (
-      <div className="mx-auto max-w-6xl">
+      <div className="">
         {/* Category Header */}
-        <div className="relative overflow-hidden rounded-3xl border border-white/[0.06] bg-gradient-to-r from-indigo-600 to-violet-600">
-          <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_30%_50%,rgba(255,255,255,0.08),transparent)]" />
-          <div className="relative z-10 p-6">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <button
-                  onClick={() => setSelectedCat(null)}
-                  className="flex h-9 w-9 items-center justify-center rounded-xl bg-white/10 text-white hover:bg-white/20"
-                >
-                  <ArrowLeft className="h-4 w-4" />
-                </button>
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/15">
-                  <Icon className="h-5 w-5 text-white" />
-                </div>
-                <div>
-                  <h2 className="font-display text-xl font-black text-white">{cat.category}</h2>
-                  <p className="text-xs text-white/60">{cat.desc}</p>
-                </div>
+        <div className="edf-hero">
+          <div className="flex flex-wrap items-center justify-between gap-4">
+            <div className="bd-title-row">
+              <button
+                type="button"
+                onClick={() => setSelectedCat(null)}
+                aria-label="Back to all categories"
+                className="ui-button bd-back-button"
+              >
+                <ArrowLeft className="h-4 w-4" />
+              </button>
+              <span className="edf-tile">
+                <Icon className="h-5 w-5" />
+              </span>
+              <div>
+                <h2 className="edf-title font-display">{cat.category}</h2>
+                <p className="edf-description">{cat.desc}</p>
               </div>
-              <div className="flex items-center gap-2">
-                <span className="rounded-full bg-white/15 px-3 py-1 text-xs font-bold text-white">
-                  {cat.totalLinks} total links
-                </span>
-                <button className="flex items-center gap-1.5 rounded-lg bg-white/15 px-3 py-1.5 text-xs font-bold text-white hover:bg-white/25">
-                  <Download className="h-3.5 w-3.5" /> Export
-                </button>
-              </div>
+            </div>
+            <div className="bd-actions">
+              <span className="admin-badge badge-sebt bd-count">
+                {cat.totalLinks} total links
+              </span>
+              <button className="ui-button bd-secondary-button">
+                <Download className="h-3.5 w-3.5" /> Export
+              </button>
             </div>
           </div>
         </div>
@@ -222,28 +187,45 @@ export default function BacklinkDirectory() {
 
   // Category grid view
   return (
-    <div className="mx-auto max-w-6xl">
+    <div className="">
       {/* ─── Hero Header ─── */}
-      <div className="relative overflow-hidden rounded-3xl border border-white/[0.06] bg-gradient-to-r from-indigo-600 to-violet-600">
-        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_70%_30%,rgba(255,255,255,0.1),transparent)]" />
-        <div className="relative z-10 p-6 lg:p-8">
-          <div className="flex items-center justify-between">
+      <div className="edf-hero bd-hero">
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <div className="bd-title-row">
+            <span className="edf-tile">
+              <Link2 className="h-5 w-5" />
+            </span>
             <div>
-              <h1 className="font-display text-2xl font-black text-white">Backlink Directory</h1>
-              <p className="text-sm text-white/60">{totalOpportunities.toLocaleString()} opportunities across {totalCategories} categories</p>
-            </div>
-            <div className="flex items-center gap-3">
-              <span className="rounded-full bg-white/15 px-3 py-1.5 text-xs font-bold text-white">
-                Progress {totalDone}/{totalOpportunities.toLocaleString()} ({Math.round((totalDone / totalOpportunities) * 100)}%)
-              </span>
-              <button className="flex items-center gap-1.5 rounded-lg bg-white/15 px-4 py-2 text-xs font-bold text-white hover:bg-white/25">
-                <Download className="h-3.5 w-3.5" /> Export
-              </button>
+              <h1 className="edf-title font-display">Backlink Directory</h1>
+              <p className="edf-description">
+                {totalOpportunities.toLocaleString()} opportunities across {totalCategories} categories
+              </p>
             </div>
           </div>
-          <button className="mt-4 flex items-center gap-2 rounded-lg bg-emerald-500 px-4 py-2 text-xs font-bold text-white shadow-lg transition hover:bg-emerald-400">
-            <Upload className="h-3.5 w-3.5" /> Import Backlink Report
-          </button>
+          <div className="bd-actions">
+            <button className="ui-button bd-secondary-button">
+              <Upload className="h-3.5 w-3.5" /> Import Backlink Report
+            </button>
+            <button className="ui-button bd-secondary-button">
+              <Download className="h-3.5 w-3.5" /> Export
+            </button>
+          </div>
+        </div>
+
+        <div className="bd-progress">
+          <span className="bd-progress-label">Progress</span>
+          <span className="bd-progress-value">
+            {totalDone}/{totalOpportunities.toLocaleString()}
+          </span>
+          <span className="bd-progress-track">
+            <span
+              className="bd-progress-fill"
+              style={{ width: `${Math.round((totalDone / totalOpportunities) * 100)}%` }}
+            />
+          </span>
+          <span className="bd-progress-pct">
+            {Math.round((totalDone / totalOpportunities) * 100)}%
+          </span>
         </div>
       </div>
 
@@ -282,9 +264,9 @@ export default function BacklinkDirectory() {
             <button
               key={cat.category}
               onClick={() => setSelectedCat(globalIdx)}
-              className="group rounded-2xl border border-white/[0.06] bg-white/[0.02] p-5 text-left transition hover:bg-white/[0.04] hover:border-white/[0.1]"
+              className="backlink-category-card group rounded-2xl border border-white/[0.06] bg-white/[0.02] p-5 text-left transition hover:bg-white/[0.04] hover:border-white/[0.1]"
             >
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-500/10 text-indigo-400 transition group-hover:bg-indigo-500/20">
+              <div className="bd-card-icon">
                 <Icon className="h-5 w-5" />
               </div>
               <h3 className="mt-3 font-display text-sm font-bold text-white/85">{cat.category}</h3>

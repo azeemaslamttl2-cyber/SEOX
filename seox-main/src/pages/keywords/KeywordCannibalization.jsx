@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   AlertCircle,
   Calendar,
@@ -16,6 +16,10 @@ import {
   X,
 } from "lucide-react";
 import { useGscKeywordData } from "../../hooks/useGscKeywordData.js";
+import { useAuth } from "../../context/AuthContext.jsx";
+import { useSyncedKeywordProjectSite } from "../../hooks/useSyncedKeywordProjectSite.js";
+import { useSavedKeywordAnalysis } from "../../hooks/useSavedKeywordAnalysis.js";
+import KeywordPagination from "../../components/keywords/KeywordPagination.jsx";
 import {
   buildCannibalizationRows,
   downloadCsv,
@@ -24,17 +28,31 @@ import {
   formatPctChange,
   getSiteDomain,
 } from "../../lib/keywordTools.js";
+import { saveProjectData } from "../../lib/projectsApi.js";
 
 export default function KeywordCannibalization() {
-  const gsc = useGscKeywordData("keyword-cannibalization");
+  const { user } = useAuth();
+  const savedAnalysis = useSavedKeywordAnalysis("cannibalization");
+  const gsc = useGscKeywordData("keyword-cannibalization", {
+    autoFetch: !savedAnalysis.isLoading && !savedAnalysis.hasSavedData,
+  });
+  const { project, syncProjectForSite } = useSyncedKeywordProjectSite(gsc);
   const [searchTerm, setSearchTerm] = useState("");
   const [sortField, setSortField] = useState("impressions");
   const [sortDirection, setSortDirection] = useState("desc");
   const [showInfo, setShowInfo] = useState(true);
+  const [saveStatus, setSaveStatus] = useState("");
+  const [page, setPage] = useState(1);
+  const savedRows = Array.isArray(savedAnalysis.saved) ? savedAnalysis.saved : [];
+  const sourceCurrentRows = gsc.currentRows.length ? gsc.currentRows : savedAnalysis.saved?.currentRows || [];
+  const sourcePreviousRows = gsc.previousRows.length ? gsc.previousRows : savedAnalysis.saved?.previousRows || [];
+  const selectedSite = gsc.selectedSite || savedAnalysis.saved?.selectedSite || "";
 
   const rows = useMemo(
-    () => buildCannibalizationRows(gsc.currentRows, gsc.previousRows, gsc.selectedSite),
-    [gsc.currentRows, gsc.previousRows, gsc.selectedSite]
+    () => savedRows.length && !sourceCurrentRows.length
+      ? savedRows
+      : buildCannibalizationRows(sourceCurrentRows, sourcePreviousRows, selectedSite),
+    [savedRows, selectedSite, sourceCurrentRows, sourcePreviousRows]
   );
   const filteredRows = useMemo(() => {
     const query = searchTerm.trim().toLowerCase();
@@ -46,6 +64,40 @@ export default function KeywordCannibalization() {
         return (Number(a[sortField] || 0) - Number(b[sortField] || 0)) * direction;
       });
   }, [rows, searchTerm, sortDirection, sortField]);
+  const totalPages = Math.max(1, Math.ceil(filteredRows.length / 20));
+  const visibleRows = filteredRows.slice((page - 1) * 20, page * 20);
+
+  useEffect(() => {
+    setPage(1);
+  }, [project?.id, searchTerm, sortField, sortDirection]);
+
+  useEffect(() => {
+    if (page > totalPages) setPage(totalPages);
+  }, [page, totalPages]);
+
+  async function persistCannibalization(current, previous, selectedSite) {
+    const userId = user?.uid || user?.id || "";
+    const projectId = project?.id || project?.project_id || "";
+    if (!userId) throw new Error("You must be signed in to save Cannibalization results.");
+    if (!projectId) throw new Error("Select a project before applying Cannibalization results.");
+
+    const result = buildCannibalizationRows(current || [], previous || [], selectedSite || "");
+    const response = await saveProjectData(userId, {
+      projectId,
+      key: "cannibalization",
+      value: result,
+    });
+    if (!response?.success) throw new Error("Cannibalization results could not be saved.");
+    setSaveStatus("Cannibalization results saved.");
+  }
+
+  async function applyCannibalization() {
+    setSaveStatus("");
+    await gsc.fetchAllData({
+      onSuccess: ({ current, previous, selectedSite }) =>
+        persistCannibalization(current, previous, selectedSite),
+    });
+  }
 
   function handleSort(field) {
     if (sortField === field) {
@@ -74,85 +126,90 @@ export default function KeywordCannibalization() {
     ]);
   }
 
-  if (gsc.isCheckingConnection) {
+  if (savedAnalysis.isLoading || gsc.isCheckingConnection) {
     return (
-      <div className="flex min-h-[360px] items-center justify-center">
-        <div className="text-center">
-          <Loader2 className="mx-auto h-8 w-8 animate-spin text-blue-400" />
-          <p className="mt-3 text-sm text-white/35">Checking Search Console connection...</p>
+      <div className="keyword-cannibalization-page kw-page space-y-5">
+        <Hero />
+        <div className="kw-connect-card kw-loading-card">
+          <Loader2 className="h-7 w-7 animate-spin" />
+          <p className="kw-connect-text">Checking Search Console connection...</p>
         </div>
       </div>
     );
   }
 
-  if (!gsc.isSignedIn) {
+  if (!gsc.isSignedIn && !savedAnalysis.hasSavedData) {
     return (
-      <div className="mx-auto max-w-[900px] space-y-5">
-        <Header />
-        <div className="rounded-2xl border border-white/[0.08] bg-[#0d1117] p-8 text-center">
-          <Globe className="mx-auto h-12 w-12 text-white/20" />
-          <h2 className="mt-4 text-lg font-bold text-white/80">Connect Google Search Console</h2>
-          <p className="mx-auto mt-2 max-w-md text-sm text-white/35">
-            AI Smart Seo needs query and page data to detect when multiple URLs compete for the same keyword.
+      <div className="keyword-cannibalization-page kw-page space-y-5">
+        <Hero />
+        <div className="kw-connect-card">
+          <span className="kw-connect-icon">
+            <Globe className="h-6 w-6" />
+          </span>
+          <h2 className="kw-connect-title">Connect Google Search Console</h2>
+          <p className="kw-connect-text">
+            PGC needs query and page data to detect when multiple URLs compete for the same keyword.
           </p>
           <button
             onClick={gsc.handleSignIn}
-            className="mt-6 inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-rose-500 to-pink-500 px-6 py-3 text-sm font-bold text-white shadow-lg"
+            className="ui-button ui-button-primary kw-connect-button"
           >
             <LogIn className="h-4 w-4" />
             Connect Search Console
           </button>
-          <p className="mx-auto mt-4 max-w-lg text-[11px] text-white/20">
-            Google OAuth callback URL: <span className="font-mono text-white/35">{gsc.redirectUri}</span>
+          <p className="kw-connect-meta">
+            Google OAuth callback URL: <span className="kw-connect-uri">{gsc.redirectUri}</span>
           </p>
-          {gsc.error && <p className="mt-4 text-xs font-semibold text-rose-300">{gsc.error}</p>}
+          {gsc.error && <p className="kw-connect-error">{gsc.error}</p>}
         </div>
       </div>
     );
   }
 
   return (
-    <div className="mx-auto max-w-[1100px] space-y-5">
-      <div className="flex items-center justify-between gap-3">
+    <div className="keyword-cannibalization-page kw-page space-y-5">
+      <div className="kw-hero">
+        <div className="flex flex-wrap items-center justify-between gap-4">
         <Header />
-        <div className="flex items-center gap-2">
+        <div className="flex flex-shrink-0 items-center gap-2">
           <button
             onClick={exportCsv}
             disabled={!filteredRows.length}
-            className="flex items-center gap-2 rounded-lg border border-white/[0.08] bg-white/[0.03] px-4 py-2 text-xs font-semibold text-white/50 transition hover:text-white/70 disabled:opacity-40"
+            className="ui-button gke-secondary"
           >
             <Download className="h-3.5 w-3.5" /> Export
           </button>
           <button
             onClick={gsc.handleSignOut}
-            className="flex items-center gap-2 rounded-lg border border-white/[0.08] bg-white/[0.03] px-3 py-2 text-xs font-semibold text-white/40 transition hover:text-rose-300"
+            className="ui-button gke-disconnect"
           >
             <LogOut className="h-3.5 w-3.5" />
             Disconnect
           </button>
         </div>
+        </div>
       </div>
 
       {showInfo && (
-        <div className="flex items-start gap-3 rounded-xl border border-white/[0.08] bg-[#0d1117] px-4 py-3">
-          <Info className="mt-0.5 h-4 w-4 flex-shrink-0 text-white/30" />
-          <p className="flex-1 text-xs text-white/50">
-            <span className="font-semibold text-white/70">About Keyword Cannibalization.</span>{" "}
+        <div className="app-alert app-alert-info kc-info">
+          <Info className="mt-0.5 h-4 w-4 flex-shrink-0" />
+          <p className="flex-1">
+            <span className="kc-info-lead">About Keyword Cannibalization.</span>{" "}
             Keyword cannibalization happens when two or more pages rank for the same query, splitting impressions and confusing search intent.
           </p>
-          <button onClick={() => setShowInfo(false)} className="text-white/20 hover:text-white/40">
+          <button onClick={() => setShowInfo(false)} className="gke-alert-close" aria-label="Dismiss">
             <X className="h-3.5 w-3.5" />
           </button>
         </div>
       )}
 
-      <div className="rounded-2xl border border-white/[0.08] bg-[#0d1117] p-4">
+      <div className="keyword-cannibalization-filters gke-filters">
         <div className="flex flex-wrap items-center gap-3">
-          <div className="flex min-w-[260px] flex-1 items-center gap-2 rounded-xl border border-white/[0.08] bg-[#010409] px-4 py-2.5">
+          <div className="flex min-w-[260px] flex-1 items-center gap-2 gke-field">
             <Globe className="h-4 w-4 text-blue-400" />
             <select
               value={gsc.selectedSite}
-              onChange={(event) => gsc.setSelectedSite(event.target.value)}
+              onChange={(event) => syncProjectForSite(event.target.value)}
               className="w-full bg-transparent text-sm text-white/60 focus:outline-none"
             >
               {gsc.sites.map((site) => (
@@ -165,14 +222,12 @@ export default function KeywordCannibalization() {
           <DatePill start={gsc.currentStart} end={gsc.currentEnd} />
           <span className="text-xs text-white/20">vs</span>
           <DatePill start={gsc.previousStart} end={gsc.previousEnd} muted />
-          <div className="flex items-center gap-0.5 rounded-lg bg-white/[0.04] p-0.5">
+          <div className="admin-tabs gke-presets">
             {gsc.datePresets.map((preset) => (
               <button
                 key={preset.id}
                 onClick={() => gsc.setDatePreset(preset.id)}
-                className={`rounded-md px-2.5 py-1.5 text-[10px] font-bold transition ${
-                  gsc.datePreset === preset.id ? "bg-blue-500 text-white" : "text-white/30 hover:text-white/50"
-                }`}
+                className={`admin-tab ${gsc.datePreset === preset.id ? "active" : ""}`}
               >
                 {preset.label}
               </button>
@@ -195,43 +250,44 @@ export default function KeywordCannibalization() {
             }}
           />
           <button
-            onClick={gsc.fetchAllData}
+            onClick={applyCannibalization}
             disabled={!gsc.selectedSite || gsc.isLoading}
-            className="flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-blue-500 to-indigo-500 px-4 py-2.5 text-xs font-bold text-white shadow-md disabled:cursor-not-allowed disabled:opacity-60"
+            className="ui-button ui-button-primary gke-apply"
           >
             {gsc.isLoading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <RefreshCw className="h-3.5 w-3.5" />}
             Apply
           </button>
         </div>
+        {saveStatus && <p className="mt-3 text-xs font-semibold text-emerald-300">{saveStatus}</p>}
       </div>
 
       {gsc.error && (
-        <div className="flex items-center gap-2 rounded-xl border border-rose-500/20 bg-rose-500/[0.05] px-4 py-3 text-xs text-rose-200">
+        <div className="app-alert app-alert-error">
           <AlertCircle className="h-4 w-4" />
           <span className="flex-1">{gsc.error}</span>
-          <button onClick={() => gsc.setError("")} className="text-rose-200/60 hover:text-rose-100">
+          <button onClick={() => gsc.setError("")} className="gke-alert-close" aria-label="Dismiss">
             <X className="h-3.5 w-3.5" />
           </button>
         </div>
       )}
 
-      <div className="rounded-2xl border border-white/[0.08] bg-[#0d1117]">
+      <div className="keyword-cannibalization-results kw-results">
         <div className="flex items-center justify-between gap-3 border-b border-white/[0.06] px-5 py-3">
           <h3 className="text-sm font-bold text-white/70">
             Keyword Cannibalization <span className="text-white/30">({filteredRows.length})</span>
           </h3>
-          <div className="flex items-center gap-2 rounded-lg border border-white/[0.08] bg-[#010409] px-3 py-1.5">
+          <div className="kw-search">
             <Search className="h-3.5 w-3.5 text-white/25" />
             <input
               value={searchTerm}
               onChange={(event) => setSearchTerm(event.target.value)}
-              className="w-40 bg-transparent text-xs text-white/60 placeholder:text-white/20 focus:outline-none"
+              className="kw-search-input w-40"
               placeholder="Filter keywords..."
             />
           </div>
         </div>
 
-        <div className="grid grid-cols-[2fr_0.5fr_0.9fr_0.8fr_0.7fr_0.7fr_0.7fr_0.8fr] gap-2 border-b border-white/[0.06] bg-white/[0.01] px-5 py-2.5">
+        <div className="keyword-cannibalization-table-header grid grid-cols-[2fr_0.5fr_0.9fr_0.8fr_0.7fr_0.7fr_0.7fr_0.8fr] gap-2 border-b border-white/[0.06] bg-white/[0.01] px-5 py-2.5">
           <TH label="Keyword" onClick={() => handleSort("keyword")} />
           <TH label="Pages" onClick={() => handleSort("pageCount")} />
           <TH label="Impressions" onClick={() => handleSort("impressions")} />
@@ -247,15 +303,15 @@ export default function KeywordCannibalization() {
             <Loader2 className="h-6 w-6 animate-spin text-blue-400" />
           </div>
         ) : filteredRows.length ? (
-          filteredRows.map((row, index) => (
+          visibleRows.map((row, index) => (
             <div
               key={row.keyword}
-              className={`grid grid-cols-[2fr_0.5fr_0.9fr_0.8fr_0.7fr_0.7fr_0.7fr_0.8fr] gap-2 px-5 py-3 transition hover:bg-white/[0.02] ${
+              className={`keyword-cannibalization-row grid grid-cols-[2fr_0.5fr_0.9fr_0.8fr_0.7fr_0.7fr_0.7fr_0.8fr] gap-2 px-5 py-3 transition hover:bg-white/[0.02] ${
                 index < filteredRows.length - 1 ? "border-b border-white/[0.03]" : ""
               }`}
             >
               <div className="min-w-0">
-                <span className="block truncate text-sm text-blue-300" title={row.keyword}>{row.keyword}</span>
+                <span className="kc-keyword block truncate" title={row.keyword}>{row.keyword}</span>
                 <div className="mt-1 space-y-0.5">
                   {row.pages.slice(0, 4).map((page) => (
                     <a
@@ -263,7 +319,7 @@ export default function KeywordCannibalization() {
                       href={page.url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="flex min-w-0 items-center gap-1 truncate text-[10px] text-white/35 hover:text-blue-300"
+                      className="kc-page-link flex min-w-0 items-center gap-1 truncate"
                       title={page.url}
                     >
                       <span className="truncate">{page.display}</span>
@@ -272,14 +328,14 @@ export default function KeywordCannibalization() {
                   ))}
                 </div>
               </div>
-              <span className="w-fit rounded-full bg-amber-500/15 px-2 py-0.5 text-[10px] font-bold text-amber-300">{row.pageCount}</span>
-              <span className="font-mono text-xs text-white/60">{formatNumber(row.impressions)}</span>
+              <span className="kc-pages">{row.pageCount}</span>
+              <span className="kc-num">{formatNumber(row.impressions)}</span>
               <Pct value={row.impressionsPct} />
-              <span className="font-mono text-xs text-white/60">{row.position.toFixed(1)}</span>
-              <span className={`text-[10px] font-bold ${row.positionChange > 0 ? "text-emerald-400" : row.positionChange < 0 ? "text-rose-400" : "text-white/30"}`}>
+              <span className="kc-num">{row.position.toFixed(1)}</span>
+              <span className={`kc-delta ${row.positionChange > 0 ? "is-up" : row.positionChange < 0 ? "is-down" : ""}`}>
                 {row.positionChange > 0 ? "+" : ""}{row.positionChange.toFixed(1)}
               </span>
-              <span className="font-mono text-xs text-white/60">{formatNumber(row.clicks)}</span>
+              <span className="kc-num">{formatNumber(row.clicks)}</span>
               <Pct value={row.clicksPct} />
             </div>
           ))
@@ -287,10 +343,11 @@ export default function KeywordCannibalization() {
           <div className="py-16 text-center">
             <AlertCircle className="mx-auto h-8 w-8 text-white/[0.06]" />
             <p className="mt-3 text-sm text-white/25">
-              {gsc.currentRows.length ? "No keyword cannibalization found." : "Connect a property and apply a date range to analyze cannibalization."}
+              {sourceCurrentRows.length ? "No keyword cannibalization found." : "Connect a property and apply a date range to analyze cannibalization."}
             </p>
           </div>
         )}
+        <KeywordPagination page={page} setPage={setPage} totalPages={totalPages} total={filteredRows.length} />
       </div>
     </div>
   );
@@ -298,13 +355,25 @@ export default function KeywordCannibalization() {
 
 function Header() {
   return (
-    <div className="flex items-center gap-3">
-      <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-rose-500/15">
-        <Copy className="h-5 w-5 text-rose-400" />
-      </div>
+    <div className="kw-title-row">
+      <span className="gke-icon">
+        <Copy className="h-5 w-5" />
+      </span>
       <div>
-        <h1 className="font-display text-xl font-black text-white">Keyword Cannibalization</h1>
-        <p className="text-xs text-white/35">Find queries where multiple URLs compete for the same ranking opportunity.</p>
+        <h1 className="kw-title font-display">Keyword Cannibalization</h1>
+        <p className="kw-description">Find queries where multiple URLs compete for the same ranking opportunity.</p>
+      </div>
+    </div>
+  );
+}
+
+/* Banner shell for the states that carry no header actions, so the
+   disconnected and loading screens keep the same banner as the loaded one. */
+function Hero() {
+  return (
+    <div className="kw-hero">
+      <div className="flex flex-wrap items-center justify-between gap-4">
+        <Header />
       </div>
     </div>
   );
@@ -312,7 +381,7 @@ function Header() {
 
 function DatePill({ end, muted, start }) {
   return (
-    <div className="flex items-center gap-2 rounded-xl border border-white/[0.08] bg-[#010409] px-4 py-2.5">
+    <div className="flex items-center gap-2 gke-field">
       <Calendar className="h-3.5 w-3.5 text-white/30" />
       <span className={`text-xs ${muted ? "text-white/35" : "text-white/50"}`}>
         {formatDateShort(start)} - {formatDateShort(end)}
@@ -323,13 +392,13 @@ function DatePill({ end, muted, start }) {
 
 function DateInput({ label, onChange, value }) {
   return (
-    <label className="flex items-center gap-2 rounded-xl border border-white/[0.08] bg-[#010409] px-3 py-2">
+    <label className="gke-field gke-datefield">
       <span className="text-[10px] font-bold uppercase tracking-wide text-white/25">{label}</span>
       <input
         type="date"
         value={value}
         onChange={(event) => onChange(event.target.value)}
-        className="bg-transparent text-xs text-white/55 outline-none [color-scheme:dark]"
+        className="gke-date-input"
       />
     </label>
   );
@@ -340,7 +409,7 @@ function TH({ label, onClick }) {
     <button
       onClick={onClick}
       disabled={!onClick}
-      className="text-left text-[10px] font-bold uppercase tracking-wider text-white/30 hover:text-white/50 disabled:hover:text-white/30"
+      className="gke-th"
     >
       {label}
       {onClick && <ChevronDown className="ml-1 inline h-3 w-3 opacity-40" />}

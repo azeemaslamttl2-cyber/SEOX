@@ -2,8 +2,8 @@ import ReportShell, { StatCard, ChartCard } from "../../../components/auditor/Re
 import DonutChart from "../../../components/auditor/DonutChart.jsx";
 import { useAuditData } from "../../../hooks/useAuditData.js";
 import { useCrawl } from "../../../context/CrawlContext.jsx";
-import { issueGroupsForCategory, issueRowsForGroups, TrackedIssuesPanel } from "./ReportInsights.jsx";
-import { htmlRows } from "./liveReportData.js";
+import { issueGroupsForCategory, issueRowsForGroups, TrackedIssuesPanel } from "../../../lib/auditor/reports/ReportInsights.jsx";
+import { htmlRows } from "../../../lib/auditor/reports/liveReportData.js";
 
 export default function LocalizationReport() {
   const { issueCategories } = useAuditData();

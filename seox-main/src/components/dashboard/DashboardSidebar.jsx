@@ -31,9 +31,7 @@ import {
   Users,
   Network,
   CreditCard,
-  Youtube,
-  Database,
-  Target,
+  BrainCircuit,
 } from "lucide-react";
 
 const nav = [
@@ -54,14 +52,12 @@ const nav = [
       { label: "Backlinks Audit", to: "/tech-seo/backlinks", icon: Link2 },
       { label: "Duplicate Checker", to: "/tech-seo/duplicate", icon: Copy },
       { label: "Plagiarism Checker", to: "/tech-seo/plagiarism", icon: FileSearch },
-      { label: "Screaming Frog", to: "/tech-seo/screaming-frog", icon: FileSearch },
     ],
   },
   {
     section: "Search Console",
     items: [
       { label: "GSC Insights", to: "/gsc", icon: BarChart3 },
-      { label: "Bulk Analysis", to: "/gsc/bulk-analysis", icon: BarChart3 },
       { label: "GSC Audit", to: "/tech-seo/gsc-audit", icon: BarChart3 },
       { label: "Bing Webmaster", to: "/tech-seo/bing", icon: Globe2 },
     ],
@@ -79,8 +75,6 @@ const nav = [
       { label: "Backlink Cleaner", to: "/off-page/backlink-cleaner", icon: Eraser },
       { label: "Backlink Indexer", to: "/off-page/backlink-indexer", icon: FolderSearch },
       { label: "Backlink Directory", to: "/off-page/backlink-directory", icon: Boxes },
-      { label: "AI Link Builder", to: "/off-page/ai-link-builder", icon: Link2 },
-      { label: "CSV Generator", to: "/off-page/csv-generator", icon: Database },
     ],
   },
   {
@@ -89,9 +83,6 @@ const nav = [
       { label: "Keyword Research", to: "/keywords/research", icon: Search },
       { label: "Suggest Keywords", to: "/keywords/suggest", icon: Lightbulb },
       { label: "Ubersuggest", to: "/keywords/ubersuggest", icon: Sparkles },
-      { label: "New Keywords", to: "/keywords/new", icon: TrendingUp },
-      { label: "Branded Keywords", to: "/keywords/branded", icon: Hash },
-      { label: "SERP Checker", to: "/keywords/serp-checker", icon: Search },
       { label: "Low Hanging", to: "/keywords/low-hanging", icon: TrendingUp },
       { label: "Lost Keywords", to: "/keywords/lost", icon: Search },
       { label: "Cannibalization", to: "/keywords/cannibalization", icon: Diff },
@@ -104,8 +95,6 @@ const nav = [
       { label: "Content Optimization", to: "/content/optimization", icon: PenTool },
       { label: "Entities Extractor", to: "/content/entities-extractor", icon: Hash },
       { label: "NLP Extractor", to: "/content/nlp", icon: Wand2 },
-      { label: "Semantic Generator", to: "/content/semantic-generator", icon: Zap },
-      { label: "Content Analyzer", to: "/content/content-analyzer", icon: Globe2 },
     ],
   },
   {
@@ -124,41 +113,20 @@ const nav = [
       { label: "Brand Sentiment", to: "/geo/brand-sentiment", icon: Users },
       { label: "AI Citation Flow", to: "/geo/citation-flow", icon: Network },
       { label: "AI Chat Console", to: "/geo/ai-chat", icon: MessageSquare },
-      { label: "LLMs.txt Generator", to: "/geo/llms-generator", icon: PenTool },
-      { label: "AI Model Index Checker", to: "/geo/ai-model-checker", icon: Bot },
-      { label: "AI Model Compatibility", to: "/geo/ai-compatibility", icon: ShieldCheck },
-    ],
-  },
-  {
-    section: "Schema SEO",
-    items: [
-      { label: "Schema Checker", to: "/schema-seo/competitor-schema", icon: Boxes },
-    ],
-  },
-  {
-    section: "Local SEO",
-    items: [
-      { label: "Lead Finder", to: "/local-seo/lead-finder", icon: Target },
-      { label: "Local Expired Finder", to: "/local-seo/local-expired-finder", icon: Globe2 },
-    ],
-  },
-  {
-    section: "YouTube SEO",
-    items: [
-      { label: "YouTube SEO Checker", to: "/youtube/seo-checker", icon: Youtube },
     ],
   },
   {
     section: "Settings",
     items: [
       { label: "Stripe", to: "/settings/stripe", icon: CreditCard },
+      { label: "DeepSeek API", to: "/settings/deepseek", icon: BrainCircuit },
     ],
   },
 ];
 
 export default function DashboardSidebar() {
   return (
-    <aside className="sticky top-0 hidden h-screen w-[232px] flex-shrink-0 overflow-y-auto border-r border-white/10 bg-ink-900/60 px-3 py-5 md:block no-scrollbar">
+    <aside className="app-sidebar sticky top-0 hidden h-screen w-[232px] flex-shrink-0 overflow-y-auto border-r border-white/10 bg-ink-900/60 px-3 py-5 md:block no-scrollbar">
       <nav className="space-y-5">
         {nav.map((section) => (
           <div key={section.section}>

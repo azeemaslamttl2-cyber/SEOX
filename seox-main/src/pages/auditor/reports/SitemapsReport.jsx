@@ -2,7 +2,7 @@ import ReportShell, { StatCard, ChartCard } from "../../../components/auditor/Re
 import DonutChart from "../../../components/auditor/DonutChart.jsx";
 import { useAuditData } from "../../../hooks/useAuditData.js";
 import { useCrawl } from "../../../context/CrawlContext.jsx";
-import { htmlRows, safeSegments } from "./liveReportData.js";
+import { htmlRows, safeSegments } from "../../../lib/auditor/reports/liveReportData.js";
 
 export default function SitemapsReport() {
   const { issueCategories } = useAuditData();
@@ -30,7 +30,7 @@ export default function SitemapsReport() {
     .map((row, index) => ({
       label: row.title,
       value: Number(row.crawled || row.count || 0),
-      color: ["#f43f5e", "#f97316", "#fbbf24", "#60a5fa"][index % 4],
+      color: ["#c76c61", "#df3c27", "#ffc600", "#4197cb"][index % 4],
     }));
 
   return (
@@ -47,7 +47,7 @@ export default function SitemapsReport() {
           <DonutChart
             segments={[
               { label: "In sitemap", value: inSitemap, color: "#34d399" },
-              { label: "Not in sitemap", value: notInSitemap, color: "#f97316" },
+              { label: "Not in sitemap", value: notInSitemap, color: "#df3c27" },
             ]}
             size={170}
           />

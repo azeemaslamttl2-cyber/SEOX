@@ -62,6 +62,7 @@ import BacklinksAudit from "./pages/techseo/BacklinksAudit.jsx";
 import DuplicateChecker from "./pages/techseo/DuplicateChecker.jsx";
 import PlagiarismChecker from "./pages/techseo/PlagiarismChecker.jsx";
 import SemanticAudit from "./pages/techseo/SemanticAudit.jsx";
+import WordPressSecurity from "./pages/techseo/WordPressSecurity.jsx";
 import OnPageSeoLayout from "./layouts/OnPageSeoLayout.jsx";
 import OnPageAnalyzer from "./pages/onpage/OnPageAnalyzer.jsx";
 import OffPageSeoLayout from "./layouts/OffPageSeoLayout.jsx";
@@ -127,6 +128,19 @@ import AdminNiches from "./pages/admin/AdminNiches.jsx";
 import AdminAffiliates from "./pages/admin/AdminAffiliates.jsx";
 import AdminStripe from "./pages/admin/AdminStripe.jsx";
 import AdminApis from "./pages/admin/AdminApis.jsx";
+import GbpConnect from "./pages/gbp/GbpConnect.jsx";
+import GbpOverview from "./pages/gbp/GbpOverview.jsx";
+import GbpOAuthCallback from "./pages/gbp/GbpOAuthCallback.jsx";
+import GbpProfile from "./pages/gbp/GbpProfile.jsx";
+import GbpAudit from "./pages/gbp/GbpAudit.jsx";
+import GbpPosts from "./pages/gbp/GbpPosts.jsx";
+import GbpAutomation from "./pages/gbp/GbpAutomation.jsx";
+import GbpReviews from "./pages/gbp/GbpReviews.jsx";
+import GbpInsights from "./pages/gbp/GbpInsights.jsx";
+import GbpQanda from "./pages/gbp/GbpQanda.jsx";
+import GbpRecommendations from "./pages/gbp/GbpRecommendations.jsx";
+import GbpHistory from "./pages/gbp/GbpHistory.jsx";
+import GbpOperations from "./pages/gbp/GbpOperations.jsx";
 
 // Next renders App.jsx directly (without src/main.jsx), so install the API
 // authorization wrapper here as well as in the Vite entry point.
@@ -273,6 +287,16 @@ export default function App() {
               <Route path="/auditor/*" element={<Navigate to="/auditor" replace />} />
             </Route>
 
+            {/* Google Business Profile OAuth return */}
+            <Route
+              path="/gbp/oauth-callback"
+              element={
+                <ProtectedRoute>
+                  <GbpOAuthCallback />
+                </ProtectedRoute>
+              }
+            />
+
             {/* GSC Insights */}
             <Route
               path="/gsc/oauth-callback"
@@ -322,6 +346,7 @@ export default function App() {
               <Route path="/tech-seo/duplicate" element={<DuplicateChecker />} />
               <Route path="/tech-seo/plagiarism" element={<PlagiarismChecker />} />
               <Route path="/tech-seo/screaming-frog" element={<ScreamingFrogAnalyzer />} />
+              <Route path="/tech-seo/wordpress-security" element={<WordPressSecurity />} />
               <Route path="/tech-seo" element={<Navigate to="/tech-seo/eeat" replace />} />
               <Route path="/tech-seo/*" element={<Navigate to="/tech-seo/eeat" replace />} />
             </Route>
@@ -444,10 +469,24 @@ export default function App() {
                 </ProtectedRoute>
               }
             >
+              <Route path="/local-seo/gbp" element={<GbpConnect />} />
+              <Route path="/local-seo/gbp/overview" element={<GbpOverview />} />
+              <Route path="/local-seo/gbp/profile" element={<GbpProfile />} />
+              <Route path="/local-seo/gbp/audit" element={<GbpAudit />} />
+              <Route path="/local-seo/gbp/posts" element={<GbpPosts />} />
+              <Route path="/local-seo/gbp/reviews" element={<GbpReviews />} />
+              <Route path="/local-seo/gbp/insights" element={<GbpInsights />} />
+              <Route path="/local-seo/gbp/qanda" element={<GbpQanda />} />
+              <Route path="/local-seo/gbp/recommendations" element={<GbpRecommendations />} />
+              <Route path="/local-seo/gbp/history" element={<GbpHistory />} />
+              <Route path="/local-seo/gbp/operations" element={<GbpOperations />} />
+              <Route path="/local-seo/gbp/automation" element={<GbpAutomation />} />
               <Route path="/local-seo/image-geo-tagger" element={<ImageGeoTagger />} />
               <Route path="/local-seo/local-image-geo-tagger" element={<Navigate to="/local-seo/image-geo-tagger" replace />} />
-              <Route path="/local-seo/rank-grid-pro" element={<RankGridPro />} />                <Route path="/local-seo/lead-finder" element={<LeadFinderTool />} />
-                <Route path="/local-seo/local-expired-finder" element={<LocalExpiredFinder />} />              <Route path="/local-seo" element={<Navigate to="/local-seo/image-geo-tagger" replace />} />
+              <Route path="/local-seo/rank-grid-pro" element={<RankGridPro />} />
+              <Route path="/local-seo/lead-finder" element={<LeadFinderTool />} />
+              <Route path="/local-seo/local-expired-finder" element={<LocalExpiredFinder />} />
+              <Route path="/local-seo" element={<Navigate to="/local-seo/image-geo-tagger" replace />} />
               <Route path="/local-seo/*" element={<Navigate to="/local-seo/image-geo-tagger" replace />} />
             </Route>
 

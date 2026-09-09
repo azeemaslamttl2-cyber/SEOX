@@ -1,11 +1,10 @@
+"use client";
+
 import { lazy, Suspense } from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { installAuthenticatedApiFetch } from "./lib/authenticatedApiFetch.js";
 import { AuthProvider } from "./context/AuthContext.jsx";
 import { CrawlProvider } from "./context/CrawlContext.jsx";
-import {
-  NotificationViewport,
-  NotificationsProvider,
-} from "./context/NotificationsContext.jsx";
 import RootLayout from "./layouts/RootLayout.jsx";
 import AuthLayout from "./layouts/AuthLayout.jsx";
 import AuditorLayout from "./layouts/AuditorLayout.jsx";
@@ -16,6 +15,7 @@ import Login from "./pages/Login.jsx";
 import Register from "./pages/Register.jsx";
 import Dashboard from "./pages/Dashboard.jsx";
 import StripeSettings from "./pages/settings/StripeSettings.jsx";
+import DeepSeekSettings from "./pages/settings/DeepSeekSettings.jsx";
 import AuditorOverview from "./pages/auditor/AuditorOverview.jsx";
 import AuditorIssues from "./pages/auditor/AuditorIssues.jsx";
 import AuditorIssueDetail from "./pages/auditor/AuditorIssueDetail.jsx";
@@ -53,8 +53,10 @@ import GscOAuthCallback from "./pages/gsc/GscOAuthCallback.jsx";
 import TechSeoLayout from "./layouts/TechSeoLayout.jsx";
 import EeatAudit from "./pages/techseo/EeatAudit.jsx";
 import RobotsAnalyzer from "./pages/techseo/RobotsAnalyzer.jsx";
+import WordPressSecurity from "./pages/techseo/WordPressSecurity.jsx";
 import CrawlOptimization from "./pages/techseo/CrawlOptimization.jsx";
 import SpeedOptimization from "./pages/techseo/SpeedOptimization.jsx";
+import W3CValidator from "./pages/techseo/W3CValidator.jsx";
 import GscAudit from "./pages/techseo/GscAudit.jsx";
 import BingWebmaster from "./pages/techseo/BingWebmaster.jsx";
 import BacklinksAudit from "./pages/techseo/BacklinksAudit.jsx";
@@ -110,7 +112,6 @@ import SitemapGenerator from "./pages/seotools/SitemapGenerator.jsx";
 import RobotsGenerator from "./pages/seotools/RobotsGenerator.jsx";
 import XmlSitemapExtractor from "./pages/seotools/XmlSitemapExtractor.jsx";
 import BulkMetaExtractor from "./pages/seotools/BulkMetaExtractor.jsx";
-import BulkCsvReporter from "./pages/seotools/BulkCsvReporter.jsx";
 import BrandRadarLayout from "./layouts/BrandRadarLayout.jsx";
 import BrandRadar from "./pages/brandradar/BrandRadar.jsx";
 import BrandRadarOverview from "./pages/brandradar/BrandRadarOverview.jsx";
@@ -128,6 +129,10 @@ import AdminAffiliates from "./pages/admin/AdminAffiliates.jsx";
 import AdminStripe from "./pages/admin/AdminStripe.jsx";
 import AdminApis from "./pages/admin/AdminApis.jsx";
 
+// Next renders App.jsx directly (without src/main.jsx), so install the API
+// authorization wrapper here as well as in the Vite entry point.
+installAuthenticatedApiFetch();
+
 const SchemaGenerator = lazy(() => import("./semanticsx/components/SchemaGenerator.jsx"));
 const CompetitorSchemaChecker = lazy(() => import("./semanticsx/components/CompetitorSchemaChecker.jsx"));
 const SemanticResourcesPage = lazy(() => import("./semanticsx/components/SemanticResourcesPage.jsx"));
@@ -144,9 +149,22 @@ const YandexBulkAnalysisPage = lazy(() => import("./semanticsx/components/Yandex
 const ScreamingFrogAnalyzer = lazy(() => import("./semanticsx/components/ScreamingFrogAnalyzer.jsx"));
 const AIBacklinkGenerator = lazy(() => import("./semanticsx/components/AIBacklinkGenerator.jsx"));
 const CsvGenerator = lazy(() => import("./semanticsx/components/CsvGenerator.jsx"));
-const SeoTools = lazy(() => import("./semanticsx/components/SEOTools.jsx"));
+const SEOTools = lazy(() => import("./semanticsx/components/SEOTools.jsx"));
 const LeadFinderTool = lazy(() => import("./semanticsx/components/LeadFinderTool.jsx"));
 const LocalExpiredFinder = lazy(() => import("./semanticsx/components/LocalExpiredFinder.jsx"));
+const GbpConnect = lazy(() => import("./pages/gbp/GbpConnect.jsx"));
+const GbpOverview = lazy(() => import("./pages/gbp/GbpOverview.jsx"));
+const GbpOAuthCallback = lazy(() => import("./pages/gbp/GbpOAuthCallback.jsx"));
+const GbpProfile = lazy(() => import("./pages/gbp/GbpProfile.jsx"));
+const GbpAudit = lazy(() => import("./pages/gbp/GbpAudit.jsx"));
+const GbpPosts = lazy(() => import("./pages/gbp/GbpPosts.jsx"));
+const GbpAutomation = lazy(() => import("./pages/gbp/GbpAutomation.jsx"));
+const GbpReviews = lazy(() => import("./pages/gbp/GbpReviews.jsx"));
+const GbpInsights = lazy(() => import("./pages/gbp/GbpInsights.jsx"));
+const GbpQanda = lazy(() => import("./pages/gbp/GbpQanda.jsx"));
+const GbpRecommendations = lazy(() => import("./pages/gbp/GbpRecommendations.jsx"));
+const GbpHistory = lazy(() => import("./pages/gbp/GbpHistory.jsx"));
+const GbpOperations = lazy(() => import("./pages/gbp/GbpOperations.jsx"));
 const SemanticKeywordAnalyzer = lazy(() => import("./semanticsx/components/SemanticKeywordAnalyzer.jsx"));
 const CompetitorContentAnalyzer = lazy(() => import("./semanticsx/components/CompetitorContentAnalyzer.jsx"));
 const YoutubeSEOChecker = lazy(() => import("./semanticsx/components/YoutubeSEOChecker.jsx"));
@@ -162,12 +180,10 @@ function RouteLoading() {
 export default function App() {
   return (
     <AuthProvider>
-      <NotificationsProvider>
-        <CrawlProvider>
-          <BrowserRouter>
-            <NotificationViewport />
-            <Suspense fallback={<RouteLoading />}>
-              <Routes>
+      <CrawlProvider>
+        <BrowserRouter>
+          <Suspense fallback={<RouteLoading />}>
+            <Routes>
             {/* Public site (with Navbar + Footer) */}
             <Route element={<RootLayout />}>
               <Route path="/" element={<HomePage />} />
@@ -182,8 +198,9 @@ export default function App() {
               }
             >
               <Route path="/dashboard" element={<Dashboard />} />
-              <Route path="/settings" element={<Navigate to="/settings/stripe" replace />} />
+              <Route path="/settings" element={<Navigate to="/settings/deepseek" replace />} />
               <Route path="/settings/stripe" element={<StripeSettings />} />
+              <Route path="/settings/deepseek" element={<DeepSeekSettings />} />
             </Route>
 
             {/* Admin Panel */}
@@ -270,6 +287,16 @@ export default function App() {
               <Route path="/auditor/*" element={<Navigate to="/auditor" replace />} />
             </Route>
 
+            {/* Google Business Profile OAuth return */}
+            <Route
+              path="/gbp/oauth-callback"
+              element={
+                <ProtectedRoute>
+                  <GbpOAuthCallback />
+                </ProtectedRoute>
+              }
+            />
+
             {/* GSC Insights */}
             <Route
               path="/gsc/oauth-callback"
@@ -312,12 +339,14 @@ export default function App() {
               <Route path="/tech-seo/robots" element={<RobotsAnalyzer />} />
               <Route path="/tech-seo/crawl" element={<CrawlOptimization />} />
               <Route path="/tech-seo/speed" element={<SpeedOptimization />} />
+              <Route path="/tech-seo/w3c" element={<W3CValidator />} />
               <Route path="/tech-seo/gsc-audit" element={<GscAudit />} />
               <Route path="/tech-seo/bing" element={<BingWebmaster />} />
               <Route path="/tech-seo/backlinks" element={<BacklinksAudit />} />
               <Route path="/tech-seo/duplicate" element={<DuplicateChecker />} />
               <Route path="/tech-seo/plagiarism" element={<PlagiarismChecker />} />
               <Route path="/tech-seo/screaming-frog" element={<ScreamingFrogAnalyzer />} />
+              <Route path="/tech-seo/wordpress-security" element={<WordPressSecurity />} />
               <Route path="/tech-seo" element={<Navigate to="/tech-seo/eeat" replace />} />
               <Route path="/tech-seo/*" element={<Navigate to="/tech-seo/eeat" replace />} />
             </Route>
@@ -369,28 +398,11 @@ export default function App() {
               <Route path="/keywords/lost" element={<LostKeywords />} />
               <Route path="/keywords/branded" element={<BrandedKeywords />} />
               <Route path="/keywords/cannibalization" element={<KeywordCannibalization />} />
-              <Route path="/keywords/serp-checker" element={<SeoTools defaultTab="serp" />} />
               <Route path="/keywords" element={<Navigate to="/keywords/research" replace />} />
               <Route path="/keywords/*" element={<Navigate to="/keywords/research" replace />} />
             </Route>
 
             {/* Content Writing section */}
-            <Route
-              path="/content/semantic-writer/editor"
-              element={
-                <ProtectedRoute>
-                  <SemanticContentWriter />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/content/content-writer/editor"
-              element={
-                <ProtectedRoute>
-                  <SemanticContentWriter />
-                </ProtectedRoute>
-              }
-            />
             <Route
               element={
                 <ProtectedRoute>
@@ -399,7 +411,9 @@ export default function App() {
               }
             >
               <Route path="/content/semantic-writer" element={<ContentWriterDashboard />} />
+              <Route path="/content/semantic-writer/editor" element={<SemanticContentWriter />} />
               <Route path="/content/content-writer" element={<ContentWriterDashboard />} />
+              <Route path="/content/content-writer/editor" element={<SemanticContentWriter />} />
               <Route path="/content/ai-helper" element={<AIContentHelper />} />
               <Route path="/content/outline" element={<OutlineCreator />} />
               <Route path="/content/entities-extractor" element={<EntitiesExtractor />} />
@@ -457,10 +471,20 @@ export default function App() {
             >
               <Route path="/local-seo/image-geo-tagger" element={<ImageGeoTagger />} />
               <Route path="/local-seo/local-image-geo-tagger" element={<Navigate to="/local-seo/image-geo-tagger" replace />} />
-              <Route path="/local-seo/rank-grid-pro" element={<RankGridPro />} />
-              <Route path="/local-seo/lead-finder" element={<LeadFinderTool />} />
-              <Route path="/local-seo/local-expired-finder" element={<LocalExpiredFinder />} />
-              <Route path="/local-seo" element={<Navigate to="/local-seo/image-geo-tagger" replace />} />
+              <Route path="/local-seo/gbp" element={<GbpConnect />} />
+              <Route path="/local-seo/gbp/overview" element={<GbpOverview />} />
+              <Route path="/local-seo/gbp/profile" element={<GbpProfile />} />
+              <Route path="/local-seo/gbp/audit" element={<GbpAudit />} />
+              <Route path="/local-seo/gbp/posts" element={<GbpPosts />} />
+              <Route path="/local-seo/gbp/reviews" element={<GbpReviews />} />
+              <Route path="/local-seo/gbp/insights" element={<GbpInsights />} />
+              <Route path="/local-seo/gbp/qanda" element={<GbpQanda />} />
+              <Route path="/local-seo/gbp/recommendations" element={<GbpRecommendations />} />
+              <Route path="/local-seo/gbp/history" element={<GbpHistory />} />
+              <Route path="/local-seo/gbp/operations" element={<GbpOperations />} />
+              <Route path="/local-seo/gbp/automation" element={<GbpAutomation />} />
+              <Route path="/local-seo/rank-grid-pro" element={<RankGridPro />} />                <Route path="/local-seo/lead-finder" element={<LeadFinderTool />} />
+                <Route path="/local-seo/local-expired-finder" element={<LocalExpiredFinder />} />              <Route path="/local-seo" element={<Navigate to="/local-seo/image-geo-tagger" replace />} />
               <Route path="/local-seo/*" element={<Navigate to="/local-seo/image-geo-tagger" replace />} />
             </Route>
 
@@ -483,7 +507,6 @@ export default function App() {
               <Route path="/seo-tools/robots-generator" element={<RobotsGenerator />} />
               <Route path="/seo-tools/sitemap-extractor" element={<XmlSitemapExtractor />} />
               <Route path="/seo-tools/meta-extractor" element={<BulkMetaExtractor />} />
-              <Route path="/seo-tools/csv-reporter" element={<BulkCsvReporter />} />
               <Route path="/seo-tools/*" element={<Navigate to="/seo-tools" replace />} />
             </Route>
 
@@ -529,11 +552,10 @@ export default function App() {
 
             {/* Catch-all → home */}
             <Route path="*" element={<Navigate to="/" replace />} />
-              </Routes>
-            </Suspense>
-          </BrowserRouter>
-        </CrawlProvider>
-      </NotificationsProvider>
+            </Routes>
+          </Suspense>
+        </BrowserRouter>
+      </CrawlProvider>
     </AuthProvider>
   );
 }

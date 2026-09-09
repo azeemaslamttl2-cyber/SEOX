@@ -1,8 +1,8 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { Link as RouterLink, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext.jsx';
-import { db } from '../../lib/firebase.js';
-import { doc, getDoc, setDoc } from 'firebase/firestore';
+import { useSelectedProjectDomain } from '../../hooks/useSelectedProjectDomain.js';
+import { loadContentWriterProfile, updateContentWriterProfile } from '../../lib/contentWriterProfile.js';
 import {
     Search, FileText, Sparkles, Loader2, Copy, Check, ChevronDown, ChevronUp,
     Plus, X, Trash2, ExternalLink, List, Target, Hash, Brain, Type, Zap, Star, SkipForward,
@@ -48,6 +48,38 @@ const htmlToPlainText = (html = '') => {
 
 const countWords = (text = '') => text.trim().split(/\s+/).filter(Boolean).length;
 
+const normalizeCompetitorUrl = (urlStr, targetHostname = '') => {
+    let raw = String(urlStr || '').trim();
+    if (!raw) return null;
+    const mdMatch = raw.match(/\((https?:\/\/[^\s)]+)\)/i);
+    if (mdMatch) raw = mdMatch[1];
+    raw = raw.replace(/^[-*•\d.)\s]+/, '').trim();
+    raw = raw.replace(/[()\[\]'"`]/g, '').trim();
+    if (!raw) return null;
+    if (!/^https?:\/\//i.test(raw)) {
+        raw = `https://${raw}`;
+    }
+    try {
+        const u = new URL(raw);
+        const hostname = u.hostname.toLowerCase().replace(/^www\./i, '');
+        if (!hostname.includes('.')) return null;
+        if (targetHostname && hostname === targetHostname.toLowerCase().replace(/^www\./i, '')) return null;
+
+        const blockedDomains = [
+            'google.com', 'bing.com', 'yahoo.com', 'duckduckgo.com', 'baidu.com', 'yandex.com',
+            'facebook.com', 'twitter.com', 'x.com', 'instagram.com', 'linkedin.com', 'pinterest.com',
+            'youtube.com', 'tiktok.com', 'reddit.com', 'wikipedia.org', 'medium.com', 'quora.com',
+            'amazon.com', 'apple.com', 'microsoft.com'
+        ];
+        if (blockedDomains.some(b => hostname === b || hostname.endsWith(`.${b}`))) {
+            return null;
+        }
+        return u.origin;
+    } catch {
+        return null;
+    }
+};
+
 const formatManualContentToHtml = (text = '') => {
     const trimmed = text.trim();
     if (!trimmed) return '';
@@ -69,23 +101,23 @@ const formatManualContentToHtml = (text = '') => {
 };
 
 const ContentWriter = () => {
-    // LocalStorage keys
+    // Session storage keys
     const STORAGE_KEY = 'contentWriter_state';
     const ARTICLES_KEY = 'contentWriter_articles';
-    const FIRESTORE_SAVE_DELAY = 3000; // 3s debounce for Firestore writes
+    const DATABASE_SAVE_DELAY = 3000;
 
     const { user } = useAuth();
     const userId = user?.uid || user?.id;
     const navigate = useNavigate();
     const [searchParams] = useSearchParams();
-    const firestoreSaveTimerRef = useRef(null);
+    const databaseSaveTimerRef = useRef(null);
     const articleStateSaveTimerRef = useRef(null);
     const articlesLoadedRef = useRef(false);
 
-    // Helper to load initial state from localStorage
+    // Helper to load initial state from sessionStorage
     const loadFromStorage = (key, defaultValue) => {
         try {
-            const saved = localStorage.getItem(STORAGE_KEY);
+            const saved = sessionStorage.getItem(STORAGE_KEY);
             if (saved) {
                 const parsed = JSON.parse(saved);
                 if (parsed[key] !== undefined) {
@@ -101,7 +133,7 @@ const ContentWriter = () => {
                 }
             }
         } catch (e) {
-            console.error('Error loading from localStorage:', e);
+            console.error('Error loading from sessionStorage:', e);
         }
         return defaultValue;
     };
@@ -199,36 +231,163 @@ const ContentWriter = () => {
     // Step 9: Grammar Generator
     const [grammarResults, setGrammarResults] = useState(() => loadFromStorage('grammarResults', null));
 
-    // Load saved articles on mount (Firestore first, localStorage fallback)
+    // Global Selected Project URL & DeepSeek Competitor Discovery
+    const { projectUrl, projectDomain } = useSelectedProjectDomain();
+    const [isDiscoveringCompetitors, setIsDiscoveringCompetitors] = useState(false);
+    const [competitorDiscoveryStatus, setCompetitorDiscoveryStatus] = useState(null);
+    const lastDiscoveredUrlRef = useRef(null);
+
+    // Fetch competitors from DeepSeek based on primary project URL
+    const fetchCompetitorsFromDeepSeek = useCallback(async (targetUrl, force = false) => {
+        if (!targetUrl || typeof targetUrl !== 'string') return;
+        const trimmed = targetUrl.trim();
+        if (!trimmed) return;
+
+        let targetOrigin = '';
+        let targetHostname = '';
+        try {
+            const parsed = new URL(/^https?:\/\//i.test(trimmed) ? trimmed : `https://${trimmed}`);
+            targetOrigin = parsed.origin;
+            targetHostname = parsed.hostname.toLowerCase().replace(/^www\./i, '');
+        } catch {
+            return;
+        }
+
+        if (!force && lastDiscoveredUrlRef.current === targetOrigin) {
+            return;
+        }
+
+        setIsDiscoveringCompetitors(true);
+        setCompetitorDiscoveryStatus({ type: 'loading', message: `Finding competitor websites for ${targetHostname}...` });
+
+        try {
+            const prompt = `Analyze the website:
+${targetOrigin}
+
+Identify 3 to 5 of the most relevant direct organic search and business competitor websites for this domain.
+
+Return ONLY a valid JSON object with this exact structure:
+{
+  "competitors": [
+    "https://competitor1.com",
+    "https://competitor2.com",
+    "https://competitor3.com"
+  ]
+}
+Do not return explanations, descriptions, social media profiles, directories, or search engines.
+Return a clean structured JSON list of competitor URLs starting with https://.`;
+
+            const response = await fetch('/api/deepseek', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    prompt,
+                    systemInstruction: 'You are an SEO and competitive intelligence expert. Return only JSON containing direct competitor website homepages.',
+                    responseMimeType: 'application/json',
+                    temperature: 0.3
+                })
+            });
+
+            if (!response.ok) {
+                throw new Error(`DeepSeek request failed (${response.status})`);
+            }
+
+            const data = await response.json();
+            let urls = [];
+
+            if (data?.text) {
+                try {
+                    const parsed = typeof data.text === 'string' ? JSON.parse(data.text) : data.text;
+                    if (Array.isArray(parsed?.competitors)) {
+                        urls = parsed.competitors;
+                    } else if (Array.isArray(parsed)) {
+                        urls = parsed;
+                    }
+                } catch {
+                    const found = data.text.match(/https?:\/\/[^\s"'<>)\]]+/gi) || [];
+                    urls = found;
+                }
+            }
+
+            const validUrls = urls
+                .map(u => normalizeCompetitorUrl(u, targetHostname))
+                .filter(Boolean);
+
+            const uniqueDiscovered = [...new Set(validUrls)];
+
+            if (uniqueDiscovered.length > 0) {
+                setCompetitors(prev => {
+                    const existing = (Array.isArray(prev) ? prev : [])
+                        .map(u => String(u || '').trim())
+                        .filter(Boolean);
+
+                    const merged = [...existing];
+                    uniqueDiscovered.forEach(u => {
+                        if (!merged.includes(u)) {
+                            merged.push(u);
+                        }
+                    });
+
+                    return merged.length > 0 ? merged : [''];
+                });
+
+                lastDiscoveredUrlRef.current = targetOrigin;
+                setCompetitorDiscoveryStatus({
+                    type: 'success',
+                    message: `${uniqueDiscovered.length} competitor website${uniqueDiscovered.length > 1 ? 's' : ''} found via DeepSeek`
+                });
+            } else {
+                lastDiscoveredUrlRef.current = targetOrigin;
+                setCompetitorDiscoveryStatus({
+                    type: 'info',
+                    message: 'No automatic competitors found for this URL. You can enter competitor URLs manually.'
+                });
+            }
+        } catch (err) {
+            console.error('Competitor discovery error:', err);
+            setCompetitorDiscoveryStatus({
+                type: 'error',
+                message: 'Unable to automatically find competitors. You can enter competitor URLs manually.'
+            });
+        } finally {
+            setIsDiscoveringCompetitors(false);
+        }
+    }, []);
+
+    // Trigger automatic competitor discovery when selected project URL is available or changes
+    useEffect(() => {
+        if (projectUrl && projectUrl !== lastDiscoveredUrlRef.current) {
+            fetchCompetitorsFromDeepSeek(projectUrl);
+        }
+    }, [projectUrl, fetchCompetitorsFromDeepSeek]);
+
+    // Load saved articles from the local database, then session storage.
     useEffect(() => {
         const loadArticles = async () => {
-            // Try Firestore first if logged in
+            // Try the local API first if logged in.
             if (userId) {
                 try {
-                    const docRef = doc(db, 'project_data', userId);
-                    const docSnap = await getDoc(docRef);
-                    if (docSnap.exists()) {
-                        const data = docSnap.data();
+                    const data = await loadContentWriterProfile();
+                    if (data) {
                         if (data.contentWriterArticles && data.contentWriterArticles.length > 0) {
                             setSavedArticles(data.contentWriterArticles);
-                            // Also cache in localStorage
-                            localStorage.setItem(ARTICLES_KEY, JSON.stringify(data.contentWriterArticles));
+                            // Also cache in sessionStorage
+                            sessionStorage.setItem(ARTICLES_KEY, JSON.stringify(data.contentWriterArticles));
                             return;
                         }
                     }
-                } catch (e) { console.error('Error loading articles from Firestore:', e); }
+                } catch (e) { console.error('Error loading articles from local database:', e); }
             }
-            // Fallback to localStorage
+            // Fallback to sessionStorage
             try {
-                const saved = localStorage.getItem(ARTICLES_KEY);
+                const saved = sessionStorage.getItem(ARTICLES_KEY);
                 if (saved) {
                     const parsed = JSON.parse(saved);
                     setSavedArticles(parsed);
-                    // Migrate to Firestore if logged in
+                    // Persist the local cache for the signed-in user.
                     if (userId && parsed.length > 0) {
                         try {
-                            const docRef = doc(db, 'project_data', userId);
-                            await setDoc(docRef, { contentWriterArticles: parsed }, { merge: true });
+                            await updateContentWriterProfile({ contentWriterArticles: parsed });
                         } catch (e) { console.error('Migration error:', e); }
                     }
                 }
@@ -237,33 +396,29 @@ const ContentWriter = () => {
         loadArticles().finally(() => { articlesLoadedRef.current = true; });
     }, [userId]);
 
-    // Save articles list to Firestore (debounced)
-    const saveArticlesToFirestore = useCallback((articles) => {
+    // Save articles list to MySQL through the local API (debounced).
+    const saveArticlesToDatabase = useCallback((articles) => {
         if (!userId) return;
-        if (firestoreSaveTimerRef.current) clearTimeout(firestoreSaveTimerRef.current);
-        firestoreSaveTimerRef.current = setTimeout(async () => {
+        if (databaseSaveTimerRef.current) clearTimeout(databaseSaveTimerRef.current);
+        databaseSaveTimerRef.current = setTimeout(async () => {
             try {
-                const docRef = doc(db, 'project_data', userId);
-                await setDoc(docRef, { contentWriterArticles: articles }, { merge: true });
-            } catch (e) { console.error('Error saving articles to Firestore:', e); }
-        }, FIRESTORE_SAVE_DELAY);
+                await updateContentWriterProfile({ contentWriterArticles: articles });
+            } catch (e) { console.error('Error saving articles to local database:', e); }
+        }, DATABASE_SAVE_DELAY);
     }, [userId]);
 
-    // Save per-article state to Firestore (debounced)
-    const saveArticleStateToFirestore = useCallback((articleId, stateData) => {
+    // Save per-article state to MySQL through the local API (debounced).
+    const saveArticleStateToDatabase = useCallback((articleId, stateData) => {
         if (!userId || !articleId) return;
         if (articleStateSaveTimerRef.current) clearTimeout(articleStateSaveTimerRef.current);
         articleStateSaveTimerRef.current = setTimeout(async () => {
             try {
-                const docRef = doc(db, 'project_data', userId);
-                await setDoc(docRef, {
-                    [`contentWriterStates_${articleId}`]: stateData
-                }, { merge: true });
-            } catch (e) { console.error('Error saving article state to Firestore:', e); }
-        }, FIRESTORE_SAVE_DELAY);
+                await updateContentWriterProfile({ [`contentWriterStates_${articleId}`]: stateData });
+            } catch (e) { console.error('Error saving article state to local database:', e); }
+        }, DATABASE_SAVE_DELAY);
     }, [userId]);
 
-    // Save state to localStorage whenever it changes
+    // Save state to sessionStorage whenever it changes
     useEffect(() => {
         const stateToSave = {
             currentStep,
@@ -292,9 +447,9 @@ const ContentWriter = () => {
             currentArticleId
         };
         try {
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(stateToSave));
+            sessionStorage.setItem(STORAGE_KEY, JSON.stringify(stateToSave));
         } catch (e) {
-            console.error('Error saving to localStorage:', e);
+            console.error('Error saving to sessionStorage:', e);
         }
     }, [currentStep, mainKeyword, competitors, extractedOutlines, combinedOutline, competitorContent, keywordData, excludedItems, selectedRules, aiInstructions, articleTitle, content, contentScore, autoSuggestKeywords, aiPickedKeywords, checkedKeywords, grammarResults, skippedSteps, masterPrompt, writerMode, headingWordCounts, currentArticleId]);
 
@@ -320,8 +475,8 @@ const ContentWriter = () => {
             const updated = existing >= 0
                 ? prev.map(a => a.id === articleId ? articleData : a)
                 : [articleData, ...prev];
-            try { localStorage.setItem(ARTICLES_KEY, JSON.stringify(updated)); } catch (e) { }
-            saveArticlesToFirestore(updated);
+            try { sessionStorage.setItem(ARTICLES_KEY, JSON.stringify(updated)); } catch (e) { }
+            saveArticlesToDatabase(updated);
             return updated;
         });
     }, [mainKeyword, articleTitle, currentStep, writerMode]);
@@ -331,23 +486,21 @@ const ContentWriter = () => {
         try {
             let state = null;
 
-            // Try Firestore first if logged in
+            // Try the local API first if logged in.
             if (userId) {
                 try {
-                    const docRef = doc(db, 'project_data', userId);
-                    const docSnap = await getDoc(docRef);
-                    if (docSnap.exists()) {
-                        const data = docSnap.data();
+                    const data = await loadContentWriterProfile();
+                    if (data) {
                         if (data[`contentWriterStates_${articleId}`]) {
                             state = data[`contentWriterStates_${articleId}`];
                         }
                     }
-                } catch (e) { console.error('Firestore load error:', e); }
+                } catch (e) { console.error('Local database load error:', e); }
             }
 
-            // Fallback to localStorage
+            // Fallback to sessionStorage
             if (!state) {
-                const saved = localStorage.getItem(`contentWriter_${articleId}`);
+                const saved = sessionStorage.getItem(`contentWriter_${articleId}`);
                 if (saved) state = JSON.parse(saved);
             }
 
@@ -391,8 +544,8 @@ const ContentWriter = () => {
             autoSuggestKeywords, aiPickedKeywords, checkedKeywords: Array.from(checkedKeywords),
             grammarResults, skippedSteps, masterPrompt, writerMode, headingWordCounts
         };
-        try { localStorage.setItem(`contentWriter_${articleId}`, JSON.stringify(stateToSave)); } catch (e) { }
-        saveArticleStateToFirestore(articleId, stateToSave);
+        try { sessionStorage.setItem(`contentWriter_${articleId}`, JSON.stringify(stateToSave)); } catch (e) { }
+        saveArticleStateToDatabase(articleId, stateToSave);
     };
 
     // Save current article state periodically
@@ -448,17 +601,16 @@ const ContentWriter = () => {
         if (!window.confirm('Delete this article?')) return;
         setSavedArticles(prev => {
             const updated = prev.filter(a => a.id !== articleId);
-            try { localStorage.setItem(ARTICLES_KEY, JSON.stringify(updated)); } catch (e) { }
-            saveArticlesToFirestore(updated);
+                    try { sessionStorage.setItem(ARTICLES_KEY, JSON.stringify(updated)); } catch (e) { }
+            saveArticlesToDatabase(updated);
             return updated;
         });
-        try { localStorage.removeItem(`contentWriter_${articleId}`); } catch (e) { }
-        // Remove from Firestore too
+        try { sessionStorage.removeItem(`contentWriter_${articleId}`); } catch (e) { }
+        // Remove the saved state from MySQL too.
         if (userId) {
             try {
-                const docRef = doc(db, 'project_data', userId);
-                setDoc(docRef, { [`contentWriterStates_${articleId}`]: null }, { merge: true })
-                    .catch(e => console.error('Firestore delete error:', e));
+                updateContentWriterProfile({ [`contentWriterStates_${articleId}`]: null })
+                    .catch(e => console.error('Content profile delete error:', e));
             } catch (e) { }
         }
         if (currentArticleId === articleId) {
@@ -472,7 +624,7 @@ const ContentWriter = () => {
     const resetAllState = () => {
         if (!window.confirm('Are you sure you want to reset all progress? This cannot be undone.')) return;
 
-        localStorage.removeItem(STORAGE_KEY);
+        sessionStorage.removeItem(STORAGE_KEY);
         setCurrentStep(1);
         setMainKeyword('');
         setCompetitors(['']);
@@ -662,7 +814,7 @@ const ContentWriter = () => {
 
         return (
             <div className="space-y-6">
-                <div className="rounded-2xl border border-white/10 bg-gradient-to-b from-white/[0.04] to-white/[0.01] p-6">
+                <div className="ctool-card">
                     <div className="flex items-center justify-between mb-2">
                         <h3 className="text-lg font-semibold text-white flex items-center gap-2">
                             <Gauge className="w-5 h-5 text-brand-500" />
@@ -795,7 +947,7 @@ const ContentWriter = () => {
         if (showNewArticle) {
             return (
                 <div className="flex flex-col h-screen bg-ink-900 overflow-hidden">
-                    <div className="flex items-center gap-3 px-6 py-3 bg-ink-800 border-b border-white/10 shrink-0">
+                    <div className="scw-toolbar shrink-0">
                         <button
                             onClick={() => setShowNewArticle(false)}
                             className="flex items-center gap-2 text-sm font-medium text-brand-500 hover:text-brand-300 transition group"
@@ -865,13 +1017,13 @@ const ContentWriter = () => {
         return (
             <div className="flex flex-col h-screen bg-ink-900 overflow-hidden">
                 {/* Back Navigation Bar */}
-                <div className="flex items-center gap-3 px-6 py-3 bg-ink-800 border-b border-white/10 shrink-0">
+                <div className="scw-toolbar shrink-0">
                     <RouterLink
                         to="/"
                         className="flex items-center gap-2 text-sm font-medium text-brand-500 hover:text-brand-300 transition group"
                     >
                         <ArrowLeft className="w-4 h-4 group-hover:-translate-x-0.5 transition-transform" />
-                        Back to AI Smart Seo
+                        Back to PGC
                     </RouterLink>
                 </div>
 
@@ -1220,7 +1372,7 @@ const ContentWriter = () => {
     const renderStep1 = () => (
         <div className="space-y-6">
             {/* Main Keyword */}
-            <div className="rounded-2xl border border-white/10 bg-gradient-to-b from-white/[0.04] to-white/[0.01] p-6">
+            <div className="ctool-card">
                 <h3 className="text-lg font-semibold text-white flex items-center gap-2 mb-4">
                     <Target className="w-5 h-5 text-brand-500" />
                     Main Keyword
@@ -1235,14 +1387,79 @@ const ContentWriter = () => {
             </div>
 
             {/* Competitor URLs - MOVED ABOVE SERP */}
-            <div className="rounded-2xl border border-white/10 bg-gradient-to-b from-white/[0.04] to-white/[0.01] p-6">
-                <h3 className="text-lg font-semibold text-white flex items-center gap-2 mb-4">
-                    <Globe className="w-5 h-5 text-brand-500" />
-                    Competitor URLs
-                    {competitors.filter(c => c.trim()).length > 0 && (
-                        <span className="ml-auto text-sm text-white/50">{competitors.filter(c => c.trim()).length} added</span>
+            <div className="ctool-card">
+                <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
+                    <h3 className="text-lg font-semibold text-white flex items-center gap-2">
+                        <Globe className="w-5 h-5 text-brand-500" />
+                        Competitor URLs
+                        {competitors.filter(c => c.trim()).length > 0 && (
+                            <span className="text-sm text-white/50">({competitors.filter(c => c.trim()).length} added)</span>
+                        )}
+                    </h3>
+                    {projectUrl && (
+                        <button
+                            onClick={() => fetchCompetitorsFromDeepSeek(projectUrl, true)}
+                            disabled={isDiscoveringCompetitors}
+                            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg bg-brand-500/10 text-brand-400 hover:bg-brand-500/20 disabled:opacity-50 transition"
+                            title={`Re-detect competitors for ${projectDomain || projectUrl}`}
+                        >
+                            {isDiscoveringCompetitors ? (
+                                <>
+                                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                                    Finding Competitors...
+                                </>
+                            ) : (
+                                <>
+                                    <Sparkles className="w-3.5 h-3.5" />
+                                    Auto-Find Competitors
+                                </>
+                            )}
+                        </button>
                     )}
-                </h3>
+                </div>
+
+                {/* Primary Website Information Banner */}
+                {projectUrl ? (
+                    <div className="mb-4 p-3 bg-white/[0.03] border border-white/10 rounded-xl flex items-center justify-between gap-3 text-xs">
+                        <div className="flex items-center gap-2 min-w-0">
+                            <span className="text-white/50 shrink-0">Primary Website:</span>
+                            <span className="font-medium text-brand-300 truncate">{projectUrl}</span>
+                        </div>
+                        <span className="text-white/40 shrink-0 hidden sm:inline">From Top Selector</span>
+                    </div>
+                ) : (
+                    <div className="mb-4 p-3 bg-white/[0.02] border border-dashed border-white/10 rounded-xl text-xs text-white/40 flex items-center justify-between">
+                        <span>Select a website in the top navigation dropdown to auto-detect competitors with DeepSeek.</span>
+                    </div>
+                )}
+
+                {/* Status / Discovery Notification Banner */}
+                {competitorDiscoveryStatus && (
+                    <div className={`mb-4 p-3 rounded-xl flex items-center gap-2.5 text-xs ${
+                        competitorDiscoveryStatus.type === 'loading'
+                            ? 'bg-brand-500/10 text-brand-300 border border-brand-500/20'
+                            : competitorDiscoveryStatus.type === 'success'
+                                ? 'bg-emerald-500/10 text-emerald-300 border border-emerald-500/20'
+                                : competitorDiscoveryStatus.type === 'error'
+                                    ? 'bg-red-500/10 text-red-300 border border-red-500/20'
+                                    : 'bg-white/[0.04] text-white/70 border border-white/10'
+                    }`}>
+                        {competitorDiscoveryStatus.type === 'loading' && <Loader2 className="w-4 h-4 animate-spin shrink-0 text-brand-400" />}
+                        {competitorDiscoveryStatus.type === 'success' && <CheckCircle className="w-4 h-4 shrink-0 text-emerald-400" />}
+                        {competitorDiscoveryStatus.type === 'error' && <AlertCircle className="w-4 h-4 shrink-0 text-red-400" />}
+                        {competitorDiscoveryStatus.type === 'info' && <Sparkles className="w-4 h-4 shrink-0 text-amber-400" />}
+                        <span className="flex-1">{competitorDiscoveryStatus.message}</span>
+                        {competitorDiscoveryStatus.type !== 'loading' && (
+                            <button
+                                onClick={() => setCompetitorDiscoveryStatus(null)}
+                                className="text-white/40 hover:text-white p-0.5"
+                            >
+                                <X className="w-3.5 h-3.5" />
+                            </button>
+                        )}
+                    </div>
+                )}
+
                 <div className="space-y-3">
                     {competitors.map((url, index) => (
                         <div key={index} className="flex gap-2">
@@ -1256,7 +1473,7 @@ const ContentWriter = () => {
                             {competitors.length > 1 && (
                                 <button
                                     onClick={() => removeCompetitor(index)}
-                                    className="p-3 text-red-500 hover:bg-red-500/10 rounded-xl transition"
+                                    className="ui-button schema-remove"
                                 >
                                     <Trash2 className="w-5 h-5" />
                                 </button>
@@ -1266,7 +1483,7 @@ const ContentWriter = () => {
                 </div>
                 <button
                     onClick={addCompetitor}
-                    className="mt-4 flex items-center gap-2 px-4 py-2 text-brand-500 hover:bg-brand-500/150/10 rounded-xl transition font-medium"
+                    className="ui-button ctool-tool-btn mt-4"
                 >
                     <Plus className="w-5 h-5" />
                     Add Competitor
@@ -1274,23 +1491,23 @@ const ContentWriter = () => {
             </div>
 
             {/* SERP Checker - Full Implementation */}
-            <div className="bg-gradient-to-br from-brand-50 to-brand-50 rounded-2xl border border-brand-200 overflow-hidden">
+            <div className="ctool-card scw-serp">
                 <button
                     onClick={() => setSerpExpanded(!serpExpanded)}
-                    className="w-full p-4 flex items-center justify-between hover:bg-brand-500/20/50 transition"
+                    className="scw-serp-head"
                 >
-                    <h3 className="text-lg font-semibold text-brand-300 flex items-center gap-2">
+                    <h3 className="scw-serp-title flex items-center gap-2">
                         <Search className="w-5 h-5" />
                         Find Competitors via SERP
                     </h3>
-                    {serpExpanded ? <ChevronUp className="w-5 h-5 text-brand-500" /> : <ChevronDown className="w-5 h-5 text-brand-500" />}
+                    {serpExpanded ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
                 </button>
 
                 {serpExpanded && (
                     <div className="px-4 pb-4 space-y-4">
                         {/* Search Keyword */}
                         <div>
-                            <label className="text-sm font-medium text-white/75 mb-1.5 block">Search Keyword</label>
+                            <label className="schema-label">Search Keyword</label>
                             <div className="relative" ref={kwInputRef}>
                                 <input
                                     type="text"
@@ -1298,20 +1515,20 @@ const ContentWriter = () => {
                                     onChange={(e) => handleSerpKeywordChange(e.target.value)}
                                     onFocus={() => kwSuggestions.length > 0 && setShowSuggestions(true)}
                                     placeholder="Enter your search keyword"
-                                    className="w-full px-4 py-3 border border-gray-600 rounded-xl bg-gray-800/50 text-white placeholder-gray-500 focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none"
+                                    className="schema-input schema-input-lg"
                                 />
                                 {isLoadingSuggestions && (
-                                    <Loader2 className="absolute right-3 top-3.5 w-5 h-5 text-white/40 animate-spin" />
+                                    <Loader2 className="absolute right-3 top-3.5 w-5 h-5 scw-field-icon animate-spin" />
                                 )}
                                 {showSuggestions && kwSuggestions.length > 0 && (
-                                    <div className="absolute z-50 w-full mt-1 bg-gray-800 rounded-xl border border-gray-600 shadow-lg max-h-60 overflow-y-auto">
+                                    <div className="scw-menu max-h-60 overflow-y-auto">
                                         {kwSuggestions.map((suggestion, idx) => (
                                             <button
                                                 key={idx}
                                                 onClick={() => selectSuggestion(suggestion)}
-                                                className="w-full px-4 py-2.5 text-left text-sm text-gray-200 hover:bg-gray-700 flex items-center gap-2"
+                                                className="scw-menu-item"
                                             >
-                                                <Search className="w-3.5 h-3.5 text-white/50" />
+                                                <Search className="w-3.5 h-3.5 scw-menu-icon" />
                                                 {suggestion}
                                             </button>
                                         ))}
@@ -1322,7 +1539,7 @@ const ContentWriter = () => {
 
                         {/* Country & Language */}
                         <div>
-                            <label className="text-sm font-medium text-white/75 mb-1.5 block">Country & Language</label>
+                            <label className="schema-label">Country & Language</label>
                             <div className="relative" ref={regionRef}>
                                 <input
                                     type="text"
@@ -1330,20 +1547,20 @@ const ContentWriter = () => {
                                     onChange={(e) => { setRegionSearch(e.target.value); setShowRegions(true); }}
                                     onFocus={() => { setShowRegions(true); setRegionSearch(''); }}
                                     placeholder="United States - English"
-                                    className="w-full px-4 py-3 border border-gray-600 rounded-xl bg-gray-800/50 text-white placeholder-gray-500 focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none cursor-text"
+                                    className="schema-input schema-input-lg cursor-text"
                                 />
-                                <ChevronDown className={`absolute right-3 top-3.5 w-5 h-5 text-white/40 transition pointer-events-none ${showRegions ? 'rotate-180' : ''}`} />
+                                <ChevronDown className={`absolute right-3 top-3.5 w-5 h-5 scw-field-icon transition pointer-events-none ${showRegions ? 'rotate-180' : ''}`} />
                                 {showRegions && (
-                                    <div className="absolute z-50 w-full mt-1 bg-gray-800 rounded-xl border border-gray-600 shadow-lg">
+                                    <div className="scw-menu">
                                         <div className="max-h-48 overflow-y-auto">
                                             {filteredRegions.map((site, idx) => (
                                                 <button
                                                     key={idx}
                                                     onClick={() => handleRegion(site)}
-                                                    className="w-full px-4 py-2.5 text-left text-sm hover:bg-gray-700 flex items-center justify-between"
+                                                    className="scw-menu-item scw-menu-item-split"
                                                 >
-                                                    <span className="text-gray-200">{site.name} - {site.lang}</span>
-                                                    <span className="text-white/50 text-xs">{site.gl}</span>
+                                                    <span className="scw-menu-label">{site.name} - {site.lang}</span>
+                                                    <span className="scw-menu-meta">{site.gl}</span>
                                                 </button>
                                             ))}
                                         </div>
@@ -1354,7 +1571,7 @@ const ContentWriter = () => {
 
                         {/* Location */}
                         <div>
-                            <label className="text-sm font-medium text-white/75 mb-1.5 block">Location <span className="text-white/50 font-normal">(optional - for hyper-local results)</span></label>
+                            <label className="schema-label">Location <span className="scw-label-note">(optional - for hyper-local results)</span></label>
                             <div className="flex gap-2">
                                 <input
                                     type="text"
@@ -1362,12 +1579,12 @@ const ContentWriter = () => {
                                     onChange={(e) => setSerpLoc(e.target.value)}
                                     onKeyDown={(e) => e.key === 'Enter' && geocodeLocation()}
                                     placeholder="e.g. 1600 Amphitheatre Pkwy, Mountain View, CA"
-                                    className="flex-1 px-4 py-3 border border-brand-500/20 rounded-xl bg-white/[0.04] focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 outline-none"
+                                    className="schema-input schema-input-lg flex-1"
                                 />
                                 <button
                                     onClick={geocodeLocation}
                                     disabled={!serpLoc.trim() || isGeo}
-                                    className="px-4 py-3 bg-gray-700 text-white rounded-xl font-medium disabled:opacity-50 hover:bg-gray-600 transition flex items-center gap-2"
+                                    className="ui-button ctool-tool-btn scw-geo-btn"
                                 >
                                     {isGeo ? <Loader2 className="w-4 h-4 animate-spin" /> : <Target className="w-4 h-4" />}
                                     Geocode
@@ -1377,16 +1594,16 @@ const ContentWriter = () => {
 
                         {/* Current Location Display */}
                         {(serpLat && serpLng) && (
-                            <div className="flex items-center justify-between px-4 py-3 bg-teal-50 border border-teal-200 rounded-xl">
+                            <div className="app-alert app-alert-info justify-between">
                                 <div>
-                                    <span className="text-xs text-teal-600 font-semibold uppercase">Current Location</span>
-                                    <div className="text-sm text-teal-800 font-mono">
+                                    <span className="stool-label">Current Location</span>
+                                    <div className="scw-latlng">
                                         Lat: {serpLat} | Lng: {serpLng}
                                     </div>
                                 </div>
                                 <button
                                     onClick={clearLocation}
-                                    className="px-3 py-1.5 bg-gray-700 text-white text-sm rounded-lg hover:bg-gray-600 transition"
+                                    className="ui-button ctool-tool-btn"
                                 >
                                     Clear
                                 </button>
@@ -1396,7 +1613,7 @@ const ContentWriter = () => {
                         {/* Advanced Settings Toggle */}
                         <button
                             onClick={() => setShowAdvanced(!showAdvanced)}
-                            className="flex items-center gap-2 text-sm text-brand-600 hover:text-brand-300 transition"
+                            className="schema-addlink"
                         >
                             <Settings className="w-4 h-4" />
                             Advanced Settings
@@ -1404,27 +1621,27 @@ const ContentWriter = () => {
                         </button>
 
                         {showAdvanced && (
-                            <div className="p-4 bg-gray-800/30 rounded-xl border border-gray-700 space-y-4">
+                            <div className="geo-well space-y-4">
                                 {/* Lat/Lng Inputs */}
                                 <div className="grid grid-cols-2 gap-3">
                                     <div>
-                                        <label className="text-xs text-white/40 uppercase mb-1 block">Latitude</label>
+                                        <label className="stool-label mb-1 block">Latitude</label>
                                         <input
                                             type="text"
                                             value={serpLat}
                                             onChange={(e) => setSerpLat(e.target.value)}
                                             placeholder="e.g. 37.4210000"
-                                            className="w-full px-3 py-2 border border-gray-600 bg-gray-800/50 rounded-lg text-sm font-mono text-white placeholder-gray-500"
+                                            className="schema-input font-mono"
                                         />
                                     </div>
                                     <div>
-                                        <label className="text-xs text-white/40 uppercase mb-1 block">Longitude</label>
+                                        <label className="stool-label mb-1 block">Longitude</label>
                                         <input
                                             type="text"
                                             value={serpLng}
                                             onChange={(e) => setSerpLng(e.target.value)}
                                             placeholder="e.g. -122.0840000"
-                                            className="w-full px-3 py-2 border border-gray-600 bg-gray-800/50 rounded-lg text-sm font-mono text-white placeholder-gray-500"
+                                            className="schema-input font-mono"
                                         />
                                     </div>
                                 </div>
@@ -1443,7 +1660,7 @@ const ContentWriter = () => {
                                     <div className="relative">
                                         <div
                                             ref={mapContainerRef}
-                                            className="w-full h-64 rounded-lg border border-gray-600 overflow-hidden"
+                                            className="igt-map w-full"
                                             style={{ background: '#1f2937' }}
                                         />
                                         <p className="text-xs text-white/50 mt-2">Click on the map or drag the marker to set location.</p>
@@ -1543,7 +1760,7 @@ const ContentWriter = () => {
                     );
                     if (response.ok) {
                         html = await response.text();
-                        if (html.includes('<html') && !html.includes('AI Smart Seo</title>')) break;
+                        if (html.includes('<html') && !html.includes('SEOX</title>')) break;
                     }
                 } catch (e) { continue; }
             }
@@ -1752,7 +1969,7 @@ const ContentWriter = () => {
         return (
             <div className="space-y-6">
                 {/* Extract from competitors */}
-                <div className="rounded-2xl border border-white/10 bg-gradient-to-b from-white/[0.04] to-white/[0.01] p-6">
+                <div className="ctool-card">
                     <h3 className="text-lg font-semibold text-white flex items-center gap-2 mb-4">
                         <List className="w-5 h-5 text-emerald-600" />
                         Extract Outlines from Competitors
@@ -1901,7 +2118,7 @@ const ContentWriter = () => {
 
                 {/* Extracted Outlines Display */}
                 {outlinesList.length > 0 && (
-                    <div className="rounded-2xl border border-white/10 bg-gradient-to-b from-white/[0.04] to-white/[0.01] p-6">
+                    <div className="ctool-card">
                         <h3 className="text-lg font-semibold text-white flex items-center gap-2 mb-4">
                             <FileText className="w-5 h-5 text-brand-500" />
                             Extracted Outlines ({outlinesList.length})
@@ -2157,7 +2374,7 @@ const ContentWriter = () => {
                 </div>
 
                 {/* Extract from Competitor URLs */}
-                <div className="rounded-2xl border border-white/10 bg-gradient-to-b from-white/[0.04] to-white/[0.01] p-6">
+                <div className="ctool-card">
                     <h4 className="font-semibold text-white flex items-center gap-2 mb-4">
                         <Globe className="w-4 h-4 text-brand-400" />
                         Extract Content from Competitors
@@ -2201,7 +2418,7 @@ const ContentWriter = () => {
                 </div>
 
                 {/* Manual Paste Area */}
-                <div className="rounded-2xl border border-white/10 bg-gradient-to-b from-white/[0.04] to-white/[0.01] p-6">
+                <div className="ctool-card">
                     <div className="flex items-center justify-between mb-4">
                         <h4 className="font-semibold text-white flex items-center gap-2">
                             <FileEdit className="w-4 h-4 text-brand-400" />
@@ -2245,7 +2462,7 @@ const ContentWriter = () => {
                 </div>
 
                 {/* Content Input */}
-                <div className="rounded-2xl border border-white/10 bg-gradient-to-b from-white/[0.04] to-white/[0.01] p-6">
+                <div className="ctool-card">
                     <div className="flex items-center justify-between mb-4">
                         <h4 className="font-semibold text-white flex items-center gap-2">
                             <Edit3 className="w-4 h-4 text-brand-400" />
@@ -2278,7 +2495,7 @@ const ContentWriter = () => {
                                 .competitor-content strong, .competitor-content b { font-weight: 700; }
                                 .competitor-content em, .competitor-content i { font-style: italic; }
                                 .competitor-content hr { margin: 1rem 0; border-color: #e5e7eb; }
-                                .competitor-content:focus { outline: 2px solid #f97316; outline-offset: -2px; }
+                                .competitor-content:focus { outline: 2px solid #df3c27; outline-offset: -2px; }
                             `}</style>
                             <div
                                 className="competitor-content px-4 py-3 text-white/75 min-h-full"
@@ -2299,7 +2516,7 @@ const ContentWriter = () => {
 
                 {/* What AI Will Extract */}
                 {competitorContent && wordCount >= 100 && (
-                    <div className="rounded-2xl border border-white/10 bg-gradient-to-b from-white/[0.04] to-white/[0.01] p-6">
+                    <div className="ctool-card">
                         <h4 className="font-semibold text-white mb-4 flex items-center gap-2">
                             <Sparkles className="w-4 h-4 text-brand-400" />
                             AI Will Analyze
@@ -2692,7 +2909,7 @@ Return JSON: {"ngrams": ["unique phrase 1", "unique phrase 2", ...]}`,
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     {/* Competitor Entities */}
-                    <div className="rounded-2xl border border-white/10 bg-gradient-to-b from-white/[0.04] to-white/[0.01] p-4">
+                    <div className="ctool-card scw-card-sm">
                         <h4 className="font-semibold text-white flex items-center gap-2 mb-3">
                             <Layers className="w-4 h-4 text-brand-500" />
                             Competitor Entities
@@ -2723,7 +2940,7 @@ Return JSON: {"ngrams": ["unique phrase 1", "unique phrase 2", ...]}`,
                     </div>
 
                     {/* AI Generated Entities */}
-                    <div className="rounded-2xl border border-white/10 bg-gradient-to-b from-white/[0.04] to-white/[0.01] p-4">
+                    <div className="ctool-card scw-card-sm">
                         <h4 className="font-semibold text-white flex items-center gap-2 mb-3">
                             <Sparkles className="w-4 h-4 text-brand-500" />
                             AI-Generated Entities
@@ -2828,7 +3045,7 @@ Return JSON: {"ngrams": ["unique phrase 1", "unique phrase 2", ...]}`,
                 {/* N-Gram Sections */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {/* Competitor N-Grams (default: unchecked/excluded) */}
-                    <div className="rounded-2xl border border-white/10 bg-gradient-to-b from-white/[0.04] to-white/[0.01] p-4">
+                    <div className="ctool-card scw-card-sm">
                         <h4 className="font-semibold text-white flex items-center gap-2 mb-2">
                             <Layers className="w-4 h-4 text-blue-400" />
                             Competitor N-Grams
@@ -2890,7 +3107,7 @@ Return JSON: {"ngrams": ["unique phrase 1", "unique phrase 2", ...]}`,
                     </div>
 
                     {/* AI Generated N-Grams */}
-                    <div className="rounded-2xl border border-white/10 bg-gradient-to-b from-white/[0.04] to-white/[0.01] p-4">
+                    <div className="ctool-card scw-card-sm">
                         <h4 className="font-semibold text-white flex items-center gap-2 mb-2">
                             <Sparkles className="w-4 h-4 text-brand-500" />
                             AI Generated N-Grams
@@ -2998,7 +3215,7 @@ Return JSON: {"ngrams": ["unique phrase 1", "unique phrase 2", ...]}`,
                     <X className="w-3 h-3" /> Click a keyword to exclude it • <Check className="w-3 h-3 text-emerald-600" /> All included by default
                 </p>
 
-                <div className="rounded-2xl border border-white/10 bg-gradient-to-b from-white/[0.04] to-white/[0.01] p-6">
+                <div className="ctool-card">
                     <h4 className="font-semibold text-white flex items-center gap-2 mb-4">
                         <Brain className="w-5 h-5 text-emerald-600" />
                         NLP Keywords (LSI Terms)
@@ -3061,7 +3278,7 @@ Return JSON: {"ngrams": ["unique phrase 1", "unique phrase 2", ...]}`,
                     <X className="w-3 h-3" /> Click a word pair to exclude it • <Check className="w-3 h-3 text-rose-600" /> All included by default
                 </p>
 
-                <div className="rounded-2xl border border-white/10 bg-gradient-to-b from-white/[0.04] to-white/[0.01] p-6">
+                <div className="ctool-card">
                     <h4 className="font-semibold text-white flex items-center gap-2 mb-4">
                         <Type className="w-5 h-5 text-rose-600" />
                         Skip-Gram Dominant Words
@@ -3232,7 +3449,7 @@ Return JSON: {"ngrams": ["unique phrase 1", "unique phrase 2", ...]}`,
         return (
             <div className="space-y-6">
                 {/* Header with Generate Button */}
-                <div className="rounded-2xl border border-white/10 bg-gradient-to-b from-white/[0.04] to-white/[0.01] p-6">
+                <div className="ctool-card">
                     <div className="flex items-center justify-between mb-4">
                         <h3 className="text-lg font-semibold text-white flex items-center gap-2">
                             <Sparkles className="w-5 h-5 text-emerald-400" />
@@ -3280,7 +3497,7 @@ Return JSON: {"ngrams": ["unique phrase 1", "unique phrase 2", ...]}`,
                     <div className="bg-gradient-to-r from-brand-500 to-amber-600 rounded-2xl p-1">
                         <div className="rounded-xl bg-white/[0.03] p-6">
                             <div className="flex items-center justify-between mb-4">
-                                <h3 className="text-lg font-semibold text-brand-300 flex items-center gap-2">
+                                <h3 className="scw-serp-title flex items-center gap-2">
                                     <Brain className="w-5 h-5" />
                                     AI Suggested Keywords ({aiPickedKeywords.length})
                                 </h3>
@@ -3319,7 +3536,7 @@ Return JSON: {"ngrams": ["unique phrase 1", "unique phrase 2", ...]}`,
 
                 {/* Base Suggestions Section */}
                 {baseKeywords.length > 0 && (
-                    <div className="rounded-2xl shadow-lg border border-white/10 bg-ink-800 overflow-hidden">
+                    <div className="scw-editor">
                         <div className="px-4 py-3 bg-green-500 text-white font-bold flex items-center justify-between">
                             <span className="flex items-center gap-2">
                                 <Search className="w-5 h-5" />
@@ -3327,7 +3544,7 @@ Return JSON: {"ngrams": ["unique phrase 1", "unique phrase 2", ...]}`,
                             </span>
                             <button
                                 onClick={() => navigator.clipboard.writeText(baseKeywords.join('\n'))}
-                                className="p-1 hover:bg-white/10 rounded transition"
+                                className="scw-tool scw-tool-sm"
                                 title="Copy all"
                             >
                                 <Copy className="w-4 h-4" />
@@ -3351,7 +3568,7 @@ Return JSON: {"ngrams": ["unique phrase 1", "unique phrase 2", ...]}`,
 
                 {/* A-Z Letter Variations */}
                 {Object.keys(autoSuggestKeywords).some(k => ALPHABET.includes(k.toLowerCase()) && autoSuggestKeywords[k]?.length > 0) && (
-                    <div className="rounded-2xl shadow-lg border border-white/10 bg-ink-800 overflow-hidden">
+                    <div className="scw-editor">
                         <div
                             onClick={() => setExpandedSuggestSections(prev => ({ ...prev, letters: !prev.letters }))}
                             className="p-4 bg-gradient-to-r from-green-500 to-emerald-500 text-white cursor-pointer flex items-center justify-between"
@@ -3374,14 +3591,14 @@ Return JSON: {"ngrams": ["unique phrase 1", "unique phrase 2", ...]}`,
                                                 <div className="flex items-center gap-1">
                                                     <button
                                                         onClick={() => toggleColumnCheck(keywords)}
-                                                        className="p-1 hover:bg-white/10 rounded transition"
+                                                        className="scw-tool scw-tool-sm"
                                                         title="Toggle all"
                                                     >
                                                         <Check className="w-3 h-3" />
                                                     </button>
                                                     <button
                                                         onClick={() => navigator.clipboard.writeText(keywords.join('\n'))}
-                                                        className="p-1 hover:bg-white/10 rounded transition"
+                                                        className="scw-tool scw-tool-sm"
                                                         title="Copy column"
                                                     >
                                                         <Copy className="w-3 h-3" />
@@ -3411,7 +3628,7 @@ Return JSON: {"ngrams": ["unique phrase 1", "unique phrase 2", ...]}`,
 
                 {/* 0-9 Number Variations */}
                 {Object.keys(autoSuggestKeywords).some(k => NUMBERS.includes(k) && autoSuggestKeywords[k]?.length > 0) && (
-                    <div className="rounded-2xl shadow-lg border border-white/10 bg-ink-800 overflow-hidden">
+                    <div className="scw-editor">
                         <div
                             onClick={() => setExpandedSuggestSections(prev => ({ ...prev, numbers: !prev.numbers }))}
                             className="p-4 bg-gradient-to-r from-blue-500 to-cyan-500 text-white cursor-pointer flex items-center justify-between"
@@ -3434,14 +3651,14 @@ Return JSON: {"ngrams": ["unique phrase 1", "unique phrase 2", ...]}`,
                                                 <div className="flex items-center gap-1">
                                                     <button
                                                         onClick={() => toggleColumnCheck(keywords)}
-                                                        className="p-1 hover:bg-white/10 rounded transition"
+                                                        className="scw-tool scw-tool-sm"
                                                         title="Toggle all"
                                                     >
                                                         <Check className="w-3 h-3" />
                                                     </button>
                                                     <button
                                                         onClick={() => navigator.clipboard.writeText(keywords.join('\n'))}
-                                                        className="p-1 hover:bg-white/10 rounded transition"
+                                                        className="scw-tool scw-tool-sm"
                                                         title="Copy column"
                                                     >
                                                         <Copy className="w-3 h-3" />
@@ -3590,7 +3807,7 @@ Return JSON: {"ngrams": ["unique phrase 1", "unique phrase 2", ...]}`,
                 )}
 
                 {grammarResults && (
-                    <div className="rounded-2xl border border-white/10 bg-gradient-to-b from-white/[0.04] to-white/[0.01] p-6">
+                    <div className="ctool-card">
                         <div className="flex items-center justify-between mb-4">
                             <h3 className="text-lg font-semibold text-white">Results for "{grammarResults.term}"</h3>
                             <p className="text-xs text-white/50 flex items-center gap-1">
@@ -3895,7 +4112,7 @@ Start with a clear Yes or No, then elaborate with supporting details.`
         };
 
         return (
-            <div className="rounded-2xl border border-white/10 bg-gradient-to-b from-white/[0.04] to-white/[0.01] p-6">
+            <div className="ctool-card">
                 <div className="flex items-center justify-between mb-4">
                     <h3 className="text-lg font-semibold text-white flex items-center gap-2">
                         <Settings className="w-5 h-5 text-amber-400" />
@@ -4537,9 +4754,9 @@ BEGIN WRITING THE ARTICLE NOW:`;
             setMegaPrompt(prompt); // Store for reference
 
             // Try OpenAI first, then OpenRouter, then Claude, then fallback to DeepSeek Chat.
-            const openaiKey = localStorage.getItem('openaiApiKey') || '';
-            const openrouterKey = localStorage.getItem('openrouterApiKey') || '';
-            const claudeKey = localStorage.getItem('claudeApiKey') || '';
+            const openaiKey = '';
+            const openrouterKey = '';
+            const claudeKey = '';
             let generatedText = '';
 
             if (openaiKey) {
@@ -4639,7 +4856,7 @@ BEGIN WRITING THE ARTICLE NOW:`;
 
         return (
             <div className="space-y-4">
-                <div className="rounded-2xl border border-white/10 bg-gradient-to-b from-white/[0.04] to-white/[0.01] p-6">
+                <div className="ctool-card">
                     <div className="flex items-center justify-between mb-4">
                         <h3 className="text-lg font-semibold text-white flex items-center gap-2">
                             <FileText className="w-5 h-5 text-brand-500" />
@@ -4887,61 +5104,60 @@ BEGIN WRITING THE ARTICLE NOW:`;
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 {/* Main Editor - Left Side */}
                 <div className="lg:col-span-2 space-y-4">
-                    {/* Toolbar */}
-                    <div className="rounded-2xl border border-white/10 bg-white/[0.03] ">
+                    {/* Toolbar & Editor Card */}
+                    <div className="scw-panel">
                         <div
-                            className="flex items-center gap-1 p-3 border-b border-gray-100 flex-wrap"
+                            className="scw-toolbar flex-wrap"
                             onMouseDownCapture={saveSelection}
                         >
                             {/* Font dropdown */}
-                            <select className="px-3 py-1.5 border border-white/10 rounded-lg text-sm" onChange={(e) => execCommand('fontName', e.target.value)}>
-                                <option>Aa</option>
+                            <select className="schema-input scw-tool-select" onChange={(e) => execCommand('fontName', e.target.value)}>
+                                <option value="">Font</option>
                                 <option value="serif">Serif</option>
                                 <option value="sans-serif">Sans-serif</option>
                                 <option value="monospace">Monospace</option>
                             </select>
 
-                            <div className="w-px h-6 bg-white/15 mx-1" />
+                            <div className="scw-tool-sep" />
 
                             {/* Text formatting */}
-                            <button onClick={() => execCommand('bold')} className="p-2 hover:bg-white/[0.06] rounded-lg font-bold" title="Bold">B</button>
-                            <button onClick={() => execCommand('italic')} className="p-2 hover:bg-white/[0.06] rounded-lg italic" title="Italic">I</button>
-                            <button onClick={() => execCommand('underline')} className="p-2 hover:bg-white/[0.06] rounded-lg underline" title="Underline">U</button>
-                            <button onClick={() => execCommand('strikeThrough')} className="p-2 hover:bg-white/[0.06] rounded-lg line-through" title="Strikethrough">S</button>
+                            <button onClick={() => execCommand('bold')} className="scw-tool font-bold" title="Bold">B</button>
+                            <button onClick={() => execCommand('italic')} className="scw-tool italic" title="Italic">I</button>
+                            <button onClick={() => execCommand('underline')} className="scw-tool underline" title="Underline">U</button>
+                            <button onClick={() => execCommand('strikeThrough')} className="scw-tool line-through" title="Strikethrough">S</button>
 
-                            <div className="w-px h-6 bg-white/15 mx-1" />
+                            <div className="scw-tool-sep" />
 
                             {/* Alignment */}
-                            <button onClick={() => execCommand('justifyLeft')} className="p-2 hover:bg-white/[0.06] rounded-lg" title="Align Left">
+                            <button onClick={() => execCommand('justifyLeft')} className="scw-tool" title="Align Left">
                                 <AlignLeft className="w-4 h-4" />
                             </button>
-                            <button onClick={() => execCommand('justifyCenter')} className="p-2 hover:bg-white/[0.06] rounded-lg" title="Align Center">
+                            <button onClick={() => execCommand('justifyCenter')} className="scw-tool" title="Align Center">
                                 <AlignCenter className="w-4 h-4" />
                             </button>
 
-                            <div className="w-px h-6 bg-white/15 mx-1" />
+                            <div className="scw-tool-sep" />
 
                             {/* Lists */}
-                            <button onClick={() => execCommand('insertUnorderedList')} className="p-2 hover:bg-white/[0.06] rounded-lg" title="Bullet List">
+                            <button onClick={() => execCommand('insertUnorderedList')} className="scw-tool" title="Bullet List">
                                 <List className="w-4 h-4" />
                             </button>
-                            <button onClick={() => execCommand('insertOrderedList')} className="p-2 hover:bg-white/[0.06] rounded-lg" title="Numbered List">
+                            <button onClick={() => execCommand('insertOrderedList')} className="scw-tool" title="Numbered List">
                                 <ListOrdered className="w-4 h-4" />
                             </button>
 
-                            <div className="w-px h-6 bg-white/15 mx-1" />
+                            <div className="scw-tool-sep" />
 
                             {/* Headings */}
                             <select
-                                className="px-2 py-1.5 border border-white/10 rounded-lg text-sm cursor-pointer"
+                                className="schema-input scw-tool-select"
                                 onMouseDown={(e) => {
-                                    // Save selection before dropdown steals focus
                                     saveSelection();
                                 }}
                                 onChange={(e) => {
                                     if (e.target.value) {
                                         applyBlockFormat(e.target.value);
-                                        e.target.selectedIndex = 0; // Reset to show "Heading" again
+                                        e.target.selectedIndex = 0;
                                     }
                                 }}
                                 defaultValue=""
@@ -4956,99 +5172,99 @@ BEGIN WRITING THE ARTICLE NOW:`;
                                 <option value="H6">H6</option>
                             </select>
 
-                            <div className="w-px h-6 bg-white/15 mx-1" />
+                            <div className="scw-tool-sep" />
 
                             {/* Links & Media */}
-                            <button onClick={insertLink} className="p-2 hover:bg-white/[0.06] rounded-lg" title="Insert Link">
+                            <button onClick={insertLink} className="scw-tool" title="Insert Link">
                                 <Link2 className="w-4 h-4" />
                             </button>
-                            <button onClick={insertImage} className="p-2 hover:bg-white/[0.06] rounded-lg" title="Insert Image">
+                            <button onClick={insertImage} className="scw-tool" title="Insert Image">
                                 <ImageIcon className="w-4 h-4" />
                             </button>
 
-                            <div className="w-px h-6 bg-white/15 mx-1" />
+                            <div className="scw-tool-sep" />
 
                             {/* Undo/Redo */}
-                            <button onClick={() => execCommand('undo')} className="p-2 hover:bg-white/[0.06] rounded-lg" title="Undo">
+                            <button onClick={() => execCommand('undo')} className="scw-tool" title="Undo">
                                 <Undo className="w-4 h-4" />
                             </button>
-                            <button onClick={() => execCommand('redo')} className="p-2 hover:bg-white/[0.06] rounded-lg" title="Redo">
+                            <button onClick={() => execCommand('redo')} className="scw-tool" title="Redo">
                                 <Redo className="w-4 h-4" />
                             </button>
                         </div>
 
-                        <div className="flex items-center gap-2 px-3 py-2 border-b border-gray-100">
+                        <div className="scw-actionbar flex-wrap">
                             {/* Left: Generate with AI + View Prompt + Writer Outline */}
                             <button
                                 onClick={generateContent}
                                 disabled={isGenerating || !mainKeyword}
-                                className="px-4 py-2 bg-gradient-to-r from-brand-500 to-amber-600 text-white rounded-lg font-medium flex items-center gap-2 disabled:opacity-50 hover:shadow-lg transition"
+                                className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-brand-500 to-amber-500 px-5 py-2 text-xs font-bold text-white shadow-lg shadow-brand-500/20 transition hover:shadow-brand-500/40 disabled:opacity-40"
                             >
                                 {isGenerating ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
                                 Generate with AI
                             </button>
                             <button
                                 onClick={() => { setMegaPrompt(masterPrompt || buildMegaPrompt()); setShowPromptModal(true); }}
-                                className="px-3 py-2 bg-white/[0.06] text-white/70 rounded-lg font-medium flex items-center gap-2 hover:bg-white/[0.1] transition text-sm"
+                                className="ui-button eeat-secondary-button"
                             >
-                                <FileText className="w-4 h-4" />
+                                <FileText className="w-3.5 h-3.5" />
                                 View Prompt
                             </button>
                             <button
                                 onClick={insertWriterOutline}
                                 disabled={!mainKeyword}
-                                className="px-3 py-2 bg-blue-100 text-blue-700 rounded-lg font-medium flex items-center gap-2 hover:bg-blue-200 transition text-sm disabled:opacity-50"
+                                className="ui-button eeat-secondary-button"
                                 title="Fill editor with collected data (entities, keywords, SEO rules, etc.)"
                             >
-                                <List className="w-4 h-4" />
+                                <List className="w-3.5 h-3.5" />
                                 Writer Outline
                             </button>
 
-                            {/* Spacer to push right items */}
+                            {/* Spacer */}
                             <div className="flex-1" />
 
                             {/* Right: Show Process + Start Fresh */}
                             <button
                                 onClick={() => setShowProcessOnStep12(!showProcessOnStep12)}
-                                className="px-3 py-2 bg-brand-500/15 text-brand-300 rounded-lg font-medium flex items-center gap-2 hover:bg-brand-200 transition text-sm"
+                                className="ui-button eeat-secondary-button"
                                 title="Toggle 12-step process visibility"
                             >
-                                <Layers className="w-4 h-4" />
+                                <Layers className="w-3.5 h-3.5" />
                                 {showProcessOnStep12 ? 'Hide Process' : 'Show Process'}
                             </button>
                             <button
                                 onClick={resetAllState}
-                                className="px-3 py-2 bg-emerald-500/15 text-emerald-300 rounded-lg font-medium flex items-center gap-2 hover:bg-green-200 transition text-sm"
+                                className="ui-button eeat-secondary-button"
                                 title="Reset all progress and start fresh"
                             >
-                                <RefreshCw className="w-4 h-4" />
+                                <RefreshCw className="w-3.5 h-3.5" />
                                 Start Fresh
                             </button>
                         </div>
 
                         {/* Mega Prompt Modal */}
                         {showPromptModal && (
-                            <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-                                <div className="rounded-2xl shadow-2xl bg-ink-800 max-w-4xl w-full max-h-[80vh] overflow-hidden">
+                            <div className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
+                                <div className="scw-modal max-w-4xl w-full max-h-[80vh] overflow-hidden">
                                     <div className="flex items-center justify-between p-4 border-b border-white/10">
-                                        <h3 className="text-lg font-semibold text-white flex items-center gap-2">
-                                            <FileText className="w-5 h-5 text-brand-500" />
+                                        <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                                            <FileText className="w-5 h-5 text-brand-400" />
                                             Mega Prompt Preview
                                         </h3>
                                         <div className="flex items-center gap-2">
                                             <button
                                                 onClick={() => { navigator.clipboard.writeText(megaPrompt); }}
-                                                className="px-3 py-1.5 bg-brand-500/15 text-brand-300 rounded-lg text-sm font-medium flex items-center gap-1"
+                                                className="ui-button eeat-secondary-button"
                                             >
-                                                <Copy className="w-3 h-3" /> Copy
+                                                <Copy className="w-3.5 h-3.5" /> Copy
                                             </button>
-                                            <button onClick={() => setShowPromptModal(false)} className="p-2 hover:bg-white/[0.06] rounded-lg">
+                                            <button onClick={() => setShowPromptModal(false)} className="scw-tool">
                                                 <X className="w-5 h-5" />
                                             </button>
                                         </div>
                                     </div>
                                     <div className="p-4 overflow-y-auto max-h-[calc(80vh-80px)]">
-                                        <pre className="whitespace-pre-wrap text-sm text-white/75 font-mono bg-white/[0.03] p-4 rounded-xl border border-white/10">
+                                        <pre className="stool-code whitespace-pre-wrap">
                                             {megaPrompt}
                                         </pre>
                                     </div>
@@ -5057,10 +5273,9 @@ BEGIN WRITING THE ARTICLE NOW:`;
                         )}
 
                         {/* Feedback banner */}
-                        <div className="flex items-center gap-2 px-4 py-2 bg-blue-50 text-blue-700 text-sm border-b border-blue-100">
-                            <AlertCircle className="w-4 h-4" />
+                        <div className="flex items-center gap-2 px-4 py-2.5 bg-brand-500/10 text-brand-300 text-xs border-b border-brand-500/20">
+                            <AlertCircle className="w-4 h-4 text-brand-400 flex-shrink-0" />
                             <span>AI will generate SEO-optimized content using all your collected data. Click "View Prompt" to see what's being sent.</span>
-                            <button className="ml-auto text-blue-500 hover:text-blue-700">×</button>
                         </div>
 
                         {/* Article Title */}
@@ -5070,7 +5285,7 @@ BEGIN WRITING THE ARTICLE NOW:`;
                                 value={articleTitle}
                                 onChange={(e) => setArticleTitle(e.target.value)}
                                 placeholder="Article Title..."
-                                className="w-full text-4xl font-bold text-white border-none outline-none placeholder-gray-300 bg-transparent"
+                                className="scw-title-input"
                             />
                         </div>
 
@@ -5087,17 +5302,17 @@ BEGIN WRITING THE ARTICLE NOW:`;
                             onSelect={saveSelection}
                             onMouseUp={saveSelection}
                             onKeyUp={saveSelection}
-                            className="min-h-[400px] max-h-[600px] overflow-y-auto p-6 focus:outline-none prose prose-lg max-w-none [&_h1]:block [&_h1]:text-4xl [&_h1]:font-bold [&_h1]:leading-tight [&_h1]:my-4 [&_h2]:block [&_h2]:text-3xl [&_h2]:font-bold [&_h2]:leading-tight [&_h2]:my-3 [&_h3]:block [&_h3]:text-2xl [&_h3]:font-semibold [&_h3]:leading-snug [&_h3]:my-3 [&_h4]:block [&_h4]:text-xl [&_h4]:font-semibold [&_h4]:leading-snug [&_h4]:my-2 [&_h5]:block [&_h5]:text-lg [&_h5]:font-semibold [&_h5]:leading-snug [&_h5]:my-2 [&_h6]:block [&_h6]:text-base [&_h6]:font-semibold [&_h6]:leading-snug [&_h6]:my-2 [&_p]:my-2 [&_ul]:list-disc [&_ul]:pl-6 [&_ol]:list-decimal [&_ol]:pl-6"
+                            className="scw-canvas prose max-w-none"
                             style={{ lineHeight: '1.8' }}
                         />
 
                         {/* Footer */}
-                        <div className="flex items-center justify-between px-4 py-2 border-t border-gray-100 text-sm text-white/50">
+                        <div className="scw-editor-foot">
                             <div className="flex items-center gap-2">
-                                <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
-                                Connected • Editing
+                                <span className="scw-dot" />
+                                Connected • Editing Mode
                             </div>
-                            <button className="text-blue-400 hover:underline">Show version history</button>
+                            <span className="scw-foot-note">Auto-saved to local database</span>
                         </div>
                     </div>
                 </div>
@@ -5105,30 +5320,30 @@ BEGIN WRITING THE ARTICLE NOW:`;
                 {/* Sidebar - Right Side */}
                 <div className="space-y-4">
                     {/* Tab Navigation */}
-                    <div className="rounded-2xl border border-white/10 bg-white/[0.03]  overflow-hidden">
-                        <div className="flex border-b border-white/10">
+                    <div className="scw-panel">
+                        <div className="scw-tabs">
                             {['guidelines', 'outline', 'brief'].map(tab => (
                                 <button
                                     key={tab}
                                     onClick={() => setSidebarTab(tab)}
-                                    className={`flex-1 py-3 text-sm font-medium transition ${sidebarTab === tab ? 'text-blue-400 border-b-2 border-blue-600 bg-blue-50/50' : 'text-white/50 hover:text-white/75'}`}
+                                    className={`ui-button ctool-tab scw-tab ${sidebarTab === tab ? 'active' : ''}`}
                                 >
-                                    {tab.toUpperCase()}
+                                    {tab}
                                 </button>
                             ))}
                         </div>
 
-                        <div className="p-4">
+                        <div className="p-5">
                             {sidebarTab === 'guidelines' && (
                                 <>
                                     {/* Content Score Gauge */}
                                     <div className="text-center mb-6">
-                                        <p className="text-sm text-white/50 mb-3 flex items-center justify-center gap-1">
-                                            Content Score <AlertCircle className="w-3 h-3" />
+                                        <p className="stool-label mb-3 flex items-center justify-center gap-1">
+                                            Content Score <AlertCircle className="w-3.5 h-3.5 text-brand-400" />
                                         </p>
                                         <div className="relative w-32 h-32 mx-auto">
                                             <svg className="w-32 h-32 transform -rotate-90">
-                                                <circle cx="64" cy="64" r="45" stroke="#e5e7eb" strokeWidth="10" fill="none" />
+                                                <circle cx="64" cy="64" r="45" stroke="#334155" strokeWidth="10" fill="none" />
                                                 <circle
                                                     cx="64" cy="64" r="45"
                                                     stroke={scoreColor}
@@ -5141,47 +5356,41 @@ BEGIN WRITING THE ARTICLE NOW:`;
                                                 />
                                             </svg>
                                             <div className="absolute inset-0 flex items-center justify-center">
-                                                <span className="text-3xl font-bold text-white">{contentScore}</span>
-                                                <span className="text-lg text-white/40">/100</span>
+                                                <span className="scw-score">{contentScore}</span>
+                                                <span className="scw-score-max">/100</span>
                                             </div>
                                         </div>
-                                        <div className="flex justify-center gap-4 mt-3 text-xs text-white/50">
+                                        <div className="flex justify-center gap-4 mt-3 ctool-help-text">
                                             <span>Avg ↓ 70</span>
                                             <span>Top ↗ 79</span>
                                         </div>
-                                        <button className="mt-2 text-sm text-white/60 flex items-center gap-1 mx-auto">
-                                            Details <ChevronDown className="w-3 h-3" />
-                                        </button>
                                     </div>
 
                                     {/* Content Structure */}
-                                    <div className="border-t border-gray-100 pt-4">
+                                    <div className="border-t border-white/10 pt-4">
                                         <div className="flex items-center justify-between mb-3">
-                                            <h4 className="font-semibold text-white">Content Structure</h4>
-                                            <button className="text-xs text-white/50 flex items-center gap-1">
-                                                <Settings className="w-3 h-3" /> Adjust
-                                            </button>
+                                            <h4 className="font-bold text-white text-xs uppercase tracking-wider">Content Structure</h4>
                                         </div>
                                         <div className="grid grid-cols-4 gap-2 text-center">
-                                            <div>
-                                                <div className="text-lg font-bold text-emerald-400">{wordCount.toLocaleString()}</div>
-                                                <div className="text-[10px] text-white/40">2,900-3,335</div>
-                                                <div className="text-xs text-white/50">WORDS</div>
+                                            <div className="scw-stat">
+                                                <div className="text-base font-black text-emerald-400">{wordCount.toLocaleString()}</div>
+                                                <div className="scw-stat-label">Target</div>
+                                                <div className="scw-stat-sub">WORDS</div>
                                             </div>
-                                            <div>
-                                                <div className="text-lg font-bold text-amber-400">{headingCount}</div>
-                                                <div className="text-[10px] text-white/40">25-28</div>
-                                                <div className="text-xs text-white/50">HEADINGS</div>
+                                            <div className="scw-stat">
+                                                <div className="text-base font-black text-amber-400">{headingCount}</div>
+                                                <div className="scw-stat-label">Target</div>
+                                                <div className="scw-stat-sub">HEADINGS</div>
                                             </div>
-                                            <div>
-                                                <div className="text-lg font-bold text-emerald-400">{paragraphCount}</div>
-                                                <div className="text-[10px] text-white/40">57-68</div>
-                                                <div className="text-xs text-white/50">PARAGRAPHS</div>
+                                            <div className="scw-stat">
+                                                <div className="text-base font-black text-emerald-400">{paragraphCount}</div>
+                                                <div className="scw-stat-label">Target</div>
+                                                <div className="scw-stat-sub">PARAGRAPHS</div>
                                             </div>
-                                            <div>
-                                                <div className="text-lg font-bold text-red-600">{imageCount}</div>
-                                                <div className="text-[10px] text-white/40">16-19</div>
-                                                <div className="text-xs text-white/50">IMAGES</div>
+                                            <div className="scw-stat">
+                                                <div className="text-base font-black text-brand-400">{imageCount}</div>
+                                                <div className="scw-stat-label">Target</div>
+                                                <div className="scw-stat-sub">IMAGES</div>
                                             </div>
                                         </div>
                                     </div>
@@ -5189,63 +5398,54 @@ BEGIN WRITING THE ARTICLE NOW:`;
                             )}
 
                             {sidebarTab === 'outline' && (
-                                <div className="space-y-1 text-sm max-h-96 overflow-y-auto">
-                                    {combinedOutline.map((h, i) => (
-                                        <div key={i} className="flex items-center gap-2 py-1" style={{ paddingLeft: `${(h.level - 1) * 12}px` }}>
-                                            <span className="text-xs text-white/40">h{h.level}</span>
-                                            <span className="text-white/75">{h.text}</span>
+                                <div className="space-y-1.5 text-xs max-h-96 overflow-y-auto">
+                                    {combinedOutline.length > 0 ? combinedOutline.map((h, i) => (
+                                        <div key={i} className="scw-listrow" style={{ paddingLeft: `${(h.level - 1) * 12 + 8}px` }}>
+                                            <span className="text-[10px] font-bold text-brand-400 uppercase">H{h.level}</span>
+                                            <span className="scw-listrow-text">{h.text}</span>
                                         </div>
-                                    ))}
+                                    )) : (
+                                        <p className="ctool-help-text text-center py-4">No outline created yet</p>
+                                    )}
                                 </div>
                             )}
 
                             {sidebarTab === 'brief' && (
-                                <div className="space-y-3 text-sm text-white/60">
-                                    <p><strong>Main Keyword:</strong> {mainKeyword}</p>
-                                    <p><strong>Target Word Count:</strong> 2,900 - 3,335</p>
-                                    <p><strong>SEO Rules:</strong> {selectedRules.length} active</p>
+                                <div className="space-y-3 ctool-help-text">
+                                    <p><strong className="text-white">Main Keyword:</strong> {mainKeyword || 'Not set'}</p>
+                                    <p><strong className="text-white">Mode:</strong> {writerMode === 'quick' ? '⚡ Quick' : '🔬 Express'}</p>
+                                    <p><strong className="text-white">Active Rules:</strong> {selectedRules.length} enabled</p>
                                 </div>
                             )}
                         </div>
                     </div>
 
                     {/* Extracted Data Panels */}
-                    <div className="rounded-2xl border border-white/10 bg-white/[0.03]  p-4 space-y-4 max-h-[600px] overflow-y-auto">
-                        <h4 className="font-semibold text-white text-sm">Extracted Data</h4>
+                    <div className="scw-panel scw-panel-pad space-y-4 max-h-[600px] overflow-y-auto">
+                        <h4 className="font-bold text-white text-xs uppercase tracking-wider">Extracted Data & Keywords</h4>
 
                         {/* Entities Box */}
                         {(keywordData.competitorEntities?.length > 0 || keywordData.aiEntities?.length > 0 || keywordData.uniqueEntities?.length > 0) && (
-                            <div className="border border-brand-200 rounded-xl p-3 bg-brand-500/100/10">
-                                <h5 className="font-semibold text-brand-300 text-xs mb-2 flex items-center gap-1">
+                            <div className="border border-amber-500/20 rounded-xl p-3 bg-amber-500/5">
+                                <h5 className="font-bold text-amber-300 text-xs mb-2 flex items-center gap-1">
                                     <Layers className="w-3.5 h-3.5" /> Entities
                                 </h5>
                                 {keywordData.competitorEntities?.length > 0 && (
                                     <div className="mb-2">
-                                        <span className="text-[10px] font-medium text-brand-500 uppercase">Competitor ({keywordData.competitorEntities.length})</span>
+                                        <span className="text-[10px] font-bold text-amber-400 uppercase">Competitor ({keywordData.competitorEntities.length})</span>
                                         <div className="flex flex-wrap gap-1 mt-1">
                                             {keywordData.competitorEntities.slice(0, 15).map((e, i) => (
-                                                <span key={i} onClick={() => execCommand('insertText', ` ${e} `)} className="px-1.5 py-0.5 bg-brand-500/15 text-brand-300 rounded text-[10px] cursor-pointer hover:bg-brand-200">{e}</span>
+                                                <span key={i} onClick={() => execCommand('insertText', ` ${e} `)} className="scw-chip">{e}</span>
                                             ))}
-                                            {keywordData.competitorEntities.length > 15 && <span className="text-[10px] text-brand-500">+{keywordData.competitorEntities.length - 15} more</span>}
                                         </div>
                                     </div>
                                 )}
                                 {keywordData.aiEntities?.length > 0 && (
-                                    <div className="mb-2">
-                                        <span className="text-[10px] font-medium text-brand-500 uppercase">AI-Picked ({keywordData.aiEntities.length})</span>
+                                    <div>
+                                        <span className="text-[10px] font-bold text-amber-400 uppercase">AI-Picked ({keywordData.aiEntities.length})</span>
                                         <div className="flex flex-wrap gap-1 mt-1">
                                             {keywordData.aiEntities.slice(0, 15).map((e, i) => (
-                                                <span key={i} onClick={() => execCommand('insertText', ` ${e} `)} className="px-1.5 py-0.5 bg-brand-500/15 text-brand-300 rounded text-[10px] cursor-pointer hover:bg-brand-200">{e}</span>
-                                            ))}
-                                        </div>
-                                    </div>
-                                )}
-                                {keywordData.uniqueEntities?.length > 0 && (
-                                    <div>
-                                        <span className="text-[10px] font-medium text-brand-500 uppercase">Unique ({keywordData.uniqueEntities.length})</span>
-                                        <div className="flex flex-wrap gap-1 mt-1">
-                                            {keywordData.uniqueEntities.slice(0, 10).map((e, i) => (
-                                                <span key={i} onClick={() => execCommand('insertText', ` ${e} `)} className="px-1.5 py-0.5 bg-brand-200 text-brand-300 rounded text-[10px] cursor-pointer hover:bg-brand-300 font-medium">{e}</span>
+                                                <span key={i} onClick={() => execCommand('insertText', ` ${e} `)} className="scw-chip">{e}</span>
                                             ))}
                                         </div>
                                     </div>
@@ -5255,46 +5455,16 @@ BEGIN WRITING THE ARTICLE NOW:`;
 
                         {/* N-Grams Box */}
                         {(keywordData.competitorNgrams?.length > 0 || keywordData.aiPickedNgrams?.length > 0 || keywordData.aiGeneratedNgrams?.length > 0 || keywordData.uniqueNgrams?.length > 0) && (
-                            <div className="border border-blue-200 rounded-xl p-3 bg-blue-50/50">
-                                <h5 className="font-semibold text-blue-300 text-xs mb-2 flex items-center gap-1">
+                            <div className="border border-blue-500/20 rounded-xl p-3 bg-blue-500/5">
+                                <h5 className="font-bold text-blue-300 text-xs mb-2 flex items-center gap-1">
                                     <Hash className="w-3.5 h-3.5" /> N-Grams
                                 </h5>
                                 {keywordData.aiPickedNgrams?.length > 0 && (
                                     <div className="mb-2">
-                                        <span className="text-[10px] font-medium text-blue-400 uppercase">AI-Picked ({keywordData.aiPickedNgrams.length})</span>
+                                        <span className="text-[10px] font-bold text-blue-400 uppercase">AI-Picked ({keywordData.aiPickedNgrams.length})</span>
                                         <div className="flex flex-wrap gap-1 mt-1">
                                             {keywordData.aiPickedNgrams.slice(0, 12).map((n, i) => (
-                                                <span key={i} onClick={() => execCommand('insertText', ` ${n} `)} className="px-1.5 py-0.5 bg-blue-200 text-blue-300 rounded text-[10px] cursor-pointer hover:bg-blue-300 font-medium">{n}</span>
-                                            ))}
-                                        </div>
-                                    </div>
-                                )}
-                                {keywordData.aiGeneratedNgrams?.length > 0 && (
-                                    <div className="mb-2">
-                                        <span className="text-[10px] font-medium text-blue-400 uppercase">AI-Generated ({keywordData.aiGeneratedNgrams.length})</span>
-                                        <div className="flex flex-wrap gap-1 mt-1">
-                                            {keywordData.aiGeneratedNgrams.slice(0, 12).map((n, i) => (
-                                                <span key={i} onClick={() => execCommand('insertText', ` ${n} `)} className="px-1.5 py-0.5 bg-blue-100 text-blue-700 rounded text-[10px] cursor-pointer hover:bg-blue-200">{n}</span>
-                                            ))}
-                                        </div>
-                                    </div>
-                                )}
-                                {keywordData.uniqueNgrams?.length > 0 && (
-                                    <div className="mb-2">
-                                        <span className="text-[10px] font-medium text-blue-400 uppercase">Unique ({keywordData.uniqueNgrams.length})</span>
-                                        <div className="flex flex-wrap gap-1 mt-1">
-                                            {keywordData.uniqueNgrams.slice(0, 10).map((n, i) => (
-                                                <span key={i} onClick={() => execCommand('insertText', ` ${n} `)} className="px-1.5 py-0.5 bg-blue-200 text-blue-300 rounded text-[10px] cursor-pointer hover:bg-blue-300 font-medium">{n}</span>
-                                            ))}
-                                        </div>
-                                    </div>
-                                )}
-                                {keywordData.competitorNgrams?.length > 0 && (
-                                    <div>
-                                        <span className="text-[10px] font-medium text-blue-400 uppercase">Competitor ({keywordData.competitorNgrams.length})</span>
-                                        <div className="flex flex-wrap gap-1 mt-1">
-                                            {keywordData.competitorNgrams.slice(0, 15).map((n, i) => (
-                                                <span key={i} onClick={() => execCommand('insertText', ` ${n} `)} className="px-1.5 py-0.5 bg-blue-100 text-blue-700 rounded text-[10px] cursor-pointer hover:bg-blue-200">{n}</span>
+                                                <span key={i} onClick={() => execCommand('insertText', ` ${n} `)} className="scw-chip">{n}</span>
                                             ))}
                                         </div>
                                     </div>
@@ -5304,131 +5474,23 @@ BEGIN WRITING THE ARTICLE NOW:`;
 
                         {/* NLP Keywords Box */}
                         {keywordData.nlpKeywords?.length > 0 && (
-                            <div className="border border-emerald-200 rounded-xl p-3 bg-emerald-50/50">
-                                <h5 className="font-semibold text-emerald-800 text-xs mb-2 flex items-center gap-1">
+                            <div className="border border-emerald-500/20 rounded-xl p-3 bg-emerald-500/5">
+                                <h5 className="font-bold text-emerald-300 text-xs mb-2 flex items-center gap-1">
                                     <Brain className="w-3.5 h-3.5" /> NLP Keywords ({keywordData.nlpKeywords.length})
                                 </h5>
                                 <div className="flex flex-wrap gap-1">
                                     {keywordData.nlpKeywords.slice(0, 25).map((kw, i) => (
-                                        <span key={i} onClick={() => execCommand('insertText', ` ${kw} `)} className="px-1.5 py-0.5 bg-emerald-100 text-emerald-700 rounded text-[10px] cursor-pointer hover:bg-emerald-200">{kw}</span>
-                                    ))}
-                                    {keywordData.nlpKeywords.length > 25 && <span className="text-[10px] text-emerald-500">+{keywordData.nlpKeywords.length - 25} more</span>}
-                                </div>
-                            </div>
-                        )}
-
-                        {/* Skip-Grams Box */}
-                        {keywordData.skipGrams?.length > 0 && (
-                            <div className="border border-amber-200 rounded-xl p-3 bg-amber-50/50">
-                                <h5 className="font-semibold text-amber-300 text-xs mb-2 flex items-center gap-1">
-                                    <Type className="w-3.5 h-3.5" /> Skip-Gram Words ({keywordData.skipGrams.length})
-                                </h5>
-                                <div className="flex flex-wrap gap-1">
-                                    {keywordData.skipGrams.slice(0, 20).map((sg, i) => (
-                                        <span key={i} onClick={() => execCommand('insertText', ` ${sg} `)} className="px-1.5 py-0.5 bg-amber-500/15 text-amber-300 rounded text-[10px] cursor-pointer hover:bg-amber-200">{sg}</span>
+                                        <span key={i} onClick={() => execCommand('insertText', ` ${kw} `)} className="scw-chip">{kw}</span>
                                     ))}
                                 </div>
-                            </div>
-                        )}
-
-                        {/* Auto-Suggested Keywords Box */}
-                        {(checkedKeywords.size > 0 || allAutoSuggestKeywords.length > 0) && (
-                            <div className="border border-brand-200 rounded-xl p-3 bg-brand-500/100/10">
-                                <h5 className="font-semibold text-brand-300 text-xs mb-2 flex items-center gap-1">
-                                    <Sparkles className="w-3.5 h-3.5" /> Auto-Suggested ({checkedKeywords.size > 0 ? checkedKeywords.size : allAutoSuggestKeywords.length})
-                                </h5>
-                                <div className="flex flex-wrap gap-1">
-                                    {(checkedKeywords.size > 0 ? Array.from(checkedKeywords) : allAutoSuggestKeywords.slice(0, 20)).map((kw, i) => (
-                                        <span key={i} onClick={() => execCommand('insertText', ` ${kw} `)} className="px-1.5 py-0.5 bg-brand-500/15 text-brand-300 rounded text-[10px] cursor-pointer hover:bg-brand-200">{kw}</span>
-                                    ))}
-                                </div>
-                            </div>
-                        )}
-
-                        {/* Grammar Box */}
-                        {grammarResults && (grammarResults.proper_nouns?.length > 0 || grammarResults.common_nouns?.length > 0 || grammarResults.synonyms?.length > 0 || grammarResults.antonyms?.length > 0 || grammarResults.hyponyms?.length > 0 || grammarResults.hypernyms?.length > 0) && (
-                            <div className="border border-brand-200 rounded-xl p-3 bg-brand-500/100/10">
-                                <h5 className="font-semibold text-brand-300 text-xs mb-2 flex items-center gap-1">
-                                    <Type className="w-3.5 h-3.5" /> Grammar Variations
-                                </h5>
-                                {grammarResults.proper_nouns?.length > 0 && (
-                                    <div className="mb-2">
-                                        <span className="text-[10px] font-medium text-brand-500 uppercase">Proper Nouns ({grammarResults.proper_nouns.length})</span>
-                                        <div className="flex flex-wrap gap-1 mt-1">
-                                            {grammarResults.proper_nouns.slice(0, 8).map((w, i) => (
-                                                <span key={i} onClick={() => execCommand('insertText', ` ${w} `)} className="px-1.5 py-0.5 bg-brand-500/15 text-brand-300 rounded text-[10px] cursor-pointer hover:bg-brand-200">{w}</span>
-                                            ))}
-                                        </div>
-                                    </div>
-                                )}
-                                {grammarResults.synonyms?.length > 0 && (
-                                    <div className="mb-2">
-                                        <span className="text-[10px] font-medium text-brand-500 uppercase">Synonyms ({grammarResults.synonyms.length})</span>
-                                        <div className="flex flex-wrap gap-1 mt-1">
-                                            {grammarResults.synonyms.slice(0, 10).map((w, i) => (
-                                                <span key={i} onClick={() => execCommand('insertText', ` ${w} `)} className="px-1.5 py-0.5 bg-brand-500/15 text-brand-300 rounded text-[10px] cursor-pointer hover:bg-brand-200">{w}</span>
-                                            ))}
-                                        </div>
-                                    </div>
-                                )}
-                                {grammarResults.antonyms?.length > 0 && (
-                                    <div className="mb-2">
-                                        <span className="text-[10px] font-medium text-brand-500 uppercase">Antonyms ({grammarResults.antonyms.length})</span>
-                                        <div className="flex flex-wrap gap-1 mt-1">
-                                            {grammarResults.antonyms.slice(0, 8).map((w, i) => (
-                                                <span key={i} onClick={() => execCommand('insertText', ` ${w} `)} className="px-1.5 py-0.5 bg-brand-500/15 text-brand-300 rounded text-[10px] cursor-pointer hover:bg-brand-200">{w}</span>
-                                            ))}
-                                        </div>
-                                    </div>
-                                )}
-                                {grammarResults.hyponyms?.length > 0 && (
-                                    <div className="mb-2">
-                                        <span className="text-[10px] font-medium text-brand-500 uppercase">Hyponyms ({grammarResults.hyponyms.length})</span>
-                                        <div className="flex flex-wrap gap-1 mt-1">
-                                            {grammarResults.hyponyms.slice(0, 8).map((w, i) => (
-                                                <span key={i} onClick={() => execCommand('insertText', ` ${w} `)} className="px-1.5 py-0.5 bg-brand-500/15 text-brand-300 rounded text-[10px] cursor-pointer hover:bg-brand-200">{w}</span>
-                                            ))}
-                                        </div>
-                                    </div>
-                                )}
-                                {grammarResults.hypernyms?.length > 0 && (
-                                    <div className="mb-2">
-                                        <span className="text-[10px] font-medium text-brand-500 uppercase">Hypernyms ({grammarResults.hypernyms.length})</span>
-                                        <div className="flex flex-wrap gap-1 mt-1">
-                                            {grammarResults.hypernyms.slice(0, 8).map((w, i) => (
-                                                <span key={i} onClick={() => execCommand('insertText', ` ${w} `)} className="px-1.5 py-0.5 bg-brand-500/15 text-brand-300 rounded text-[10px] cursor-pointer hover:bg-brand-200">{w}</span>
-                                            ))}
-                                        </div>
-                                    </div>
-                                )}
-                                {grammarResults.meronyms?.length > 0 && (
-                                    <div className="mb-2">
-                                        <span className="text-[10px] font-medium text-brand-500 uppercase">Meronyms ({grammarResults.meronyms.length})</span>
-                                        <div className="flex flex-wrap gap-1 mt-1">
-                                            {grammarResults.meronyms.slice(0, 8).map((w, i) => (
-                                                <span key={i} onClick={() => execCommand('insertText', ` ${w} `)} className="px-1.5 py-0.5 bg-brand-500/15 text-brand-300 rounded text-[10px] cursor-pointer hover:bg-brand-200">{w}</span>
-                                            ))}
-                                        </div>
-                                    </div>
-                                )}
-                                {grammarResults.holonyms?.length > 0 && (
-                                    <div>
-                                        <span className="text-[10px] font-medium text-brand-500 uppercase">Holonyms ({grammarResults.holonyms.length})</span>
-                                        <div className="flex flex-wrap gap-1 mt-1">
-                                            {grammarResults.holonyms.slice(0, 8).map((w, i) => (
-                                                <span key={i} onClick={() => execCommand('insertText', ` ${w} `)} className="px-1.5 py-0.5 bg-brand-500/15 text-brand-300 rounded text-[10px] cursor-pointer hover:bg-brand-200">{w}</span>
-                                            ))}
-                                        </div>
-                                    </div>
-                                )}
                             </div>
                         )}
 
                         {/* Empty State */}
                         {!keywordData.competitorEntities?.length && !keywordData.nlpKeywords?.length && !keywordData.skipGrams?.length && (
-                            <div className="text-center py-6 text-white/40 text-sm">
+                            <div className="text-center py-6 ctool-help-text">
                                 <p>No extracted data yet.</p>
-                                <p className="text-xs mt-1">Complete the previous steps to see data here.</p>
+                                <p className="text-[11px] mt-1">Complete previous steps to surface live keywords & entities.</p>
                             </div>
                         )}
                     </div>
@@ -5474,68 +5536,68 @@ BEGIN WRITING THE ARTICLE NOW:`;
     // If no mode selected, show mode selector (new article screen)
     if (!writerMode) {
         return (
-            <div className="flex flex-col h-screen bg-ink-900 overflow-hidden">
-                <div className="flex items-center gap-3 px-6 py-3 bg-ink-800 border-b border-white/10 shrink-0">
+            <div className="ctool-page space-y-5">
+                {/* Back Navigation Bar */}
+                <div className="scw-backbar">
                     <button
                         onClick={() => navigate('/content/semantic-writer')}
-                        className="flex items-center gap-2 text-sm font-medium text-brand-500 hover:text-brand-300 transition group"
+                        className="ui-button ctool-tool-btn"
                     >
-                        <ArrowLeft className="w-4 h-4 group-hover:-translate-x-0.5 transition-transform" />
+                        <ArrowLeft className="w-3.5 h-3.5" />
                         Back to Articles
                     </button>
+                    <span className="stool-label">New Article Setup</span>
                 </div>
 
-                <div className="flex-1 overflow-auto p-6">
-                    <div className="max-w-3xl mx-auto">
-                        <div className="text-center mb-8">
-                            <h1 className="text-3xl font-bold text-white mb-2">Start New Article</h1>
-                            <p className="text-white/50">Choose your content creation workflow</p>
-                        </div>
-
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            {/* Quick Mode */}
-                            <button
-                                onClick={() => startNewArticle('quick')}
-                                className="group relative rounded-2xl border-2 border-white/10 bg-white/[0.03] hover:border-amber-400 p-8 text-left transition-all hover:shadow-xl hover:shadow-brand-500/10 hover:-translate-y-1"
-                            >
-                                <div className="absolute top-4 right-4 px-3 py-1 bg-amber-500/15 text-amber-300 text-xs font-bold rounded-full uppercase">Fast</div>
-                                <div className="w-14 h-14 bg-gradient-to-br from-amber-400 to-orange-500 rounded-2xl flex items-center justify-center mb-5 shadow-lg shadow-amber-500/20 group-hover:scale-110 transition-transform">
-                                    <Zap className="w-7 h-7 text-white" />
-                                </div>
-                                <h3 className="text-xl font-bold text-white mb-2">⚡ Quick Mode</h3>
-                                <p className="text-white/50 text-sm mb-4">Generate a focused article in 4 simple steps. Perfect for quick content needs.</p>
-                                <div className="space-y-2">
-                                    {['Competitor Research + Keywords', 'Outline Creation', 'Word Count Configuration', 'AI Content Editor'].map(t => (
-                                        <div key={t} className="flex items-center gap-2 text-xs text-white/60">
-                                            <CheckCircle className="w-3.5 h-3.5 text-amber-500" />
-                                            <span>{t}</span>
-                                        </div>
-                                    ))}
-                                </div>
-                            </button>
-
-                            {/* Express Mode */}
-                            <button
-                                onClick={() => startNewArticle('express')}
-                                className="group relative rounded-2xl border-2 border-white/10 bg-white/[0.03] hover:border-brand-400 p-8 text-left transition-all hover:shadow-xl hover:shadow-brand-500/10 hover:-translate-y-1"
-                            >
-                                <div className="absolute top-4 right-4 px-3 py-1 bg-brand-500/15 text-brand-300 text-xs font-bold rounded-full uppercase">Full</div>
-                                <div className="w-14 h-14 bg-gradient-to-br from-brand-500 to-amber-600 rounded-2xl flex items-center justify-center mb-5 shadow-lg shadow-brand-500/20 group-hover:scale-110 transition-transform">
-                                    <Layers className="w-7 h-7 text-white" />
-                                </div>
-                                <h3 className="text-xl font-bold text-white mb-2">🔬 Express Mode</h3>
-                                <p className="text-white/50 text-sm mb-4">Deep semantic optimization with all 13 steps. For maximum SEO impact.</p>
-                                <div className="space-y-2">
-                                    {['Full competitor analysis', 'Entities, N-Grams, NLP Keywords', 'Grammar, SEO rules, AI instructions', 'Master prompt + Content editor'].map(t => (
-                                        <div key={t} className="flex items-center gap-2 text-xs text-white/60">
-                                            <CheckCircle className="w-3.5 h-3.5 text-brand-500" />
-                                            <span>{t}</span>
-                                        </div>
-                                    ))}
-                                </div>
-                            </button>
+                {/* Hero Banner */}
+                <div className="ctool-hero">
+                    <div className="ctool-hero-row">
+                        <span className="ctool-hero-icon">
+                            <Sparkles className="h-5 w-5" />
+                        </span>
+                        <div className="min-w-0">
+                            <h1 className="ctool-title font-display">Start New Article</h1>
+                            <p className="ctool-subtitle">Choose your AI content creation &amp; optimization workflow</p>
                         </div>
                     </div>
+                </div>
+
+                <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
+                    {/* Quick Mode Card */}
+                    <button onClick={() => startNewArticle('quick')} className="scw-mode">
+                        <span className="app-badge app-badge-neutral scw-mode-badge">Fast</span>
+                        <span className="ctool-hero-icon scw-mode-icon">
+                            <Zap className="w-5 h-5" />
+                        </span>
+                        <h3 className="scw-mode-title font-display">Quick Mode</h3>
+                        <p className="scw-mode-desc">Generate a focused article in 4 streamlined steps. Ideal for rapid content creation.</p>
+                        <div className="scw-mode-list">
+                            {['Competitor Research + Keywords', 'Outline Creation', 'Word Count Configuration', 'AI Content Editor'].map(t => (
+                                <div key={t} className="scw-mode-item">
+                                    <CheckCircle className="w-4 h-4 flex-shrink-0" />
+                                    <span>{t}</span>
+                                </div>
+                            ))}
+                        </div>
+                    </button>
+
+                    {/* Express Mode Card */}
+                    <button onClick={() => startNewArticle('express')} className="scw-mode">
+                        <span className="app-badge app-badge-brand scw-mode-badge">Full</span>
+                        <span className="ctool-hero-icon scw-mode-icon">
+                            <Layers className="w-5 h-5" />
+                        </span>
+                        <h3 className="scw-mode-title font-display">Express Mode</h3>
+                        <p className="scw-mode-desc">Deep semantic optimization with all 13 steps for maximum organic search impact.</p>
+                        <div className="scw-mode-list">
+                            {['Full competitor analysis', 'Entities, N-Grams, NLP Keywords', 'Grammar, SEO rules, AI instructions', 'Master prompt + Content editor'].map(t => (
+                                <div key={t} className="scw-mode-item">
+                                    <CheckCircle className="w-4 h-4 flex-shrink-0" />
+                                    <span>{t}</span>
+                                </div>
+                            ))}
+                        </div>
+                    </button>
                 </div>
             </div>
         );
@@ -5544,282 +5606,293 @@ BEGIN WRITING THE ARTICLE NOW:`;
     const activeSteps = getActiveSteps();
 
     return (
-        <div className="flex flex-col h-screen bg-ink-900 overflow-hidden">
+        <div className="semantic-writer-workspace space-y-6">
             {/* Back Navigation Bar */}
-            <div className="flex items-center justify-between px-6 py-3 bg-ink-800 border-b border-white/10 shrink-0">
+            <div className="top-nav-bar flex items-center justify-between px-5 py-3 rounded-2xl">
                 <button
                     onClick={goToLanding}
-                    className="flex items-center gap-2 text-sm font-medium text-brand-500 hover:text-brand-300 transition group"
+                    className="flex items-center gap-2 text-xs font-bold transition px-4 py-2 rounded-xl"
                 >
-                    <ArrowLeft className="w-4 h-4 group-hover:-translate-x-0.5 transition-transform" />
+                    <ArrowLeft className="w-4 h-4" />
                     Back to Articles
                 </button>
                 <button
                     onClick={goToLanding}
-                    className="flex items-center gap-2 text-sm font-medium text-white/50 hover:text-brand-500 transition"
+                    className="flex items-center gap-2 text-xs font-bold transition px-4 py-2 rounded-xl"
                 >
                     <FolderOpen className="w-4 h-4" />
                     All Articles
                 </button>
             </div>
-            <div className="flex-1 flex flex-col overflow-auto p-6">
-                {/* Header - Hidden on Step 13 (Content Editor) */}
-                {currentStep !== 13 && (
-                    <div className="bg-gradient-to-r from-brand-500 via-amber-500 to-amber-600 rounded-2xl p-6 text-white mb-6 shadow-xl">
-                        <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-4">
-                                <div className="w-14 h-14 bg-white/10 rounded-xl flex items-center justify-center backdrop-blur-sm">
-                                    <Edit3 className="w-7 h-7" />
-                                </div>
-                                <div>
-                                    <h1 className="text-2xl font-bold">Content Writer</h1>
-                                    <p className="text-brand-200">
-                                        {writerMode === 'quick' ? '⚡ Quick Mode' : '🔬 Express Mode'}
-                                        {showWordCount && ' — Word Count Setup'}
-                                    </p>
-                                </div>
+
+            {/* Header - Hidden on Step 13 (Content Editor) */}
+            {currentStep !== 13 && (
+                <div className="writer-hero relative overflow-hidden rounded-3xl p-6 shadow-xl">
+                    <div className="pointer-events-none absolute inset-0">
+                        <div className="absolute -right-20 -top-20 h-80 w-80 rounded-full bg-white/10 blur-[100px]" />
+                        <div className="absolute -bottom-10 -left-10 h-60 w-60 rounded-full bg-amber-500/10 blur-[80px]" />
+                    </div>
+                    <div className="relative z-10 flex flex-wrap items-center justify-between gap-4">
+                        <div className="flex items-center gap-3">
+                            <div className="hero-icon flex h-10 w-10 items-center justify-center rounded-xl">
+                                <Edit3 className="h-5 w-5" />
                             </div>
-                            <div className="flex items-center gap-2">
-                                <button
-                                    onClick={() => setShowProcess(!showProcess)}
-                                    className="flex items-center gap-2 px-4 py-2 bg-white/10 hover:bg-white/20 border border-white/20 rounded-xl text-sm font-medium transition backdrop-blur-sm"
-                                    title="Toggle step process visibility"
-                                >
-                                    <Layers className="w-4 h-4" />
-                                    {showProcess ? 'Hide Process' : 'Show Process'}
-                                </button>
-                                <button
-                                    onClick={goToLanding}
-                                    className="flex items-center gap-2 px-4 py-2 bg-white/10 hover:bg-white/20 border border-white/20 rounded-xl text-sm font-medium transition backdrop-blur-sm"
-                                    title="Go back to article list"
-                                >
-                                    <FolderOpen className="w-4 h-4" />
-                                    Articles
-                                </button>
-                                <button
-                                    onClick={resetAllState}
-                                    className="flex items-center gap-2 px-4 py-2 bg-white/10 hover:bg-white/20 border border-white/20 rounded-xl text-sm font-medium transition backdrop-blur-sm"
-                                    title="Reset all progress and start fresh"
-                                >
-                                    <RefreshCw className="w-4 h-4" />
-                                    Start Fresh
-                                </button>
+                            <div>
+                                <h1 className="hero-title font-display text-xl font-black">Content Writer Workspace</h1>
+                                <p className="hero-sub text-xs">
+                                    {writerMode === 'quick' ? '⚡ Quick Mode' : '🔬 Express Mode'}
+                                    {showWordCount && ' — Word Count Setup'}
+                                </p>
                             </div>
                         </div>
+                        <div className="flex items-center gap-2">
+                            <button
+                                onClick={() => setShowProcess(!showProcess)}
+                                className="px-3 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2"
+                                title="Toggle step process visibility"
+                            >
+                                <Layers className="w-3.5 h-3.5" />
+                                {showProcess ? 'Hide Process' : 'Show Process'}
+                            </button>
+                            <button
+                                onClick={goToLanding}
+                                className="px-3 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2"
+                                title="Go back to article list"
+                            >
+                                <FolderOpen className="w-3.5 h-3.5" />
+                                Articles
+                            </button>
+                            <button
+                                onClick={resetAllState}
+                                className="px-3 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2"
+                                title="Reset all progress and start fresh"
+                            >
+                                <RefreshCw className="w-3.5 h-3.5" />
+                                Start Fresh
+                            </button>
+                        </div>
                     </div>
-                )}
-
-                {/* API Status Banner */}
-                {currentStep !== 13 && !showWordCount && (() => {
-                    const openaiKey = localStorage.getItem('openaiApiKey') || '';
-                    const openrouterKey = localStorage.getItem('openrouterApiKey') || '';
-                    const claudeKey = localStorage.getItem('claudeApiKey') || '';
-                    const hasOpenAI = !!openaiKey;
-                    const hasOpenRouter = !!openrouterKey;
-                    const hasClaude = !!claudeKey;
-
-                    if (hasOpenAI) {
-                        return (
-                            <div className="mb-4 p-3 bg-emerald-500/10 border border-emerald-500/20 rounded-xl flex items-center gap-3">
-                                <CheckCircle className="w-5 h-5 text-emerald-400 flex-shrink-0" />
-                                <div className="flex-1">
-                                    <p className="text-sm text-emerald-300 font-medium">Using OpenAI (ChatGPT) for content generation</p>
-                                </div>
-                                <a href="/settings" className="text-xs text-emerald-400 hover:underline">Settings</a>
-                            </div>
-                        );
-                    } else if (hasOpenRouter) {
-                        return (
-                            <div className="mb-4 p-3 bg-blue-500/10 border border-blue-500/20 rounded-xl flex items-center gap-3">
-                                <Sparkles className="w-5 h-5 text-blue-400 flex-shrink-0" />
-                                <div className="flex-1">
-                                    <p className="text-sm text-blue-300 font-medium">Using OpenRouter for content generation</p>
-                                    <p className="text-xs text-blue-400">Add OpenAI key for ChatGPT priority</p>
-                                </div>
-                                <a href="/settings" className="text-xs text-blue-400 hover:underline">Settings</a>
-                            </div>
-                        );
-                    } else if (hasClaude) {
-                        return (
-                            <div className="mb-4 p-3 bg-brand-500/100/10 border border-brand-500/20 rounded-xl flex items-center gap-3">
-                                <Sparkles className="w-5 h-5 text-brand-400 flex-shrink-0" />
-                                <div className="flex-1">
-                                    <p className="text-sm text-brand-300 font-medium">Using Claude (Anthropic) for content generation</p>
-                                    <p className="text-xs text-brand-400">Add OpenAI or OpenRouter key for higher priority</p>
-                                </div>
-                                <a href="/settings" className="text-xs text-brand-400 hover:underline">Settings</a>
-                            </div>
-                        );
-                    } else {
-                        return (
-                            <div className="mb-4 p-3 bg-amber-500/10 border border-amber-500/20 rounded-xl flex items-center gap-3">
-                                <AlertCircle className="w-5 h-5 text-amber-400 flex-shrink-0" />
-                                <div className="flex-1">
-                                    <p className="text-sm text-amber-300 font-medium">No API key configured - Using DeepSeek Chat</p>
-                                    <p className="text-xs text-amber-400">Add your OpenAI, OpenRouter, or Claude API key in Settings for better results</p>
-                                </div>
-                                <a href="/settings" className="px-3 py-1.5 bg-amber-600 text-white text-xs font-medium rounded-lg hover:bg-amber-700 transition">Add API Key</a>
-                            </div>
-                        );
-                    }
-                })()}
-
-                {/* Step Progress */}
-                {(currentStep === 13 ? showProcessOnStep12 : showProcess) && (
-                    <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4 mb-6 ">
-                        {writerMode === 'quick' ? (
-                            /* Quick Mode: Single row with 4 steps */
-                            <div className="flex items-center justify-between gap-2">
-                                {/* Step 1 */}
-                                <button
-                                    onClick={() => goToStep(1)}
-                                    className={`flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-xl transition whitespace-nowrap text-sm ${currentStep === 1 && !showWordCount ? 'bg-brand-500/100 text-white' : currentStep > 1 ? 'bg-emerald-500/15 text-emerald-300' : 'bg-white/[0.06] text-white/60 hover:bg-white/[0.1]'
-                                        }`}
-                                >
-                                    <Search className="w-4 h-4 flex-shrink-0" />
-                                    <span className="font-medium hidden sm:inline">Research</span>
-                                </button>
-                                <ChevronRight className="w-4 h-4 text-white/40 flex-shrink-0" />
-                                {/* Step 2 */}
-                                <button
-                                    onClick={() => goToStep(2)}
-                                    disabled={!isStepComplete(1)}
-                                    className={`flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-xl transition whitespace-nowrap text-sm ${currentStep === 2 && !showWordCount ? 'bg-brand-500/100 text-white' : currentStep > 2 || showWordCount ? 'bg-emerald-500/15 text-emerald-300' : 'bg-white/[0.06] text-white/60 hover:bg-white/[0.1]'
-                                        } ${!isStepComplete(1) ? 'opacity-50 cursor-not-allowed' : ''}`}
-                                >
-                                    <List className="w-4 h-4 flex-shrink-0" />
-                                    <span className="font-medium hidden sm:inline">Outline</span>
-                                </button>
-                                <ChevronRight className="w-4 h-4 text-white/40 flex-shrink-0" />
-                                {/* Word Count */}
-                                <button
-                                    onClick={() => { if (isStepComplete(2)) { setCurrentStep(2); setShowWordCount(true); } }}
-                                    disabled={!isStepComplete(2)}
-                                    className={`flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-xl transition whitespace-nowrap text-sm ${showWordCount ? 'bg-brand-500/100 text-white' : (currentStep === 13 ? 'bg-emerald-500/15 text-emerald-300' : 'bg-white/[0.06] text-white/60 hover:bg-white/[0.1]')
-                                        } ${!isStepComplete(2) ? 'opacity-50 cursor-not-allowed' : ''}`}
-                                >
-                                    <Gauge className="w-4 h-4 flex-shrink-0" />
-                                    <span className="font-medium hidden sm:inline">Word Count</span>
-                                </button>
-                                <ChevronRight className="w-4 h-4 text-white/40 flex-shrink-0" />
-                                {/* Content Editor */}
-                                <button
-                                    onClick={() => { if (isStepComplete(2)) goToStep(13); }}
-                                    disabled={!isStepComplete(2)}
-                                    className={`flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-xl transition whitespace-nowrap text-sm ${currentStep === 13 && !showWordCount ? 'bg-brand-500/100 text-white' : 'bg-white/[0.06] text-white/60 hover:bg-white/[0.1]'
-                                        } ${!isStepComplete(2) ? 'opacity-50 cursor-not-allowed' : ''}`}
-                                >
-                                    <Edit3 className="w-4 h-4 flex-shrink-0" />
-                                    <span className="font-medium hidden sm:inline">Content Editor</span>
-                                </button>
-                            </div>
-                        ) : (
-                            /* Express Mode: Two rows */
-                            <>
-                                {/* Row 1: Steps 1-7 (with word count after 2) */}
-                                <div className="flex items-center justify-between gap-2 mb-3">
-                                    {STEPS.slice(0, 7).map((step, index) => (
-                                        <React.Fragment key={step.id}>
-                                            <button
-                                                onClick={() => goToStep(step.id)}
-                                                disabled={step.id > 1 && !isStepComplete(step.id - 1)}
-                                                className={`flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-xl transition whitespace-nowrap text-sm ${currentStep === step.id && !showWordCount
-                                                    ? 'bg-brand-500/100 text-white'
-                                                    : skippedSteps.includes(step.id)
-                                                        ? 'bg-amber-500/15 text-amber-300'
-                                                        : currentStep > step.id || (step.id === 2 && showWordCount)
-                                                            ? 'bg-emerald-500/15 text-emerald-300'
-                                                            : 'bg-white/[0.06] text-white/60 hover:bg-white/[0.1]'
-                                                    } ${step.id > 1 && !isStepComplete(step.id - 1) ? 'opacity-50 cursor-not-allowed' : ''}`}
-                                            >
-                                                <step.icon className="w-4 h-4 flex-shrink-0" />
-                                                <span className="font-medium hidden sm:inline">{step.name}</span>
-                                            </button>
-                                            {/* Insert Word Count button after Step 2 */}
-                                            {step.id === 2 && (
-                                                <>
-                                                    <ChevronRight className="w-4 h-4 text-white/40 flex-shrink-0" />
-                                                    <button
-                                                        onClick={() => { if (isStepComplete(2)) { setCurrentStep(2); setShowWordCount(true); } }}
-                                                        disabled={!isStepComplete(2)}
-                                                        className={`flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-xl transition whitespace-nowrap text-sm ${showWordCount ? 'bg-brand-500/100 text-white' : (currentStep > 2 ? 'bg-emerald-500/15 text-emerald-300' : 'bg-white/[0.06] text-white/60 hover:bg-white/[0.1]')
-                                                            } ${!isStepComplete(2) ? 'opacity-50 cursor-not-allowed' : ''}`}
-                                                    >
-                                                        <Gauge className="w-4 h-4 flex-shrink-0" />
-                                                        <span className="font-medium hidden sm:inline">Word Count</span>
-                                                    </button>
-                                                </>
-                                            )}
-                                            {index < 6 && (
-                                                <ChevronRight className="w-4 h-4 text-white/40 flex-shrink-0" />
-                                            )}
-                                        </React.Fragment>
-                                    ))}
-                                </div>
-                                {/* Row 2: Steps 8-13 */}
-                                <div className="flex items-center justify-between gap-2">
-                                    {STEPS.slice(7).map((step, index) => (
-                                        <React.Fragment key={step.id}>
-                                            <button
-                                                onClick={() => goToStep(step.id)}
-                                                disabled={step.id > 1 && !isStepComplete(step.id - 1)}
-                                                className={`flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-xl transition whitespace-nowrap text-sm ${currentStep === step.id && !showWordCount
-                                                    ? 'bg-brand-500/100 text-white'
-                                                    : skippedSteps.includes(step.id)
-                                                        ? 'bg-amber-500/15 text-amber-300'
-                                                        : currentStep > step.id
-                                                            ? 'bg-emerald-500/15 text-emerald-300'
-                                                            : 'bg-white/[0.06] text-white/60 hover:bg-white/[0.1]'
-                                                    } ${step.id > 1 && !isStepComplete(step.id - 1) ? 'opacity-50 cursor-not-allowed' : ''}`}
-                                            >
-                                                <step.icon className="w-4 h-4 flex-shrink-0" />
-                                                <span className="font-medium hidden sm:inline">{step.name}</span>
-                                            </button>
-                                            {index < STEPS.slice(7).length - 1 && (
-                                                <ChevronRight className="w-4 h-4 text-white/40 flex-shrink-0" />
-                                            )}
-                                        </React.Fragment>
-                                    ))}
-                                </div>
-                            </>
-                        )}
-                    </div>
-                )}
-
-                {/* Step Content */}
-                <div className="mb-6">
-                    {showWordCount ? renderWordCountStep() : renderStepContent()}
                 </div>
+            )}
 
-                {/* Navigation */}
-                <div className="flex justify-between items-center">
-                    <button
-                        onClick={prevStep}
-                        disabled={currentStep === 1 && !showWordCount}
-                        className="flex items-center gap-2 px-6 py-3 bg-white/[0.06] text-white/70 rounded-xl font-medium disabled:opacity-50 hover:bg-white/[0.1] transition"
-                    >
-                        <ChevronLeft className="w-5 h-5" />
-                        Previous
-                    </button>
-                    {currentStep < 13 && !showWordCount && (
-                        <button
-                            onClick={skipStep}
-                            className="flex items-center gap-2 px-5 py-3 border border-amber-300 text-amber-700 bg-amber-50 rounded-xl font-medium hover:bg-amber-500/15 transition"
-                            title="Skip this step and mark as done"
-                        >
-                            <SkipForward className="w-4 h-4" />
-                            Skip
-                        </button>
+            {/* API Status Banner */}
+            {currentStep !== 13 && !showWordCount && (() => {
+                const openaiKey = '';
+                const openrouterKey = '';
+                const claudeKey = '';
+                const hasOpenAI = !!openaiKey;
+                const hasOpenRouter = !!openrouterKey;
+                const hasClaude = !!claudeKey;
+
+                if (hasOpenAI) {
+                    return (
+                        <div className="p-4 bg-emerald-500/10 border border-emerald-500/25 rounded-2xl flex items-center gap-3 shadow-sm">
+                            <CheckCircle className="w-5 h-5 text-emerald-600 flex-shrink-0" />
+                            <div className="flex-1">
+                                <p className="text-sm font-bold text-emerald-800">Using OpenAI (ChatGPT) for content generation</p>
+                            </div>
+                            <a href="/settings" className="text-xs font-bold text-emerald-700 hover:underline">Settings</a>
+                        </div>
+                    );
+                } else if (hasOpenRouter) {
+                    return (
+                        <div className="p-4 bg-blue-500/10 border border-blue-500/25 rounded-2xl flex items-center gap-3 shadow-sm">
+                            <Sparkles className="w-5 h-5 text-blue-600 flex-shrink-0" />
+                            <div className="flex-1">
+                                <p className="text-sm font-bold text-blue-800">Using OpenRouter for content generation</p>
+                                <p className="text-xs text-blue-700 font-medium">Add OpenAI key for ChatGPT priority</p>
+                            </div>
+                            <a href="/settings" className="text-xs font-bold text-blue-700 hover:underline">Settings</a>
+                        </div>
+                    );
+                } else if (hasClaude) {
+                    return (
+                        <div className="p-4 bg-brand-500/10 border border-brand-500/25 rounded-2xl flex items-center gap-3 shadow-sm">
+                            <Sparkles className="w-5 h-5 text-brand-600 flex-shrink-0" />
+                            <div className="flex-1">
+                                <p className="text-sm font-bold text-brand-800">Using Claude (Anthropic) for content generation</p>
+                                <p className="text-xs text-brand-700 font-medium">Add OpenAI or OpenRouter key for higher priority</p>
+                            </div>
+                            <a href="/settings" className="text-xs font-bold text-brand-700 hover:underline">Settings</a>
+                        </div>
+                    );
+                } else {
+                    return (
+                        <div className="api-status-amber p-4 rounded-2xl flex items-center justify-between gap-4 shadow-sm">
+                            <div className="flex items-center gap-3">
+                                <AlertCircle className="w-5 h-5 text-amber-600 flex-shrink-0" />
+                                <div>
+                                    <p className="status-title text-sm font-bold">Using DeepSeek Chat</p>
+                                    <p className="status-desc text-xs font-medium">DeepSeek API is configured server-side and ready for AI generation.</p>
+                                </div>
+                            </div>
+                        </div>
+                    );
+                }
+            })()}
+
+            {/* Step Progress Bar matching EeatAudit tab buttons */}
+            {(currentStep === 13 ? showProcessOnStep12 : showProcess) && (
+                <div className="step-progress-bar rounded-2xl p-3 shadow-sm">
+                    {writerMode === 'quick' ? (
+                        /* Quick Mode: Single row with 4 steps */
+                        <div className="flex items-center justify-between gap-2 overflow-x-auto w-full no-scrollbar py-0.5">
+                            <button
+                                onClick={() => goToStep(1)}
+                                className={`flex-1 min-w-fit flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-xs transition whitespace-nowrap ${currentStep === 1 && !showWordCount
+                                    ? 'step-tab-active'
+                                    : currentStep > 1
+                                        ? 'step-tab-complete'
+                                        : 'step-tab-inactive'
+                                    }`}
+                            >
+                                <Search className="w-3.5 h-3.5 flex-shrink-0" />
+                                <span>Research</span>
+                            </button>
+                            <ChevronRight className="w-4 h-4 text-content-muted flex-shrink-0 hidden sm:block" />
+                            <button
+                                onClick={() => goToStep(2)}
+                                disabled={!isStepComplete(1)}
+                                className={`flex-1 min-w-fit flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-xs transition whitespace-nowrap ${currentStep === 2 && !showWordCount
+                                    ? 'step-tab-active'
+                                    : currentStep > 2 || showWordCount
+                                        ? 'step-tab-complete'
+                                        : 'step-tab-inactive'
+                                    } ${!isStepComplete(1) ? 'opacity-40 cursor-not-allowed' : ''}`}
+                            >
+                                <List className="w-3.5 h-3.5 flex-shrink-0" />
+                                <span>Outline</span>
+                            </button>
+                            <ChevronRight className="w-4 h-4 text-content-muted flex-shrink-0 hidden sm:block" />
+                            <button
+                                onClick={() => { if (isStepComplete(2)) { setCurrentStep(2); setShowWordCount(true); } }}
+                                disabled={!isStepComplete(2)}
+                                className={`flex-1 min-w-fit flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-xs transition whitespace-nowrap ${showWordCount
+                                    ? 'step-tab-active'
+                                    : (currentStep === 13 ? 'step-tab-complete' : 'step-tab-inactive')
+                                    } ${!isStepComplete(2) ? 'opacity-40 cursor-not-allowed' : ''}`}
+                            >
+                                <Gauge className="w-3.5 h-3.5 flex-shrink-0" />
+                                <span>Word Count</span>
+                            </button>
+                            <ChevronRight className="w-4 h-4 text-content-muted flex-shrink-0 hidden sm:block" />
+                            <button
+                                onClick={() => { if (isStepComplete(2)) goToStep(13); }}
+                                disabled={!isStepComplete(2)}
+                                className={`flex-1 min-w-fit flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-xs transition whitespace-nowrap ${currentStep === 13 && !showWordCount
+                                    ? 'step-tab-active'
+                                    : 'step-tab-inactive'
+                                    } ${!isStepComplete(2) ? 'opacity-40 cursor-not-allowed' : ''}`}
+                            >
+                                <Edit3 className="w-3.5 h-3.5 flex-shrink-0" />
+                                <span>Content Editor</span>
+                            </button>
+                        </div>
+                    ) : (
+                        /* Express Mode: Two rows */
+                        <div className="space-y-2">
+                            <div className="flex items-center justify-between gap-1.5 overflow-x-auto w-full no-scrollbar py-0.5">
+                                {STEPS.slice(0, 7).map((step, index) => (
+                                    <React.Fragment key={step.id}>
+                                        <button
+                                            onClick={() => goToStep(step.id)}
+                                            disabled={step.id > 1 && !isStepComplete(step.id - 1)}
+                                            className={`flex-1 min-w-fit flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl text-xs transition whitespace-nowrap ${currentStep === step.id && !showWordCount
+                                                ? 'step-tab-active'
+                                                : skippedSteps.includes(step.id)
+                                                    ? 'bg-amber-100 border border-amber-300 text-amber-800 font-bold'
+                                                    : currentStep > step.id || (step.id === 2 && showWordCount)
+                                                        ? 'step-tab-complete'
+                                                        : 'step-tab-inactive'
+                                                } ${step.id > 1 && !isStepComplete(step.id - 1) ? 'opacity-40 cursor-not-allowed' : ''}`}
+                                        >
+                                            <step.icon className="w-3.5 h-3.5 flex-shrink-0" />
+                                            <span className="inline">{step.name}</span>
+                                        </button>
+                                        {step.id === 2 && (
+                                            <>
+                                                <ChevronRight className="w-3 h-3 text-content-muted flex-shrink-0" />
+                                                <button
+                                                    onClick={() => { if (isStepComplete(2)) { setCurrentStep(2); setShowWordCount(true); } }}
+                                                    disabled={!isStepComplete(2)}
+                                                    className={`flex-1 min-w-fit flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl text-xs transition whitespace-nowrap ${showWordCount
+                                                        ? 'step-tab-active'
+                                                        : (currentStep > 2 ? 'step-tab-complete' : 'step-tab-inactive')
+                                                        } ${!isStepComplete(2) ? 'opacity-40 cursor-not-allowed' : ''}`}
+                                                >
+                                                    <Gauge className="w-3.5 h-3.5 flex-shrink-0" />
+                                                    <span className="inline">Word Count</span>
+                                                </button>
+                                            </>
+                                        )}
+                                        {index < 6 && (
+                                            <ChevronRight className="w-3 h-3 text-content-muted flex-shrink-0" />
+                                        )}
+                                    </React.Fragment>
+                                ))}
+                            </div>
+                            <div className="flex items-center justify-between gap-1.5 overflow-x-auto w-full no-scrollbar py-0.5">
+                                {STEPS.slice(7).map((step, index) => (
+                                    <React.Fragment key={step.id}>
+                                        <button
+                                            onClick={() => goToStep(step.id)}
+                                            disabled={step.id > 1 && !isStepComplete(step.id - 1)}
+                                            className={`flex-1 min-w-fit flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl text-xs transition whitespace-nowrap ${currentStep === step.id && !showWordCount
+                                                ? 'step-tab-active'
+                                                : skippedSteps.includes(step.id)
+                                                    ? 'bg-amber-100 border border-amber-300 text-amber-800 font-bold'
+                                                    : currentStep > step.id
+                                                        ? 'step-tab-complete'
+                                                        : 'step-tab-inactive'
+                                                } ${step.id > 1 && !isStepComplete(step.id - 1) ? 'opacity-40 cursor-not-allowed' : ''}`}
+                                        >
+                                            <step.icon className="w-3.5 h-3.5 flex-shrink-0" />
+                                            <span className="inline">{step.name}</span>
+                                        </button>
+                                        {index < STEPS.slice(7).length - 1 && (
+                                            <ChevronRight className="w-3 h-3 text-content-muted flex-shrink-0" />
+                                        )}
+                                    </React.Fragment>
+                                ))}
+                            </div>
+                        </div>
                     )}
-                    <button
-                        onClick={nextStep}
-                        disabled={(currentStep === 13 && !showWordCount) || (!showWordCount && !isStepComplete(currentStep))}
-                        className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-brand-500 to-amber-600 text-white rounded-xl font-medium disabled:opacity-50 hover:shadow-lg transition"
-                    >
-                        {showWordCount && writerMode === 'quick' ? 'Start Writing' : 'Next'}
-                        <ChevronRight className="w-5 h-5" />
-                    </button>
                 </div>
+            )}
+
+            {/* Step Content */}
+            <div>
+                {showWordCount ? renderWordCountStep() : renderStepContent()}
+            </div>
+
+            {/* Navigation Footer */}
+            <div className="scw-navigation">
+                <button
+                    onClick={prevStep}
+                    disabled={currentStep === 1 && !showWordCount}
+                    className="ui-button ctool-tool-btn scw-nav-btn"
+                >
+                    <ChevronLeft className="w-4 h-4" />
+                    Previous
+                </button>
+                {currentStep < 13 && !showWordCount && (
+                    <button
+                        onClick={skipStep}
+                        className="ui-button ctool-tool-btn scw-nav-btn"
+                        title="Skip this step and mark as done"
+                    >
+                        <SkipForward className="w-4 h-4" />
+                        Skip Step
+                    </button>
+                )}
+                <button
+                    onClick={currentStep === 13 && !showWordCount ? goToLanding : nextStep}
+                    disabled={(currentStep === 13 && !showWordCount && !articleTitle.trim()) || (!showWordCount && currentStep !== 13 && !isStepComplete(currentStep))}
+                    className="ui-button ui-button-primary scw-nav-btn"
+                >
+                    {currentStep === 13 && !showWordCount ? 'Finish Article' : showWordCount && writerMode === 'quick' ? 'Start Writing' : 'Next Step'}
+                    <ChevronRight className="w-4 h-4" />
+                </button>
             </div>
         </div>
     );

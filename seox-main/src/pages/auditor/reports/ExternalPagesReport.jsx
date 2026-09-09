@@ -1,7 +1,7 @@
 import ReportShell, { StatCard, ChartCard } from "../../../components/auditor/ReportShell.jsx";
 import DonutChart from "../../../components/auditor/DonutChart.jsx";
 import { useCrawl } from "../../../context/CrawlContext.jsx";
-import { externalLinkStats, safeSegments } from "./liveReportData.js";
+import { externalLinkStats, safeSegments } from "../../../lib/auditor/reports/liveReportData.js";
 
 export default function ExternalPagesReport() {
   const { stats } = useCrawl();

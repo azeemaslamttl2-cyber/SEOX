@@ -2,10 +2,10 @@
 import { issueSlug } from "../lib/auditIssues.js";
 
 export const project = {
-  id: "ai-smart-seo",
-  name: "AI Smart Seo",
-  domain: "www.aismartseo.com",
-  fullUrl: "https://www.aismartseo.com",
+  id: "crawlus",
+  name: "Crawlus",
+  domain: "www.crawlus.com",
+  fullUrl: "https://www.crawlus.com",
   crawledOn: "13 May 2026",
   compareTo: "6 May 2026",
   totalUrls: 1615,
@@ -18,7 +18,7 @@ export const defaultProjects = [];
 export const crawledUrls = {
   total: 1615,
   segments: [
-    { label: "Internal", value: 225, color: "#f97316" }, // brand-500
+    { label: "Internal", value: 225, color: "#df3c27" }, // brand-500
     { label: "Resources", value: 1390, color: "#60a5fa" }, // blue-400
   ],
 };
@@ -918,7 +918,7 @@ function httpStatusSegmentsFromRows(rows) {
   const segments = [
     { label: "Success (2xx)", value: counts.success, color: "#34d399" },
     { label: "Redirect (3xx)", value: counts.redirect, color: "#facc15" },
-    { label: "Client error (4xx)", value: counts.client, color: "#f97316" },
+    { label: "Client error (4xx)", value: counts.client, color: "#df3c27" },
     { label: "Server error (5xx)", value: counts.server, color: "#f43f5e" },
     { label: "Fetch error", value: counts.error, color: "#64748b" },
   ].filter((item) => item.value > 0);
@@ -979,7 +979,7 @@ function emptyLiveAuditData() {
     crawledUrls: {
       total: 0,
       segments: [
-        { label: "Internal", value: 0, color: "#f97316" },
+        { label: "Internal", value: 0, color: "#df3c27" },
         { label: "Resources", value: 0, color: "#60a5fa" },
       ],
     },
@@ -1050,11 +1050,18 @@ function scaleHealthScore(block, factor) {
 }
 
 function liveAuditData(selectedProject, stats) {
-  const crawled = Math.max(0, stats?.crawledCount || 0);
+  const effectiveStats = (stats && (stats.crawledCount > 0 || (stats.latestUrls && stats.latestUrls.length > 0)))
+    ? stats
+    : selectedProject?.project_data?.crawlState?.stats ||
+      selectedProject?.project_data?.auditState?.stats ||
+      selectedProject?.project_data?.stats ||
+      null;
+
+  const crawled = Math.max(0, effectiveStats?.crawledCount || (effectiveStats?.latestUrls ? effectiveStats.latestUrls.length : 0));
   if (!crawled) return null;
 
-  const latestRows = stats?.latestUrls || [];
-  const byStatus = stats?.byStatus || {};
+  const latestRows = effectiveStats?.latestUrls || [];
+  const byStatus = effectiveStats?.byStatus || {};
   const errors = (byStatus["4xx"] || 0) + (byStatus["5xx"] || 0);
   const redirects = byStatus["3xx"] || 0;
   const warnings = redirects + Math.ceil(errors * 0.8);
@@ -1072,7 +1079,7 @@ function liveAuditData(selectedProject, stats) {
     crawledUrls: {
       total: rowTotal,
       segments: [
-        { label: "Internal", value: htmlCount, color: "#f97316" },
+        { label: "Internal", value: htmlCount, color: "#df3c27" },
         { label: "Resources", value: resourceCount, color: "#60a5fa" },
       ],
     },

@@ -12,14 +12,14 @@ const metricTabs = ["Mentions", "Citations", "Impressions", "AI Share of Voice"]
 
 function TabPills({ tabs, active, onChange }) {
   return (
-    <div className="flex gap-1 rounded-lg border border-white/10 bg-white/[0.02] p-1">
+    <div className="admin-tabs radar-tabs">
       {tabs.map((tab) => (
         <button
           key={tab}
+          type="button"
           onClick={() => onChange(tab)}
-          className={`rounded-md px-3 py-1.5 text-xs font-semibold transition ${
-            active === tab ? "bg-brand-500/20 text-brand-200" : "text-white/50 hover:text-white/80"
-          }`}
+          aria-pressed={active === tab}
+          className={`admin-tab ${active === tab ? "active" : ""}`}
         >
           {tab}
         </button>
@@ -63,16 +63,21 @@ export default function BrandRadarAIVisibility() {
     <section className="space-y-5 pb-16">
       <BrandRadarDataForSeoStatus loading={metricsState.loading} error={metricsState.error} data={metricsState.data} />
 
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h1 className="font-display text-xl font-bold tracking-tight sm:text-2xl">
-            AI Visibility: <span className="gradient-text">{config.brand}</span>
-          </h1>
-          <p className="mt-0.5 text-xs text-white/40">
-            DataForSEO LLM Mentions comparison{config.competitors.length ? ` for ${config.brand} vs. ${config.competitors.join(", ")}` : ""}
-          </p>
+      <div className="radar-page-hero">
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <div className="radar-page-title flex items-center gap-3">
+            <BarChart3 className="h-5 w-5" />
+            <div>
+              <h1 className="font-display">
+                AI Visibility: <span className="radar-brand">{config.brand}</span>
+              </h1>
+              <p className="radar-page-description">
+                DataForSEO LLM Mentions comparison{config.competitors.length ? ` for ${config.brand} vs. ${config.competitors.join(", ")}` : ""}
+              </p>
+            </div>
+          </div>
+          <TabPills tabs={metricTabs} active={metricTab} onChange={setMetricTab} />
         </div>
-        <TabPills tabs={metricTabs} active={metricTab} onChange={setMetricTab} />
       </div>
 
       {!brands.length && !metricsState.loading ? (
@@ -110,7 +115,7 @@ export default function BrandRadarAIVisibility() {
               </thead>
               <tbody>
                 {brands.map((brand, index) => {
-                  const color = ["#fb923c", "#3b82f6", "#22c55e", "#a855f7", "#e879f9"][index % 5];
+                  const color = ["#df3c27", "#4197cb", "#6abf4b", "#2d2b6f", "#c76c61"][index % 5];
                   return (
                     <tr key={brand.name} className="border-b border-white/[0.06]">
                       <td className="px-4 py-3 font-medium text-white">

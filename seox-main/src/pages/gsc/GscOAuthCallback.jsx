@@ -1,9 +1,12 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { AlertCircle, Loader2 } from "lucide-react";
 import { useAuth } from "../../context/AuthContext.jsx";
 import { getGoogleRedirectUri, parseGscOAuthState } from "../../lib/googleOAuthConfig.js";
 import { writeStoredGscSession } from "../../lib/gscSession.js";
+import { getSessionToken } from "../../lib/authSession.js";
+import { fetchProjectGscPerformance } from "../../lib/gscPerformance.js";
+import { saveToolResult } from "../../lib/projectsApi.js";
 
 function getUserId(user) {
   return user?.uid || user?.id || "";
@@ -14,6 +17,7 @@ export default function GscOAuthCallback() {
   const navigate = useNavigate();
   const [params] = useSearchParams();
   const [error, setError] = useState("");
+  const exchangeStartedRef = useRef(false);
   const state = useMemo(() => parseGscOAuthState(params.get("state")), [params]);
 
   useEffect(() => {
@@ -39,19 +43,24 @@ export default function GscOAuthCallback() {
       return;
     }
 
+    if (exchangeStartedRef.current) return;
+    exchangeStartedRef.current = true;
+
     async function exchangeCode() {
       try {
-        const idToken = await user.getIdToken();
+        const sessionToken = getSessionToken();
+        if (!sessionToken) throw new Error("Your login session is missing. Please sign in again.");
         const response = await fetch("/api/gsc-token", {
           method: "POST",
           headers: {
-            Authorization: `Bearer ${idToken}`,
+            Authorization: `Bearer ${sessionToken}`,
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
             action: "exchange",
             code,
             userId,
+            projectId: state.projectId || null,
             redirectUri: getGoogleRedirectUri(),
           }),
         });
@@ -71,9 +80,25 @@ export default function GscOAuthCallback() {
           expiresAt: data.expiresAt,
           googleEmail: data.googleEmail,
         });
+        if (state.projectId) {
+          const result = await fetchProjectGscPerformance(
+            { id: state.projectId, domain: state.projectDomain, fullUrl: state.projectUrl },
+            { userId, accessToken: data.accessToken }
+          );
+          if (result.status === "complete") {
+            await saveToolResult(userId, {
+              projectId: state.projectId,
+              projectUrl: state.projectUrl || "",
+              toolKey: "gsc",
+              result,
+            });
+          }
+        }
         navigate(returnTo, { replace: true });
       } catch (err) {
-        setError(err?.message || "Failed to connect Search Console.");
+        const errorMsg = err?.message || "Failed to connect Search Console.";
+        console.error("GSC OAuth exchange error:", err);
+        setError(errorMsg);
       }
     }
 

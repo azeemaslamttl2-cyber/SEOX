@@ -439,7 +439,7 @@ function buildSiteSummary(site, dailyRows, previousDailyRows = []) {
   const summary = summarizeRows(dailyRows);
   const previous = summarizeRows(previousDailyRows);
   return {
-    ...site,
+    ...(site || {}),
     ...summary,
     dailyData: rowsByDate(dailyRows),
     changes: {
@@ -471,6 +471,7 @@ export function GscInsightsProvider({ children }) {
   const [isLoadingSummaries, setIsLoadingSummaries] = useState(false);
   const [isLoadingSelected, setIsLoadingSelected] = useState(false);
   const lastSilentRestoreRef = useRef(0);
+  const restoreRequestRef = useRef(0);
   const sitesRequestRef = useRef(0);
   const summariesRequestRef = useRef(0);
   const selectedRequestRef = useRef(0);
@@ -532,6 +533,9 @@ export function GscInsightsProvider({ children }) {
         return;
       }
 
+      const requestId = restoreRequestRef.current + 1;
+      restoreRequestRef.current = requestId;
+
       if (silent) {
         const now = Date.now();
         if (now - lastSilentRestoreRef.current < 1500) return;
@@ -550,16 +554,18 @@ export function GscInsightsProvider({ children }) {
           userId,
           preferServer: Boolean(userId),
         });
+        if (restoreRequestRef.current !== requestId) return;
         if (session?.connected && session.accessToken) {
           applyGscSession(session);
         } else {
           clearGscState();
         }
       } catch (err) {
+        if (restoreRequestRef.current !== requestId) return;
         setError(err?.message || "Could not restore Search Console connection.");
         clearGscState();
       } finally {
-        if (!silent) setIsCheckingConnection(false);
+        if (!silent && restoreRequestRef.current === requestId) setIsCheckingConnection(false);
       }
     },
     [applyGscSession, authLoading, clearGscState, userId]
@@ -664,10 +670,13 @@ export function GscInsightsProvider({ children }) {
     setIsLoadingSummaries(true);
     setError("");
 
+    // Capture current sites to avoid race condition if normalizedSites changes during fetch
+    const sitesToFetch = normalizedSites;
+
     try {
       const token = await getValidAccessToken();
       const results = await Promise.allSettled(
-        normalizedSites.map(async (site) => {
+        sitesToFetch.map(async (site) => {
           const base = {
             searchType,
             device,
@@ -704,7 +713,7 @@ export function GscInsightsProvider({ children }) {
       const summaries = results.map((result, index) =>
         result.status === "fulfilled"
           ? result.value
-          : buildSiteSummary(normalizedSites[index], [], [])
+          : buildSiteSummary(sitesToFetch[index], [], [])
       );
       setSiteSummaries(summaries);
 

@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useCallback, useEffect } from 'react';
+import React, { useState, useMemo, useCallback, useEffect, useRef } from 'react';
 import {
     Upload,
     FileText,
@@ -27,6 +27,8 @@ import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { useAuth } from '../contexts/AuthContext';
 import { downloadScreamingFrogPdf } from '../lib/toolPdfReports';
+import { useCrawl } from '../../context/CrawlContext.jsx';
+import { getSessionToken } from '../../lib/authSession.js';
 
 // CSV Parser utility
 const parseCSV = (text) => {
@@ -105,6 +107,57 @@ const detectFileType = (headers) => {
     }
 
     return 'unknown';
+};
+
+const mergeFilesIntoParsedData = (files) => Object.values(files).reduce((data, file) => {
+    if (!file?.rows?.length || !file?.type || file.type === 'unknown') return data;
+    const current = data[file.type] || { headers: file.headers, rows: [], sources: [] };
+    current.rows.push(...file.rows);
+    current.sources.push({ name: file.name, rows: file.rows });
+    data[file.type] = current;
+    return data;
+}, {});
+
+const readCsvFile = (file) => new Promise((resolve) => {
+    const reader = new FileReader();
+    reader.onload = (event) => {
+        const { headers, rows } = parseCSV(event.target.result || '');
+        const type = detectFileType(headers);
+        if (type === 'unknown' || !rows.length) {
+            resolve({ name: file.name, error: type === 'unknown' ? 'Unsupported Screaming Frog CSV headers' : 'CSV file has no data rows' });
+            return;
+        }
+        resolve({ name: file.name, type, headers, rows, rowCount: rows.length });
+    };
+    reader.onerror = () => resolve({ name: file.name, error: 'Could not read the CSV file' });
+    reader.readAsText(file);
+});
+
+const createScanId = () => `sf_${new Date().toISOString().slice(0, 10).replace(/-/g, '')}_${crypto.randomUUID().replace(/-/g, '').slice(0, 12)}`;
+
+const buildUrlReports = (data, analysis) => {
+    const reports = new Map();
+    const add = (url, sourceFile, sourceType, row) => {
+        if (!/^https?:\/\//i.test(String(url || ''))) return;
+        const item = reports.get(url) || { url, sourceFileIds: new Set(), sourceTypes: new Set(), sourceRows: [], findings: [] };
+        if (sourceFile) item.sourceFileIds.add(sourceFile);
+        if (sourceType) item.sourceTypes.add(sourceType);
+        if (row && item.sourceRows.length < 25) item.sourceRows.push({ source_file: sourceFile, source_type: sourceType, row });
+        reports.set(url, item);
+    };
+    Object.entries(data).forEach(([type, category]) => (category.sources || []).forEach((source) => source.rows.forEach((row) => {
+        add(row.Address || row.URL || row['Source URL'] || row.Destination, source.name, type, row);
+    })));
+    Object.entries(analysis).forEach(([check, result]) => (result.urls || []).forEach((url) => {
+        if (!reports.has(url)) add(url, '', '', null);
+        const item = reports.get(url);
+        if (item) item.findings.push({ check, count: (result.urls || []).filter((candidate) => candidate === url).length });
+    }));
+    return [...reports.values()].map((item) => ({
+        url: item.url,
+        sourceFileIds: [...item.sourceFileIds],
+        reportData: { url: item.url, source_types: [...item.sourceTypes], source_rows: item.sourceRows, findings: item.findings },
+    }));
 };
 
 // Define checklist categories and items as per the reference images
@@ -748,7 +801,9 @@ const DetailedIssueTable = ({ details, type, itemId, tablePage, setTablePage }) 
 
 const ScreamingFrogAnalyzer = () => {
     const { user } = useAuth();
+    const { project: selectedProject } = useCrawl();
     const [uploadedFiles, setUploadedFiles] = useState({});
+    const uploadedFilesRef = useRef({});
     const [parsedData, setParsedData] = useState({});
     const [analysisResults, setAnalysisResults] = useState(null);
     const [isAnalyzing, setIsAnalyzing] = useState(false);
@@ -758,6 +813,8 @@ const ScreamingFrogAnalyzer = () => {
     const [urlPages, setUrlPages] = useState({}); // Pagination state per URL list
     const [tablePage, setTablePage] = useState({}); // Pagination state for detailed tables
     const [markedUrls, setMarkedUrls] = useState({}); // Track marked URLs per issue: { issueId: { url: true } }
+    const [fileErrors, setFileErrors] = useState([]);
+    const [persistenceMessage, setPersistenceMessage] = useState('');
     const URLS_PER_PAGE = 20;
     const STORAGE_KEY = 'screaming_frog_analysis';
 
@@ -831,93 +888,86 @@ const ScreamingFrogAnalyzer = () => {
         setMarkedUrls({});
     }, []);
 
-    const handleFileUpload = useCallback((event) => {
-        const files = Array.from(event.target.files);
-
-        files.forEach(file => {
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                const text = e.target.result;
-                const { headers, rows } = parseCSV(text);
-                const fileType = detectFileType(headers);
-
-                setUploadedFiles(prev => ({
-                    ...prev,
-                    [file.name]: { name: file.name, type: fileType, rowCount: rows.length }
-                }));
-
-                setParsedData(prev => ({
-                    ...prev,
-                    [fileType]: { headers, rows }
-                }));
-            };
-            reader.readAsText(file);
-        });
+    const addFiles = useCallback(async (files) => {
+        const completed = await Promise.all(files.map(readCsvFile));
+        const failures = completed.filter((item) => item.error).map((item) => ({ name: item.name, reason: item.error }));
+        const accepted = completed.filter((item) => !item.error);
+        if (failures.length) setFileErrors((previous) => [...previous, ...failures]);
+        if (!accepted.length) return;
+        const next = { ...uploadedFilesRef.current };
+        accepted.forEach((file) => { next[file.name] = file; });
+        uploadedFilesRef.current = next;
+        setUploadedFiles(next);
+        setParsedData(mergeFilesIntoParsedData(next));
     }, []);
+
+    const handleFileUpload = useCallback((event) => {
+        void addFiles(Array.from(event.target.files || []));
+        event.target.value = '';
+    }, [addFiles]);
 
     const handleDrop = useCallback((event) => {
         event.preventDefault();
-        const files = Array.from(event.dataTransfer.files).filter(f => f.name.endsWith('.csv'));
-
-        files.forEach(file => {
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                const text = e.target.result;
-                const { headers, rows } = parseCSV(text);
-                const fileType = detectFileType(headers);
-
-                setUploadedFiles(prev => ({
-                    ...prev,
-                    [file.name]: { name: file.name, type: fileType, rowCount: rows.length }
-                }));
-
-                setParsedData(prev => ({
-                    ...prev,
-                    [fileType]: { headers, rows }
-                }));
-            };
-            reader.readAsText(file);
-        });
-    }, []);
+        void addFiles(Array.from(event.dataTransfer.files).filter(f => f.name.toLowerCase().endsWith('.csv')));
+    }, [addFiles]);
 
     const handleDragOver = useCallback((event) => {
         event.preventDefault();
     }, []);
 
-    const runAnalysis = useCallback(() => {
+    const runAnalysis = useCallback(async () => {
         setIsAnalyzing(true);
-
-        setTimeout(() => {
+        setPersistenceMessage('');
+        try {
             const results = analyzeData(parsedData);
             setAnalysisResults(results);
-            setIsAnalyzing(false);
             setShowUploadSection(false); // Collapse upload section after analysis
-        }, 500);
-    }, [parsedData]);
+            const reports = buildUrlReports(parsedData, results);
+            if (!selectedProject?.id) {
+                setPersistenceMessage('Analysis completed, but select a project to save this URL report.');
+            } else if (!user?.id) {
+                setPersistenceMessage('Analysis completed, but sign in to save this URL report.');
+            } else if (!reports.length) {
+                setPersistenceMessage('Analysis completed; no valid URL-level records were available to save.');
+            } else {
+                const response = await fetch('/api/tech-seo/screaming-frog/url-reports', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${getSessionToken()}` },
+                    body: JSON.stringify({ projectId: selectedProject.id, scanId: createScanId(), reports }),
+                });
+                const payload = await response.json().catch(() => ({}));
+                if (!response.ok) throw new Error(payload.error || 'Could not save the Screaming Frog URL report.');
+                setPersistenceMessage(`Saved ${payload.savedUrls} URL reports for scan ${payload.scanId}.`);
+            }
+        } catch (error) {
+            console.error('Screaming Frog URL report persistence failed:', error);
+            setPersistenceMessage(`Analysis completed, but database saving failed: ${error?.message || 'Unknown error'}`);
+        } finally {
+            setIsAnalyzing(false);
+        }
+    }, [parsedData, selectedProject?.id, user?.id]);
 
     const removeFile = useCallback((fileName) => {
         const fileInfo = uploadedFiles[fileName];
-        setUploadedFiles(prev => {
-            const newFiles = { ...prev };
-            delete newFiles[fileName];
-            return newFiles;
-        });
+        const remaining = { ...uploadedFilesRef.current };
+        delete remaining[fileName];
+        uploadedFilesRef.current = remaining;
+        setUploadedFiles(remaining);
 
         if (fileInfo) {
-            setParsedData(prev => {
-                const newData = { ...prev };
-                delete newData[fileInfo.type];
-                return newData;
-            });
+            setParsedData(mergeFilesIntoParsedData(remaining));
         }
     }, [uploadedFiles]);
 
     const clearAll = useCallback(() => {
         setUploadedFiles({});
+        uploadedFilesRef.current = {};
         setParsedData({});
         setAnalysisResults(null);
         setCheckedItems({});
         setMarkedUrls({});
+        setFileErrors([]);
+        setPersistenceMessage('');
         clearSavedData();
     }, [clearSavedData]);
 
@@ -1162,50 +1212,48 @@ const ScreamingFrogAnalyzer = () => {
     };
 
     return (
-        <div className="h-screen overflow-y-auto bg-gradient-to-br from-slate-50 to-emerald-50">
-            {/* Header */}
-            <div className="bg-gradient-to-r from-emerald-600 to-teal-600 text-white">
-                <div className="max-w-7xl mx-auto px-4 py-8">
-                    <div className="flex items-center gap-3 mb-2">
-                        <div className="p-2 bg-white/20 rounded-lg">
-                            <FileSearch className="w-6 h-6" />
-                        </div>
-                        <h1 className="text-3xl font-bold">Screaming Frog Analyzer</h1>
+        <div className="">
+            {/* ─── Hero Header ─── */}
+            <div className="sf-hero">
+                <div className="sf-title flex items-center gap-3">
+                    <FileSearch className="w-5 h-5" />
+                    <div>
+                        <h1 className="font-display">Screaming Frog Analyzer</h1>
+                        <p className="sf-description">
+                            Upload your Screaming Frog CSV exports to analyze SEO issues and generate a comprehensive audit report.
+                        </p>
                     </div>
-                    <p className="text-emerald-100 max-w-2xl">
-                        Upload your Screaming Frog CSV exports to analyze SEO issues and generate a comprehensive audit report.
-                    </p>
                 </div>
             </div>
 
-            <div className="max-w-7xl mx-auto px-4 py-8">
+            <div className="mt-5">
                 {/* Upload Section - Collapsible after analysis */}
-                <div className={`bg-white/80 backdrop-blur-xl rounded-2xl shadow-lg border border-white/50 mb-8 overflow-hidden transition-all duration-300 ${analysisResults && !showUploadSection ? 'p-0' : 'p-6'}`}>
+                <div className={`sf-card mb-5 overflow-hidden ${analysisResults && !showUploadSection ? 'p-0' : ''}`}>
                     {/* Collapsible Header */}
                     <button
                         onClick={() => setShowUploadSection(!showUploadSection)}
-                        className={`w-full flex items-center justify-between ${analysisResults ? 'cursor-pointer hover:bg-gray-50/50' : 'cursor-default'} ${analysisResults && !showUploadSection ? 'p-4' : ''} transition-colors rounded-xl`}
+                        className={`sf-card-header w-full flex items-center justify-between ${analysisResults ? 'cursor-pointer' : 'cursor-default'}`}
                     >
                         <div className="flex items-center gap-3">
-                            <div className="p-2 bg-gradient-to-br from-emerald-500 to-teal-500 rounded-xl text-white shadow-lg shadow-emerald-500/25">
+                            <div className="sf-tile">
                                 <Upload className="w-5 h-5" />
                             </div>
                             <div className="text-left">
-                                <h2 className="text-lg font-semibold text-gray-800">Upload CSV Files</h2>
+                                <h2 className="sf-card-title">Upload CSV Files</h2>
                                 {analysisResults && !showUploadSection && fileCount > 0 && (
-                                    <p className="text-sm text-gray-500">{fileCount} file(s) uploaded • Click to expand</p>
+                                    <p className="sf-card-note">{fileCount} file(s) uploaded • Click to expand</p>
                                 )}
                             </div>
                         </div>
                         {analysisResults && (
                             <div className="flex items-center gap-2">
                                 {fileCount > 0 && !showUploadSection && (
-                                    <span className="px-2.5 py-1 bg-emerald-100 text-emerald-700 text-xs font-semibold rounded-full">
+                                    <span className="admin-badge badge-professional">
                                         {fileCount} files
                                     </span>
                                 )}
-                                <div className={`p-2 rounded-lg ${showUploadSection ? 'bg-emerald-100' : 'bg-gray-100'} transition-colors`}>
-                                    {showUploadSection ? <ChevronUp className="w-5 h-5 text-emerald-600" /> : <ChevronDown className="w-5 h-5 text-gray-400" />}
+                                <div className="sf-chevron">
+                                    {showUploadSection ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
                                 </div>
                             </div>
                         )}
@@ -1215,7 +1263,7 @@ const ScreamingFrogAnalyzer = () => {
                     {(showUploadSection || !analysisResults) && (
                         <div className={`${analysisResults ? 'mt-4 pt-4 border-t border-gray-100' : 'mt-4'}`}>
                             <div
-                                className="border-2 border-dashed border-gray-300 rounded-xl p-8 text-center hover:border-emerald-400 hover:bg-emerald-50/50 transition-all cursor-pointer bg-gradient-to-br from-gray-50/50 to-emerald-50/30"
+                                className="sf-dropzone"
                                 onDrop={handleDrop}
                                 onDragOver={handleDragOver}
                                 onClick={() => document.getElementById('csv-upload').click()}
@@ -1228,10 +1276,10 @@ const ScreamingFrogAnalyzer = () => {
                                     onChange={handleFileUpload}
                                     className="hidden"
                                 />
-                                <div className="w-16 h-16 mx-auto mb-4 bg-gradient-to-br from-emerald-100 to-teal-100 rounded-2xl flex items-center justify-center">
-                                    <Upload className="w-8 h-8 text-emerald-600" />
+                                <div className="sf-dropzone-icon">
+                                    <Upload className="w-6 h-6" />
                                 </div>
-                                <p className="text-gray-700 font-medium mb-2">Drag & drop CSV files here, or click to browse</p>
+                                <p className="sf-dropzone-title">Drag &amp; drop CSV files here, or click to browse</p>
                                 <p className="text-sm text-gray-400 mb-1">
                                     <span className="font-medium">Required files:</span> issues_overview_report.csv, internal_html.csv, external_html.csv
                                 </p>
@@ -1240,6 +1288,12 @@ const ScreamingFrogAnalyzer = () => {
                                 </p>
                             </div>
 
+
+                            {fileErrors.length > 0 && (
+                                <div className="mt-4 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+                                    {fileErrors.map((file) => <p key={`${file.name}-${file.reason}`}>{file.name}: {file.reason}</p>)}
+                                </div>
+                            )}
 
                             {/* Uploaded Files List */}
                             {fileCount > 0 && (
@@ -1308,6 +1362,11 @@ const ScreamingFrogAnalyzer = () => {
                 {/* Results Section - Premium Design */}
                 {analysisResults && (
                     <>
+                        {persistenceMessage && (
+                            <div className={`mb-5 rounded-lg border px-4 py-3 text-sm ${persistenceMessage.startsWith('Saved') ? 'border-emerald-200 bg-emerald-50 text-emerald-800' : 'border-amber-200 bg-amber-50 text-amber-800'}`}>
+                                {persistenceMessage}
+                            </div>
+                        )}
                         {/* Premium Stats Dashboard */}
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
                             {/* Categories Card */}
@@ -1583,13 +1642,15 @@ const ScreamingFrogAnalyzer = () => {
 
                 {/* Empty State */}
                 {fileCount === 0 && (
-                    <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-12 text-center">
-                        <FileSearch className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-                        <h3 className="text-xl font-semibold text-gray-800 mb-2">No Files Uploaded</h3>
-                        <p className="text-gray-500 max-w-md mx-auto">
-                            Upload your Screaming Frog CSV exports to begin the analysis.
-                            You can upload multiple files at once.
-                        </p>
+                    <div className="sf-card">
+                        <div className="app-empty-state">
+                            <FileSearch className="h-7 w-7" />
+                            <h3 className="sf-card-title">No Files Uploaded</h3>
+                            <p>
+                                Upload your Screaming Frog CSV exports to begin the analysis.
+                                You can upload multiple files at once.
+                            </p>
+                        </div>
                     </div>
                 )}
             </div>

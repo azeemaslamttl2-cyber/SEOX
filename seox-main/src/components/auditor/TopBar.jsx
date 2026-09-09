@@ -65,8 +65,8 @@ export default function TopBar() {
           </button>
 
           {switcherOpen && (
-            <div className="absolute left-0 top-10 z-30 w-80 overflow-hidden rounded-xl border border-white/10 bg-ink-800 shadow-2xl shadow-black/40">
-              <div className="border-b border-white/10 px-3 py-2 text-[10px] font-bold uppercase tracking-wider text-white/40">
+            <div role="menu" className="site-menu animate-scale-in absolute left-0 top-10 z-30 w-80 overflow-hidden rounded-xl border border-white/10 bg-ink-800 shadow-2xl shadow-black/40">
+              <div className="site-menu-label border-b border-white/10 px-3 py-2 text-[10px] font-bold uppercase tracking-wider text-white/40">
                 Websites
               </div>
               <div className="max-h-80 overflow-y-auto p-1.5">
@@ -78,10 +78,8 @@ export default function TopBar() {
                   return (
                     <div
                       key={site.id}
-                      className={`group flex w-full items-center gap-2 rounded-lg px-2 py-2 transition ${
-                        active
-                          ? "bg-brand-500/15 text-white"
-                          : "text-white/75 hover:bg-white/[0.05] hover:text-white"
+                      className={`site-menu-row group flex w-full items-center gap-2 rounded-lg px-2 py-2 transition ${
+                        active ? "is-active" : ""
                       }`}
                     >
                       <button
@@ -90,22 +88,22 @@ export default function TopBar() {
                           selectProject(site.id);
                           setSwitcherOpen(false);
                         }}
-                        className="flex min-w-0 flex-1 items-center gap-3 text-left"
+                        className="site-menu-select flex min-w-0 flex-1 items-center gap-3 text-left"
                       >
-                      <span className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-white/[0.06] text-white/75">
+                      <span className="site-menu-icon flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg">
                         <Globe2 className="h-4 w-4" />
                       </span>
                       <span className="min-w-0 flex-1">
                         <span className="block truncate text-sm font-semibold">
                           {site.name}
                         </span>
-                        <span className="block truncate text-xs text-white/45">
+                        <span className="site-menu-url block truncate text-xs">
                           {site.fullUrl || site.domain}
                         </span>
                       </span>
                       <span className="flex flex-col items-end gap-1">
                         {active && <Check className="h-4 w-4 text-brand-300" />}
-                        <span className="text-[10px] uppercase tracking-wide text-white/35">
+                        <span className="site-menu-count text-[10px] uppercase tracking-wide">
                           {siteStatus === "crawling"
                             ? "Live"
                             : `${crawledCount.toLocaleString()} URLs`}
@@ -123,7 +121,7 @@ export default function TopBar() {
                           }
                         }}
                         title={`Delete ${site.name}`}
-                        className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-md text-white/35 transition hover:bg-rose-500/15 hover:text-rose-300"
+                        className="site-menu-delete flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-md transition"
                       >
                         <Trash2 className="h-3.5 w-3.5" />
                       </button>
@@ -138,7 +136,7 @@ export default function TopBar() {
               </div>
               <button
                 onClick={() => navigate("/auditor/new")}
-                className="flex w-full items-center gap-2 border-t border-white/10 px-3 py-2 text-xs font-semibold text-brand-200 transition hover:bg-brand-500/10"
+                className="site-menu-add flex w-full items-center gap-2 border-t px-3 py-2 text-xs font-semibold transition"
               >
                 <Plus className="h-3.5 w-3.5" />
                 Add website

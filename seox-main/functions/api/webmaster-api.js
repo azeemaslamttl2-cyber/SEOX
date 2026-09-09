@@ -1,5 +1,5 @@
 import handler from "../_handlers/webmaster-api.js";
-import { verifyFirebaseIdToken } from "../_lib/firebase-rest.js";
+import { verifyAccessToken } from "../_lib/mysql-storage.js";
 
 export async function onRequest(context) {
   const url = new URL(context.request.url);
@@ -16,7 +16,7 @@ export async function onRequest(context) {
   }
 
   try {
-    var decoded = await verifyFirebaseIdToken(context.request, context.env);
+    var decoded = await verifyAccessToken(context.request, context.env);
   } catch (error) {
     return new Response(JSON.stringify({ error: error?.message || "Unauthorized" }), {
       status: error?.status || 401,

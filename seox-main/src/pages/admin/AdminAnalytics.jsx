@@ -13,7 +13,7 @@ import {
 } from "lucide-react";
 import { formatCurrency, formatNumber, useAdminData } from "../../hooks/useAdminData.js";
 
-const avatarColors = ["#fb923c", "#8b5cf6", "#3b82f6", "#22c55e", "#ef4444", "#ec4899", "#06b6d4", "#f97316"];
+const avatarColors = ["#df3c27", "#2d2b6f", "#4197cb", "#6abf4b", "#c76c61", "#df3c27", "#ffc600", "#c72f1d"];
 
 function StatCard({ icon: Icon, value, label, color, iconBg }) {
   return (
@@ -62,7 +62,7 @@ export default function AdminAnalytics() {
       </div>
 
       <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-5 gap-3 mb-6">
-        <StatCard icon={Crown} value={formatNumber(stats.enterpriseUsers)} label="Total Enterprise" color="#fb923c" iconBg="rgba(251,146,60,0.15)" />
+        <StatCard icon={Crown} value={formatNumber(stats.enterpriseUsers)} label="Total Enterprise" color="#df3c27" iconBg="rgba(223,60,39,0.15)" />
         <StatCard icon={Heart} value={formatNumber(stats.lifetimeEnterprise)} label="Lifetime Enterprise" color="#22c55e" iconBg="rgba(34,197,94,0.15)" />
         <StatCard icon={Calendar} value={formatNumber(stats.monthlyEnterprise)} label="Monthly Enterprise" color="#3b82f6" iconBg="rgba(59,130,246,0.15)" />
         <StatCard icon={TrendingUp} value={`${stats.conversionRate.toFixed(1)}%`} label="Conversion Rate" color="#8b5cf6" iconBg="rgba(139,92,246,0.15)" />

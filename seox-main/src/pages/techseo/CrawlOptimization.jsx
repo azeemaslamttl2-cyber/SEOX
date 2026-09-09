@@ -175,35 +175,37 @@ export default function CrawlOptimization() {
   }
 
   return (
-    <div className="mx-auto max-w-5xl">
-      <div className="flex items-center justify-center">
-        <div className="rounded-full bg-gradient-to-r from-violet-500 to-indigo-500 px-6 py-2 shadow-lg shadow-violet-500/30">
-          <div className="flex items-center gap-2 text-white">
-            <Zap className="h-5 w-5" />
-            <span className="font-display text-lg font-bold">Crawl Optimization Checker</span>
+    <div className="">
+      {/* ─── Hero Header ─── */}
+      <div className="crawl-hero rounded-3xl border border-brand-600 bg-brand-500 p-6 sm:p-8">
+        <div className="crawl-title-row flex items-center justify-start">
+          <div className="crawl-title">
+            <div className="flex items-center gap-2">
+              <Zap className="h-5 w-5" />
+              <span className="font-display text-lg font-bold text-white">Crawl Optimization Checker</span>
+            </div>
           </div>
         </div>
-      </div>
-      <p className="mt-3 text-center text-sm text-white/50">
-        Analyze source code for unnecessary metadata, WordPress crawl bloat, feeds, redirects, and indexability issues.
-      </p>
+        <p className="crawl-description mt-3 text-sm text-white/50">
+          Analyze source code for unnecessary metadata, WordPress crawl bloat, feeds, redirects, and indexability issues.
+        </p>
 
-      <div className="mt-4 flex items-center justify-center gap-3">
-        <button onClick={downloadReport} className="flex items-center gap-1.5 rounded-lg border border-blue-500/30 bg-blue-500/10 px-3 py-1.5 text-xs font-semibold text-blue-300 transition hover:bg-blue-500/20">
-          <Download className="h-3.5 w-3.5" /> Download Report
-        </button>
-        <button onClick={analyze} disabled={loading || !hasProject} className="flex items-center gap-1.5 rounded-lg bg-emerald-500 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-emerald-400 disabled:opacity-60">
-          <RefreshCw className={`h-3.5 w-3.5 ${loading ? "animate-spin" : ""}`} /> Re-analyze
-        </button>
-        <span className="flex items-center gap-1 text-xs text-white/40">
-          <Clock className="h-3 w-3" /> Live source fetch
-        </span>
-      </div>
+        <div className="crawl-actions mt-4 flex items-center gap-3">
+          <button onClick={downloadReport} className="ui-button crawl-secondary-button">
+            <Download className="h-3.5 w-3.5" /> Download Report
+          </button>
+          <button onClick={analyze} disabled={loading || !hasProject} className="ui-button crawl-primary-button">
+            <RefreshCw className={`h-3.5 w-3.5 ${loading ? "animate-spin" : ""}`} /> Re-analyze
+          </button>
+          <span className="crawl-meta flex items-center gap-1 text-xs text-white/40">
+            <Clock className="h-3 w-3" /> Live source fetch
+          </span>
+        </div>
 
-      <div className="mt-6 rounded-2xl border border-white/10 bg-white/[0.02] p-5">
+      <div className="crawl-input-panel mt-6 rounded-2xl border border-white/10 bg-white/[0.02] p-5">
         <div className="flex items-center gap-2">
-          <div className="flex flex-1 items-center gap-2 rounded-xl border border-white/10 bg-white/[0.03] px-4 py-2.5">
-            <Globe className="h-4 w-4 text-white/40" />
+          <div className="crawl-url-field flex flex-1 items-center gap-2 rounded-xl border border-white/10 bg-white/[0.03] px-4 py-2.5">
+            <Globe className="h-4 w-4" />
             <input
               value={displayUrl}
               readOnly
@@ -212,12 +214,12 @@ export default function CrawlOptimization() {
               placeholder="Select a website in the nav"
             />
           </div>
-          <button onClick={analyze} disabled={loading || !hasProject} className="flex items-center gap-2 rounded-xl bg-blue-500 px-5 py-2.5 text-sm font-semibold text-white shadow transition hover:bg-blue-400 disabled:opacity-60">
+          <button onClick={analyze} disabled={loading || !hasProject} className="ui-button crawl-analyze-button rounded-xl">
             <Search className="h-4 w-4" /> {loading ? "Analyzing..." : "Analyze"}
           </button>
         </div>
         {(error || persistenceError) && <p className="mt-3 text-xs font-semibold text-rose-300">{error || persistenceError}</p>}
-        <button onClick={() => setShowSource((value) => !value)} className="mt-2 flex items-center gap-1 text-xs text-blue-300 hover:underline">
+        <button onClick={() => setShowSource((value) => !value)} className="crawl-source-button mt-2 flex items-center gap-1 text-xs text-blue-300 hover:underline">
           <Code className="h-3 w-3" /> {showSource ? "Hide" : "View"} Page Source ({d.pageSourceSize})
         </button>
         {showSource && (
@@ -225,6 +227,7 @@ export default function CrawlOptimization() {
             {source || "Run an analysis to load the current page source."}
           </pre>
         )}
+      </div>
       </div>
 
       <div className="mt-6 rounded-2xl border border-white/10 bg-white/[0.02] p-5">
@@ -244,8 +247,8 @@ export default function CrawlOptimization() {
 
       <div className="mt-6 space-y-3">
         {d.sections.map((section) => (
-          <div key={section.id} className="overflow-hidden rounded-2xl border border-white/[0.06] bg-white/[0.015]">
-            <button onClick={() => toggleSection(section.id)} className="flex w-full items-center gap-3 px-5 py-4 text-left transition hover:bg-white/[0.02]">
+          <div key={section.id} className="crawl-section overflow-hidden rounded-2xl border border-white/[0.06] bg-white/[0.015]">
+            <button onClick={() => toggleSection(section.id)} className="crawl-section-button flex w-full items-center gap-3 px-5 py-4 text-left transition hover:bg-white/[0.02]">
               <SectionIcon id={section.id} />
               <span className="font-display text-sm font-bold">{section.title}</span>
               <div className="ml-auto">
@@ -306,5 +309,5 @@ function SectionIcon({ id }) {
     technical: { label: "T", bg: "bg-rose-500/15 text-rose-200" },
   };
   const item = map[id] || { label: "OK", bg: "bg-white/10 text-white/60" };
-  return <span className={`flex h-8 w-8 items-center justify-center rounded-lg text-xs font-bold ${item.bg}`}>{item.label}</span>;
+  return <span className={`crawl-section-icon flex h-8 w-8 items-center justify-center rounded-lg text-xs font-bold ${item.bg}`}>{item.label}</span>;
 }

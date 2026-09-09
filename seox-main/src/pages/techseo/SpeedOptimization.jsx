@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import { fetchCrawlTarget } from "../../lib/siteCrawler.js";
 import { csvEscape, downloadTextFile } from "../../lib/techSeoTools.js";
+import { buildSpeedResult, normalizeSpeedUrl } from "../../lib/speedTestResult.js";
 import { useSelectedProjectDomain } from "../../hooks/useSelectedProjectDomain.js";
 import { useTechSeoToolResult } from "../../hooks/useTechSeoToolResult.js";
 
@@ -30,20 +31,6 @@ const EMPTY_SPEED_RESULT = {
   resourceSummary: { totalResources: 0, cdnResources: 0, cdnExamples: [] },
 };
 
-const CDN_PATTERNS = [
-  "cloudflare",
-  "cloudfront",
-  "fastly",
-  "akamai",
-  "bunnycdn",
-  "jsdelivr",
-  "unpkg",
-  "stackpath",
-  "bootstrapcdn",
-  "googleapis.com",
-  "gstatic.com",
-];
-
 /* ── Score Ring Component ── */
 function SpeedRing({ score, size = 120 }) {
   const r = (size - 10) / 2;
@@ -55,7 +42,7 @@ function SpeedRing({ score, size = 120 }) {
   return (
     <div className="relative flex flex-col items-center" style={{ width: size, height: size }}>
       <svg width={size} height={size} className="-rotate-90">
-        <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="7" />
+        <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="#e2e5ee" strokeWidth="7" />
         <circle
           cx={size / 2}
           cy={size / 2}
@@ -95,122 +82,6 @@ function SectionProgressBar({ passed, total }) {
   );
 }
 
-function normalizeSpeedUrl(domain, path = "") {
-  const base = /^https?:\/\//i.test(domain) ? domain : `https://${domain}`;
-  const url = new URL(base);
-  if (path.trim()) url.pathname = path.trim().startsWith("/") ? path.trim() : `/${path.trim()}`;
-  return url.toString();
-}
-
-function metricValue(lhr, key, fallback = "--") {
-  return lhr?.audits?.[key]?.displayValue || fallback;
-}
-
-function scoreFromCategory(data) {
-  return Math.round((data?.lighthouseResult?.categories?.performance?.score || 0) * 100);
-}
-
-function sectionFromChecks(id, title, checks) {
-  return {
-    id,
-    title,
-    passed: checks.filter((item) => item.status === "pass").length,
-    total: checks.length,
-    checks,
-  };
-}
-
-function speedCheck(name, desc, passed, affected = 0) {
-  return { name, desc, status: passed ? "pass" : "fail", tutorial: false, affected };
-}
-
-function getAuditScore(lhr, key) {
-  return lhr?.audits?.[key]?.score;
-}
-
-function getResourceUrl(item) {
-  return typeof item === "string" ? item : item?.url || "";
-}
-
-function collectCdnHits(resources = []) {
-  return resources
-    .map(getResourceUrl)
-    .filter(Boolean)
-    .filter((url) => CDN_PATTERNS.some((pattern) => url.toLowerCase().includes(pattern)));
-}
-
-function buildSpeedResult(targetUrl, mobileData, desktopData, crawlData) {
-  const mobileLhr = mobileData?.lighthouseResult || {};
-  const desktopLhr = desktopData?.lighthouseResult || {};
-  const audits = desktopLhr.audits || mobileLhr.audits || {};
-  const audit = crawlData?.audit || {};
-  const resources = Array.isArray(crawlData?.resources) ? crawlData.resources : [];
-  const cdnHits = collectCdnHits(resources);
-  const mobileScore = scoreFromCategory(mobileData) || Math.max(0, Math.min(100, 100 - Math.round((crawlData?.loadTime || 0) / 100)));
-  const desktopScore = scoreFromCategory(desktopData) || mobileScore;
-
-  const cwv = [
-    { metric: "LCP", value: metricValue(mobileLhr, "largest-contentful-paint"), full: "Largest Contentful Paint", good: getAuditScore(mobileLhr, "largest-contentful-paint") !== 0 },
-    { metric: "FCP", value: metricValue(mobileLhr, "first-contentful-paint"), full: "First Contentful Paint", good: getAuditScore(mobileLhr, "first-contentful-paint") !== 0 },
-    { metric: "CLS", value: metricValue(mobileLhr, "cumulative-layout-shift"), full: "Cumulative Layout Shift", good: getAuditScore(mobileLhr, "cumulative-layout-shift") !== 0 },
-    { metric: "TBT", value: metricValue(mobileLhr, "total-blocking-time"), full: "Total Blocking Time", good: getAuditScore(mobileLhr, "total-blocking-time") !== 0 },
-    { metric: "SI", value: metricValue(mobileLhr, "speed-index"), full: "Speed Index", good: getAuditScore(mobileLhr, "speed-index") !== 0 },
-    { metric: "TTFB", value: metricValue(mobileLhr, "server-response-time", `${crawlData?.loadTime || 0} ms`), full: "Server Response Time", good: (crawlData?.loadTime || 0) < 800 },
-  ];
-
-  const sections = [
-    sectionFromChecks("cache", "Caching & Compression", [
-      speedCheck("Enable Text Compression", audits["uses-text-compression"]?.title || "Text compression enabled", getAuditScore(mobileLhr, "uses-text-compression") !== 0),
-      speedCheck("Efficient Cache Policy", audits["uses-long-cache-ttl"]?.title || "Static assets use cache policy", getAuditScore(mobileLhr, "uses-long-cache-ttl") !== 0),
-    ]),
-    sectionFromChecks("css", "CSS Optimization", [
-      speedCheck("Remove Unused CSS", audits["unused-css-rules"]?.title || "Unused CSS check", getAuditScore(mobileLhr, "unused-css-rules") !== 0),
-      speedCheck("Avoid Render Blocking", audits["render-blocking-resources"]?.title || "Render-blocking resources check", getAuditScore(mobileLhr, "render-blocking-resources") !== 0),
-    ]),
-    sectionFromChecks("js", "JavaScript Optimization", [
-      speedCheck("Remove Unused JavaScript", audits["unused-javascript"]?.title || "Unused JavaScript check", getAuditScore(mobileLhr, "unused-javascript") !== 0),
-      speedCheck("Minimize Main Thread Work", audits["mainthread-work-breakdown"]?.title || "Main-thread work check", getAuditScore(mobileLhr, "mainthread-work-breakdown") !== 0),
-      speedCheck("Avoid Legacy JavaScript", audits["legacy-javascript"]?.title || "Legacy JavaScript check", getAuditScore(mobileLhr, "legacy-javascript") !== 0),
-    ]),
-    sectionFromChecks("html", "HTML Optimization", [
-      speedCheck("Has Valid Doctype", "Valid doctype present", true),
-      speedCheck("DOM Size Healthy", audits["dom-size"]?.title || "DOM size check", getAuditScore(mobileLhr, "dom-size") !== 0),
-      speedCheck("Meta Viewport Present", "Page exposes viewport metadata", !audit.noindex),
-    ]),
-    sectionFromChecks("images", "Image Optimization", [
-      speedCheck("Images Have Alt Text", "Images should have descriptive alt attributes", (audit.missingImageAltCount || 0) === 0, audit.missingImageAltCount || 0),
-      speedCheck("Properly Size Images", audits["uses-responsive-images"]?.title || "Responsive image sizing", getAuditScore(mobileLhr, "uses-responsive-images") !== 0),
-      speedCheck("Serve Next-Gen Formats", audits["modern-image-formats"]?.title || "Modern image formats", getAuditScore(mobileLhr, "modern-image-formats") !== 0),
-    ]),
-    sectionFromChecks("network", "Network & CDN", [
-      speedCheck("Minimize Redirects", audits.redirects?.title || "Avoid redirect chains", getAuditScore(mobileLhr, "redirects") !== 0),
-      speedCheck("No Mixed Content", "HTTPS pages should not load HTTP resources", (audit.mixedContentCount || 0) === 0, audit.mixedContentCount || 0),
-      speedCheck("CDN or Edge Resources Detected", "Static assets should be served through fast edge infrastructure when possible", cdnHits.length > 0, cdnHits.length),
-      speedCheck("Resource Count Reasonable", "Too many page resources can slow crawling and rendering", resources.length <= 120, resources.length),
-    ]),
-  ];
-
-  return {
-    url: targetUrl,
-    mobile: { score: mobileScore, label: "Mobile Score" },
-    desktop: { score: desktopScore, label: "Desktop Score" },
-    cwv,
-    sections,
-    opportunities: Object.values(audits)
-      .filter((item) => item?.details?.overallSavingsMs || item?.details?.overallSavingsBytes)
-      .slice(0, 5)
-      .map((item) => ({
-        name: item.title,
-        savings: item.displayValue || "Potential improvement",
-      })),
-    resourceSummary: {
-      totalResources: resources.length,
-      cdnResources: cdnHits.length,
-      cdnExamples: cdnHits.slice(0, 5),
-    },
-  };
-}
-
 export default function SpeedOptimization() {
   const { project, projectUrl, hasProject, displayUrl } = useSelectedProjectDomain();
   const { result: d, saveResult, persistenceError } = useTechSeoToolResult({
@@ -245,13 +116,30 @@ export default function SpeedOptimization() {
         fetch(`/api/pagespeed?url=${encodeURIComponent(target)}&strategy=mobile&category=performance,best-practices`).catch(() => null),
         fetch(`/api/pagespeed?url=${encodeURIComponent(target)}&strategy=desktop&category=performance,best-practices`).catch(() => null),
       ]);
-      const mobileData = mobileRes?.ok ? await mobileRes.json() : null;
-      const desktopData = desktopRes?.ok ? await desktopRes.json() : null;
+
+      const parseJsonResponse = async (response) => {
+        if (!response) return null;
+        try {
+          return await response.json();
+        } catch {
+          return null;
+        }
+      };
+
+      const mobileData = await parseJsonResponse(mobileRes);
+      const desktopData = await parseJsonResponse(desktopRes);
+      const pageSpeedError =
+        mobileRes && !mobileRes.ok && mobileData?.error
+          ? mobileData.error
+          : desktopRes && !desktopRes.ok && desktopData?.error
+          ? desktopData.error
+          : null;
+
       const next = buildSpeedResult(target, mobileData, desktopData, crawlData);
       await saveResult(next);
       setOpenSections(Object.fromEntries(next.sections.map((s) => [s.id, true])));
       if (!mobileData || !desktopData) {
-        setError("Live crawl completed. PageSpeed metrics need PAGESPEED_API_KEY to be configured.");
+        setError(pageSpeedError || "Live crawl completed. PageSpeed metrics need PAGESPEED_API_KEY to be configured.");
       }
     } catch (err) {
       setError(err?.message || "Could not test this URL");
@@ -287,55 +175,57 @@ export default function SpeedOptimization() {
   }
 
   return (
-    <div className="mx-auto max-w-5xl">
+    <div className="">
       {/* ─── Hero Header ─── */}
-      <div className="flex items-center justify-center">
-        <div className="rounded-full bg-gradient-to-r from-orange-500 to-rose-500 px-6 py-2 shadow-lg shadow-orange-500/30">
-          <div className="flex items-center gap-2 text-white">
+        <div className="speed-hero rounded-3xl border border-brand-600 bg-brand-500 p-6 sm:p-8">
+        <div className="speed-title-row flex items-center justify-start">
+        <div className="speed-title">
+          <div className="flex items-center gap-2">
             <Activity className="h-5 w-5" />
-            <span className="font-display text-lg font-bold">Speed Test Tool</span>
+            <span className="font-display text-lg font-bold text-white">Speed Test Tool</span>
           </div>
         </div>
-      </div>
-      <p className="mt-3 text-center text-sm text-white/50">
+        </div>
+      <p className="speed-description mt-3 text-center text-sm text-white/50">
         Analyze your website's performance using Google PageSpeed Insights API
       </p>
 
       {/* ─── URL Input ─── */}
-      <div className="mt-6 rounded-2xl border border-white/10 bg-white/[0.02] p-5">
+      <div className="speed-input-panel mt-6 rounded-2xl border border-white/10 bg-white/[0.02] p-5">
         <div className="flex items-center gap-2">
           <div className="flex items-center gap-0 flex-1 overflow-hidden rounded-xl border border-white/10 bg-white/[0.03]">
-            <div className="flex items-center gap-2 bg-blue-500/15 px-4 py-2.5 border-r border-white/10">
-              <Globe className="h-4 w-4 text-blue-400" />
-              <span className="text-sm text-blue-300 whitespace-nowrap">{displayUrl.replace(/^https?:\/\//i, "")}</span>
+            <div className="speed-domain flex items-center gap-2 bg-blue-500/15 px-4 py-2.5 border-r border-white/10">
+              <Globe className="h-4 w-4" />
+              <span className="text-sm whitespace-nowrap">{displayUrl.replace(/^https?:\/\//i, "")}</span>
             </div>
             <input
               value={pagePath}
               onChange={(e) => setPagePath(e.target.value)}
-              className="flex-1 bg-transparent px-3 py-2.5 text-sm text-white placeholder:text-white/30 focus:outline-none"
+              className="speed-path flex-1 bg-transparent px-3 py-2.5 text-sm text-white placeholder:text-white/30 focus:outline-none"
               placeholder="/page-path (optional, leave empty for homepage)"
             />
           </div>
           <button
             onClick={analyzeSpeed}
             disabled={isAnalyzing || !hasProject}
-            className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-orange-500 to-rose-500 px-5 py-2.5 text-sm font-semibold text-white shadow transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
+            className="ui-button speed-test-button rounded-xl"
           >
             <Zap className={`h-4 w-4 ${isAnalyzing ? "animate-pulse" : ""}`} /> {isAnalyzing ? "Testing..." : "Test Speed"}
           </button>
-          <button onClick={analyzeSpeed} disabled={isAnalyzing || !hasProject} className="flex items-center gap-2 rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-2.5 text-sm font-semibold text-emerald-300 transition hover:bg-emerald-500/20 disabled:cursor-not-allowed disabled:opacity-60">
+          <button onClick={analyzeSpeed} disabled={isAnalyzing || !hasProject} className="ui-button speed-retest-button rounded-xl">
             <RefreshCw className="h-4 w-4" /> Re-test
           </button>
         </div>
         {(error || persistenceError) && <p className="mt-3 text-center text-xs font-semibold text-amber-300">{error || persistenceError}</p>}
-        <div className="mt-2 text-center text-xs text-white/35">
+        <div className="speed-cache mt-2 text-center text-xs text-white/35">
           <Clock className="mr-1 inline h-3 w-3" /> Cached 0h ago
         </div>
         <div className="mt-2 flex justify-end">
-          <button onClick={exportReport} className="flex items-center gap-1.5 rounded-lg bg-rose-500 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-rose-400">
+          <button onClick={exportReport} className="ui-button speed-export-button">
             <Download className="h-3.5 w-3.5" /> Export Report
           </button>
         </div>
+      </div>
       </div>
 
       {/* ─── Score Cards ─── */}
@@ -443,7 +333,7 @@ export default function SpeedOptimization() {
                         {check.status === "pass" ? "✓ Pass" : "✕ Fail"}
                       </span>
                     </div>
-                    {Number(check.affected) > 0 && (
+                    {check.affected > 0 && (
                       <button className="mt-1 ml-8 flex items-center gap-1 text-[11px] text-blue-300 hover:underline">
                         <ChevronDown className="h-3 w-3" /> Show {check.affected} affected resources
                       </button>

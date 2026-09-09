@@ -28,21 +28,26 @@ export function mergeW3CValidationReport(existingProjectData, report) {
     ? existingProjectData
     : {};
 
-  const currentReport = base.w3_validation && typeof base.w3_validation === "object" && !Array.isArray(base.w3_validation)
+  const legacyReport = base.w3_validation && typeof base.w3_validation === "object" && !Array.isArray(base.w3_validation)
     ? base.w3_validation
     : {};
+
+  const currentReport = base["w3c-validation"] && typeof base["w3c-validation"] === "object" && !Array.isArray(base["w3c-validation"])
+    ? base["w3c-validation"]
+    : legacyReport;
 
   const nextReport = report && typeof report === "object" && !Array.isArray(report)
     ? report
     : { report };
 
-  return {
-    ...base,
-    w3_validation: {
-      ...currentReport,
-      ...nextReport,
-    },
+  const next = { ...base };
+  delete next.w3_validation;
+  next["w3c-validation"] = {
+    ...currentReport,
+    ...nextReport,
   };
+
+  return next;
 }
 
 async function persistW3CValidationReport(env, userId, projectId, report) {
@@ -196,12 +201,38 @@ export async function onRequest({ request, env }) {
       ...summary,
     };
 
+    let database = {
+      updated: false,
+      field: "user_projects.project_data[\"w3c-validation\"]",
+    };
+
     if (projectId) {
-      await persistW3CValidationReport(env, decoded.uid, projectId, result);
+      const saved = await persistW3CValidationReport(env, decoded.uid, projectId, result);
+      database = {
+        updated: !!saved,
+        field: "user_projects.project_data[\"w3c-validation\"]",
+      };
     }
 
-    return jsonResponse(result, 200, headers);
+    return jsonResponse(
+      {
+        success: true,
+        message: "W3C validation completed successfully and result saved.",
+        data: result,
+        database,
+      },
+      200,
+      headers
+    );
   } catch (error) {
-    return errorResponse(error, headers);
+    return jsonResponse(
+      {
+        success: false,
+        message: "W3C validation failed.",
+        error: error?.message || "Unable to validate the provided URL.",
+      },
+      error?.status || 500,
+      headers
+    );
   }
 }

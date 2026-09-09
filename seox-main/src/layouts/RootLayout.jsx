@@ -3,7 +3,7 @@ import { useEffect } from "react";
 import Navbar from "../components/Navbar.jsx";
 import Footer from "../components/Footer.jsx";
 
-export default function RootLayout() {
+export default function RootLayout({ children }) {
   const { pathname, hash } = useLocation();
 
   // On route change scroll to top, unless there's a hash (anchor) — then scroll to it.
@@ -29,7 +29,7 @@ export default function RootLayout() {
 
       <Navbar />
       <main>
-        <Outlet />
+        {children || <Outlet />}
       </main>
       <Footer />
     </div>

@@ -3,13 +3,64 @@ import react from "@vitejs/plugin-react";
 import fs from "node:fs";
 import { onRequest as autocompleteOnRequest } from "./functions/api/autocomplete.js";
 import { onRequest as gscTokenOnRequest } from "./functions/api/gsc-token.js";
+import { onRequest as gbpConnectOnRequest } from "./functions/api/gbp/connect.js";
+import { onRequest as gbpAccountsOnRequest } from "./functions/api/gbp/accounts.js";
+import { onRequest as gbpLocationsOnRequest } from "./functions/api/gbp/locations.js";
+import { onRequest as gbpOverviewOnRequest } from "./functions/api/gbp/overview.js";
+import { onRequest as gbpProfileOnRequest } from "./functions/api/gbp/profile.js";
+import { onRequest as gbpAuditOnRequest } from "./functions/api/gbp/audit.js";
+import { onRequest as gbpPostsOnRequest } from "./functions/api/gbp/posts.js";
+import { onRequest as gbpAutomationOnRequest } from "./functions/api/gbp/automation.js";
+import { onRequest as gbpJobsOnRequest } from "./functions/api/gbp/jobs.js";
+import { onRequest as gbpReviewsOnRequest } from "./functions/api/gbp/reviews.js";
+import { onRequest as gbpInsightsOnRequest } from "./functions/api/gbp/insights.js";
+import { onRequest as gbpQandaOnRequest } from "./functions/api/gbp/qanda.js";
+import { onRequest as gbpRecommendationsOnRequest } from "./functions/api/gbp/recommendations.js";
+import { onRequest as gbpHistoryOnRequest } from "./functions/api/gbp/history.js";
+import { onRequest as wpSecurityOnRequest } from "./functions/api/tech-seo/wordpress-security.js";
+import { onRequest as deepseekSettingsOnRequest } from "./functions/api/deepseek-settings.js";
+import { onRequest as pagespeedOnRequest } from "./functions/api/pagespeed.js";
+import { onRequest as speedOnRequest } from "./functions/api/tech-seo/speed.js";
+import { onRequest as screamingFrogOnRequest } from "./functions/api/tech-seo/screaming-frog.js";
+import { onRequest as screamingFrogReportDownloadOnRequest } from "./functions/api/tech-seo/screaming-frog/report-download.js";
+import { onRequest as screamingFrogUrlReportsOnRequest } from "./functions/api/tech-seo/screaming-frog/url-reports.js";
 import { onRequest as projectsOnRequest } from "./functions/api/projects.js";
-import { onRequest as aiToolsOnRequest } from "./functions/api/ai-tools.js";
-import { onRequest as localLeadsOnRequest } from "./functions/api/local-leads.js";
-import { onRequest as localExpiredFinderOnRequest } from "./functions/api/local-expired-finder.js";
+import { onRequest as projectDetailsOnRequest } from "./functions/api/project-details.js";
+import { onRequest as backlinksAnalyzeOnRequest } from "./functions/api/tech-seo/backlinks/analyze.js";
+import { onRequest as w3cValidateOnRequest } from "./functions/api/tech-seo/w3c/validate.js";
+import { onRequest as adminW3cValidateOnRequest } from "./functions/api/tech-seo/w3c/admin-validation.js";
+import { onRequest as expiredDomainsCheckOnRequest } from "./functions/api/off-page/expired-domains/check.js";
+import { onRequest as backlinkCleanerOnRequest } from "./functions/api/off-page/backlink-cleaner.js";
+import { onRequest as backlinkIndexerOnRequest } from "./functions/api/off-page/backlink-indexer.js";
+import { onRequest as keywordResearchOnRequest } from "./functions/api/keywords/research.js";
+import { onRequest as ubersuggestOnRequest } from "./functions/api/keywords/ubersuggest.js";
+import { onRequest as contentOutlineOnRequest } from "./functions/api/content/outline.js";
+import { onRequest as textEditorOnRequest } from "./functions/api/seo-tools/text-editor.js";
+import { onRequest as domainSeparatorOnRequest } from "./functions/api/seo-tools/domain-separator.js";
+import { onRequest as wordCounterOnRequest } from "./functions/api/seo-tools/word-counter.js";
+import { onRequest as botViewerOnRequest } from "./functions/api/seo-tools/bot-viewer.js";
+import { onRequest as daPaCheckerOnRequest } from "./functions/api/seo-tools/da-pa-checker.js";
+import { onRequest as metaExtractorOnRequest } from "./functions/api/seo-tools/meta-extractor.js";
+import { onRequest as sitemapExtractorOnRequest } from "./functions/api/seo-tools/sitemap-extractor.js";
+import { onRequest as seoToolsOnRequest } from "./functions/api/seo-tools.js";
+import { onRequest as promptTrackingOnRequest } from "./functions/api/geo/prompt-tracking.js";
+import { onRequest as brandSentimentOnRequest } from "./functions/api/geo/brand-sentiment.js";
+import { onRequest as citationFlowOnRequest } from "./functions/api/geo/citation-flow.js";
+import { onRequest as competitorResearchOnRequest } from "./functions/api/geo/competitor-research.js";
+import { onRequest as internalLinksOnRequest } from "./functions/api/geo/internal-links.js";
+import { onRequest as aiChatOnRequest } from "./functions/api/geo/ai-chat.js";
+import { onRequest as llmsGeneratorOnRequest } from "./functions/api/geo/llms-generator.js";
+import { onRequest as aiModelCheckerOnRequest } from "./functions/api/geo/ai-model-checker.js";
+import { onRequest as aiCompatibilityOnRequest } from "./functions/api/geo/ai-compatibility.js";
+import { onRequest as semanticWriterEditorOnRequest } from "./functions/api/content/semantic-writer/editor.js";
+import { onRequest as contentWriterOnRequest } from "./functions/api/content-writer.js";
+import { onRequest as auditorOnRequest } from "./functions/api/auditor.js";
+import { onRequestGet as authOnRequestGet, onRequestPost as authOnRequestPost } from "./functions/api/auth.js";
 import fetchUrlMetaHandler from "./functions/_handlers/fetch-url-meta.js";
 import webmasterApiHandler from "./functions/_handlers/webmaster-api.js";
 import { verifyFirebaseIdToken } from "./functions/_lib/firebase-rest.js";
+import { runNodeHandler } from "./functions/_lib/node-handler-adapter.js";
+import proxyHandler from "./functions/_handlers/proxy.js";
 import { fetchPublicHttpUrl, parsePublicHttpUrl } from "./functions/_lib/url-security.js";
 
 const TEXT_TYPES = [
@@ -29,7 +80,7 @@ async function verifyDevApiRequest(req) {
   if (authorization) headers.set("authorization", authorization);
   return verifyFirebaseIdToken(
     new Request("http://127.0.0.1/auth", { headers }),
-    process.env
+    loadDevApiEnv()
   );
 }
 
@@ -58,11 +109,22 @@ function parseEnvFile(pathname) {
 }
 
 function loadDevApiEnv() {
-  return {
+  const merged = {
     ...process.env,
     ...loadEnv("development", process.cwd(), ""),
+    ...parseEnvFile(".env"),
     ...parseEnvFile(".dev.vars"),
   };
+
+  if (merged.PAGESPEED_API_KEY === undefined || merged.PAGESPEED_API_KEY === "") {
+    const envFilePath = fs.existsSync(".env") ? ".env" : null;
+    if (envFilePath) {
+      const parsed = parseEnvFile(envFilePath);
+      if (parsed.PAGESPEED_API_KEY) merged.PAGESPEED_API_KEY = parsed.PAGESPEED_API_KEY;
+    }
+  }
+
+  return merged;
 }
 
 function sendUnauthorized(res, error) {
@@ -71,51 +133,61 @@ function sendUnauthorized(res, error) {
   });
 }
 
+async function readRawBody(req) {
+  if (!req || !["POST", "PUT", "PATCH"].includes(req.method)) return undefined;
+
+  return new Promise((resolve) => {
+    const chunks = [];
+    req.on("data", (chunk) => chunks.push(Buffer.from(chunk)));
+    // Request bodies can be multipart uploads. Returning UTF-8 text here
+    // corrupts arbitrary ZIP bytes before Request.formData() sees them.
+    const finish = () => {
+      const body = Buffer.concat(chunks);
+      resolve(body.length ? body : undefined);
+    };
+    req.on("end", finish);
+    req.on("error", finish);
+  });
+}
+
 /* ── Proxy API middleware (for content tools to fetch external URLs) ── */
 function proxyApiPlugin() {
   return {
-    name: "ai-smart-seo-proxy-api",
+    name: "seox-proxy-api",
     configureServer(server) {
       server.middlewares.use("/api/proxy", async (req, res) => {
         try {
           try {
             await verifyDevApiRequest(req);
           } catch (error) {
-            return sendUnauthorized(res, error);
+            if (process.env.NODE_ENV !== "development") {
+              return sendUnauthorized(res, error);
+            }
           }
 
           const requestUrl = new URL(req.url || "", "http://127.0.0.1");
-          const targetUrl = requestUrl.searchParams.get("url");
-          if (!targetUrl) {
-            return sendJson(res, 400, { error: "URL parameter is required" });
-          }
+          const rawBody = await readRawBody(req);
+          const headers = new Headers();
+          Object.entries(req.headers || {}).forEach(([key, value]) => {
+            if (Array.isArray(value)) headers.set(key, value.join(", "));
+            else if (value !== undefined) headers.set(key, String(value));
+          });
 
-          const controller = new AbortController();
-          const timeoutId = setTimeout(() => controller.abort(), 10000);
+          const request = new Request(`http://127.0.0.1${requestUrl.pathname}${requestUrl.search}`, {
+            method: req.method,
+            headers,
+            body: rawBody ? rawBody : undefined,
+          });
 
-          const response = await fetchPublicHttpUrl(targetUrl, {
-            signal: controller.signal,
-            headers: {
-              "User-Agent":
-                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-              Accept:
-                "text/html,application/xhtml+xml,application/xml;q=0.9,text/plain;q=0.8,*/*;q=0.7",
-              "Accept-Language": "en-US,en;q=0.5",
-              Connection: "keep-alive",
-              "Upgrade-Insecure-Requests": "1",
-            },
-          }).finally(() => clearTimeout(timeoutId));
-
-          const contentType = response.headers.get("content-type") || "";
-          const text = await response.text();
-
-          res.setHeader("Access-Control-Allow-Origin", "*");
-          res.setHeader("Content-Type", contentType || "text/html");
+          const response = await runNodeHandler({ request, env: loadDevApiEnv() }, proxyHandler);
           res.statusCode = response.status;
-          res.end(text);
+          response.headers.forEach((value, key) => {
+            res.setHeader(key, value);
+          });
+          res.end(await response.text());
         } catch (error) {
           sendJson(res, error?.status || 500, {
-            error: "Failed to fetch URL",
+            error: "Failed to process proxy request",
             message: error?.message || "Unknown error",
           });
         }
@@ -127,7 +199,7 @@ function proxyApiPlugin() {
 /* ── DeepSeek API middleware (for AI-powered content tools) ── */
 function deepseekApiPlugin() {
   return {
-    name: "ai-smart-seo-deepseek-api",
+    name: "seox-deepseek-api",
     configureServer(server) {
       server.middlewares.use("/api/deepseek", async (req, res) => {
         // CORS headers
@@ -252,10 +324,37 @@ function deepseekApiPlugin() {
   };
 }
 
+function deepseekSettingsApiPlugin() {
+  return {
+    name: "seox-deepseek-settings-api",
+    configureServer(server) {
+      server.middlewares.use("/api/deepseek-settings", async (req, res) => {
+        try {
+          const rawBody = await readRawBody(req);
+          const headers = new Headers();
+          Object.entries(req.headers || {}).forEach(([key, value]) => {
+            if (Array.isArray(value)) headers.set(key, value.join(", "));
+            else if (value !== undefined) headers.set(key, String(value));
+          });
+          const request = new Request(mountedUrl(req, "/api/deepseek-settings"), {
+            method: req.method || "GET",
+            headers,
+            body: rawBody || undefined,
+          });
+          const response = await deepseekSettingsOnRequest({ request, env: loadDevApiEnv() });
+          await sendWebResponse(res, response);
+        } catch (error) {
+          sendJson(res, error?.status || 500, { error: error?.message || "DeepSeek settings request failed" });
+        }
+      });
+    },
+  };
+}
+
 /* ── Crawler API middleware (existing) ── */
 function crawlerApiPlugin() {
   return {
-    name: "ai-smart-seo-crawler-api",
+    name: "seox-crawler-api",
     configureServer(server) {
       registerCrawlerMiddleware(server);
     },
@@ -267,7 +366,7 @@ function crawlerApiPlugin() {
 
 function fetchUrlMetaApiPlugin() {
   return {
-    name: "ai-smart-seo-fetch-url-meta-api",
+    name: "seox-fetch-url-meta-api",
     configureServer(server) {
       registerFetchUrlMetaMiddleware(server);
     },
@@ -277,9 +376,33 @@ function fetchUrlMetaApiPlugin() {
   };
 }
 
+function pagespeedApiPlugin() {
+  return {
+    name: "seox-pagespeed-api",
+    configureServer(server) {
+      registerPagespeedMiddleware(server);
+    },
+    configurePreviewServer(server) {
+      registerPagespeedMiddleware(server);
+    },
+  };
+}
+
+function screamingFrogApiPlugin() {
+  return {
+    name: "seox-screaming-frog-api",
+    configureServer(server) {
+      registerScreamingFrogMiddleware(server);
+    },
+    configurePreviewServer(server) {
+      registerScreamingFrogMiddleware(server);
+    },
+  };
+}
+
 function webmasterApiPlugin() {
   return {
-    name: "ai-smart-seo-webmaster-api",
+    name: "seox-webmaster-api",
     configureServer(server) {
       registerWebmasterApiMiddleware(server);
     },
@@ -291,7 +414,7 @@ function webmasterApiPlugin() {
 
 function autocompleteApiPlugin() {
   return {
-    name: "ai-smart-seo-autocomplete-api",
+    name: "seox-autocomplete-api",
     configureServer(server) {
       registerAutocompleteMiddleware(server);
     },
@@ -301,9 +424,79 @@ function autocompleteApiPlugin() {
   };
 }
 
+// Pages Functions route functions/api/gbp/<name>.js to /api/gbp/<name>; the dev
+// server needs the same mapping registered by hand.
+const GBP_ROUTES = {
+  "/api/gbp/connect": gbpConnectOnRequest,
+  "/api/gbp/accounts": gbpAccountsOnRequest,
+  "/api/gbp/locations": gbpLocationsOnRequest,
+  "/api/gbp/overview": gbpOverviewOnRequest,
+  "/api/gbp/profile": gbpProfileOnRequest,
+  "/api/gbp/audit": gbpAuditOnRequest,
+  "/api/gbp/posts": gbpPostsOnRequest,
+  "/api/gbp/automation": gbpAutomationOnRequest,
+  "/api/gbp/jobs": gbpJobsOnRequest,
+  "/api/gbp/reviews": gbpReviewsOnRequest,
+  "/api/gbp/insights": gbpInsightsOnRequest,
+  "/api/gbp/qanda": gbpQandaOnRequest,
+  "/api/gbp/recommendations": gbpRecommendationsOnRequest,
+  "/api/gbp/history": gbpHistoryOnRequest,
+};
+
+function registerGbpMiddleware(server) {
+  for (const [mountPath, handler] of Object.entries(GBP_ROUTES)) {
+    server.middlewares.use(mountPath, async (req, res) => {
+      try {
+        const request = await createWebRequest(req, mountPath);
+        const response = await handler({ request, env: loadDevApiEnv() });
+        await sendWebResponse(res, response);
+      } catch (error) {
+        sendJson(res, error?.status || 500, {
+          error: "Business Profile request failed",
+          message: error?.message || "Unknown error",
+        });
+      }
+    });
+  }
+}
+
+function wordpressSecurityApiPlugin() {
+  const register = (server) => {
+    server.middlewares.use("/api/tech-seo/wordpress-security", async (req, res) => {
+      try {
+        const request = await createWebRequest(req, "/api/tech-seo/wordpress-security");
+        const response = await wpSecurityOnRequest({ request, env: loadDevApiEnv() });
+        await sendWebResponse(res, response);
+      } catch (error) {
+        sendJson(res, error?.status || 500, {
+          error: "WordPress security scan failed",
+          message: error?.message || "Unknown error",
+        });
+      }
+    });
+  };
+  return {
+    name: "seox-wordpress-security-api",
+    configureServer: register,
+    configurePreviewServer: register,
+  };
+}
+
+function gbpApiPlugin() {
+  return {
+    name: "seox-gbp-api",
+    configureServer(server) {
+      registerGbpMiddleware(server);
+    },
+    configurePreviewServer(server) {
+      registerGbpMiddleware(server);
+    },
+  };
+}
+
 function gscTokenApiPlugin() {
   return {
-    name: "ai-smart-seo-gsc-token-api",
+    name: "seox-gsc-token-api",
     configureServer(server) {
       registerGscTokenMiddleware(server);
     },
@@ -315,7 +508,7 @@ function gscTokenApiPlugin() {
 
 function projectsApiPlugin() {
   return {
-    name: "ai-smart-seo-projects-api",
+    name: "seox-projects-api",
     configureServer(server) {
       registerProjectsMiddleware(server);
     },
@@ -325,44 +518,380 @@ function projectsApiPlugin() {
   };
 }
 
-function importedSemanticsxApiPlugin() {
+function projectDetailsApiPlugin() {
   return {
-    name: "ai-smart-seo-semanticsx-api",
+    name: "seox-project-details-api",
     configureServer(server) {
-      registerPagesFunctionMiddleware(server, "/api/ai-tools", aiToolsOnRequest);
-      registerPagesFunctionMiddleware(server, "/api/local-leads", localLeadsOnRequest);
-      registerPagesFunctionMiddleware(server, "/api/local-expired-finder", localExpiredFinderOnRequest);
+      registerProjectDetailsMiddleware(server);
     },
     configurePreviewServer(server) {
-      registerPagesFunctionMiddleware(server, "/api/ai-tools", aiToolsOnRequest);
-      registerPagesFunctionMiddleware(server, "/api/local-leads", localLeadsOnRequest);
-      registerPagesFunctionMiddleware(server, "/api/local-expired-finder", localExpiredFinderOnRequest);
+      registerProjectDetailsMiddleware(server);
     },
   };
 }
 
-function registerPagesFunctionMiddleware(server, mountPath, onRequest) {
-  server.middlewares.use(mountPath, async (req, res) => {
-    try {
-      const request = await createWebRequest(req, mountPath);
-      const response = await onRequest({ request, env: loadDevApiEnv() });
-      await sendWebResponse(res, response);
-    } catch (error) {
-      sendJson(res, error?.status || 500, {
-        error: "API request failed",
-        message: error?.message || "Unknown error",
-      });
-    }
-  });
+function backlinksAnalyzeApiPlugin() {
+  return {
+    name: "seox-backlinks-analyze-api",
+    configureServer(server) {
+      registerBacklinksAnalyzeMiddleware(server);
+    },
+    configurePreviewServer(server) {
+      registerBacklinksAnalyzeMiddleware(server);
+    },
+  };
+}
+
+function w3cValidationApiPlugin() {
+  return {
+    name: "seox-w3c-validation-api",
+    configureServer(server) {
+      registerW3CValidationMiddleware(server);
+      registerAdminW3CValidationMiddleware(server);
+    },
+    configurePreviewServer(server) {
+      registerW3CValidationMiddleware(server);
+      registerAdminW3CValidationMiddleware(server);
+    },
+  };
+}
+
+function expiredDomainsCheckApiPlugin() {
+  return {
+    name: "seox-expired-domains-check-api",
+    configureServer(server) {
+      registerExpiredDomainsCheckMiddleware(server);
+    },
+    configurePreviewServer(server) {
+      registerExpiredDomainsCheckMiddleware(server);
+    },
+  };
+}
+
+function backlinkCleanerApiPlugin() {
+  return {
+    name: "seox-backlink-cleaner-api",
+    configureServer(server) {
+      registerBacklinkCleanerMiddleware(server);
+    },
+    configurePreviewServer(server) {
+      registerBacklinkCleanerMiddleware(server);
+    },
+  };
+}
+
+function backlinkIndexerApiPlugin() {
+  return {
+    name: "seox-backlink-indexer-api",
+    configureServer(server) {
+      registerBacklinkIndexerMiddleware(server);
+    },
+    configurePreviewServer(server) {
+      registerBacklinkIndexerMiddleware(server);
+    },
+  };
+}
+
+function keywordResearchApiPlugin() {
+  return {
+    name: "seox-keyword-research-api",
+    configureServer(server) {
+      registerKeywordResearchMiddleware(server);
+    },
+    configurePreviewServer(server) {
+      registerKeywordResearchMiddleware(server);
+    },
+  };
+}
+
+function ubersuggestApiPlugin() {
+  return {
+    name: "seox-ubersuggest-api",
+    configureServer(server) {
+      registerUbersuggestMiddleware(server);
+    },
+    configurePreviewServer(server) {
+      registerUbersuggestMiddleware(server);
+    },
+  };
+}
+
+function authApiPlugin() {
+  return {
+    name: "seox-auth-api",
+    configureServer(server) {
+      registerAuthMiddleware(server);
+    },
+    configurePreviewServer(server) {
+      registerAuthMiddleware(server);
+    },
+  };
+}
+
+function contentOutlineApiPlugin() {
+  return {
+    name: "seox-content-outline-api",
+    configureServer(server) {
+      registerContentOutlineMiddleware(server);
+    },
+    configurePreviewServer(server) {
+      registerContentOutlineMiddleware(server);
+    },
+  };
+}
+
+function textEditorApiPlugin() {
+  return {
+    name: "seox-text-editor-api",
+    configureServer(server) {
+      registerTextEditorMiddleware(server);
+    },
+    configurePreviewServer(server) {
+      registerTextEditorMiddleware(server);
+    },
+  };
+}
+
+function domainSeparatorApiPlugin() {
+  return {
+    name: "seox-domain-separator-api",
+    configureServer(server) {
+      registerDomainSeparatorMiddleware(server);
+    },
+    configurePreviewServer(server) {
+      registerDomainSeparatorMiddleware(server);
+    },
+  };
+}
+
+function wordCounterApiPlugin() {
+  return {
+    name: "seox-word-counter-api",
+    configureServer(server) {
+      registerWordCounterMiddleware(server);
+    },
+    configurePreviewServer(server) {
+      registerWordCounterMiddleware(server);
+    },
+  };
+}
+
+function botViewerApiPlugin() {
+  return {
+    name: "seox-bot-viewer-api",
+    configureServer(server) {
+      registerBotViewerMiddleware(server);
+    },
+    configurePreviewServer(server) {
+      registerBotViewerMiddleware(server);
+    },
+  };
+}
+
+function daPaCheckerApiPlugin() {
+  return {
+    name: "seox-da-pa-checker-api",
+    configureServer(server) {
+      registerDaPaCheckerMiddleware(server);
+    },
+    configurePreviewServer(server) {
+      registerDaPaCheckerMiddleware(server);
+    },
+  };
+}
+
+function metaExtractorApiPlugin() {
+  return {
+    name: "seox-meta-extractor-api",
+    configureServer(server) {
+      registerMetaExtractorMiddleware(server);
+    },
+    configurePreviewServer(server) {
+      registerMetaExtractorMiddleware(server);
+    },
+  };
+}
+
+function sitemapExtractorApiPlugin() {
+  return {
+    name: "seox-sitemap-extractor-api",
+    configureServer(server) {
+      registerSitemapExtractorMiddleware(server);
+    },
+    configurePreviewServer(server) {
+      registerSitemapExtractorMiddleware(server);
+    },
+  };
+}
+
+function seoToolsApiPlugin() {
+  return {
+    name: "seox-seo-tools-api",
+    configureServer(server) {
+      registerSeoToolsMiddleware(server);
+    },
+    configurePreviewServer(server) {
+      registerSeoToolsMiddleware(server);
+    },
+  };
+}
+
+function promptTrackingApiPlugin() {
+  return {
+    name: "seox-prompt-tracking-api",
+    configureServer(server) {
+      registerPromptTrackingMiddleware(server);
+    },
+    configurePreviewServer(server) {
+      registerPromptTrackingMiddleware(server);
+    },
+  };
+}
+
+function brandSentimentApiPlugin() {
+  return {
+    name: "seox-brand-sentiment-api",
+    configureServer(server) {
+      registerBrandSentimentMiddleware(server);
+    },
+    configurePreviewServer(server) {
+      registerBrandSentimentMiddleware(server);
+    },
+  };
+}
+
+function citationFlowApiPlugin() {
+  return {
+    name: "seox-citation-flow-api",
+    configureServer(server) {
+      registerCitationFlowMiddleware(server);
+    },
+    configurePreviewServer(server) {
+      registerCitationFlowMiddleware(server);
+    },
+  };
+}
+
+function competitorResearchApiPlugin() {
+  return {
+    name: "seox-competitor-research-api",
+    configureServer(server) {
+      registerCompetitorResearchMiddleware(server);
+    },
+    configurePreviewServer(server) {
+      registerCompetitorResearchMiddleware(server);
+    },
+  };
+}
+
+function internalLinksApiPlugin() {
+  return {
+    name: "seox-internal-links-api",
+    configureServer(server) {
+      registerInternalLinksMiddleware(server);
+    },
+    configurePreviewServer(server) {
+      registerInternalLinksMiddleware(server);
+    },
+  };
+}
+
+function aiChatApiPlugin() {
+  return {
+    name: "seox-ai-chat-api",
+    configureServer(server) {
+      registerAiChatMiddleware(server);
+    },
+    configurePreviewServer(server) {
+      registerAiChatMiddleware(server);
+    },
+  };
+}
+
+function llmsGeneratorApiPlugin() {
+  return {
+    name: "seox-llms-generator-api",
+    configureServer(server) {
+      registerLlmsGeneratorMiddleware(server);
+    },
+    configurePreviewServer(server) {
+      registerLlmsGeneratorMiddleware(server);
+    },
+  };
+}
+
+function aiModelCheckerApiPlugin() {
+  return {
+    name: "seox-ai-model-checker-api",
+    configureServer(server) {
+      registerAiModelCheckerMiddleware(server);
+    },
+    configurePreviewServer(server) {
+      registerAiModelCheckerMiddleware(server);
+    },
+  };
+}
+
+function aiCompatibilityApiPlugin() {
+  return {
+    name: "seox-ai-compatibility-api",
+    configureServer(server) {
+      registerAiCompatibilityMiddleware(server);
+    },
+    configurePreviewServer(server) {
+      registerAiCompatibilityMiddleware(server);
+    },
+  };
+}
+
+function semanticWriterEditorApiPlugin() {
+  return {
+    name: "seox-semantic-writer-editor-api",
+    configureServer(server) {
+      registerSemanticWriterEditorMiddleware(server);
+    },
+    configurePreviewServer(server) {
+      registerSemanticWriterEditorMiddleware(server);
+    },
+  };
+}
+
+function contentWriterApiPlugin() {
+  return {
+    name: "seox-content-writer-api",
+    configureServer(server) {
+      registerContentWriterMiddleware(server);
+    },
+    configurePreviewServer(server) {
+      registerContentWriterMiddleware(server);
+    },
+  };
+}
+
+function auditorApiPlugin() {
+  return {
+    name: "seox-auditor-api",
+    configureServer(server) {
+      registerAuditorMiddleware(server);
+    },
+    configurePreviewServer(server) {
+      registerAuditorMiddleware(server);
+    },
+  };
 }
 
 function mountedUrl(req, mountPath) {
+  const forwardedHost = String(req.headers?.["x-forwarded-host"] || req.headers?.host || "").split(",")[0].trim();
+  const host = /^[a-z0-9.:[\]-]+$/i.test(forwardedHost) ? forwardedHost : "127.0.0.1:3000";
+  const forwardedProtocol = String(req.headers?.["x-forwarded-proto"] || "").split(",")[0].trim().toLowerCase();
+  const protocol = forwardedProtocol === "https" ? "https" : "http";
+  const origin = `${protocol}://${host}`;
   const raw = req.url || "";
-  if (raw.startsWith(mountPath)) return `http://127.0.0.1${raw}`;
-  if (raw.startsWith("/?")) return `http://127.0.0.1${mountPath}${raw.slice(1)}`;
-  if (raw.startsWith("?")) return `http://127.0.0.1${mountPath}${raw}`;
-  if (!raw || raw === "/") return `http://127.0.0.1${mountPath}`;
-  return `http://127.0.0.1${mountPath}${raw.startsWith("/") ? raw : `/${raw}`}`;
+  if (raw.startsWith(mountPath)) return `${origin}${raw}`;
+  if (raw.startsWith("/?")) return `${origin}${mountPath}${raw.slice(1)}`;
+  if (raw.startsWith("?")) return `${origin}${mountPath}${raw}`;
+  if (!raw || raw === "/") return `${origin}${mountPath}`;
+  return `${origin}${mountPath}${raw.startsWith("/") ? raw : `/${raw}`}`;
 }
 
 function registerFetchUrlMetaMiddleware(server) {
@@ -394,6 +923,76 @@ function registerAutocompleteMiddleware(server) {
       sendJson(res, 500, {
         error: "Autocomplete request failed",
         message: error?.message || "Unknown error",
+      });
+    }
+  });
+}
+
+function registerPagespeedMiddleware(server) {
+  server.middlewares.use("/api/pagespeed", async (req, res) => {
+    try {
+      const request = await createWebRequest(req, "/api/pagespeed");
+      const response = await pagespeedOnRequest({
+        request,
+        env: loadDevApiEnv(),
+      });
+      await sendWebResponse(res, response);
+    } catch (error) {
+      sendJson(res, error?.status || 500, {
+        error: "PageSpeed request failed",
+        message: error?.message || "Unknown error",
+      });
+    }
+  });
+}
+
+function speedApiPlugin() {
+  return {
+    name: "seox-speed-api",
+    configureServer(server) {
+      server.middlewares.use("/api/tech-seo/speed", async (req, res) => {
+        try {
+          const request = await createWebRequest(req, "/api/tech-seo/speed");
+          const response = await speedOnRequest({ request, env: loadDevApiEnv() });
+          await sendWebResponse(res, response);
+        } catch (error) {
+          sendJson(res, error?.status || 500, { success: false, error: error?.message || "Speed test request failed" });
+        }
+      });
+    },
+  };
+}
+
+function registerScreamingFrogMiddleware(server) {
+  server.middlewares.use("/api/tech-seo/screaming-frog/url-reports", async (req, res) => {
+    try {
+      const request = await createWebRequest(req, "/api/tech-seo/screaming-frog/url-reports");
+      const response = await screamingFrogUrlReportsOnRequest({ request, env: loadDevApiEnv() });
+      await sendWebResponse(res, response);
+    } catch (error) {
+      sendJson(res, error?.status || 500, { success: false, error: error?.message || "Screaming Frog URL report storage failed." });
+    }
+  });
+  server.middlewares.use("/api/tech-seo/screaming-frog/report-download", async (req, res) => {
+    try {
+      const request = await createWebRequest(req, "/api/tech-seo/screaming-frog/report-download");
+      const response = await screamingFrogReportDownloadOnRequest({ request, env: loadDevApiEnv() });
+      await sendWebResponse(res, response);
+    } catch (error) {
+      sendJson(res, error?.status || 500, { status: "error", success: false, message: error?.message || "Screaming Frog report download failed." });
+    }
+  });
+  server.middlewares.use("/api/tech-seo/screaming-frog", async (req, res) => {
+    try {
+      const request = await createWebRequest(req, "/api/tech-seo/screaming-frog");
+      const response = await screamingFrogOnRequest({ request, env: loadDevApiEnv() });
+      await sendWebResponse(res, response);
+    } catch (error) {
+      sendJson(res, error?.status || 500, {
+        status: "error",
+        success: false,
+        message: error?.message || "Screaming Frog request failed.",
+        errors: [],
       });
     }
   });
@@ -431,6 +1030,474 @@ function registerProjectsMiddleware(server) {
         error: "Projects request failed",
         message: error?.message || "Unknown error",
       });
+    }
+  });
+}
+
+function registerProjectDetailsMiddleware(server) {
+  const handleProjectDetailsRequest = async (req, res, mountPath) => {
+    try {
+      const request = await createWebRequest(req, mountPath);
+      const response = await projectDetailsOnRequest({
+        request,
+        env: loadDevApiEnv(),
+      });
+      await sendWebResponse(res, response);
+    } catch (error) {
+      sendJson(res, 500, {
+        error: "Project details request failed",
+        message: error?.message || "Unknown error",
+      });
+    }
+  };
+
+  server.middlewares.use("/api/project-details", async (req, res) => {
+    await handleProjectDetailsRequest(req, res, "/api/project-details");
+  });
+
+  server.middlewares.use("/api/add-project-detail", async (req, res) => {
+    await handleProjectDetailsRequest(req, res, "/api/add-project-detail");
+  });
+}
+
+function registerBacklinksAnalyzeMiddleware(server) {
+  server.middlewares.use("/api/tech-seo/backlinks/analyze", async (req, res) => {
+    try {
+      const request = await createWebRequest(req, "/api/tech-seo/backlinks/analyze");
+      const response = await backlinksAnalyzeOnRequest({ request, env: loadDevApiEnv() });
+      await sendWebResponse(res, response);
+    } catch (error) {
+      sendJson(res, error?.status || 500, {
+        success: false,
+        error: error?.message || "Backlink analysis request failed.",
+      });
+    }
+  });
+}
+
+function registerW3CValidationMiddleware(server) {
+  server.middlewares.use("/api/tech-seo/w3c/validate", async (req, res) => {
+    try {
+      const request = await createWebRequest(req, "/api/tech-seo/w3c/validate");
+      const response = await w3cValidateOnRequest({ request, env: loadDevApiEnv() });
+      await sendWebResponse(res, response);
+    } catch (error) {
+      sendJson(res, error?.status || 500, {
+        success: false,
+        error: error?.message || "W3C validation request failed.",
+      });
+    }
+  });
+}
+
+function registerAdminW3CValidationMiddleware(server) {
+  server.middlewares.use("/api/tech-seo/w3c-validation", async (req, res) => {
+    try {
+      const request = await createWebRequest(req, "/api/tech-seo/w3c-validation");
+      const response = await adminW3cValidateOnRequest({ request, env: loadDevApiEnv() });
+      await sendWebResponse(res, response);
+    } catch (error) {
+      sendJson(res, error?.status || 500, {
+        success: false,
+        error: error?.message || "W3C validation request failed.",
+      });
+    }
+  });
+}
+
+function registerExpiredDomainsCheckMiddleware(server) {
+  server.middlewares.use("/api/off-page/expired-domains/check", async (req, res) => {
+    try {
+      const request = await createWebRequest(req, "/api/off-page/expired-domains/check");
+      const response = await expiredDomainsCheckOnRequest({ request, env: loadDevApiEnv() });
+      await sendWebResponse(res, response);
+    } catch (error) {
+      sendJson(res, error?.status || 500, {
+        success: false,
+        error: error?.message || "Expired domain check request failed.",
+      });
+    }
+  });
+}
+
+function registerBacklinkCleanerMiddleware(server) {
+  server.middlewares.use("/api/off-page/backlink-cleaner", async (req, res) => {
+    try {
+      const request = await createWebRequest(req, "/api/off-page/backlink-cleaner");
+      const response = await backlinkCleanerOnRequest({ request, env: loadDevApiEnv() });
+      await sendWebResponse(res, response);
+    } catch (error) {
+      sendJson(res, error?.status || 500, {
+        success: false,
+        error: error?.message || "Backlink cleaner request failed.",
+      });
+    }
+  });
+}
+
+function registerBacklinkIndexerMiddleware(server) {
+  server.middlewares.use("/api/off-page/backlink-indexer", async (req, res) => {
+    try {
+      const request = await createWebRequest(req, "/api/off-page/backlink-indexer");
+      const response = await backlinkIndexerOnRequest({ request, env: loadDevApiEnv() });
+      await sendWebResponse(res, response);
+    } catch (error) {
+      sendJson(res, error?.status || 500, {
+        success: false,
+        error: error?.message || "Backlink indexer request failed.",
+      });
+    }
+  });
+}
+
+function registerKeywordResearchMiddleware(server) {
+  server.middlewares.use("/api/keywords/research", async (req, res) => {
+    try {
+      const request = await createWebRequest(req, "/api/keywords/research");
+      const response = await keywordResearchOnRequest({ request, env: loadDevApiEnv() });
+      await sendWebResponse(res, response);
+    } catch (error) {
+      sendJson(res, error?.status || 500, {
+        success: false,
+        error: error?.message || "Keyword research request failed.",
+      });
+    }
+  });
+}
+
+function registerUbersuggestMiddleware(server) {
+  server.middlewares.use("/api/keywords/ubersuggest", async (req, res) => {
+    try {
+      const request = await createWebRequest(req, "/api/keywords/ubersuggest");
+      const response = await ubersuggestOnRequest({ request, env: loadDevApiEnv() });
+      await sendWebResponse(res, response);
+    } catch (error) {
+      sendJson(res, error?.status || 500, {
+        success: false,
+        error: error?.message || "Ubersuggest request failed.",
+      });
+    }
+  });
+}
+
+function registerAuthMiddleware(server) {
+  server.middlewares.use("/api/auth", async (req, res) => {
+    try {
+      const request = await createWebRequest(req, "/api/auth");
+      const handler = request.method === "GET" ? authOnRequestGet : authOnRequestPost;
+      const response = await handler({ request, env: loadDevApiEnv() });
+      await sendWebResponse(res, response);
+    } catch (error) {
+      sendJson(res, error?.status || 500, {
+        ok: false,
+        error: error?.message || "Authentication request failed",
+      });
+    }
+  });
+}
+
+function registerContentOutlineMiddleware(server) {
+  server.middlewares.use("/api/content/outline", async (req, res) => {
+    try {
+      const request = await createWebRequest(req, "/api/content/outline");
+      const response = await contentOutlineOnRequest({ request, env: loadDevApiEnv() });
+      await sendWebResponse(res, response);
+    } catch (error) {
+      sendJson(res, error?.status || 500, {
+        success: false,
+        message: error?.message || "Outline generation request failed.",
+      });
+    }
+  });
+}
+
+function registerTextEditorMiddleware(server) {
+  server.middlewares.use("/api/seo-tools/text-editor", async (req, res) => {
+    try {
+      const request = await createWebRequest(req, "/api/seo-tools/text-editor");
+      const response = await textEditorOnRequest({ request, env: loadDevApiEnv() });
+      await sendWebResponse(res, response);
+    } catch (error) {
+      sendJson(res, error?.status || 500, {
+        success: false,
+        status: "error",
+        message: error?.message || "Text editor request failed.",
+      });
+    }
+  });
+}
+
+function registerDomainSeparatorMiddleware(server) {
+  server.middlewares.use("/api/seo-tools/domain-separator", async (req, res) => {
+    try {
+      const request = await createWebRequest(req, "/api/seo-tools/domain-separator");
+      const response = await domainSeparatorOnRequest({ request, env: loadDevApiEnv() });
+      await sendWebResponse(res, response);
+    } catch (error) {
+      sendJson(res, error?.status || 500, {
+        success: false,
+        status: "error",
+        message: error?.message || "Domain separator request failed.",
+        data: null,
+      });
+    }
+  });
+}
+
+function registerWordCounterMiddleware(server) {
+  server.middlewares.use("/api/seo-tools/word-counter", async (req, res) => {
+    try {
+      const request = await createWebRequest(req, "/api/seo-tools/word-counter");
+      const response = await wordCounterOnRequest({ request, env: loadDevApiEnv() });
+      await sendWebResponse(res, response);
+    } catch (error) {
+      sendJson(res, error?.status || 500, {
+        success: false,
+        status: "error",
+        message: error?.message || "Word counter request failed.",
+        data: null,
+      });
+    }
+  });
+}
+
+function registerBotViewerMiddleware(server) {
+  server.middlewares.use("/api/seo-tools/bot-viewer", async (req, res) => {
+    try {
+      const request = await createWebRequest(req, "/api/seo-tools/bot-viewer");
+      const response = await botViewerOnRequest({ request, env: loadDevApiEnv() });
+      await sendWebResponse(res, response);
+    } catch (error) {
+      sendJson(res, error?.status || 500, {
+        success: false,
+        status: "error",
+        message: error?.message || "Bot viewer request failed.",
+        data: null,
+      });
+    }
+  });
+}
+
+function registerDaPaCheckerMiddleware(server) {
+  server.middlewares.use("/api/seo-tools/da-pa-checker", async (req, res) => {
+    try {
+      const request = await createWebRequest(req, "/api/seo-tools/da-pa-checker");
+      const response = await daPaCheckerOnRequest({ request, env: loadDevApiEnv() });
+      await sendWebResponse(res, response);
+    } catch (error) {
+      sendJson(res, error?.status || 500, {
+        success: false,
+        status: "error",
+        message: error?.message || "DA/PA checker request failed.",
+        data: null,
+      });
+    }
+  });
+}
+
+function registerMetaExtractorMiddleware(server) {
+  server.middlewares.use("/api/seo-tools/meta-extractor", async (req, res) => {
+    try {
+      const request = await createWebRequest(req, "/api/seo-tools/meta-extractor");
+      const response = await metaExtractorOnRequest({ request, env: loadDevApiEnv() });
+      await sendWebResponse(res, response);
+    } catch (error) {
+      sendJson(res, error?.status || 500, {
+        success: false,
+        status: "error",
+        message: error?.message || "Meta extractor request failed.",
+        data: null,
+      });
+    }
+  });
+}
+
+function registerSitemapExtractorMiddleware(server) {
+  server.middlewares.use("/api/seo-tools/sitemap-extractor", async (req, res) => {
+    try {
+      const request = await createWebRequest(req, "/api/seo-tools/sitemap-extractor");
+      const response = await sitemapExtractorOnRequest({ request, env: loadDevApiEnv() });
+      await sendWebResponse(res, response);
+    } catch (error) {
+      sendJson(res, error?.status || 500, {
+        success: false,
+        status: "error",
+        message: error?.message || "Sitemap extractor request failed.",
+        data: null,
+      });
+    }
+  });
+}
+
+function registerSeoToolsMiddleware(server) {
+  server.middlewares.use("/api/seo-tools", async (req, res, next) => {
+    if (req.url && req.url !== "/" && !req.url.startsWith("/?")) return next();
+    try {
+      const request = await createWebRequest(req, "/api/seo-tools");
+      const response = await seoToolsOnRequest({ request, env: loadDevApiEnv() });
+      await sendWebResponse(res, response);
+    } catch (error) {
+      sendJson(res, error?.status || 500, {
+        success: false,
+        status: "error",
+        message: error?.message || "SEO tools request failed.",
+        tool: null,
+        data: null,
+      });
+    }
+  });
+}
+
+function registerPromptTrackingMiddleware(server) {
+  server.middlewares.use("/api/geo/prompt-tracking", async (req, res) => {
+    try {
+      const request = await createWebRequest(req, "/api/geo/prompt-tracking");
+      const response = await promptTrackingOnRequest({ request, env: loadDevApiEnv() });
+      await sendWebResponse(res, response);
+    } catch (error) {
+      sendJson(res, error?.status || 500, {
+        success: false,
+        status: "error",
+        message: error?.message || "Prompt tracking request failed.",
+        data: null,
+      });
+    }
+  });
+}
+
+function registerBrandSentimentMiddleware(server) {
+  server.middlewares.use("/api/geo/brand-sentiment", async (req, res) => {
+    try {
+      const request = await createWebRequest(req, "/api/geo/brand-sentiment");
+      const response = await brandSentimentOnRequest({ request, env: loadDevApiEnv() });
+      await sendWebResponse(res, response);
+    } catch (error) {
+      sendJson(res, error?.status || 500, {
+        success: false,
+        status: "error",
+        message: error?.message || "Brand sentiment request failed.",
+        data: null,
+      });
+    }
+  });
+}
+
+function registerCitationFlowMiddleware(server) {
+  server.middlewares.use("/api/geo/citation-flow", async (req, res) => {
+    try {
+      const request = await createWebRequest(req, "/api/geo/citation-flow");
+      const response = await citationFlowOnRequest({ request, env: loadDevApiEnv() });
+      await sendWebResponse(res, response);
+    } catch (error) {
+      sendJson(res, error?.status || 500, { success: false, status: "error", message: error?.message || "Citation Flow request failed.", data: null });
+    }
+  });
+}
+
+function registerCompetitorResearchMiddleware(server) {
+  server.middlewares.use("/api/geo/competitor-research", async (req, res) => {
+    try {
+      const request = await createWebRequest(req, "/api/geo/competitor-research");
+      const response = await competitorResearchOnRequest({ request, env: loadDevApiEnv() });
+      await sendWebResponse(res, response);
+    } catch (error) {
+      sendJson(res, error?.status || 500, { success: false, status: "error", message: error?.message || "Competitor research request failed.", data: null });
+    }
+  });
+}
+
+function registerInternalLinksMiddleware(server) {
+  server.middlewares.use("/api/geo/internal-links", async (req, res) => {
+    try {
+      const request = await createWebRequest(req, "/api/geo/internal-links");
+      const response = await internalLinksOnRequest({ request, env: loadDevApiEnv() });
+      await sendWebResponse(res, response);
+    } catch (error) {
+      sendJson(res, error?.status || 500, { success: false, status: "error", message: error?.message || "Internal links request failed.", data: null });
+    }
+  });
+}
+
+function registerAiChatMiddleware(server) {
+  server.middlewares.use("/api/geo/ai-chat", async (req, res) => {
+    try {
+      const request = await createWebRequest(req, "/api/geo/ai-chat");
+      const response = await aiChatOnRequest({ request, env: loadDevApiEnv() });
+      await sendWebResponse(res, response);
+    } catch (error) {
+      sendJson(res, error?.status || 500, { success: false, status: "error", message: error?.message || "AI chat request failed.", data: null });
+    }
+  });
+}
+
+function registerLlmsGeneratorMiddleware(server) {
+  server.middlewares.use("/api/geo/llms-generator", async (req, res) => {
+    try {
+      const request = await createWebRequest(req, "/api/geo/llms-generator");
+      const response = await llmsGeneratorOnRequest({ request, env: loadDevApiEnv() });
+      await sendWebResponse(res, response);
+    } catch (error) {
+      sendJson(res, error?.status || 500, { success: false, status: "error", message: error?.message || "LLMs Generator request failed.", data: null });
+    }
+  });
+}
+
+function registerAiModelCheckerMiddleware(server) {
+  server.middlewares.use("/api/geo/ai-model-checker", async (req, res) => {
+    try {
+      const request = await createWebRequest(req, "/api/geo/ai-model-checker");
+      const response = await aiModelCheckerOnRequest({ request, env: loadDevApiEnv() });
+      await sendWebResponse(res, response);
+    } catch (error) {
+      sendJson(res, error?.status || 500, { success: false, status: "error", message: error?.message || "AI Model Checker request failed.", data: null });
+    }
+  });
+}
+
+function registerAiCompatibilityMiddleware(server) {
+  server.middlewares.use("/api/geo/ai-compatibility", async (req, res) => {
+    try {
+      const request = await createWebRequest(req, "/api/geo/ai-compatibility");
+      const response = await aiCompatibilityOnRequest({ request, env: loadDevApiEnv() });
+      await sendWebResponse(res, response);
+    } catch (error) {
+      sendJson(res, error?.status || 500, { success: false, status: "error", message: error?.message || "AI Compatibility request failed.", data: null });
+    }
+  });
+}
+
+function registerSemanticWriterEditorMiddleware(server) {
+  server.middlewares.use("/api/content/semantic-writer/editor", async (req, res) => {
+    try {
+      const request = await createWebRequest(req, "/api/content/semantic-writer/editor");
+      const response = await semanticWriterEditorOnRequest({ request, env: loadDevApiEnv() });
+      await sendWebResponse(res, response);
+    } catch (error) {
+      sendJson(res, error?.status || 500, { success: false, status: "error", message: error?.message || "Semantic Writer Editor request failed.", data: null });
+    }
+  });
+}
+
+function registerContentWriterMiddleware(server) {
+  server.middlewares.use("/api/content-writer", async (req, res) => {
+    try {
+      const request = await createWebRequest(req, "/api/content-writer");
+      const response = await contentWriterOnRequest({ request, env: loadDevApiEnv() });
+      await sendWebResponse(res, response);
+    } catch (error) {
+      sendJson(res, error?.status || 500, { error: error?.message || "Content profile request failed." });
+    }
+  });
+}
+
+function registerAuditorMiddleware(server) {
+  server.middlewares.use("/api/auditor", async (req, res) => {
+    try {
+      const request = await createWebRequest(req, "/api/auditor");
+      const response = await auditorOnRequest({ request, env: loadDevApiEnv() });
+      await sendWebResponse(res, response);
+    } catch (error) {
+      sendJson(res, error?.status || 500, { success: false, status: "error", message: error?.message || "Auditor request failed.", data: null });
     }
   });
 }
@@ -490,7 +1557,7 @@ function registerCrawlerMiddleware(server) {
         signal: controller.signal,
         headers: {
           "user-agent":
-            "AISmartSeoBot/1.0 (+https://ai-smart-seo.local/crawler; compatible; site-audit)",
+            "SEOXBot/1.0 (+https://seox.local/crawler; compatible; site-audit)",
           accept:
             "text/html,application/xhtml+xml,application/xml;q=0.9,text/plain;q=0.8,*/*;q=0.5",
         },
@@ -765,30 +1832,6 @@ function decodeHtml(value) {
     .replace(/&#39;/g, "'");
 }
 
-function readJsonBody(req) {
-  return new Promise((resolve) => {
-    let data = "";
-    req.on("data", (chunk) => {
-      data += chunk;
-    });
-    req.on("end", () => {
-      try {
-        resolve(data ? JSON.parse(data) : {});
-      } catch {
-        resolve({});
-      }
-    });
-  });
-}
-
-function readRawBody(req) {
-  return new Promise((resolve) => {
-    const chunks = [];
-    req.on("data", (chunk) => chunks.push(Buffer.from(chunk)));
-    req.on("end", () => resolve(Buffer.concat(chunks).toString("utf8")));
-  });
-}
-
 async function createWebRequest(req, mountPath) {
   const headers = new Headers();
   Object.entries(req.headers || {}).forEach(([key, value]) => {
@@ -842,9 +1885,9 @@ function sendJson(res, status, payload) {
 }
 
 export default defineConfig({
-  plugins: [react(), proxyApiPlugin(), deepseekApiPlugin(), fetchUrlMetaApiPlugin(), webmasterApiPlugin(), autocompleteApiPlugin(), gscTokenApiPlugin(), projectsApiPlugin(), importedSemanticsxApiPlugin(), crawlerApiPlugin()],
+  plugins: [react(), proxyApiPlugin(), deepseekApiPlugin(), deepseekSettingsApiPlugin(), fetchUrlMetaApiPlugin(), pagespeedApiPlugin(), speedApiPlugin(), screamingFrogApiPlugin(), webmasterApiPlugin(), autocompleteApiPlugin(), gscTokenApiPlugin(), gbpApiPlugin(), wordpressSecurityApiPlugin(), projectsApiPlugin(), projectDetailsApiPlugin(), backlinksAnalyzeApiPlugin(), w3cValidationApiPlugin(), expiredDomainsCheckApiPlugin(), backlinkCleanerApiPlugin(), backlinkIndexerApiPlugin(), keywordResearchApiPlugin(), ubersuggestApiPlugin(), authApiPlugin(), contentOutlineApiPlugin(), textEditorApiPlugin(), domainSeparatorApiPlugin(), wordCounterApiPlugin(), botViewerApiPlugin(), daPaCheckerApiPlugin(), metaExtractorApiPlugin(), sitemapExtractorApiPlugin(), seoToolsApiPlugin(), promptTrackingApiPlugin(), brandSentimentApiPlugin(), citationFlowApiPlugin(), competitorResearchApiPlugin(), internalLinksApiPlugin(), aiChatApiPlugin(), llmsGeneratorApiPlugin(), aiModelCheckerApiPlugin(), aiCompatibilityApiPlugin(), semanticWriterEditorApiPlugin(), contentWriterApiPlugin(), auditorApiPlugin(), crawlerApiPlugin()],
   server: {
-    port: 5173,
+    port: 3000,
     host: true,
   },
 });

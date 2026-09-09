@@ -59,7 +59,7 @@ function Badge({ kind, children }) {
 
 export default function SecondaryNav() {
   return (
-    <aside className="no-scrollbar sticky top-0 hidden h-screen w-[232px] flex-shrink-0 overflow-y-auto border-r border-white/10 bg-ink-900/60 px-3 py-5 md:block">
+    <aside className="app-sidebar no-scrollbar sticky top-0 hidden h-screen w-[232px] flex-shrink-0 overflow-y-auto border-r border-white/10 bg-ink-900/60 px-3 py-5 md:block">
       <nav className="space-y-5">
         {nav.map((section) => (
           <div key={section.section}>

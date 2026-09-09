@@ -5,14 +5,24 @@ import {
   FileCode,
   FileText,
   Grid3X3,
+  Building2,
+  LayoutDashboard,
+  ClipboardCheck,
+  Megaphone,
+  Workflow,
+  UserSquare,
+  Star,
+  BrainCircuit,
+  HelpCircle,
+  Lightbulb,
+  History,
+  Activity,
   Image,
   MapPin,
   Search,
-  Sparkles,
-  Target,
-  Globe2,
-  Youtube,
-} from "lucide-react";
+  Sparkles,  Users,
+  AlertCircle,
+  Youtube,} from "lucide-react";
 import IconRail from "../components/auditor/IconRail.jsx";
 import ProjectSelector from "../components/ProjectSelector.jsx";
 
@@ -34,7 +44,7 @@ const groups = {
               pathname === "/schema-seo" ||
               (pathname.startsWith("/schema-seo/") && !pathname.startsWith("/schema-seo/competitor-schema")),
           },
-          { label: "Schema Checker", to: "/schema-seo/competitor-schema", icon: Search },
+          { label: "Competitor Schema", to: "/schema-seo/competitor-schema", icon: Search },
         ],
       },
     ],
@@ -59,25 +69,47 @@ const groups = {
     icon: MapPin,
     sections: [
       {
+        label: "Business Profile",
+        items: [
+          {
+            label: "GBP Connection",
+            to: "/local-seo/gbp",
+            icon: Building2,
+            end: true,
+          },
+          { label: "GBP Overview", to: "/local-seo/gbp/overview", icon: LayoutDashboard },
+          { label: "Profile Manager", to: "/local-seo/gbp/profile", icon: UserSquare },
+          { label: "Health Audit", to: "/local-seo/gbp/audit", icon: ClipboardCheck },
+          { label: "Posts", to: "/local-seo/gbp/posts", icon: Megaphone },
+          { label: "Reviews", to: "/local-seo/gbp/reviews", icon: Star },
+          { label: "Review Intelligence", to: "/local-seo/gbp/insights", icon: BrainCircuit },
+          { label: "Q&A", to: "/local-seo/gbp/qanda", icon: HelpCircle },
+          { label: "Opportunities", to: "/local-seo/gbp/recommendations", icon: Lightbulb },
+          { label: "Audit History", to: "/local-seo/gbp/history", icon: History },
+          { label: "Operations", to: "/local-seo/gbp/operations", icon: Activity },
+          { label: "Automation", to: "/local-seo/gbp/automation", icon: Workflow },
+        ],
+      },
+      {
         label: "Local Visibility",
         items: [
           { label: "Image Geo Tagger", to: "/local-seo/image-geo-tagger", icon: Image },
           { label: "Rank Grid Pro", to: "/local-seo/rank-grid-pro", icon: Grid3X3 },
-          { label: "Lead Finder", to: "/local-seo/lead-finder", icon: Target },
-          { label: "Local Expired Finder", to: "/local-seo/local-expired-finder", icon: Globe2 },
+          { label: "Lead Finder", to: "/local-seo/lead-finder", icon: Users },
+          { label: "Expired Domain Finder", to: "/local-seo/local-expired-finder", icon: AlertCircle },
         ],
       },
     ],
   },
   youtube: {
     label: "YouTube SEO",
-    accent: "rose",
+    accent: "violet",
     icon: Youtube,
     sections: [
       {
         label: "Video Optimization",
         items: [
-          { label: "YouTube SEO Checker", to: "/youtube/seo-checker", icon: Youtube },
+          { label: "SEO Checker", to: "/youtube/seo-checker", icon: Search },
         ],
       },
     ],
@@ -103,12 +135,6 @@ const accentClasses = {
     glow: "bg-violet-500/[0.06]",
     card: "border-violet-500/25 from-violet-500/10 to-fuchsia-500/5 text-violet-300",
   },
-  rose: {
-    active: "bg-rose-500/15 text-rose-200",
-    icon: "text-rose-400",
-    glow: "bg-rose-500/[0.06]",
-    card: "border-rose-500/25 from-rose-500/10 to-red-500/5 text-rose-300",
-  },
 };
 
 function getTitle(config, pathname) {
@@ -127,14 +153,10 @@ export default function FeatureGroupLayout({ group }) {
   const title = getTitle(config, pathname);
 
   return (
-    <div className="relative flex h-screen overflow-hidden bg-ink-900 text-white">
-      <div className="pointer-events-none fixed inset-0 -z-10">
-        <div className={`absolute -top-44 left-1/3 h-[560px] w-[680px] rounded-full ${accent.glow} blur-[150px]`} />
-      </div>
-
+    <div className="app-shell relative flex h-screen overflow-hidden bg-ink-900 text-white">
       <IconRail />
 
-      <aside className="sticky top-0 hidden h-screen w-[232px] flex-shrink-0 overflow-y-auto border-r border-white/10 bg-ink-900/60 px-3 py-5 md:block">
+      <aside className="app-sidebar sticky top-0 hidden h-screen w-[232px] flex-shrink-0 overflow-y-auto border-r border-white/10 bg-ink-900/60 px-3 py-5 md:block no-scrollbar">
         <nav className="space-y-5">
           {config.sections.map((section) => (
             <div key={section.label}>
@@ -177,14 +199,14 @@ export default function FeatureGroupLayout({ group }) {
               {config.label}
             </div>
             <p className="mt-1 text-[11px] leading-relaxed text-white/55">
-              Imported from SemanticsX and available alongside the AI Smart Seo workflow.
+              Imported from SemanticsX and available alongside the PGC workflow.
             </p>
           </div>
         </nav>
       </aside>
 
       <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
-        <header className="sticky top-0 z-20 flex h-14 items-center justify-between gap-4 border-b border-white/10 bg-ink-900/80 px-4 backdrop-blur-md lg:px-6">
+        <header className="app-topbar sticky top-0 z-20 flex h-14 items-center justify-between gap-4 border-b border-white/10 bg-ink-900/80 px-4 backdrop-blur-md lg:px-6">
           <div className="flex items-center gap-3">
             <ProjectSelector />
             <div className="hidden items-center gap-2 text-sm lg:flex">
@@ -196,7 +218,7 @@ export default function FeatureGroupLayout({ group }) {
           </div>
         </header>
 
-        <main className="min-w-0 flex-1 overflow-y-auto px-4 py-6 lg:px-8">
+        <main className="app-main min-w-0 flex-1 overflow-y-auto px-4 py-6 lg:px-8">
           <Outlet />
         </main>
       </div>

@@ -1,8 +1,8 @@
 import {
   assertAdmin,
-  getFirestoreDocument,
-  patchFirestoreDocument,
-} from "../_lib/firebase-rest.js";
+  getStoredDocument,
+  upsertStoredDocument,
+} from "../_lib/mysql-storage.js";
 import {
   corsHeaders,
   emptyResponse,
@@ -57,7 +57,7 @@ export async function onRequest({ request, env }) {
     const collection = settingsCollection(env);
 
     if (request.method === "GET") {
-      const document = await getFirestoreDocument(env, collection, SETTINGS_DOCUMENT);
+      const document = await getStoredDocument(env, collection, SETTINGS_DOCUMENT);
       return jsonResponse(publicSettings(document || {}, env), 200, headers);
     }
 
@@ -66,7 +66,7 @@ export async function onRequest({ request, env }) {
       const login = String(body.dataforseoLogin || "").trim();
       const password = String(body.dataforseoPassword || "").trim();
       const clearPassword = Boolean(body.clearDataforseoPassword);
-      const existing = await getFirestoreDocument(env, collection, SETTINGS_DOCUMENT);
+      const existing = await getStoredDocument(env, collection, SETTINGS_DOCUMENT);
 
       const fields = {
         dataforseoLogin: login,
@@ -78,7 +78,7 @@ export async function onRequest({ request, env }) {
         fields.dataforseoPassword = clearPassword ? "" : password;
       }
 
-      const saved = await patchFirestoreDocument(env, collection, SETTINGS_DOCUMENT, fields);
+      const saved = await upsertStoredDocument(env, collection, SETTINGS_DOCUMENT, fields);
       return jsonResponse(publicSettings(saved, env), 200, headers);
     }
 

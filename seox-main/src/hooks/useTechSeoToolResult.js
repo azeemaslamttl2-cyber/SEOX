@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useAuth } from "../context/AuthContext.jsx";
 import {
-  loadFirestoreToolResult,
-  saveFirestoreToolResult,
-} from "../lib/firestoreProjects.js";
+  loadToolResult,
+  saveToolResult,
+} from "../lib/projectsApi.js";
 
 const STORAGE_PREFIX = "seox.techSeoToolResult.";
 const STORAGE_VERSION = 1;
@@ -48,7 +48,7 @@ function readLocalResult(toolKey, projectId, projectUrl) {
   if (!key) return null;
 
   try {
-    const raw = localStorage.getItem(key);
+    const raw = sessionStorage.getItem(key);
     if (!raw) return null;
     const parsed = JSON.parse(raw);
     if (parsed?.version !== STORAGE_VERSION) return null;
@@ -64,7 +64,7 @@ function writeLocalResult(toolKey, projectId, projectUrl, result) {
   if (!key || !result) return;
 
   try {
-    localStorage.setItem(
+    sessionStorage.setItem(
       key,
       JSON.stringify({
         version: STORAGE_VERSION,
@@ -76,7 +76,7 @@ function writeLocalResult(toolKey, projectId, projectUrl, result) {
       })
     );
   } catch {
-    // Firebase is the durable store; localStorage is only for fast project swaps.
+    // MySQL is the durable store; sessionStorage is only for fast project swaps.
   }
 }
 
@@ -100,7 +100,7 @@ export function useTechSeoToolResult({ toolKey, project, projectUrl, emptyResult
 
     if (!userId || !projectId) return;
 
-    loadFirestoreToolResult(userId, { projectId, toolKey })
+    loadToolResult(userId, { projectId, toolKey })
       .then((storedResult) => {
         if (loadIdRef.current !== loadId) return;
         if (storedResult) {
@@ -124,14 +124,19 @@ export function useTechSeoToolResult({ toolKey, project, projectUrl, emptyResult
       if (!userId || !projectId) return storableResult;
 
       try {
-        await saveFirestoreToolResult(userId, {
+        await saveToolResult(userId, {
           projectId,
           projectUrl,
           toolKey,
           result: storableResult,
         });
       } catch (error) {
-        setPersistenceError(error?.message || "Could not save tool result.");
+        const message = error?.message || "Could not save tool result.";
+        setPersistenceError(message);
+        // The local session copy is already updated, so a database outage
+        // should not interrupt the tool workflow or create an unhandled
+        // rejection from fire-and-forget persistence calls.
+        return storableResult;
       }
 
       return storableResult;

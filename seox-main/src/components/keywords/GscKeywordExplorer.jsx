@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   AlertCircle,
   ArrowDown,
@@ -17,7 +17,12 @@ import {
   TrendingDown,
   X,
 } from "lucide-react";
+import { useAuth } from "../../context/AuthContext.jsx";
 import { useGscKeywordData } from "../../hooks/useGscKeywordData.js";
+import { useSyncedKeywordProjectSite } from "../../hooks/useSyncedKeywordProjectSite.js";
+import { useSelectedProjectDomain } from "../../hooks/useSelectedProjectDomain.js";
+import { useSavedKeywordAnalysis } from "../../hooks/useSavedKeywordAnalysis.js";
+import KeywordPagination from "./KeywordPagination.jsx";
 import {
   buildKeywordRows,
   downloadCsv,
@@ -27,6 +32,7 @@ import {
   getBrandStem,
   getSiteDomain,
 } from "../../lib/keywordTools.js";
+import { saveProjectData } from "../../lib/projectsApi.js";
 
 const KIND_CONFIG = {
   new: {
@@ -60,54 +66,103 @@ const KIND_CONFIG = {
 };
 
 const accentClasses = {
-  blue: {
-    icon: "bg-blue-500/15 text-blue-400",
-    button: "from-blue-500 to-indigo-500",
-    panel: "border-blue-500/20 bg-blue-500/[0.04]",
-    text: "text-blue-300",
-  },
-  amber: {
-    icon: "bg-amber-500/15 text-amber-400",
-    button: "from-amber-500 to-orange-500",
-    panel: "border-amber-500/20 bg-amber-500/[0.04]",
-    text: "text-amber-300",
-  },
-  rose: {
-    icon: "bg-rose-500/15 text-rose-400",
-    button: "from-rose-500 to-pink-500",
-    panel: "border-rose-500/20 bg-rose-500/[0.04]",
-    text: "text-rose-300",
-  },
-  violet: {
-    icon: "bg-violet-500/15 text-violet-400",
-    button: "from-violet-500 to-purple-500",
-    panel: "border-violet-500/20 bg-violet-500/[0.04]",
-    text: "text-violet-300",
-  },
+  blue:   { button: "gke-apply", panel: "gke-panel", text: "gke-text-info" },
+  amber:  { button: "gke-apply", panel: "gke-panel", text: "gke-text-warning" },
+  rose:   { button: "gke-apply", panel: "gke-panel", text: "gke-text-danger" },
+  violet: { button: "gke-apply", panel: "gke-panel", text: "gke-text-brand" },
 };
 
 export default function GscKeywordExplorer({ kind }) {
   const config = KIND_CONFIG[kind] || KIND_CONFIG.new;
   const colors = accentClasses[config.accent];
-  const gsc = useGscKeywordData(`keywords-${kind}`);
+  const { user } = useAuth();
+  const userId = user?.uid || user?.id || "";
+  const { project } = useSelectedProjectDomain();
+  const projectId = project?.id || project?.project_id || "";
+  const savedAnalysis = useSavedKeywordAnalysis(kind);
+  const brandStem = getBrandStem(project?.fullUrl || project?.domain || "");
   const [searchTerm, setSearchTerm] = useState("");
   const [sortField, setSortField] = useState("clicks");
   const [sortDirection, setSortDirection] = useState("desc");
+  const [page, setPage] = useState(1);
+
+  const persistKeywordSnapshot = useCallback(
+    async ({ current, previous, selectedSite, currentStart, currentEnd, previousStart, previousEnd }) => {
+      if (!userId || !projectId) return;
+
+      try {
+        const keywordRows = buildKeywordRows(current || [], previous || [], selectedSite || "");
+        const persistedRows = kind === "low-hanging"
+          ? keywordRows.filter((row) => row.isLowHanging)
+          : kind === "lost"
+            ? keywordRows.filter((row) => row.isLost)
+            : kind === "branded"
+              ? keywordRows.filter((row) => brandStem && row.keyword.toLowerCase().includes(brandStem))
+              : undefined;
+
+        const projectDataKey = kind === "new"
+          ? "new-keywords"
+          : kind === "branded"
+          ? "branded-keywords"
+          : kind === "low-hanging"
+            ? "low-hanging-keywords"
+            : "lost-keywords";
+
+        await saveProjectData(userId, {
+          projectId,
+          key: projectDataKey,
+          value: {
+              kind,
+              selectedSite: selectedSite || "",
+              currentRows: current || [],
+              previousRows: previous || [],
+              dateRange: {
+                currentStart,
+                currentEnd,
+                previousStart,
+                previousEnd,
+              },
+              fetchedAt: new Date().toISOString(),
+              rows: persistedRows || current || [],
+              ...(kind === "low-hanging" && persistedRows ? { lowHangingRows: persistedRows } : {}),
+              ...(kind === "lost" && persistedRows ? { lostRows: persistedRows } : {}),
+          },
+        });
+      } catch (error) {
+        console.error(`Failed to save ${kind} keyword snapshot:`, error);
+        throw error;
+      }
+    },
+    [brandStem, kind, projectId, userId]
+  );
+
+  const gsc = useGscKeywordData(`keywords-${kind}`, {
+    onAutoFetchSuccess: persistKeywordSnapshot,
+    autoFetch: !savedAnalysis.isLoading && !savedAnalysis.hasSavedData,
+  });
+  const { syncProjectForSite } = useSyncedKeywordProjectSite(gsc);
+
+  const savedSnapshot = savedAnalysis.saved && !Array.isArray(savedAnalysis.saved)
+    ? savedAnalysis.saved
+    : null;
+  const sourceCurrentRows = gsc.currentRows.length ? gsc.currentRows : savedSnapshot?.currentRows || [];
+  const sourcePreviousRows = gsc.previousRows.length ? gsc.previousRows : savedSnapshot?.previousRows || [];
+  const selectedSite = gsc.selectedSite || savedSnapshot?.selectedSite || "";
 
   const allRows = useMemo(
-    () => buildKeywordRows(gsc.currentRows, gsc.previousRows, gsc.selectedSite),
-    [gsc.currentRows, gsc.previousRows, gsc.selectedSite]
+    () => buildKeywordRows(sourceCurrentRows, sourcePreviousRows, selectedSite),
+    [selectedSite, sourceCurrentRows, sourcePreviousRows]
   );
-  const brandStem = getBrandStem(gsc.selectedSite);
+  const liveBrandStem = getBrandStem(selectedSite);
   const rows = useMemo(() => {
     if (kind === "new") return allRows.filter((row) => row.isNew);
     if (kind === "low-hanging") return allRows.filter((row) => row.isLowHanging);
     if (kind === "lost") return allRows.filter((row) => row.isLost);
     if (kind === "branded") {
-      return allRows.filter((row) => brandStem && row.keyword.toLowerCase().includes(brandStem));
+      return allRows.filter((row) => liveBrandStem && row.keyword.toLowerCase().includes(liveBrandStem));
     }
     return allRows;
-  }, [allRows, brandStem, kind]);
+  }, [allRows, kind, liveBrandStem]);
   const filteredRows = useMemo(() => {
     const query = searchTerm.trim().toLowerCase();
     const direction = sortDirection === "asc" ? 1 : -1;
@@ -119,6 +174,16 @@ export default function GscKeywordExplorer({ kind }) {
         return (Number(a[sortField] || 0) - Number(b[sortField] || 0)) * direction;
       });
   }, [rows, searchTerm, sortDirection, sortField]);
+  const totalPages = Math.max(1, Math.ceil(filteredRows.length / 20));
+  const visibleRows = filteredRows.slice((page - 1) * 20, page * 20);
+
+  useEffect(() => {
+    setPage(1);
+  }, [projectId, kind, searchTerm, sortField, sortDirection]);
+
+  useEffect(() => {
+    if (page > totalPages) setPage(totalPages);
+  }, [page, totalPages]);
   const totals = useMemo(
     () => ({
       clicks: rows.reduce((sum, row) => sum + row.clicks, 0),
@@ -154,14 +219,13 @@ export default function GscKeywordExplorer({ kind }) {
     ]);
   }
 
-  if (gsc.isCheckingConnection) {
-    return <LoadingState label="Checking Search Console connection..." />;
+  if (savedAnalysis.isLoading || gsc.isCheckingConnection) {
+    return <LoadingState config={config} label="Checking Search Console connection..." />;
   }
 
-  if (!gsc.isSignedIn) {
+  if (!gsc.isSignedIn && !savedAnalysis.hasSavedData) {
     return (
       <ConnectState
-        colors={colors}
         config={config}
         error={gsc.error}
         onConnect={gsc.handleSignIn}
@@ -171,44 +235,47 @@ export default function GscKeywordExplorer({ kind }) {
   }
 
   return (
-    <div className="mx-auto max-w-[1100px] space-y-5">
-      <div className="flex items-center justify-between gap-3">
-        <div className="flex items-center gap-3">
-          <div className={`flex h-10 w-10 items-center justify-center rounded-xl ${colors.icon}`}>
+    <div className={`gsc-keyword-explorer gsc-keyword-explorer-${kind} kw-page space-y-5`}>
+      <div className="kw-hero">
+        <div className="flex flex-wrap items-center justify-between gap-4">
+        <div className="kw-title-row">
+          <span className="gke-icon">
             <config.Icon className="h-5 w-5" />
-          </div>
+          </span>
           <div>
-            <h1 className="font-display text-xl font-black text-white">{config.title}</h1>
-            <p className="text-xs text-white/35">{config.subtitle}</p>
+            <h1 className="kw-title font-display">{config.title}</h1>
+            <p className="kw-description">{config.subtitle}</p>
           </div>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-shrink-0 items-center gap-2">
           <button
             onClick={exportCsv}
             disabled={!filteredRows.length}
-            className="flex items-center gap-2 rounded-lg border border-white/[0.08] bg-white/[0.03] px-4 py-2 text-xs font-semibold text-white/50 transition hover:text-white/70 disabled:opacity-40"
+            className="ui-button gke-secondary"
           >
             <Download className="h-3.5 w-3.5" /> Export
           </button>
           <button
             onClick={gsc.handleSignOut}
-            className="flex items-center gap-2 rounded-lg border border-white/[0.08] bg-white/[0.03] px-3 py-2 text-xs font-semibold text-white/40 transition hover:text-rose-300"
+            className="ui-button gke-disconnect"
             title={gsc.gscEmail || "Disconnect Search Console"}
           >
             <LogOut className="h-3.5 w-3.5" />
             Disconnect
           </button>
         </div>
+        </div>
       </div>
 
-      <div className="rounded-2xl border border-white/[0.08] bg-[#0d1117] p-4">
+      <div className="gke-filters">
         <div className="flex flex-wrap items-center gap-3">
-          <div className="flex min-w-[260px] flex-1 items-center gap-2 rounded-xl border border-white/[0.08] bg-[#010409] px-4 py-2.5">
-            <Globe className="h-4 w-4 text-blue-400" />
+          <div className="gke-field">
+            <Globe className="h-4 w-4" />
             <select
               value={gsc.selectedSite}
-              onChange={(event) => gsc.setSelectedSite(event.target.value)}
-              className="w-full bg-transparent text-sm text-white/60 focus:outline-none"
+              onChange={(event) => syncProjectForSite(event.target.value)}
+
+              className="gke-site-select"
             >
               {gsc.sites.map((site) => (
                 <option key={site.siteUrl} value={site.siteUrl}>
@@ -220,14 +287,12 @@ export default function GscKeywordExplorer({ kind }) {
           <DatePill start={gsc.currentStart} end={gsc.currentEnd} />
           <span className="text-xs text-white/20">vs</span>
           <DatePill start={gsc.previousStart} end={gsc.previousEnd} muted />
-          <div className="flex items-center gap-0.5 rounded-lg bg-white/[0.04] p-0.5">
+          <div className="admin-tabs gke-presets">
             {gsc.datePresets.map((preset) => (
               <button
                 key={preset.id}
                 onClick={() => gsc.setDatePreset(preset.id)}
-                className={`rounded-md px-2.5 py-1.5 text-[10px] font-bold transition ${
-                  gsc.datePreset === preset.id ? "bg-blue-500 text-white" : "text-white/30 hover:text-white/50"
-                }`}
+                className={`admin-tab ${gsc.datePreset === preset.id ? "active" : ""}`}
               >
                 {preset.label}
               </button>
@@ -250,9 +315,23 @@ export default function GscKeywordExplorer({ kind }) {
             }}
           />
           <button
-            onClick={gsc.fetchAllData}
+            onClick={async () => {
+              await gsc.fetchAllData({
+                onSuccess: async ({ current, previous, selectedSite, currentStart, currentEnd, previousStart, previousEnd }) => {
+                  await persistKeywordSnapshot({
+                    current,
+                    previous,
+                    selectedSite,
+                    currentStart,
+                    currentEnd,
+                    previousStart,
+                    previousEnd,
+                  });
+                },
+              });
+            }}
             disabled={!gsc.selectedSite || gsc.isLoading}
-            className={`flex items-center gap-1.5 rounded-xl bg-gradient-to-r px-4 py-2.5 text-xs font-bold text-white shadow-md disabled:cursor-not-allowed disabled:opacity-60 ${colors.button}`}
+            className={`ui-button ui-button-primary ${colors.button}`}
           >
             {gsc.isLoading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <RefreshCw className="h-3.5 w-3.5" />}
             Apply
@@ -261,37 +340,37 @@ export default function GscKeywordExplorer({ kind }) {
       </div>
 
       {gsc.error && (
-        <div className="flex items-center gap-2 rounded-xl border border-rose-500/20 bg-rose-500/[0.05] px-4 py-3 text-xs text-rose-200">
+        <div className="app-alert app-alert-error">
           <AlertCircle className="h-4 w-4" />
           <span className="flex-1">{gsc.error}</span>
-          <button onClick={() => gsc.setError("")} className="text-rose-200/60 hover:text-rose-100">
+          <button onClick={() => gsc.setError("")} className="gke-alert-close" aria-label="Dismiss">
             <X className="h-3.5 w-3.5" />
           </button>
         </div>
       )}
 
-      <div className={`rounded-2xl border p-5 ${colors.panel}`}>
+      <div className={`gsc-keyword-highlights rounded-2xl border p-5 ${colors.panel}`}>
         <h3 className="mb-2 text-sm font-bold text-white/70">Highlights</h3>
         <p className="text-xs text-white/45">{highlightText(kind, rows.length, totals, gsc.selectedSite, brandStem)}</p>
       </div>
 
-      <div className="rounded-2xl border border-white/[0.08] bg-[#0d1117]">
+      <div className="gsc-keyword-results kw-results">
         <div className="flex items-center justify-between gap-3 border-b border-white/[0.06] px-5 py-3">
           <h3 className="text-sm font-bold text-white/70">
             {config.title} <span className="text-white/30">({filteredRows.length})</span>
           </h3>
-          <div className="flex items-center gap-2 rounded-lg border border-white/[0.08] bg-[#010409] px-3 py-1.5">
+          <div className="kw-search">
             <Search className="h-3.5 w-3.5 text-white/25" />
             <input
               value={searchTerm}
               onChange={(event) => setSearchTerm(event.target.value)}
-              className="w-36 bg-transparent text-xs text-white/60 placeholder:text-white/20 focus:outline-none"
+              className="kw-search-input w-36"
               placeholder="Search..."
             />
           </div>
         </div>
 
-        <div className="grid grid-cols-[2fr_1fr_0.7fr_0.7fr_0.7fr_0.7fr_0.8fr_0.8fr] gap-2 border-b border-white/[0.06] bg-white/[0.01] px-5 py-2.5">
+        <div className="gsc-keyword-table-header grid grid-cols-[2fr_1fr_0.7fr_0.7fr_0.7fr_0.7fr_0.8fr_0.8fr] gap-2 border-b border-white/[0.06] bg-white/[0.01] px-5 py-2.5">
           <TH label="Keyword" onClick={() => handleSort("keyword")} />
           <TH label="Top Page" />
           <TH label="Position" onClick={() => handleSort("position")} />
@@ -307,10 +386,10 @@ export default function GscKeywordExplorer({ kind }) {
             <Loader2 className="h-6 w-6 animate-spin text-blue-400" />
           </div>
         ) : filteredRows.length ? (
-          filteredRows.map((row, index) => (
+          visibleRows.map((row, index) => (
             <div
               key={`${row.keyword}-${index}`}
-              className={`grid grid-cols-[2fr_1fr_0.7fr_0.7fr_0.7fr_0.7fr_0.8fr_0.8fr] gap-2 px-5 py-3 transition hover:bg-white/[0.02] ${
+              className={`gsc-keyword-row grid grid-cols-[2fr_1fr_0.7fr_0.7fr_0.7fr_0.7fr_0.8fr_0.8fr] gap-2 px-5 py-3 transition hover:bg-white/[0.02] ${
                 index < filteredRows.length - 1 ? "border-b border-white/[0.03]" : ""
               }`}
             >
@@ -330,6 +409,7 @@ export default function GscKeywordExplorer({ kind }) {
             <p className="mt-3 text-sm text-white/25">{gsc.currentRows.length || gsc.previousRows.length ? config.empty : "Connect a property and apply a date range to load keyword data."}</p>
           </div>
         )}
+        <KeywordPagination page={page} setPage={setPage} totalPages={totalPages} total={filteredRows.length} />
       </div>
     </div>
   );
@@ -353,46 +433,60 @@ function highlightText(kind, count, totals, siteUrl, brandStem) {
   return `${formatNumber(count)} branded keywords containing "${brandStem || site}" were found for ${site}.`;
 }
 
-function ConnectState({ colors, config, error, onConnect, redirectUri }) {
+function KeywordHero({ children, config }) {
   return (
-    <div className="mx-auto max-w-[900px] space-y-5">
-      <div className="flex items-center gap-3">
-        <div className={`flex h-10 w-10 items-center justify-center rounded-xl ${colors.icon}`}>
-          <config.Icon className="h-5 w-5" />
+    <div className="kw-hero">
+      <div className="flex flex-wrap items-center justify-between gap-4">
+        <div className="kw-title-row">
+          <span className="gke-icon">
+            <config.Icon className="h-5 w-5" />
+          </span>
+          <div>
+            <h1 className="kw-title font-display">{config.title}</h1>
+            <p className="kw-description">{config.subtitle}</p>
+          </div>
         </div>
-        <div>
-          <h1 className="font-display text-xl font-black text-white">{config.title}</h1>
-          <p className="text-xs text-white/35">{config.subtitle}</p>
-        </div>
-      </div>
-      <div className="rounded-2xl border border-white/[0.08] bg-[#0d1117] p-8 text-center">
-        <Globe className="mx-auto h-12 w-12 text-white/20" />
-        <h2 className="mt-4 text-lg font-bold text-white/80">Connect Google Search Console</h2>
-        <p className="mx-auto mt-2 max-w-md text-sm text-white/35">
-          AI Smart Seo needs readonly Search Console access to fetch keyword clicks, impressions, positions, and page data.
-        </p>
-        <button
-          onClick={onConnect}
-          className={`mt-6 inline-flex items-center gap-2 rounded-xl bg-gradient-to-r px-6 py-3 text-sm font-bold text-white shadow-lg ${colors.button}`}
-        >
-          <LogIn className="h-4 w-4" />
-          Connect Search Console
-        </button>
-        <p className="mx-auto mt-4 max-w-lg text-[11px] text-white/20">
-          Google OAuth callback URL: <span className="font-mono text-white/35">{redirectUri}</span>
-        </p>
-        {error && <p className="mt-4 text-xs font-semibold text-rose-300">{error}</p>}
+        {children ? <div className="flex flex-shrink-0 items-center gap-2">{children}</div> : null}
       </div>
     </div>
   );
 }
 
-function LoadingState({ label }) {
+function ConnectState({ config, error, onConnect, redirectUri }) {
   return (
-    <div className="flex min-h-[360px] items-center justify-center">
-      <div className="text-center">
-        <Loader2 className="mx-auto h-8 w-8 animate-spin text-blue-400" />
-        <p className="mt-3 text-sm text-white/35">{label}</p>
+    <div className="kw-page space-y-5">
+      <KeywordHero config={config} />
+      <div className="kw-connect-card">
+        <span className="kw-connect-icon">
+          <Globe className="h-6 w-6" />
+        </span>
+        <h2 className="kw-connect-title">Connect Google Search Console</h2>
+        <p className="kw-connect-text">
+          PGC needs readonly Search Console access to fetch keyword clicks, impressions, positions, and page data.
+        </p>
+        <button
+          onClick={onConnect}
+          className="ui-button ui-button-primary kw-connect-button"
+        >
+          <LogIn className="h-4 w-4" />
+          Connect Search Console
+        </button>
+        <p className="kw-connect-meta">
+          Google OAuth callback URL: <span className="kw-connect-uri">{redirectUri}</span>
+        </p>
+        {error && <p className="kw-connect-error">{error}</p>}
+      </div>
+    </div>
+  );
+}
+
+function LoadingState({ config, label }) {
+  return (
+    <div className="kw-page space-y-5">
+      {config ? <KeywordHero config={config} /> : null}
+      <div className="kw-connect-card kw-loading-card">
+        <Loader2 className="h-7 w-7 animate-spin" />
+        <p className="kw-connect-text">{label}</p>
       </div>
     </div>
   );
@@ -400,7 +494,7 @@ function LoadingState({ label }) {
 
 function DatePill({ end, muted, start }) {
   return (
-    <div className="flex items-center gap-2 rounded-xl border border-white/[0.08] bg-[#010409] px-4 py-2.5">
+    <div className="gke-field">
       <Calendar className="h-3.5 w-3.5 text-white/30" />
       <span className={`text-xs ${muted ? "text-white/35" : "text-white/50"}`}>
         {formatDateShort(start)} - {formatDateShort(end)}
@@ -411,13 +505,13 @@ function DatePill({ end, muted, start }) {
 
 function DateInput({ label, onChange, value }) {
   return (
-    <label className="flex items-center gap-2 rounded-xl border border-white/[0.08] bg-[#010409] px-3 py-2">
+    <label className="gke-field gke-datefield">
       <span className="text-[10px] font-bold uppercase tracking-wide text-white/25">{label}</span>
       <input
         type="date"
         value={value}
         onChange={(event) => onChange(event.target.value)}
-        className="bg-transparent text-xs text-white/55 outline-none [color-scheme:dark]"
+        className="gke-date-input"
       />
     </label>
   );
@@ -428,7 +522,7 @@ function TH({ label, onClick }) {
     <button
       onClick={onClick}
       disabled={!onClick}
-      className="text-left text-[10px] font-bold uppercase tracking-wider text-white/30 hover:text-white/50 disabled:hover:text-white/30"
+      className="gke-th"
     >
       {label}
     </button>

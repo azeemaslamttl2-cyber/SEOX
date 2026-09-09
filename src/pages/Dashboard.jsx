@@ -28,6 +28,8 @@ import { useDashboardGscMetrics } from "../hooks/useDashboardGscMetrics.js";
 import { useProjectToolChecks } from "../hooks/useProjectToolChecks.js";
 import { averageCompletedScore } from "../lib/projectToolChecks.js";
 import { formatNumber } from "../lib/techSeoTools.js";
+import SecurityCard from "../components/dashboard/SecurityCard.jsx";
+import GbpCard from "../components/dashboard/GbpCard.jsx";
 
 /* ------------------------------------------------------------------ */
 /*  SVG circular progress ring                                        */

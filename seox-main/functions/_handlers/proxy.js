@@ -1,6 +1,6 @@
-import { requireFirebaseAuthFromNodeRequest } from "../_lib/request-auth.js";
+import { requireAuthenticatedUser } from "../_lib/request-auth.js";
 import { fetchPublicHttpUrl } from "../_lib/url-security.js";
-import { getFirestoreDocument } from "../_lib/firebase-rest.js";
+import { getStoredDocument } from "../_lib/mysql-storage.js";
 
 const MAX_PROXY_BODY_BYTES = 5_000_000;
 const DATAFORSEO_API_BASE = 'https://api.dataforseo.com/v3';
@@ -133,7 +133,7 @@ function firstTaskResult(data) {
 async function getSavedDataForSeoCredentials() {
     try {
         const collection = process.env.ADMIN_SETTINGS_COLLECTION || API_SETTINGS_COLLECTION;
-        const settings = await getFirestoreDocument(process.env, collection, API_SETTINGS_DOCUMENT);
+        const settings = await getStoredDocument(process.env, collection, API_SETTINGS_DOCUMENT);
         return {
             login: String(settings?.dataforseoLogin || '').trim(),
             password: String(settings?.dataforseoPassword || '').trim()
@@ -152,8 +152,8 @@ async function resolveDataForSeoCredentials(body = {}) {
     const saved = await getSavedDataForSeoCredentials();
 
     return {
-        login: requestLogin || saved.login || process.env.DATAFORSEO_LOGIN || '',
-        password: requestPassword || saved.password || process.env.DATAFORSEO_PASSWORD || ''
+        login: requestLogin || saved.login || process.env.DATAFORSEO_LOGIN || process.env.VITE_DATAFORSEO_LOGIN || '',
+        password: requestPassword || saved.password || process.env.DATAFORSEO_PASSWORD || process.env.VITE_DATAFORSEO_PASSWORD || ''
     };
 }
 
@@ -208,10 +208,12 @@ export default async function handler(req, res) {
         return res.status(200).end();
     }
 
-    try {
-        await requireFirebaseAuthFromNodeRequest(req);
-    } catch (error) {
-        return res.status(error?.status || 401).json({ error: error?.message || 'Unauthorized' });
+    if (!req.internalAdminAuthorized) {
+        try {
+            await requireAuthenticatedUser(req);
+        } catch (error) {
+            return res.status(error?.status || 401).json({ error: error?.message || 'Unauthorized' });
+        }
     }
 
     // Check if this is a DataforSEO request
@@ -861,10 +863,19 @@ async function handleProxy(req, res) {
         res.setHeader('Content-Type', contentType || 'text/html');
         res.status(response.status).send(text);
     } catch (error) {
+        clearTimeout(timeoutId);
         console.error('Proxy error:', error);
+
+        if (error?.name === 'AbortError') {
+            return res.status(504).json({
+                error: 'Proxy request timed out',
+                message: 'The remote request took too long and was aborted.',
+            });
+        }
+
         res.status(error?.status || 500).json({
             error: 'Failed to fetch URL',
-            message: error.message
+            message: error?.message || 'An unexpected error occurred while proxying the request.',
         });
     }
 }

@@ -3,8 +3,8 @@ import DonutChart from "../../../components/auditor/DonutChart.jsx";
 import ReportShell, { ChartCard, StatCard } from "../../../components/auditor/ReportShell.jsx";
 import { useAuditData } from "../../../hooks/useAuditData.js";
 import { useCrawl } from "../../../context/CrawlContext.jsx";
-import { issueGroupsForCategory, issueRowsForGroups, TrackedIssuesPanel } from "./ReportInsights.jsx";
-import { htmlRows } from "./liveReportData.js";
+import { issueGroupsForCategory, issueRowsForGroups, TrackedIssuesPanel } from "../../../lib/auditor/reports/ReportInsights.jsx";
+import { htmlRows } from "../../../lib/auditor/reports/liveReportData.js";
 
 const OG_TAGS = ["og:title", "og:type", "og:image", "og:url", "og:description", "og:site_name", "og:locale", "og:updated_time"];
 const OG_REQUIRED = new Set(["og:title", "og:type", "og:image", "og:url"]);
@@ -59,12 +59,12 @@ export default function SocialTagsReport() {
       ogTypeSegments: Object.entries(ogTypeCounts).map(([label, value], index) => ({
         label,
         value,
-        color: ["#f97316", "#fbbf24", "#34d399", "#60a5fa"][index % 4],
+        color: ["#df3c27", "#ffc600", "#6abf4b", "#4197cb"][index % 4],
       })),
       twitterCardSegments: Object.entries(twitterCardCounts).map(([label, value], index) => ({
         label,
         value,
-        color: ["#f97316", "#fbbf24", "#34d399", "#60a5fa"][index % 4],
+        color: ["#df3c27", "#ffc600", "#6abf4b", "#4197cb"][index % 4],
       })),
     };
   }, [latestUrls]);

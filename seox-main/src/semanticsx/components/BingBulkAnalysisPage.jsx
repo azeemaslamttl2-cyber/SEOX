@@ -9,7 +9,7 @@ import {
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, ComposedChart, ReferenceLine, CartesianGrid, Legend } from 'recharts';
 import BulkAnalysisToggle from './BulkAnalysisToggle';
 
-// LocalStorage keys for persisting user preferences  
+// Session storage keys for persisting user preferences
 const LS_KEYS = {
     ACTIVE_METRICS: 'bingBulkAnalysis_activeMetrics',
     DATE_RANGE: 'bingBulkAnalysis_dateRange',
@@ -17,6 +17,8 @@ const LS_KEYS = {
     DETAIL_ACTIVE_METRICS: 'bingBulkAnalysis_detailActiveMetrics',
     DETAIL_DATE_RANGE: 'bingBulkAnalysis_detailDateRange',
 };
+
+const BING_KEY_STORAGE = "bing_webmaster_api_key";
 
 // Helper to extract favicon URL
 const getFaviconUrl = (siteUrl) => {
@@ -137,8 +139,8 @@ const MultiMetricSparkline = ({ data, height = 50, activeMetrics = ['clicks', 'i
                         <stop offset="100%" stopColor="#10b981" stopOpacity={0.02} />
                     </linearGradient>
                     <linearGradient id="bingGradientImpressions" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="0%" stopColor="#f97316" stopOpacity={0.3} />
-                        <stop offset="100%" stopColor="#f97316" stopOpacity={0.02} />
+                        <stop offset="0%" stopColor="#df3c27" stopOpacity={0.3} />
+                        <stop offset="100%" stopColor="#df3c27" stopOpacity={0.02} />
                     </linearGradient>
                     <linearGradient id="bingGradientCtr" x1="0" y1="0" x2="0" y2="1">
                         <stop offset="0%" stopColor="#f59e0b" stopOpacity={0.3} />
@@ -150,9 +152,9 @@ const MultiMetricSparkline = ({ data, height = 50, activeMetrics = ['clicks', 'i
                 <ReferenceLine y={0} stroke="#e5e7eb" strokeWidth={1} />
                 <Tooltip content={<CustomTooltip />} />
                 {activeMetrics.includes('impressions') && (
-                    <Area type="monotone" dataKey="impressionsNorm" stroke="#f97316" strokeWidth={2}
+                        <Area type="monotone" dataKey="impressionsNorm" stroke="#df3c27" strokeWidth={2}
                         fill="url(#bingGradientImpressions)" dot={false}
-                        activeDot={{ r: 3, fill: '#f97316', stroke: '#fff', strokeWidth: 1 }} />
+                            activeDot={{ r: 3, fill: '#df3c27', stroke: '#fff', strokeWidth: 1 }} />
                 )}
                 {activeMetrics.includes('clicks') && (
                     <Area type="monotone" dataKey="clicksNorm" stroke="#10b981" strokeWidth={2}
@@ -237,13 +239,13 @@ const WebsiteCard = ({ site, onClick, isLoading, activeMetrics }) => {
 const SiteDetailView = ({ site, apiKey, onBack }) => {
     const [activeTab, setActiveTab] = useState('dashboard');
     const [dateRange, setDateRange] = useState(() => {
-        try { return localStorage.getItem(LS_KEYS.DETAIL_DATE_RANGE) || '28'; }
+        try { return sessionStorage.getItem(LS_KEYS.DETAIL_DATE_RANGE) || '28'; }
         catch { return '28'; }
     });
     const [selectedMetric, setSelectedMetric] = useState('impressions');
     const [activeDetailMetrics, setActiveDetailMetrics] = useState(() => {
         try {
-            const saved = localStorage.getItem(LS_KEYS.DETAIL_ACTIVE_METRICS);
+            const saved = sessionStorage.getItem(LS_KEYS.DETAIL_ACTIVE_METRICS);
             return saved ? JSON.parse(saved) : ['impressions'];
         } catch { return ['impressions']; }
     });
@@ -253,11 +255,11 @@ const SiteDetailView = ({ site, apiKey, onBack }) => {
     const datePickerRef = useRef(null);
 
     useEffect(() => {
-        try { localStorage.setItem(LS_KEYS.DETAIL_DATE_RANGE, dateRange); } catch { }
+        try { sessionStorage.setItem(LS_KEYS.DETAIL_DATE_RANGE, dateRange); } catch { }
     }, [dateRange]);
 
     useEffect(() => {
-        try { localStorage.setItem(LS_KEYS.DETAIL_ACTIVE_METRICS, JSON.stringify(activeDetailMetrics)); } catch { }
+        try { sessionStorage.setItem(LS_KEYS.DETAIL_ACTIVE_METRICS, JSON.stringify(activeDetailMetrics)); } catch { }
     }, [activeDetailMetrics]);
 
     const dateRangeOptions = [
@@ -351,10 +353,10 @@ const SiteDetailView = ({ site, apiKey, onBack }) => {
     }, [detailData]);
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-slate-50 to-orange-50">
+        <div className="bulk-page">
             {/* Header */}
             <div className="bg-white border-b border-gray-100 sticky top-0 z-10">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+                <div className="px-4 sm:px-6 lg:px-8 py-4">
                     <div className="flex items-center gap-4">
                         <button onClick={onBack} className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
                             <ArrowLeft className="w-5 h-5 text-gray-600" />
@@ -369,7 +371,7 @@ const SiteDetailView = ({ site, apiKey, onBack }) => {
             </div>
 
             {/* Toolbar */}
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+            <div className="px-4 sm:px-6 lg:px-8 py-4">
                 <div className="flex items-center gap-3 flex-wrap">
                     {/* Metric Toggle Buttons */}
                     <div className="bg-gray-100 rounded-lg p-1 flex items-center gap-1">
@@ -418,7 +420,7 @@ const SiteDetailView = ({ site, apiKey, onBack }) => {
             </div>
 
             {/* Tabs */}
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="px-4 sm:px-6 lg:px-8">
                 <div className="flex gap-1 bg-gray-100 rounded-xl p-1 w-fit">
                     {tabs.map((tab) => (
                         <button key={tab.id} onClick={() => setActiveTab(tab.id)}
@@ -430,7 +432,7 @@ const SiteDetailView = ({ site, apiKey, onBack }) => {
             </div>
 
             {/* Content */}
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+            <div className="px-4 sm:px-6 lg:px-8 py-6">
                 {isLoading ? (
                     <div className="flex items-center justify-center py-20">
                         <Loader2 className="w-8 h-8 text-orange-500 animate-spin" />
@@ -473,8 +475,8 @@ const SiteDetailView = ({ site, apiKey, onBack }) => {
                                                 <AreaChart data={site.data.dailyData}>
                                                     <defs>
                                                         <linearGradient id="bingImpressionsGradient" x1="0" y1="0" x2="0" y2="1">
-                                                            <stop offset="0%" stopColor="#f97316" stopOpacity={0.2} />
-                                                            <stop offset="100%" stopColor="#f97316" stopOpacity={0} />
+                                                            <stop offset="0%" stopColor="#df3c27" stopOpacity={0.2} />
+                                                            <stop offset="100%" stopColor="#df3c27" stopOpacity={0} />
                                                         </linearGradient>
                                                         <linearGradient id="bingClicksGradient" x1="0" y1="0" x2="0" y2="1">
                                                             <stop offset="0%" stopColor="#10b981" stopOpacity={0.2} />
@@ -486,7 +488,7 @@ const SiteDetailView = ({ site, apiKey, onBack }) => {
                                                     <YAxis tick={{ fontSize: 12 }} stroke="#9ca3af" />
                                                     <Tooltip contentStyle={{ backgroundColor: 'white', border: '1px solid #e5e7eb', borderRadius: '12px' }} />
                                                     <Legend />
-                                                    <Area type="monotone" dataKey="impressions" stroke="#f97316" strokeWidth={2} fill="url(#bingImpressionsGradient)" name="Impressions" />
+                                                            <Area type="monotone" dataKey="impressions" stroke="#df3c27" strokeWidth={2} fill="url(#bingImpressionsGradient)" name="Impressions" />
                                                     <Area type="monotone" dataKey="clicks" stroke="#10b981" strokeWidth={2} fill="url(#bingClicksGradient)" name="Clicks" />
                                                 </AreaChart>
                                             </ResponsiveContainer>
@@ -597,32 +599,34 @@ const BingBulkAnalysisPage = () => {
     const [loadingStates, setLoadingStates] = useState({});
     const [error, setError] = useState('');
 
-    // UI State with localStorage persistence
+    // UI State with sessionStorage persistence
     const [viewMode, setViewMode] = useState(() => {
-        try { return localStorage.getItem(LS_KEYS.VIEW_MODE) || 'grid'; } catch { return 'grid'; }
+        try { return sessionStorage.getItem(LS_KEYS.VIEW_MODE) || 'grid'; } catch { return 'grid'; }
     });
     const [activeMetrics, setActiveMetrics] = useState(() => {
         try {
-            const saved = localStorage.getItem(LS_KEYS.ACTIVE_METRICS);
+            const saved = sessionStorage.getItem(LS_KEYS.ACTIVE_METRICS);
             return saved ? JSON.parse(saved) : ['impressions'];
         } catch { return ['impressions']; }
     });
     const [mainDateRange, setMainDateRange] = useState(() => {
-        try { return localStorage.getItem(LS_KEYS.DATE_RANGE) || '28'; } catch { return '28'; }
+        try { return sessionStorage.getItem(LS_KEYS.DATE_RANGE) || '28'; } catch { return '28'; }
     });
     const [searchQuery, setSearchQuery] = useState('');
     const [sortBy, setSortBy] = useState('impressions');
     const [selectedSite, setSelectedSite] = useState(null);
 
-    // Persist to localStorage
-    useEffect(() => { try { localStorage.setItem(LS_KEYS.VIEW_MODE, viewMode); } catch { } }, [viewMode]);
-    useEffect(() => { try { localStorage.setItem(LS_KEYS.ACTIVE_METRICS, JSON.stringify(activeMetrics)); } catch { } }, [activeMetrics]);
-    useEffect(() => { try { localStorage.setItem(LS_KEYS.DATE_RANGE, mainDateRange); } catch { } }, [mainDateRange]);
+    // Persist to sessionStorage
+    useEffect(() => { try { sessionStorage.setItem(LS_KEYS.VIEW_MODE, viewMode); } catch { } }, [viewMode]);
+    useEffect(() => { try { sessionStorage.setItem(LS_KEYS.ACTIVE_METRICS, JSON.stringify(activeMetrics)); } catch { } }, [activeMetrics]);
+    useEffect(() => { try { sessionStorage.setItem(LS_KEYS.DATE_RANGE, mainDateRange); } catch { } }, [mainDateRange]);
 
     // Load API key on mount
     useEffect(() => {
-        const savedKey = localStorage.getItem('bing_webmaster_api_key');
-        if (savedKey) { setApiKey(savedKey); setIsConfigured(true); }
+        try {
+            const savedKey = sessionStorage.getItem(BING_KEY_STORAGE);
+            if (savedKey) { setApiKey(savedKey); setIsConfigured(true); }
+        } catch { }
     }, []);
 
     // Fetch sites when configured
@@ -641,14 +645,14 @@ const BingBulkAnalysisPage = () => {
 
     const saveApiKey = () => {
         if (!apiKey.trim()) { setError('Please enter a valid API key'); return; }
-        localStorage.setItem('bing_webmaster_api_key', apiKey.trim());
+        sessionStorage.setItem(BING_KEY_STORAGE, apiKey.trim());
         setIsConfigured(true);
         setError('');
         fetchSites();
     };
 
     const clearApiKey = () => {
-        localStorage.removeItem('bing_webmaster_api_key');
+        sessionStorage.removeItem(BING_KEY_STORAGE);
         setApiKey('');
         setIsConfigured(false);
         setSites([]);
@@ -761,39 +765,39 @@ const BingBulkAnalysisPage = () => {
     // API Key Setup UI
     if (!isConfigured) {
         return (
-            <div className="min-h-screen bg-gradient-to-br from-slate-50 to-orange-50 p-6">
-                <div className="max-w-2xl mx-auto">
-                    <div className="mb-8">
-                        <div className="flex items-center gap-3 mb-2">
-                            <div className="p-2 bg-gradient-to-r from-orange-500 to-amber-500 rounded-xl">
-                                <BarChart3 className="w-6 h-6 text-white" />
+            <div className="bulk-page">
+                <div className="connect-column">
+                    <div className="bing-connect-hero">
+                        <div className="bing-connect-title">
+                            <BarChart3 className="h-5 w-5" />
+                            <div>
+                                <h1 className="font-display">Bing Bulk Analysis</h1>
+                                <p>Connect your Bing Webmaster Tools to analyze search performance</p>
                             </div>
-                            <h1 className="text-2xl font-bold text-gray-900">Bing Bulk Analysis</h1>
                         </div>
-                        <p className="text-gray-500">Connect your Bing Webmaster Tools to analyze search performance</p>
                     </div>
-                    <div className="bg-white rounded-2xl p-8 border border-gray-100 shadow-lg">
+                    <div className="bing-connect-card">
                         <div className="text-center mb-6">
-                            <div className="w-16 h-16 bg-orange-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                                <Key className="w-8 h-8 text-orange-600" />
-                            </div>
-                            <h2 className="text-xl font-bold text-gray-900 mb-2">Enter Your Bing API Key</h2>
-                            <p className="text-gray-500 text-sm">
-                                Get your API key from <a href="https://www.bing.com/webmasters/apikey" target="_blank" rel="noopener noreferrer" className="text-orange-600 hover:underline">Bing Webmaster Tools → Settings → API Access</a>
+                            <span className="bing-connect-tile">
+                                <Key className="h-5 w-5" />
+                            </span>
+                            <h2 className="bing-connect-heading font-display">Enter Your Bing API Key</h2>
+                            <p className="bing-connect-hint">
+                                Get your API key from <a href="https://www.bing.com/webmasters/apikey" target="_blank" rel="noopener noreferrer" className="bing-connect-link">Bing Webmaster Tools → Settings → API Access</a>
                             </p>
                         </div>
                         {error && (
-                            <div className="bg-red-50 border border-red-200 rounded-xl p-4 mb-6 flex items-center gap-3">
-                                <AlertCircle className="w-5 h-5 text-red-500" />
-                                <span className="text-red-700 text-sm">{error}</span>
+                            <div className="app-alert app-alert-error mb-5">
+                                <AlertCircle className="h-4 w-4 flex-shrink-0" />
+                                <span>{error}</span>
                             </div>
                         )}
                         <div className="space-y-4">
                             <input type="password" value={apiKey} onChange={(e) => setApiKey(e.target.value)}
                                 placeholder="Enter your Bing Webmaster API key"
-                                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-orange-500" />
+                                className="bing-connect-input" />
                             <button onClick={saveApiKey} disabled={!apiKey.trim()}
-                                className="w-full px-6 py-3 bg-gradient-to-r from-orange-500 to-amber-500 text-white rounded-xl font-semibold hover:from-orange-600 hover:to-amber-600 disabled:opacity-50 transition-all">
+                                className="ui-button ui-button-primary bing-connect-submit">
                                 Connect Bing Webmaster
                             </button>
                         </div>
@@ -805,10 +809,10 @@ const BingBulkAnalysisPage = () => {
 
     // Main Sites Grid
     return (
-        <div className="min-h-screen bg-gradient-to-br from-slate-50 to-orange-50">
+        <div className="bulk-page">
             {/* Header */}
             <div className="bg-white border-b border-gray-100">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+                <div className="px-4 sm:px-6 lg:px-8 py-6">
                     <div className="flex items-center justify-between relative">
                         <div className="flex items-center gap-4 min-w-[140px]" />
 
@@ -829,7 +833,7 @@ const BingBulkAnalysisPage = () => {
             </div>
 
             {/* Toolbar */}
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+            <div className="px-4 sm:px-6 lg:px-8 py-4">
                 <div className="flex items-center gap-3 flex-wrap">
                     {/* Search */}
                     <div className="relative flex-1 max-w-md">
@@ -877,7 +881,7 @@ const BingBulkAnalysisPage = () => {
             </div>
 
             {/* Sites Grid */}
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-8">
+            <div className="px-4 sm:px-6 lg:px-8 pb-8">
                 {isLoadingSites ? (
                     <div className="flex items-center justify-center py-20">
                         <Loader2 className="w-8 h-8 text-orange-500 animate-spin" />

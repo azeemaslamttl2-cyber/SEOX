@@ -10,8 +10,7 @@ import {
   Network,
   PenTool,
   ShieldCheck,
-  Globe,
-  Zap,
+  Eye,
 } from "lucide-react";
 
 const nav = [
@@ -26,14 +25,14 @@ const nav = [
   { label: "Unique N-Grams", to: "/content/unique-ngrams", icon: Fingerprint },
   { label: "Skip Gram Words", to: "/content/skip-gram", icon: Network },
   { label: "Content Optimization", to: "/content/optimization", icon: PenTool },
-  { label: "Semantic Generator", to: "/content/semantic-generator", icon: Zap },
-  { label: "Content Analyzer", to: "/content/content-analyzer", icon: Globe },
   { label: "ChatGPT Watermark Remover", to: "/content/watermark-remover", icon: ShieldCheck },
+  { label: "Semantic Generator", to: "/content/semantic-generator", icon: Brain },
+  { label: "Content Analyzer", to: "/content/content-analyzer", icon: Eye },
 ];
 
 export default function ContentSecondaryNav() {
   return (
-    <aside className="sticky top-0 hidden h-screen w-[232px] flex-shrink-0 overflow-y-auto border-r border-white/10 bg-ink-900/60 px-3 py-5 md:block">
+    <aside className="app-sidebar sticky top-0 hidden h-screen w-[232px] flex-shrink-0 overflow-y-auto border-r border-white/10 bg-ink-900/60 px-3 py-5 md:block">
       <nav className="space-y-5">
         <div>
           <h4 className="flex items-center gap-1.5 px-2 pb-2 text-[11px] font-bold uppercase tracking-wider text-white/40">

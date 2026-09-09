@@ -18,7 +18,7 @@ export default function SearchEngineBulkAnalysisPlaceholder({ engine }) {
   const meta = engineMeta[engine] || engineMeta.bing;
 
   return (
-    <section className="mx-auto max-w-5xl space-y-5 pb-16">
+    <section className="space-y-5 pb-16">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="font-display text-2xl font-black text-white">{meta.label}</h1>

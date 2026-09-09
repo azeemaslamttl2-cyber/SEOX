@@ -7,7 +7,7 @@ export default function Sparkline({
   values = [],
   width = 70,
   height = 22,
-  color = "#f97316",
+  color = "#df3c27",
   empty = false,
 }) {
   if (!values || values.length === 0 || empty) {

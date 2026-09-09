@@ -28,10 +28,13 @@ export function downloadTextFile(filename, content, type = "text/plain;charset=u
   URL.revokeObjectURL(href);
 }
 
-export async function fetchPageHtml(url) {
+export async function fetchPageHtml(url, options = {}) {
   const target = normalizeToolUrl(url);
   const metaPath = `${FETCH_META_PATH}?url=${encodeURIComponent(target)}&returnHtml=true`;
-  const metaResponse = await fetch(metaPath, { headers: { Accept: "application/json" } }).catch(() => null);
+  const metaResponse = await fetch(metaPath, {
+    ...options,
+    headers: { Accept: "application/json", ...(options.headers || {}) },
+  }).catch(() => null);
   if (metaResponse?.ok) {
     const payload = await metaResponse.json().catch(() => null);
     if (payload?.html) {
@@ -46,8 +49,9 @@ export async function fetchPageHtml(url) {
   }
 
   const proxyResponse = await fetch("/api/proxy", {
+    ...options,
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: { "Content-Type": "application/json", ...(options.headers || {}) },
     body: JSON.stringify({ url: target }),
   });
   const proxyPayload = await proxyResponse.json().catch(() => null);

@@ -1,4 +1,4 @@
-import { requireFirebaseAuthFromNodeRequest } from "../_lib/request-auth.js";
+import { requireAuthenticatedUser } from "../_lib/request-auth.js";
 import { parsePublicHttpUrl, resolvePublicRedirect } from "../_lib/url-security.js";
 
 // Shared Node-style handler used by the Cloudflare Pages Function wrapper.
@@ -10,7 +10,7 @@ export default async function handler(req, res) {
   if (req.method === "OPTIONS") return res.status(200).end();
 
   try {
-    await requireFirebaseAuthFromNodeRequest(req);
+    await requireAuthenticatedUser(req);
   } catch (error) {
     return res.status(error?.status || 401).json({ error: error?.message || "Unauthorized" });
   }
@@ -29,7 +29,7 @@ export default async function handler(req, res) {
         method: "HEAD",
         redirect: "manual",
         signal: controller.signal,
-        headers: { "User-Agent": "AISmartSeoBot/1.0" },
+        headers: { "User-Agent": "SEOXBot/1.0" },
       }).finally(() => clearTimeout(timeout));
 
       if (response.status >= 300 && response.status < 400) {

@@ -75,16 +75,16 @@ function ScoreGauge({ score, label, size = 120, color = "brand" }) {
       <div className="relative" style={{ width: size, height: size }}>
         <div className={`absolute inset-0 rounded-full ${c.glow} blur-2xl`} />
         <svg width={size} height={size} className="-rotate-90 relative z-10">
-          <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="rgba(255,255,255,0.04)" strokeWidth="8" />
+          <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="#e2e5ee" strokeWidth="8" />
           <circle
             cx={size / 2} cy={size / 2} r={r} fill="none"
             stroke={c.stroke} strokeWidth="8" strokeLinecap="round"
             strokeDasharray={circ} strokeDashoffset={offset}
-            style={{ filter: "drop-shadow(0 0 6px rgba(99,102,241,0.4))" }}
+            style={{ transition: "stroke-dashoffset 700ms ease" }}
           />
           <defs>
             <linearGradient id="gaugeGradBrand" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor="#f97316" />
+              <stop offset="0%" stopColor="#df3c27" />
               <stop offset="100%" stopColor="#fbbf24" />
             </linearGradient>
             <linearGradient id="gaugeGradBlue" x1="0%" y1="0%" x2="100%" y2="0%">
@@ -97,7 +97,7 @@ function ScoreGauge({ score, label, size = 120, color = "brand" }) {
             </linearGradient>
             <linearGradient id="gaugeGradRose" x1="0%" y1="0%" x2="100%" y2="0%">
               <stop offset="0%" stopColor="#f43f5e" />
-              <stop offset="100%" stopColor="#fb923c" />
+              <stop offset="100%" stopColor="#c72f1d" />
             </linearGradient>
           </defs>
         </svg>
@@ -144,8 +144,15 @@ function Section({ id, icon: Icon, title, description, children, defaultOpen = t
 }
 
 /* ── Keyword Cloud ── */
-function KeywordCloud({ keywords }) {
+function KeywordCloud({ keywords = [] }) {
   const colors = ["text-cyan-300", "text-blue-300", "text-violet-300", "text-emerald-300", "text-amber-300", "text-pink-300", "text-sky-300", "text-indigo-300", "text-teal-300", "text-orange-300"];
+  if (!keywords.length) {
+    return (
+      <div className="app-empty-state">
+        <p>No keyword cloud data for this page yet.</p>
+      </div>
+    );
+  }
   return (
     <div className="flex flex-wrap items-center justify-center gap-3 py-4">
       {keywords.map((kw, i) => (
@@ -162,8 +169,17 @@ function KeywordCloud({ keywords }) {
 }
 
 /* ── Mini Pie Chart (SVG) ── */
-function PieChart({ data, size = 180 }) {
+function PieChart({ data = [], size = 180 }) {
   const total = data.reduce((sum, d) => sum + d.percent, 0);
+  // With no data every slice angle is NaN, so nothing but the centre
+  // circle used to paint — which read as a solid dark disc.
+  if (!data.length || total <= 0) {
+    return (
+      <div className="app-empty-state" style={{ minHeight: size }}>
+        <p>No occurrence data for this page yet.</p>
+      </div>
+    );
+  }
   let cumulative = 0;
   const slices = data.map((d) => {
     const start = cumulative;
@@ -188,9 +204,9 @@ function PieChart({ data, size = 180 }) {
     <div className="flex flex-col items-center gap-3">
       <svg width={size} height={size}>
         {slices.map((s, i) => (
-          <path key={i} d={describeArc(cx, cy, r, s.startAngle, s.endAngle)} fill={s.color} stroke="rgba(0,0,0,0.3)" strokeWidth="1" />
+          <path key={i} d={describeArc(cx, cy, r, s.startAngle, s.endAngle)} fill={s.color} stroke="#ffffff" strokeWidth="2" />
         ))}
-        <circle cx={cx} cy={cy} r={r * 0.5} fill="#0d1117" />
+        <circle cx={cx} cy={cy} r={r * 0.5} fill="#ffffff" />
       </svg>
       <div className="flex flex-wrap justify-center gap-x-4 gap-y-1">
         {data.map((d, i) => (
@@ -233,7 +249,7 @@ function normalizeAuditUrl(input) {
 
 function getApiUrls(path) {
   if (
-    import.meta.env.DEV &&
+    import.meta.env?.DEV &&
     typeof window !== "undefined" &&
     ["localhost", "127.0.0.1"].includes(window.location.hostname) &&
     window.location.port === "5173"
@@ -474,7 +490,7 @@ function buildPerformanceRows(crawlData, html, plainText, imageAlts) {
   const mixedContent = crawlData.audit?.mixedContentCount || 0;
 
   return [
-    { metric: "Fetch Time", explanation: "Time for AI Smart Seo to fetch the HTML document.", value: `${(loadMs / 1000).toFixed(2)} seconds`, status: loadMs <= 1500 ? "pass" : loadMs <= 3500 ? "warning" : "fail" },
+    { metric: "Fetch Time", explanation: "Time for PGC to fetch the HTML document.", value: `${(loadMs / 1000).toFixed(2)} seconds`, status: loadMs <= 1500 ? "pass" : loadMs <= 3500 ? "warning" : "fail" },
     { metric: "HTML Size", explanation: "Raw downloaded HTML size. Very heavy HTML can slow rendering and crawling.", value: `${sizeKb.toFixed(1)} KB`, status: sizeKb <= 250 ? "pass" : sizeKb <= 750 ? "warning" : "fail" },
     { metric: "Resource Count", explanation: "Scripts, styles, images, and linked resources discovered in the HTML.", value: `${resources} resources`, status: resources <= 60 ? "pass" : resources <= 140 ? "warning" : "fail" },
     { metric: "Text to Code Ratio", explanation: "Visible text compared with total HTML size.", value: `${textRatio.toFixed(2)}%`, status: textRatio >= 10 ? "pass" : textRatio >= 3 ? "warning" : "fail" },
@@ -661,12 +677,6 @@ export default function SemanticAudit() {
     setNotice("");
   }, [projectUrl]);
 
-  const scrollToSection = (id) => {
-    setActiveSection(id);
-    const el = document.getElementById(`semantic-${id}`);
-    if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
-  };
-
   async function analyze() {
     setLoading(true);
     setError("");
@@ -715,10 +725,10 @@ export default function SemanticAudit() {
   }
 
   return (
-    <div className="mx-auto max-w-6xl">
+    <div className="">
 
       {/* ─────────── HERO ─────────── */}
-      <div className="relative overflow-hidden rounded-3xl border border-white/[0.06] bg-ink-800">
+      <div className="semantic-hero relative overflow-hidden rounded-3xl border border-brand-600 bg-brand-500">
         <div className="pointer-events-none absolute inset-0">
           <div className="absolute -right-20 -top-20 h-80 w-80 rounded-full bg-blue-500/[0.08] blur-[100px]" />
           <div className="absolute -bottom-10 -left-10 h-60 w-60 rounded-full bg-cyan-500/[0.05] blur-[80px]" />
@@ -736,7 +746,7 @@ export default function SemanticAudit() {
               </div>
             </div>
             <div className="mt-5 flex items-center gap-2">
-              <div className="flex flex-1 items-center gap-2 rounded-xl border border-white/[0.08] bg-ink-900/80 px-4 py-2.5">
+              <div className="flex flex-1 items-center gap-2 rounded-xl border border-white/70 bg-white px-4 py-2.5">
                 <Globe className="h-4 w-4 text-blue-400/60" />
                 <input
                   value={displayUrl}
@@ -744,7 +754,7 @@ export default function SemanticAudit() {
                   onKeyDown={(e) => {
                     if (e.key === "Enter") analyze();
                   }}
-                  className="flex-1 cursor-not-allowed bg-transparent text-sm text-white placeholder:text-white/25 focus:outline-none"
+                  className="flex-1 cursor-not-allowed bg-transparent text-sm text-college-blue placeholder:text-college-blue/60 focus:outline-none"
                   placeholder="Select a website in the nav"
                 />
               </div>
@@ -752,7 +762,7 @@ export default function SemanticAudit() {
                 type="button"
                 onClick={analyze}
                 disabled={loading || !hasProject}
-                className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-blue-500 to-cyan-500 px-5 py-2.5 text-sm font-bold text-white shadow-lg shadow-blue-500/25 transition hover:shadow-blue-500/40 disabled:cursor-not-allowed disabled:opacity-60"
+                className="ui-button semantic-analyze-button rounded-xl"
               >
                 <Search className={`h-4 w-4 ${loading ? "animate-pulse" : ""}`} /> {loading ? "Analyzing..." : "Analyze"}
               </button>
@@ -771,7 +781,7 @@ export default function SemanticAudit() {
               <button
                 type="button"
                 onClick={() => window.print()}
-                className="flex items-center gap-1.5 rounded-lg border border-blue-500/30 bg-blue-500/10 px-3 py-1.5 text-[11px] font-bold text-blue-300 transition hover:bg-blue-500/20"
+                className="ui-button semantic-secondary-button"
               >
                 <Download className="h-3 w-3" /> Export PDF
               </button>
@@ -779,11 +789,11 @@ export default function SemanticAudit() {
                 type="button"
                 onClick={analyze}
                 disabled={loading || !hasProject}
-                className="flex items-center gap-1.5 rounded-lg border border-white/10 bg-white/[0.04] px-3 py-1.5 text-[11px] font-bold text-white/50 transition hover:bg-white/[0.08] disabled:cursor-not-allowed disabled:opacity-60"
+                className="ui-button semantic-secondary-button"
               >
                 <RefreshCw className={`h-3 w-3 ${loading ? "animate-spin" : ""}`} /> Re-scan
               </button>
-              <span className="ml-1 text-[11px] text-white/25"><Clock className="mr-0.5 inline h-3 w-3" /> {d.cachedAgo}</span>
+              <span className="ml-1 text-[11px] text-white"><Clock className="mr-0.5 inline h-3 w-3" /> {d.cachedAgo}</span>
             </div>
           </div>
           {/* Scores */}
@@ -797,15 +807,18 @@ export default function SemanticAudit() {
 
       {/* ─────────── Section Navigation (horizontal tabs) ─────────── */}
       <div className="mt-4">
-        <div className="flex flex-wrap items-center gap-1 rounded-2xl border border-white/[0.06] bg-white/[0.02] p-1.5">
+        <div className="semantic-tabs flex flex-wrap items-center gap-1 rounded-2xl border border-white/[0.06] bg-white/[0.02] p-1.5">
           {navSections.map((sec) => {
             const Icon = sec.icon;
             const isActive = activeSection === sec.id;
             return (
               <button
                 key={sec.id}
-                onClick={() => scrollToSection(sec.id)}
-                className={`flex items-center gap-1.5 rounded-xl px-3 py-2 text-[12px] font-semibold transition whitespace-nowrap ${
+                type="button"
+                onClick={() => setActiveSection(sec.id)}
+                role="tab"
+                aria-selected={isActive}
+                className={`semantic-tab flex items-center gap-1.5 rounded-xl px-3 py-2 text-[12px] font-semibold transition whitespace-nowrap ${
                   isActive ? "bg-blue-500/15 text-blue-300 ring-1 ring-blue-500/30" : "text-white/45 hover:bg-white/[0.04] hover:text-white/70"
                 }`}
               >
@@ -821,7 +834,7 @@ export default function SemanticAudit() {
       <div className="mt-6 space-y-4">
 
         {/* ── SUMMARY ── */}
-        <div id="semantic-summary">
+        <div id="semantic-summary" className={activeSection === "summary" ? "" : "hidden"}>
           <Section id="summary" icon={BarChart3} title="Summary Overview" description="Keyword cloud and occurrence distribution" defaultOpen={true}>
             <div className="grid gap-6 lg:grid-cols-2">
               <div>
@@ -848,7 +861,7 @@ export default function SemanticAudit() {
         </div>
 
         {/* ── SEO ANALYSIS ── */}
-        <div id="semantic-seo-analysis">
+        <div id="semantic-seo-analysis" className={activeSection === "seo-analysis" ? "" : "hidden"}>
           <Section id="seo-analysis" icon={FileText} title="SEO Analysis of the Page" description="Technical and editorial on-page criteria" defaultOpen={true}>
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
@@ -877,7 +890,7 @@ export default function SemanticAudit() {
         </div>
 
         {/* ── HEADING HIERARCHY ── */}
-        <div id="semantic-headings">
+        <div id="semantic-headings" className={activeSection === "headings" ? "" : "hidden"}>
           <Section id="headings" icon={Heading} title="Page Title Hierarchy" description="Check the heading structure of your page">
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
@@ -906,7 +919,7 @@ export default function SemanticAudit() {
         </div>
 
         {/* ── RELEVANT KEYWORDS ── */}
-        <div id="semantic-keywords">
+        <div id="semantic-keywords" className={activeSection === "keywords" ? "" : "hidden"}>
           <Section id="keywords" icon={Tags} title="Relevant Keywords & Tag Presence" description="Keywords most often found in the text and their presence in HTML tags">
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
@@ -946,7 +959,7 @@ export default function SemanticAudit() {
         </div>
 
         {/* ── ENTITIES ── */}
-        <div id="semantic-entities">
+        <div id="semantic-entities" className={activeSection === "entities" ? "" : "hidden"}>
           <Section id="entities" icon={Brain} title="Analysis of Entities Found on the Page" description="Named entities sorted by relevance to the text being analyzed">
             <div className="mb-4 flex items-center gap-2">
               <button
@@ -968,7 +981,7 @@ export default function SemanticAudit() {
                 onClick={() => window.print()}
                 className="flex items-center gap-1.5 rounded-lg bg-blue-500/15 px-3 py-1.5 text-[11px] font-bold text-blue-300 ring-1 ring-blue-500/25"
               >
-                <FileDown className="h-3 w-3" /> PDF
+                <FileDown className="h-3 w-3" /> Print
               </button>
             </div>
             <div className="overflow-x-auto">
@@ -1009,7 +1022,7 @@ export default function SemanticAudit() {
         </div>
 
         {/* ── HYPERLINKS ── */}
-        <div id="semantic-links">
+        <div id="semantic-links" className={activeSection === "links" ? "" : "hidden"}>
           <Section id="links" icon={Link2} title="Analysis of Hyperlinks (Outgoing Links)" description="Outgoing links from the analyzed page">
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
@@ -1057,7 +1070,7 @@ export default function SemanticAudit() {
         </div>
 
         {/* ── IMAGE ALT TAGS ── */}
-        <div id="semantic-images">
+        <div id="semantic-images" className={activeSection === "images" ? "" : "hidden"}>
           <Section id="images" icon={Image} title="Analysis of Image Alt Tags" description="Check if images have proper alt text for accessibility and SEO">
             <div className="mb-4 flex items-center gap-2">
               <button
@@ -1116,7 +1129,7 @@ export default function SemanticAudit() {
         </div>
 
         {/* ── LANGUAGE & ENCODING ── */}
-        <div id="semantic-language">
+        <div id="semantic-language" className={activeSection === "language" ? "" : "hidden"}>
           <Section id="language" icon={Languages} title="Language and Encoding" description="Language settings and character encoding detection">
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
@@ -1146,7 +1159,7 @@ export default function SemanticAudit() {
         </div>
 
         {/* ── PERFORMANCE ── */}
-        <div id="semantic-performance">
+        <div id="semantic-performance" className={activeSection === "performance" ? "" : "hidden"}>
           <Section id="performance" icon={Gauge} title="Page Performance on Mobile" description="Lighthouse performance diagnostics summary (cached for 10 minutes)">
             <div className="mb-4 flex items-center justify-between">
               <p className="text-[11px] text-white/30">Performance score of the page</p>
@@ -1181,7 +1194,7 @@ export default function SemanticAudit() {
         </div>
 
         {/* ── COMPETITOR ANALYSIS ── */}
-        <div id="semantic-competitors">
+        <div id="semantic-competitors" className={activeSection === "competitors" ? "" : "hidden"}>
           <Section id="competitors" icon={BarChart3} title={`Content Benchmark: "${d.competitorAnalysis.keyword}"`} description="Automated benchmark from page size, topical coverage, and semantic signals">
             <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
               <CompetitorStat label="Total Words" yours={`${d.competitorAnalysis.yourPage.totalWords} words`} competition={`${d.competitorAnalysis.competition.totalWords} words`} />
@@ -1218,7 +1231,7 @@ export default function SemanticAudit() {
         </div>
 
         {/* ── PLAIN TEXT ── */}
-        <div id="semantic-plaintext">
+        <div id="semantic-plaintext" className={activeSection === "plaintext" ? "" : "hidden"}>
           <Section id="plaintext" icon={Type} title="Plain Text of the Page" description="The full text extracted from the page content">
             <div className="max-h-[400px] overflow-y-auto rounded-xl border border-white/[0.06] bg-ink-900/60 p-4">
               <pre className="whitespace-pre-wrap text-[12px] leading-relaxed text-white/55 font-sans">

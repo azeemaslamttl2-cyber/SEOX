@@ -5,12 +5,26 @@ import {
   FileCode,
   FileText,
   Grid3X3,
+  Building2,
+  LayoutDashboard,
+  ClipboardCheck,
+  Megaphone,
+  Workflow,
+  UserSquare,
+  Star,
+  BrainCircuit,
+  HelpCircle,
+  Lightbulb,
+  History,
+  Activity,
   Image,
   MapPin,
   Search,
-  Sparkles,  Users,
+  Sparkles,
+  Users,
   AlertCircle,
-  Youtube,} from "lucide-react";
+  Youtube,
+} from "lucide-react";
 import IconRail from "../components/auditor/IconRail.jsx";
 import ProjectSelector from "../components/ProjectSelector.jsx";
 
@@ -56,6 +70,28 @@ const groups = {
     accent: "teal",
     icon: MapPin,
     sections: [
+      {
+        label: "Business Profile",
+        items: [
+          {
+            label: "GBP Connection",
+            to: "/local-seo/gbp",
+            icon: Building2,
+            end: true,
+          },
+          { label: "GBP Overview", to: "/local-seo/gbp/overview", icon: LayoutDashboard },
+          { label: "Profile Manager", to: "/local-seo/gbp/profile", icon: UserSquare },
+          { label: "Health Audit", to: "/local-seo/gbp/audit", icon: ClipboardCheck },
+          { label: "Posts", to: "/local-seo/gbp/posts", icon: Megaphone },
+          { label: "Reviews", to: "/local-seo/gbp/reviews", icon: Star },
+          { label: "Review Intelligence", to: "/local-seo/gbp/insights", icon: BrainCircuit },
+          { label: "Q&A", to: "/local-seo/gbp/qanda", icon: HelpCircle },
+          { label: "Opportunities", to: "/local-seo/gbp/recommendations", icon: Lightbulb },
+          { label: "Audit History", to: "/local-seo/gbp/history", icon: History },
+          { label: "Operations", to: "/local-seo/gbp/operations", icon: Activity },
+          { label: "Automation", to: "/local-seo/gbp/automation", icon: Workflow },
+        ],
+      },
       {
         label: "Local Visibility",
         items: [

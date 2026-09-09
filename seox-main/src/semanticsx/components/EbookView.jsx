@@ -487,7 +487,7 @@ const EbookView = ({
             </div>
 
             {/* Content - Accordion Sections */}
-            <main className="max-w-7xl mx-auto px-4 pb-12">
+            <main className="px-4 pb-12">
                 {filteredSections.length === 0 ? (
                     <div className="text-center py-20">
                         <div className={`inline-flex items-center justify-center w-24 h-24 rounded-3xl shadow-lg mb-6 ${isDarkMode ? 'bg-slate-800' : 'bg-white'}`}>

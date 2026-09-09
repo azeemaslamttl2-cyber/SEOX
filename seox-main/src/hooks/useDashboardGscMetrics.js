@@ -3,6 +3,7 @@ import {
   EMPTY_GSC_PERFORMANCE_METRICS,
   fetchProjectGscPerformance,
 } from "../lib/gscPerformance.js";
+import { saveToolResult } from "../lib/projectsApi.js";
 
 function userIdFor(user) {
   return user?.uid || user?.id || "";
@@ -50,7 +51,7 @@ export function useDashboardGscMetrics(project, user) {
     }));
 
     fetchProjectGscPerformance(project, { userId })
-      .then((next) => {
+      .then(async (next) => {
         if (requestRef.current !== requestId) return;
         setState({
           ...INITIAL_STATE,
@@ -60,6 +61,15 @@ export function useDashboardGscMetrics(project, user) {
           previousMetrics: next.previousMetrics || EMPTY_GSC_PERFORMANCE_METRICS,
           deltas: next.deltas || EMPTY_GSC_PERFORMANCE_METRICS,
         });
+
+        if (userId && project?.id && next.status === "complete") {
+          await saveToolResult(userId, {
+            projectId: project.id,
+            projectUrl: project.fullUrl || project.url || project.domain || "",
+            toolKey: "gsc",
+            result: next,
+          });
+        }
       })
       .catch((error) => {
         if (requestRef.current !== requestId) return;

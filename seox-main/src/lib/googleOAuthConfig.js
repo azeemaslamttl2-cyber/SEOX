@@ -1,7 +1,21 @@
-import { auth } from "./firebase.js";
+import { getSessionToken } from './authSession.js';
 
-export const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || "";
-export const GOOGLE_REDIRECT_URI = import.meta.env.VITE_GOOGLE_REDIRECT_URI || "";
+const runtimeEnv =
+  typeof import.meta !== "undefined" && import.meta.env
+    ? import.meta.env
+    : typeof process !== "undefined"
+    ? process.env
+    : {};
+
+export const GOOGLE_CLIENT_ID =
+  runtimeEnv.VITE_GOOGLE_CLIENT_ID ||
+  runtimeEnv.NEXT_PUBLIC_GOOGLE_CLIENT_ID ||
+  runtimeEnv.GOOGLE_CLIENT_ID ||
+  "";
+export const GOOGLE_REDIRECT_URI =
+  runtimeEnv.VITE_GOOGLE_REDIRECT_URI ||
+  runtimeEnv.NEXT_PUBLIC_GOOGLE_REDIRECT_URI ||
+  "";
 
 export const GSC_SCOPE = "https://www.googleapis.com/auth/webmasters.readonly";
 
@@ -59,9 +73,8 @@ export async function getGscAuthUrl(payload = {}) {
   }
 
   const headers = new Headers({ "Content-Type": "application/json" });
-  if (auth.currentUser) {
-    headers.set("Authorization", `Bearer ${await auth.currentUser.getIdToken()}`);
-  }
+  const token = getSessionToken();
+  if (token) headers.set('Authorization', `Bearer ${token}`);
 
   const response = await fetch("/api/gsc-token", {
     method: "POST",
@@ -71,6 +84,7 @@ export async function getGscAuthUrl(payload = {}) {
       redirectUri: getGoogleRedirectUri(),
       returnTo: payload.returnTo || "/gsc",
       source: payload.source || "gsc-insights",
+      projectId: payload.projectId || null,
     }),
   });
   const data = await response.json().catch(() => ({}));

@@ -1,18 +1,7 @@
 import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import {
-  ChevronDown,
-  Eye,
-  Globe2,
-  Hash,
-  MousePointerClick,
-  Percent,
-  RefreshCw,
-  Search,
-} from "lucide-react";
-import { useCrawl } from "../../context/CrawlContext.jsx";
+import { AlertTriangle, ChevronDown, Eye, Globe2, Hash, LogIn, MousePointerClick, Percent, RefreshCw, Search } from "lucide-react";
 import { useGscInsights } from "../../context/GscInsightsContext.jsx";
-import { filterSitesByProjects } from "../../lib/domainMatching.js";
 
 function formatNum(n) {
   const value = Number(n) || 0;
@@ -23,7 +12,6 @@ function formatNum(n) {
 }
 
 export default function GscDashboard() {
-  const { projects } = useCrawl();
   const {
     datePreset,
     datePresets,
@@ -45,14 +33,10 @@ export default function GscDashboard() {
     siteSummaries,
   } = useGscInsights();
   const [query, setQuery] = useState("");
-  const profileSites = useMemo(
-    () => filterSitesByProjects(normalizedSites, projects),
-    [normalizedSites, projects]
-  );
 
   const rows = useMemo(() => {
     const summariesByUrl = new Map(siteSummaries.map((site) => [site.siteUrl, site]));
-    return profileSites
+    return normalizedSites
       .map((site) => {
         const summary = summariesByUrl.get(site.siteUrl);
         return (
@@ -74,7 +58,7 @@ export default function GscDashboard() {
           site.siteUrl.toLowerCase().includes(query.toLowerCase())
       )
       .sort((a, b) => b.totalClicks - a.totalClicks);
-  }, [profileSites, query, siteSummaries]);
+  }, [normalizedSites, query, siteSummaries]);
 
   const totals = useMemo(() => {
     const totalClicks = rows.reduce((sum, site) => sum + site.totalClicks, 0);
@@ -166,11 +150,13 @@ export default function GscDashboard() {
           label="Total Clicks"
           value={formatNum(totals.totalClicks)}
           icon={MousePointerClick}
+          accent="clicks"
         />
         <StatCard
           label="Total Impressions"
           value={formatNum(totals.totalImpressions)}
           icon={Eye}
+          accent="impressions"
         />
         <StatCard
           label="Average CTR"
@@ -189,7 +175,7 @@ export default function GscDashboard() {
           <Search className="h-4 w-4 text-white/40" />
           <input
             type="text"
-            placeholder="Search saved project properties..."
+            placeholder="Search connected properties..."
             value={query}
             onChange={(event) => setQuery(event.target.value)}
             className="flex-1 bg-transparent text-sm text-white placeholder:text-white/30 focus:outline-none"
@@ -214,23 +200,11 @@ export default function GscDashboard() {
           />
         )}
 
-        {!isLoadingSites && normalizedSites.length > 0 && profileSites.length === 0 && (
-          <FullPageState
-            title="No saved project domains found in GSC"
-            body="Only domains added to your AI Smart Seo project profile are shown here. Add the domain as a project, or connect the matching Search Console property."
-            actionLabel="Add project"
-            onAction={() => {
-              window.location.href = "/auditor/new?mode=checks";
-            }}
-            compact
-          />
-        )}
-
         {rows.map((site) => (
           <SiteRow key={site.id} site={site} />
         ))}
 
-        {profileSites.length > 0 && rows.length === 0 && !isLoadingSummaries && (
+        {normalizedSites.length > 0 && rows.length === 0 && !isLoadingSummaries && (
           <div className="rounded-2xl border border-white/10 bg-white/[0.02] px-6 py-16 text-center">
             <Globe2 className="mx-auto h-10 w-10 text-white/20" />
             <p className="mt-3 text-sm text-white/40">No properties match your search.</p>
@@ -347,7 +321,7 @@ function DualAxisChart({ data, showClicks, showImpressions }) {
             y1={padT + chartHeight - fraction * chartHeight}
             x2={width - padR}
             y2={padT + chartHeight - fraction * chartHeight}
-            stroke="rgba(255,255,255,0.05)"
+            stroke="#eef0f5"
           />
         ))}
 
@@ -381,7 +355,7 @@ function DualAxisChart({ data, showClicks, showImpressions }) {
                 x={xPos(originalIndex)}
                 y={height - 5}
                 textAnchor="middle"
-                fill="rgba(255,255,255,0.3)"
+                fill="#727a94"
                 fontSize="9"
               >
                 {formatDate(row.date)}
@@ -421,11 +395,13 @@ function MetricValue({ label, value }) {
   );
 }
 
-function StatCard({ icon: Icon, label, value }) {
+function StatCard({ icon: Icon, label, value, accent = "neutral" }) {
   return (
-    <div className="rounded-2xl border border-white/10 bg-white/[0.02] p-4">
+    <div className={`gsc-stat-card gsc-stat-card-${accent} rounded-2xl border border-white/10 bg-white/[0.02] p-4`}>
       <div className="flex items-center gap-2 text-[11px] text-white/45">
-        <Icon className="h-3.5 w-3.5 text-brand-300" />
+        <span className="gsc-stat-icon flex h-6 w-6 items-center justify-center rounded-lg">
+          <Icon className="h-3.5 w-3.5" />
+        </span>
         {label}
       </div>
       <div className="mt-1 font-display text-2xl font-bold">{value}</div>
@@ -481,24 +457,21 @@ function FilterDropdown({
 
 function FullPageState({ title, body, actionLabel, onAction, error, compact = false }) {
   return (
-    <div
-      className={`rounded-2xl border border-white/10 bg-white/[0.02] px-6 text-center ${
-        compact ? "py-12" : "py-24"
-      }`}
-    >
-      <Globe2 className="mx-auto h-10 w-10 text-white/20" />
-      <h2 className="mt-4 font-display text-lg font-bold text-white">{title}</h2>
-      <p className="mx-auto mt-2 max-w-xl text-sm text-white/50">{body}</p>
+    <div className={`gsc-state ${compact ? "is-compact" : ""}`}>
+      <span className="gsc-state-tile">
+        <Globe2 className="h-5 w-5" />
+      </span>
+      <h2 className="gsc-state-title font-display">{title}</h2>
+      <p className="gsc-state-body">{body}</p>
       {error && (
-        <p className="mx-auto mt-4 max-w-xl rounded-xl border border-amber-500/25 bg-amber-500/10 px-3 py-2 text-sm text-amber-100">
-          {error}
-        </p>
+        <div className="app-alert app-alert-warning gsc-state-alert">
+          <AlertTriangle className="h-4 w-4 flex-shrink-0" />
+          <span>{error}</span>
+        </div>
       )}
       {actionLabel && (
-        <button
-          onClick={onAction}
-          className="mt-5 inline-flex items-center rounded-lg bg-brand-500 px-4 py-2 text-sm font-semibold text-white transition hover:bg-brand-400"
-        >
+        <button type="button" onClick={onAction} className="ui-button ui-button-primary gsc-state-action">
+          <LogIn className="h-4 w-4" />
           {actionLabel}
         </button>
       )}

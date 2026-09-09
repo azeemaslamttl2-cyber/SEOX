@@ -8,8 +8,8 @@ import {
   issueRowsForGroups,
   RedirectIncomingInsights,
   TrackedIssuesPanel,
-} from "./ReportInsights.jsx";
-import { pageExplorerHref } from "./reportLinks.js";
+} from "../../../lib/auditor/reports/ReportInsights.jsx";
+import { pageExplorerHref } from "../../../lib/auditor/reports/reportLinks.js";
 
 export default function RedirectsReport() {
   const { project, issueCategories } = useAuditData();
@@ -47,7 +47,7 @@ export default function RedirectsReport() {
     ? Object.entries(liveStats.statusCounts).map(([status, value], index) => ({
         label: `${status} redirect`,
         value,
-        color: index % 2 ? "#fbbf24" : "#f97316",
+        color: index % 2 ? "#ffc600" : "#df3c27",
       }))
     : [{ label: "No redirects", value: 0, color: "#64748b" }];
   const depthValues = Object.entries(liveStats.depthBuckets)

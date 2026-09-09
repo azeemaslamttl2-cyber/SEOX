@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useState, useMemo } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import {
   X,
@@ -15,18 +15,11 @@ import {
   Zap,
   Bot,
   Bell,
-  AlertTriangle,
-  CircleDashed,
 } from "lucide-react";
 import Logo from "../../components/Logo.jsx";
 import { useCrawl } from "../../context/CrawlContext.jsx";
 import { useAuth } from "../../context/AuthContext.jsx";
-import { useNotifications } from "../../context/NotificationsContext.jsx";
-import {
-  createEmptyProjectToolChecks,
-  PROJECT_TOOL_DEFS,
-  runProjectToolChecks,
-} from "../../lib/projectToolChecks.js";
+import { getGscAuthUrl } from "../../lib/googleOAuthConfig.js";
 
 const steps = [
   { num: 1, label: "Scope", Icon: Globe },
@@ -45,23 +38,44 @@ const SCOPES = [
   { value: "path", label: "Path" },
 ];
 
-const CHECK_MODE_TOOL_KEYS = [
-  "speed",
-  "eeat",
-  "semantic",
-  "robots",
-  "crawlOptimization",
-  "duplicate",
-  "gsc",
-  "bing",
-];
-
 function cleanScopeInput(value = "", { stripTrailingSlash = false } = {}) {
   let cleaned = value.trim().replace(/^(?:https?:)?\/\//i, "");
   if (stripTrailingSlash) {
     cleaned = cleaned.replace(/\/+$/, "");
   }
   return cleaned;
+}
+
+function getProjectHost(value = "") {
+  const rawValue = String(value || "").trim();
+  if (!rawValue) return "";
+
+  try {
+    const url = new URL(/^https?:\/\//i.test(rawValue) ? rawValue : `https://${rawValue}`);
+    return url.hostname.replace(/^www\./i, "").toLowerCase();
+  } catch {
+    const host = rawValue.replace(/^(?:https?:)?\/\//i, "").split("/")[0];
+    return host.replace(/^www\./i, "").toLowerCase();
+  }
+}
+
+function normalizeProjectUrlValue(value = "", { stripTrailingSlash = false } = {}) {
+  let normalized = String(value || "").trim();
+  if (!normalized) return "";
+
+  if (/^https?:\/\//i.test(normalized)) {
+    try {
+      const url = new URL(normalized);
+      const path = stripTrailingSlash ? url.pathname.replace(/\/+$/, "") : url.pathname;
+      return `${url.hostname.replace(/^www\./i, "").toLowerCase()}${path}${url.search}${url.hash}`;
+    } catch {
+      // fall through to fallback
+    }
+  }
+
+  normalized = normalized.replace(/^(?:https?:)?\/\//i, "");
+  if (stripTrailingSlash) normalized = normalized.replace(/\/+$/, "");
+  return normalized.replace(/^www\./i, "").toLowerCase();
 }
 
 function crawlProtocolPrefix(protocol) {
@@ -74,12 +88,12 @@ function buildCrawlUrl(domain, protocol) {
 }
 
 export default function NewProject() {
+  ///console.warn("Hello world-------------");
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const checksMode = searchParams.get("mode") === "checks";
-  const { startCrawl, setProject } = useCrawl();
+  const { projects, startCrawl, setProject } = useCrawl();
   const { user } = useAuth();
-  const { notify } = useNotifications();
   const flowSteps = useMemo(
     () => checksMode ? [
       { num: 1, label: "Scope", Icon: Globe },
@@ -102,15 +116,17 @@ export default function NewProject() {
   // Audit settings
   const [urlLimit, setUrlLimit] = useState(10000);
   const [schedule, setSchedule] = useState("weekly");
-  const [userAgent, setUserAgent] = useState("ai-smart-seo-desktop");
+  const [userAgent, setUserAgent] = useState("seox-desktop");
   const [renderJs, setRenderJs] = useState(false);
   const [respectRobots, setRespectRobots] = useState(true);
   const [notifyEmail, setNotifyEmail] = useState(true);
 
   const normalizedDomain = useMemo(
-    () => cleanScopeInput(domain, { stripTrailingSlash: true }),
+    () => normalizeProjectUrlValue(domain, { stripTrailingSlash: true }),
     [domain]
   );
+
+  const currentHost = useMemo(() => getProjectHost(domain), [domain]);
 
   // Auto-fill name from domain
   const finalName = useMemo(() => {
@@ -124,7 +140,33 @@ export default function NewProject() {
 
   const canContinueStep1 = normalizedDomain.length > 3 && /\./.test(normalizedDomain);
 
-  const goNext = () => setStep((s) => Math.min(flowSteps.length, s + 1));
+  const duplicateProject = useMemo(
+    () => {
+      const currentNormalized = normalizeProjectUrlValue(normalizedDomain, { stripTrailingSlash: true });
+      return projects.some((project) => {
+        const existingValue = project.domain || project.full_url || project.fullUrl || project.url || "";
+        const existingHost = getProjectHost(existingValue);
+        const existingNormalized = normalizeProjectUrlValue(existingValue, {
+          stripTrailingSlash: true,
+        });
+
+        return (
+          (currentHost && existingHost && existingHost === currentHost) ||
+          existingNormalized === currentNormalized
+        );
+      });
+    },
+    [projects, normalizedDomain, currentHost]
+  );
+
+  const goNext = () => {
+    if (duplicateProject) {
+      setSaveError(`A project for ${normalizedDomain} already exists.`);
+      return;
+    }
+    setSaveError("");
+    setStep((s) => Math.min(flowSteps.length, s + 1));
+  };
   const goBack = () => setStep((s) => Math.max(1, s - 1));
 
   const fullUrl = useMemo(
@@ -133,49 +175,87 @@ export default function NewProject() {
   );
 
   const handleStartCrawl = async () => {
+    if (duplicateProject) {
+      setSaveError(`A project for ${normalizedDomain} already exists.`);
+      setStep(1);
+      return;
+    }
+
     setSubmitting(true);
     setSaveError("");
+
+    const projectId = `proj_${Date.now()}`;
+    const safeOwnerName = user?.displayName || user?.name || user?.email || null;
+    const createdAt = new Date().toISOString();
+
     const proj = {
-      id: `proj_${Date.now()}`,
+      id: projectId,
+      project_id: projectId,
       name: finalName || normalizedDomain,
+      project_name: finalName || normalizedDomain,
       domain: normalizedDomain,
       fullUrl: fullUrl || buildCrawlUrl(normalizedDomain, protocol),
+      full_url: fullUrl || buildCrawlUrl(normalizedDomain, protocol),
       scope,
       protocol,
       folder,
       urlLimit,
+      url_limit: urlLimit,
       schedule,
       userAgent,
+      user_agent: userAgent,
       renderJs,
+      render_js: renderJs,
       respectRobots,
+      respect_robots: respectRobots,
       notifyEmail,
-      owner: user?.email,
-      createdAt: new Date().toISOString(),
+      notify_email: notifyEmail,
+      owner: safeOwnerName,
+      owner_email: user?.email || null,
+      owner_uid: user?.uid || null,
+      total_urls: 0,
+      compare_to: null,
+      crawled_on: null,
+      project_data: {
+        protocol,
+        scope,
+        folder,
+        schedule,
+        userAgent,
+        urlLimit,
+        renderJs,
+        respectRobots,
+        notifyEmail,
+        createdAt,
+        owner: safeOwnerName,
+        ownerEmail: user?.email || null,
+        ownerUid: user?.uid || null,
+      },
+      createdAt,
+      created_at: createdAt,
+      updatedAt: createdAt,
+      updated_at: createdAt,
     };
 
     await new Promise((resolve) => setTimeout(resolve, 600));
 
     try {
       await setProject(proj);
-      notify({
-        type: "success",
-        title: "Project saved",
-        body: `${proj.name} was added to your dashboard.`,
-        href: "/dashboard",
-      });
       if (checksMode) {
-        navigate("/dashboard");
+        const authUrl = await getGscAuthUrl({
+          returnTo: "/dashboard",
+          source: "project-creation",
+          projectId,
+          projectDomain: proj.domain,
+          projectUrl: proj.fullUrl,
+        });
+        window.location.assign(authUrl);
       } else {
         startCrawl(proj, { skipOnline: true });
         navigate("/auditor/log");
       }
     } catch (error) {
       setSaveError(error?.message || "Could not save this project online. Please try again.");
-      notify({
-        type: "error",
-        title: "Project was not saved online",
-        body: error?.message || "Could not save this project online.",
-      });
       setSubmitting(false);
     }
   };
@@ -194,7 +274,7 @@ export default function NewProject() {
           <Link to={checksMode ? "/dashboard" : "/auditor"} className="flex items-center gap-2.5">
             <Logo className="h-8 w-8" />
             <span className="font-display text-lg font-bold tracking-tight">
-              AI Smart <span className="text-brand-400">Seo</span>
+              SEO<span className="text-brand-400">X</span>
             </span>
           </Link>
 
@@ -266,6 +346,7 @@ export default function NewProject() {
             folder={folder}
             setFolder={setFolder}
             canContinue={canContinueStep1}
+            error={saveError}
             onContinue={goNext}
           />
         )}
@@ -291,7 +372,6 @@ export default function NewProject() {
             submitting={submitting}
             saveError={saveError}
             checksMode={checksMode}
-            userId={user?.uid || user?.id || ""}
           />
         )}
       </main>
@@ -312,6 +392,7 @@ function ScopeStep({
   folder,
   setFolder,
   canContinue,
+  error = "",
   onContinue,
 }) {
   const handleDomainChange = (event) => {
@@ -327,7 +408,7 @@ function ScopeStep({
         Create a <span className="gradient-text">project</span>
       </h1>
       <p className="mt-3 text-base text-white/55">
-        Set up your website to start analyzing it with AI Smart Seo.
+        Set up your website to start analyzing it with PGC.
       </p>
 
       <div className="mt-8 overflow-hidden rounded-3xl border border-white/10 bg-ink-800/60 p-6 text-left backdrop-blur sm:p-8">
@@ -354,6 +435,7 @@ function ScopeStep({
           domain. You'll get the most complete backlink profile and accurate tracking data
           this way.
         </p>
+        {error && <p className="mt-3 text-sm text-rose-300">{error}</p>}
 
         {/* Project name */}
         <Label className="mt-6">Project name</Label>
@@ -414,65 +496,14 @@ function AuditStep({
   submitting,
   saveError = "",
   checksMode = false,
-  userId = "",
 }) {
-  const [toolChecks, setToolChecks] = useState(null);
-
-  const previewProject = useMemo(
-    () => ({
-      id: `checks_${fullUrl}`,
-      name: projectName || fullUrl,
-      domain: fullUrl,
-      fullUrl,
-    }),
-    [fullUrl, projectName]
-  );
-
-  useEffect(() => {
-    if (!checksMode || !fullUrl) {
-      setToolChecks(null);
-      return undefined;
-    }
-
-    let cancelled = false;
-    const initial = createEmptyProjectToolChecks(previewProject);
-    initial.status = "running";
-    initial.startedAt = new Date().toISOString();
-    setToolChecks(initial);
-
-    runProjectToolChecks(previewProject, {
-      userId,
-      persist: false,
-      onUpdate: (next) => {
-        if (!cancelled) setToolChecks(next);
-      },
-    }).catch((error) => {
-      if (cancelled) return;
-      setToolChecks((current) => ({
-        ...(current || initial),
-        status: "error",
-        updatedAt: new Date().toISOString(),
-        error: error?.message || "Could not run project checks.",
-      }));
-    });
-
-    return () => {
-      cancelled = true;
-    };
-  }, [checksMode, fullUrl, previewProject, userId]);
-
-  const liveToolDefs = useMemo(
-    () => PROJECT_TOOL_DEFS.filter((tool) => CHECK_MODE_TOOL_KEYS.includes(tool.key)),
-    []
-  );
-
   return (
     <div className="text-center">
       <h1 className="font-display text-4xl font-bold tracking-tight">
         Ready to <span className="gradient-text">{checksMode ? "check" : "crawl"}</span>?
       </h1>
       <p className="mt-3 text-base text-white/55">
-        {checksMode ? "AI Smart Seo will run available tools for " : "Fine-tune how AI Smart Seo crawls "}
+        {checksMode ? "PGC will run available tools for " : "Fine-tune how PGC crawls "}
         <span className="font-semibold text-white">{fullUrl || "your site"}</span>.
       </p>
 
@@ -489,27 +520,24 @@ function AuditStep({
         </div>
 
         {checksMode ? (
-          <Tile
-            title="Dashboard checks"
-            subtitle={
-              toolChecks?.status === "running"
-                ? "Running live tool checks without starting the Site Audit crawler"
-                : "Live tool checks for this project"
-            }
-          >
+          <Tile title="Dashboard checks" subtitle="Runs without starting the Site Audit crawler">
             <div className="grid gap-2 sm:grid-cols-2">
-              {liveToolDefs.map((def) => (
-                <ToolCheckStatus
-                  key={def.key}
-                  tool={toolChecks?.tools?.[def.key] || { ...def, status: "queued" }}
-                />
+              {[
+                "Speed Optimization",
+                "E-E-A-T Audit",
+                "Semantic Audit",
+                "Robots.txt Analyzer",
+                "Crawl Optimization",
+                "Duplicate Checker",
+                "GSC/Bing if connected",
+                "Credential/upload tools marked as setup needed",
+              ].map((item) => (
+                <div key={item} className="flex items-center gap-2 rounded-lg border border-white/10 bg-white/[0.03] px-3 py-2 text-xs text-white/65">
+                  <Check className="h-3.5 w-3.5 text-emerald-300" />
+                  {item}
+                </div>
               ))}
             </div>
-            {toolChecks?.error && (
-              <p className="mt-3 rounded-lg border border-rose-500/25 bg-rose-500/10 px-3 py-2 text-xs text-rose-100">
-                {toolChecks.error}
-              </p>
-            )}
           </Tile>
         ) : (
           <>
@@ -534,7 +562,7 @@ function AuditStep({
             </Tile>
 
             {/* Schedule */}
-            <Tile title="Schedule" subtitle="How often AI Smart Seo should re-crawl your site">
+            <Tile title="Schedule" subtitle="How often PGC should re-crawl your site">
               <div className="flex flex-wrap gap-2">
                 {[
                   { v: "once", l: "Once" },
@@ -558,13 +586,13 @@ function AuditStep({
             </Tile>
 
             {/* User agent */}
-            <Tile title="User agent" subtitle="Which crawler AI Smart Seo should identify as">
+            <Tile title="User agent" subtitle="Which crawler PGC should identify as">
               <Select
                 value={userAgent}
                 onChange={setUserAgent}
                 options={[
-                  { value: "ai-smart-seo-desktop", label: "AI Smart Seo desktop crawler" },
-                  { value: "ai-smart-seo-mobile", label: "AI Smart Seo mobile crawler" },
+                  { value: "seox-desktop", label: "PGC desktop crawler" },
+                  { value: "seox-mobile", label: "PGC mobile crawler" },
                   { value: "googlebot", label: "Googlebot" },
                   { value: "bingbot", label: "Bingbot" },
                 ]}
@@ -711,70 +739,6 @@ function Detail({ label, value }) {
     <div className="flex gap-2">
       <span className="text-white/40">{label}:</span>
       <span className="font-medium text-white">{value || "—"}</span>
-    </div>
-  );
-}
-
-function statusMeta(status) {
-  if (status === "complete") {
-    return {
-      Icon: Check,
-      className: "border-emerald-500/20 bg-emerald-500/[0.06] text-emerald-200",
-      iconClass: "text-emerald-300",
-      label: "Done",
-    };
-  }
-  if (status === "running") {
-    return {
-      Icon: Loader2,
-      className: "border-sky-500/20 bg-sky-500/[0.06] text-sky-100",
-      iconClass: "animate-spin text-sky-300",
-      label: "Running",
-    };
-  }
-  if (status === "skipped") {
-    return {
-      Icon: CircleDashed,
-      className: "border-amber-500/20 bg-amber-500/[0.06] text-amber-100",
-      iconClass: "text-amber-300",
-      label: "Setup",
-    };
-  }
-  if (status === "error") {
-    return {
-      Icon: AlertTriangle,
-      className: "border-rose-500/20 bg-rose-500/[0.06] text-rose-100",
-      iconClass: "text-rose-300",
-      label: "Error",
-    };
-  }
-  return {
-    Icon: CircleDashed,
-    className: "border-white/10 bg-white/[0.03] text-white/60",
-    iconClass: "text-white/35",
-    label: "Queued",
-  };
-}
-
-function ToolCheckStatus({ tool }) {
-  const status = tool.status || "queued";
-  const { Icon, className, iconClass, label } = statusMeta(status);
-  const score = Number.isFinite(tool.score) ? `${tool.score}%` : label;
-
-  return (
-    <div className={`flex min-h-[58px] items-center gap-3 rounded-lg border px-3 py-2 text-xs ${className}`}>
-      <Icon className={`h-3.5 w-3.5 flex-shrink-0 ${iconClass}`} />
-      <div className="min-w-0 flex-1">
-        <div className="flex items-center justify-between gap-2">
-          <p className="truncate font-semibold text-white/85">{tool.label}</p>
-          <span className="flex-shrink-0 rounded-full bg-white/[0.06] px-2 py-0.5 text-[10px] font-bold uppercase text-white/55">
-            {score}
-          </span>
-        </div>
-        <p className="mt-0.5 truncate text-white/45">
-          {tool.summary || tool.detail || "Waiting to run"}
-        </p>
-      </div>
     </div>
   );
 }

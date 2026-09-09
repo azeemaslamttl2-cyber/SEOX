@@ -1,4 +1,4 @@
-// Maps Firebase Auth error codes to friendly user-facing messages.
+// Maps authentication errors to friendly user-facing messages.
 const map = {
   "auth/email-already-in-use": "An account with this email already exists.",
   "auth/invalid-email": "Please enter a valid email address.",

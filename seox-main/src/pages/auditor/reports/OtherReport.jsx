@@ -2,7 +2,7 @@ import { useMemo } from "react";
 import ReportShell, { StatCard, ChartCard } from "../../../components/auditor/ReportShell.jsx";
 import DonutChart from "../../../components/auditor/DonutChart.jsx";
 import { useCrawl } from "../../../context/CrawlContext.jsx";
-import { safeSegments } from "./liveReportData.js";
+import { safeSegments } from "../../../lib/auditor/reports/liveReportData.js";
 
 export default function OtherReport() {
   const { stats } = useCrawl();
@@ -26,7 +26,7 @@ export default function OtherReport() {
       trafficDropped: 0,
       pagesDropped: 0,
       segments: safeSegments([
-        { label: "Schema.org errors", value: schemaErrors, color: "#f97316" },
+        { label: "Schema.org errors", value: schemaErrors, color: "#df3c27" },
         { label: "Rich results errors", value: richResultsErrors, color: "#f43f5e" },
       ].filter((item) => item.value > 0)),
     };

@@ -13,7 +13,7 @@ import {
 } from "lucide-react";
 import { useAdminData } from "../../hooks/useAdminData.js";
 
-const avatarColors = ["#8b5cf6", "#3b82f6", "#10b981", "#ec4899", "#f97316", "#06b6d4"];
+const avatarColors = ["#2d2b6f", "#4197cb", "#6abf4b", "#c76c61", "#df3c27", "#ffc600"];
 
 /* ================================================================
    Stat Card

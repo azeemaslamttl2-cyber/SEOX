@@ -1,4 +1,4 @@
-import { auth } from "./firebase.js";
+import { clearSession, getSessionToken } from "./authSession.js";
 
 let installed = false;
 
@@ -17,10 +17,7 @@ function isAppApiRequest(url) {
   if (!url || url.pathname.startsWith("/api/") === false) return false;
   if (url.origin === window.location.origin) return true;
 
-  return (
-    import.meta.env.DEV &&
-    ["http://127.0.0.1:8788", "http://localhost:8788"].includes(url.origin)
-  );
+  return ["http://127.0.0.1:8788", "http://localhost:8788"].includes(url.origin);
 }
 
 function hasAuthorization(headers) {
@@ -36,6 +33,11 @@ function mergeAuthHeader(init, token) {
   return { ...(init || {}), headers };
 }
 
+function clearInvalidSession() {
+  if (typeof window === "undefined") return;
+  clearSession();
+}
+
 export function installAuthenticatedApiFetch() {
   if (installed || typeof window === "undefined" || typeof window.fetch !== "function") return;
   installed = true;
@@ -48,10 +50,14 @@ export function installAuthenticatedApiFetch() {
       return nativeFetch(input, init);
     }
 
-    const user = auth.currentUser;
-    if (!user) return nativeFetch(input, init);
+    if (typeof window !== 'undefined') {
+      const token = getSessionToken();
+      if (token) {
+        const response = await nativeFetch(input, mergeAuthHeader(init, token));
+        return response;
+      }
+    }
 
-    const token = await user.getIdToken();
-    return nativeFetch(input, mergeAuthHeader(init, token));
+    return nativeFetch(input, init);
   };
 }

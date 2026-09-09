@@ -4,8 +4,8 @@ import DonutChart from "../../../components/auditor/DonutChart.jsx";
 import IssueTable from "../../../components/auditor/IssueTable.jsx";
 import { useAuditData } from "../../../hooks/useAuditData.js";
 import { useCrawl } from "../../../context/CrawlContext.jsx";
-import { DiscoverySourceInsights } from "./ReportInsights.jsx";
-import { pageExplorerHref } from "./reportLinks.js";
+import { DiscoverySourceInsights } from "../../../lib/auditor/reports/ReportInsights.jsx";
+import { pageExplorerHref } from "../../../lib/auditor/reports/reportLinks.js";
 
 export default function InternalPagesReport() {
   const { project, issueCategories } = useAuditData();

@@ -25,7 +25,7 @@ const navItems = [
 export default function AdminSidebar() {
   return (
     <aside
-      className="no-scrollbar"
+      className="app-sidebar no-scrollbar"
       style={{
         position: "sticky",
         top: 0,

@@ -18,6 +18,7 @@ import {
   formatNumber,
   normalizeToolUrl,
 } from "../../lib/techSeoTools.js";
+import { useTechSeoToolResult } from "../../hooks/useTechSeoToolResult.js";
 
 const EMPTY_DUPLICATE_SUMMARY = {
   uniquePercent: 0,
@@ -29,6 +30,17 @@ const EMPTY_DUPLICATE_SUMMARY = {
   cleanPages: 0,
   avgPageSizeKb: 0,
   avgWordsPerPage: 0,
+};
+
+const EMPTY_DUPLICATE_RESULT = {
+  status: "idle",
+  summary: EMPTY_DUPLICATE_SUMMARY,
+  duplicatePages: [],
+  skippedPages: [],
+  discoveredUrls: [],
+  maxPages: 0,
+  error: "",
+  scannedAt: "",
 };
 
 function DonutChart({ unique, duplicate, common, size = 140 }) {
@@ -62,7 +74,7 @@ function CompArc({ value, percentile, size = 80 }) {
   return (
     <div className="relative flex flex-col items-center" style={{ width: size, height: size }}>
       <svg width={size} height={size} className="-rotate-90">
-        <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="5" />
+        <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="#e2e5ee" strokeWidth="5" />
         <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="#7c3aed" strokeWidth="5" strokeLinecap="round" strokeDasharray={circ} strokeDashoffset={offset} />
       </svg>
       <span className="absolute inset-0 flex items-center justify-center font-display text-sm font-black text-white">{value}</span>
@@ -80,7 +92,13 @@ function comparisonFromSummary(summary) {
 }
 
 export default function DuplicateChecker() {
-  const { projectUrl, hasProject, displayUrl } = useSelectedProjectDomain();
+  const { project, projectUrl, hasProject, displayUrl } = useSelectedProjectDomain();
+  const { result: savedResult, saveResult, persistenceError } = useTechSeoToolResult({
+    toolKey: "duplicate",
+    project,
+    projectUrl,
+    emptyResult: EMPTY_DUPLICATE_RESULT,
+  });
   const [maxPages, setMaxPages] = useState(50);
   const [tab, setTab] = useState("summary");
   const [summary, setSummary] = useState(EMPTY_DUPLICATE_SUMMARY);
@@ -103,15 +121,29 @@ export default function DuplicateChecker() {
     setError("");
   }, [projectUrl]);
 
+  useEffect(() => {
+    if (savedResult.status === "idle") return;
+    setSummary({ ...EMPTY_DUPLICATE_SUMMARY, ...(savedResult.summary || {}) });
+    setDuplicatePages(Array.isArray(savedResult.duplicatePages) ? savedResult.duplicatePages : []);
+    setSkippedPages(Array.isArray(savedResult.skippedPages) ? savedResult.skippedPages : []);
+    setTab("summary");
+    setPhase(savedResult.status === "completed" ? "done" : "idle");
+    setError(savedResult.status === "failed" ? savedResult.error || "Could not scan duplicate content." : "");
+  }, [savedResult]);
+
   async function runScan() {
     setError("");
     setPhase("discovering");
+    let pagesToScan = [];
+    let skipped = [];
     try {
       if (!hasProject) throw new Error("Select a website in the nav before running this audit.");
       const target = normalizeToolUrl(projectUrl);
-      const pagesToScan = await discoverInternalPages(target, Number(maxPages) || 20, setProgress);
+      pagesToScan = await discoverInternalPages(target, Number(maxPages) || 20, setProgress);
       setPhase("crawling");
-      const { pages, skipped } = await fetchDuplicatePages(pagesToScan, setProgress);
+      const crawlResult = await fetchDuplicatePages(pagesToScan, setProgress);
+      const { pages } = crawlResult;
+      skipped = Array.isArray(crawlResult.skipped) ? crawlResult.skipped : [];
       setSkippedPages(skipped);
       if (pages.length < 2) {
         throw new Error("Need at least two crawlable pages to compare duplicate content.");
@@ -121,9 +153,36 @@ export default function DuplicateChecker() {
       setSummary(analyzed.summary);
       setDuplicatePages(analyzed.results);
       setTab("summary");
+      await saveResult({
+        status: "completed",
+        summary: analyzed.summary,
+        duplicatePages: analyzed.results,
+        skippedPages: skipped,
+        discoveredUrls: pagesToScan,
+        maxPages: Number(maxPages) || 20,
+        error: "",
+        scannedAt: new Date().toISOString(),
+      });
       setPhase("done");
     } catch (err) {
-      setError(err?.message || "Could not scan duplicate content.");
+      const message = err?.message || "Could not scan duplicate content.";
+      try {
+        await saveResult({
+          status: "failed",
+          summary: EMPTY_DUPLICATE_SUMMARY,
+          duplicatePages: [],
+          skippedPages: skipped,
+          discoveredUrls: pagesToScan,
+          maxPages: Number(maxPages) || 20,
+          error: message,
+          scannedAt: new Date().toISOString(),
+        });
+      } catch (saveError) {
+        setError(saveError?.message || message);
+        setPhase("idle");
+        return;
+      }
+      setError(message);
       setPhase("idle");
     }
   }
@@ -148,43 +207,48 @@ export default function DuplicateChecker() {
   }
 
   return (
-    <div className="mx-auto max-w-5xl">
-      <div className="flex justify-center">
-        <div className="rounded-full bg-gradient-to-r from-violet-500 to-purple-600 px-6 py-2.5 shadow-lg shadow-violet-500/25">
-          <div className="flex items-center gap-2 text-white">
+    <div className="">
+      {/* ─── Hero Header ─── */}
+      <div className="duplicate-hero">
+        <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
+          <div className="duplicate-title flex items-center gap-3">
             <Copy className="h-5 w-5" />
-            <span className="font-display text-lg font-bold">Content Duplicate Checker</span>
+            <div>
+              <h1 className="font-display">Content Duplicate Checker</h1>
+              <p className="duplicate-description">
+                Crawl your site and detect repeated sentences, paragraphs, and common text blocks across internal pages.
+              </p>
+            </div>
           </div>
-        </div>
-      </div>
-      <p className="mx-auto mt-3 max-w-lg text-center text-sm text-white/40">
-        Crawl your site and detect repeated sentences, paragraphs, and common text blocks across internal pages.
-      </p>
-
-      <div className="mt-6 rounded-2xl border border-white/[0.06] bg-white/[0.02] p-5">
-        <div className="flex flex-wrap items-center gap-3">
-          <div className="flex min-w-[260px] flex-1 items-center gap-2 rounded-xl border border-white/[0.08] bg-ink-900/80 px-4 py-2.5">
-            <Globe className="h-4 w-4 text-violet-400/60" />
-            <input value={displayUrl} readOnly onKeyDown={(e) => e.key === "Enter" && runScan()} className="flex-1 cursor-not-allowed bg-transparent text-sm text-white placeholder:text-white/25 focus:outline-none" placeholder="Select a website in the nav" />
-          </div>
-          <label className="flex items-center gap-1.5 rounded-lg border border-white/10 bg-ink-900/60 px-3 py-2">
-            <span className="text-[11px] text-white/40">Max Pages:</span>
-            <input type="number" min="2" max="100" value={maxPages} onChange={(e) => setMaxPages(e.target.value)} className="w-16 bg-transparent text-sm font-bold text-white/70 focus:outline-none" />
-          </label>
-          <button onClick={runScan} disabled={isWorking || !hasProject} className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-violet-500 to-purple-600 px-5 py-2.5 text-sm font-bold text-white shadow-lg shadow-violet-500/25 transition hover:shadow-violet-500/40 disabled:opacity-60">
+          <button onClick={runScan} disabled={isWorking || !hasProject} className="ui-button ui-button-primary duplicate-scan-button">
             <Search className={`h-4 w-4 ${isWorking ? "animate-pulse" : ""}`} /> {isWorking ? "Scanning..." : "Scan Site"}
           </button>
         </div>
+
+        {/* Target + crawl depth meta row */}
+        <div className="duplicate-meta">
+          <div className="duplicate-url-field">
+            <Globe className="h-4 w-4" />
+            <input value={displayUrl} readOnly onKeyDown={(e) => e.key === "Enter" && runScan()} className="flex-1 cursor-not-allowed" placeholder="Select a website in the nav" />
+          </div>
+          <label className="duplicate-maxpages">
+            <span>Max Pages</span>
+            <input type="number" min="2" max="100" value={maxPages} onChange={(e) => setMaxPages(e.target.value)} />
+          </label>
+        </div>
+
         {isWorking && (
-          <div className="mt-4 rounded-xl border border-violet-500/20 bg-violet-500/10 px-4 py-3">
-            <div className="flex items-center justify-between text-xs text-violet-200">
+          <div className="duplicate-progress">
+            <div className="flex items-center justify-between">
               <span className="capitalize">{phase} {progress.total ? `${progress.current}/${progress.total}` : ""}</span>
-              <StopCircle className="h-3.5 w-3.5 text-violet-300" />
+              <StopCircle className="h-3.5 w-3.5" />
             </div>
-            <p className="mt-1 truncate text-[11px] text-white/35">{progress.currentUrl || "Preparing crawl..."}</p>
+            <p className="duplicate-progress-url truncate">{progress.currentUrl || "Preparing crawl..."}</p>
           </div>
         )}
-        {error && <p className="mt-3 text-xs font-semibold text-rose-300">{error}</p>}
+        {(error || persistenceError) && (
+          <div className="app-alert app-alert-error mt-3">{error || persistenceError}</div>
+        )}
       </div>
 
       <div className="mt-5 flex items-center justify-between">
@@ -287,7 +351,7 @@ export default function DuplicateChecker() {
 
 function TabButton({ active, onClick, children }) {
   return (
-    <button onClick={onClick} className={`rounded-xl px-4 py-2 text-sm font-bold transition ${active ? "bg-violet-500/20 text-violet-300 ring-1 ring-violet-500/30" : "text-white/40 hover:text-white/60"}`}>
+    <button onClick={onClick} className={`duplicate-tab rounded-xl border px-4 py-2 text-sm font-bold transition ${active ? "duplicate-tab-active" : "duplicate-tab-inactive"}`}>
       {children}
     </button>
   );

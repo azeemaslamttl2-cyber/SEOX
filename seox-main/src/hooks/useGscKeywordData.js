@@ -8,6 +8,7 @@ import {
 } from "../lib/gscSession.js";
 import { getGoogleRedirectUri, getGscAuthUrl } from "../lib/googleOAuthConfig.js";
 import { formatDateISO } from "../lib/keywordTools.js";
+import { getSessionToken } from "../lib/authSession.js";
 
 const DATE_PRESETS = [
   { id: "7", label: "7 day", days: 7 },
@@ -29,9 +30,10 @@ function dateFromInput(value, fallback) {
   return Number.isNaN(date.getTime()) ? fallback : date;
 }
 
-export function useGscKeywordData(source = "keyword-tools") {
+export function useGscKeywordData(source = "keyword-tools", { onAutoFetchSuccess, autoFetch = true } = {}) {
   const { user, loading: authLoading } = useAuth();
   const userId = getUserId(user);
+  const onAutoFetchSuccessRef = useRef(onAutoFetchSuccess);
   const [isSignedIn, setIsSignedIn] = useState(false);
   const [isCheckingConnection, setIsCheckingConnection] = useState(true);
   const [accessToken, setAccessToken] = useState(null);
@@ -91,6 +93,10 @@ export function useGscKeywordData(source = "keyword-tools") {
     setIsSignedIn(true);
     setGscEmail(session.googleEmail || null);
   }, []);
+
+  useEffect(() => {
+    onAutoFetchSuccessRef.current = onAutoFetchSuccess;
+  }, [onAutoFetchSuccess]);
 
   const clearGscState = useCallback(() => {
     clearStoredGscSession();
@@ -189,7 +195,8 @@ export function useGscKeywordData(source = "keyword-tools") {
   const handleSignOut = useCallback(async () => {
     if (userId) {
       try {
-        const token = await user.getIdToken();
+        const token = getSessionToken();
+        if (!token) throw new Error("Your login session is missing.");
         await fetch("/api/gsc-token", {
           method: "POST",
           headers: {
@@ -265,7 +272,7 @@ export function useGscKeywordData(source = "keyword-tools") {
     [selectedSite]
   );
 
-  const fetchAllData = useCallback(async () => {
+  const fetchAllData = useCallback(async ({ onSuccess } = {}) => {
     if (!selectedSite || !accessToken) return;
     setIsLoading(true);
     setError("");
@@ -278,6 +285,19 @@ export function useGscKeywordData(source = "keyword-tools") {
       ]);
       setCurrentRows(current);
       setPreviousRows(previous);
+
+      if (typeof onSuccess === "function") {
+        await onSuccess({
+          current,
+          previous,
+          selectedSite,
+          currentStart,
+          currentEnd,
+          previousStart,
+          previousEnd,
+          source,
+        });
+      }
     } catch (err) {
       setError(err?.message || "Failed to fetch Search Console data.");
       if (String(err?.message || "").includes("connect")) clearGscState();
@@ -294,11 +314,14 @@ export function useGscKeywordData(source = "keyword-tools") {
     previousEnd,
     previousStart,
     selectedSite,
+    source,
   ]);
 
   useEffect(() => {
-    if (selectedSite && accessToken) fetchAllData();
-  }, [selectedSite, accessToken, fetchAllData]);
+    if (autoFetch && selectedSite && accessToken) {
+      fetchAllData({ onSuccess: onAutoFetchSuccessRef.current });
+    }
+  }, [accessToken, autoFetch, fetchAllData, selectedSite]);
 
   return {
     accessToken,

@@ -13,101 +13,7 @@ import {
   Upload,
   X,
 } from "lucide-react";
-
-function parseCsvLine(line) {
-  const cells = [];
-  let current = "";
-  let quoted = false;
-
-  for (let i = 0; i < line.length; i += 1) {
-    const char = line[i];
-    const next = line[i + 1];
-    if (char === "\"" && quoted && next === "\"") {
-      current += "\"";
-      i += 1;
-    } else if (char === "\"") {
-      quoted = !quoted;
-    } else if (char === "," && !quoted) {
-      cells.push(current.trim());
-      current = "";
-    } else {
-      current += char;
-    }
-  }
-
-  cells.push(current.trim());
-  return cells;
-}
-
-function getCell(row, headers, names) {
-  const lowered = names.map((name) => name.toLowerCase());
-  const index = headers.findIndex((header) => lowered.includes(header.toLowerCase()));
-  return index >= 0 ? row[index] : "";
-}
-
-function domainFromValue(value) {
-  const raw = String(value || "").trim();
-  if (!raw) return "";
-  try {
-    const parsed = new URL(/^https?:\/\//i.test(raw) ? raw : `https://${raw}`);
-    return parsed.hostname.replace(/^www\./i, "").toLowerCase();
-  } catch {
-    return raw.replace(/^https?:\/\//i, "").split(/[/?#]/)[0].replace(/^www\./i, "").toLowerCase();
-  }
-}
-
-function classifyIssues(row) {
-  if (row.issues && row.issues !== "Unknown") return row.issues;
-  const haystack = `${row.domain} ${row.url} ${row.title} ${row.category}`.toLowerCase();
-  const tld = row.domain.split(".").pop();
-  if (["xyz", "top", "click", "link", "quest", "rest"].includes(tld)) return "Spammy TLD";
-  if (/\b(casino|gambling|betting|poker|adult|porn|escort)\b/.test(haystack)) return "Adult/Gambling";
-  if (row.dr > 0 && row.dr < 20) return "Low Authority";
-  if (row.status && !/^2\d\d$|^live$/i.test(String(row.status))) return "HTTP Error";
-  return "Clean";
-}
-
-function normalizeRows(text) {
-  const lines = String(text || "").split(/\r?\n/).filter((line) => line.trim());
-  if (!lines.length) return [];
-
-  const first = parseCsvLine(lines[0]);
-  const looksHeader = first.some((cell) => /domain|url|title|dr|authority|status|issue|category/i.test(cell));
-  const headers = looksHeader ? first.map((cell) => cell.trim()) : [];
-  const dataLines = looksHeader ? lines.slice(1) : lines;
-
-  return dataLines.map((line, index) => {
-    const cells = parseCsvLine(line);
-    const url = getCell(cells, headers, ["url", "backlink", "source url", "referring page"]) || cells[0] || "";
-    const domain = domainFromValue(getCell(cells, headers, ["domain", "referring domain"]) || url);
-    const drValue = getCell(cells, headers, ["dr", "domain rating", "da", "authority"]) || cells[2] || "";
-    const row = {
-      id: `${domain || "row"}-${index}`,
-      domain: domain || "unknown-domain",
-      url,
-      dr: Number.parseInt(String(drValue).replace(/[^\d]/g, ""), 10) || 0,
-      category: getCell(cells, headers, ["category", "type", "niche"]) || "Uncategorized",
-      title: getCell(cells, headers, ["title", "page title", "anchor"]) || "Not extracted",
-      status: getCell(cells, headers, ["status", "http status"]) || "Unknown",
-      issues: getCell(cells, headers, ["issues", "issue", "risk"]) || "Unknown",
-    };
-    return { ...row, issues: classifyIssues(row) };
-  }).filter((row) => row.domain && row.domain !== "unknown-domain");
-}
-
-function computeStats(rows) {
-  const clean = rows.filter((row) => row.issues === "Clean").length;
-  const flagged = rows.length - clean;
-  const avgDr = rows.length ? Math.round(rows.reduce((sum, row) => sum + row.dr, 0) / rows.length) : 0;
-  return {
-    totalLinks: rows.length,
-    clean,
-    flagged,
-    avgDR: avgDr,
-    scanned: rows.length,
-    excluded: 0,
-  };
-}
+import { classifyIssues, computeStats, normalizeRows } from "../../lib/backlinkCleaner.js";
 
 function downloadRows(filename, rows) {
   const escape = (value) => {
@@ -174,35 +80,31 @@ export default function BacklinkCleaner() {
   }
 
   return (
-    <div className="mx-auto max-w-6xl">
+    <div className="">
       {/* ─── Hero Header ─── */}
-      <div className="relative overflow-hidden rounded-3xl border border-white/[0.06] bg-ink-800">
-        <div className="pointer-events-none absolute inset-0">
-          <div className="absolute -left-20 -top-20 h-60 w-60 rounded-full bg-emerald-500/[0.07] blur-[80px]" />
-          <div className="absolute -bottom-10 right-1/4 h-48 w-48 rounded-full bg-teal-500/[0.05] blur-[60px]" />
-        </div>
-        <div className="relative z-10 flex items-center justify-between p-6">
+      <div className="edf-hero">
+        <div className="flex flex-wrap items-center justify-between gap-4">
           <div className="flex items-center gap-3">
-            <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-emerald-500/20 ring-1 ring-emerald-500/30">
-              <RefreshCw className="h-5 w-5 text-emerald-400" />
-            </div>
+            <span className="edf-tile">
+              <RefreshCw className="h-5 w-5" />
+            </span>
             <div>
-              <h1 className="font-display text-xl font-black text-white">Backlink Cleaner</h1>
-              <p className="text-xs text-white/40">Upload competitor backlinks CSV · Advanced Analysis · AI Categorization</p>
+              <h1 className="edf-title font-display">Backlink Cleaner</h1>
+              <p className="edf-description">Upload competitor backlinks CSV · Advanced Analysis · AI Categorization</p>
             </div>
           </div>
           <div className="flex items-center gap-2">
             <button
               onClick={clearRows}
               disabled={!rows.length}
-              className="flex items-center gap-1.5 rounded-lg border border-white/10 bg-white/[0.04] px-4 py-2 text-xs font-semibold text-white/60 hover:bg-white/[0.07] disabled:cursor-not-allowed disabled:opacity-40"
+              className="ui-button edf-clear-button"
             >
               <Trash2 className="h-3.5 w-3.5" /> Clear
             </button>
             <button
               onClick={() => downloadRows("clean-backlinks.csv", rows.filter((row) => row.issues === "Clean"))}
               disabled={!stats.clean}
-              className="flex items-center gap-1.5 rounded-lg bg-emerald-500 px-4 py-2 text-xs font-bold text-white shadow transition hover:bg-emerald-400 disabled:cursor-not-allowed disabled:opacity-40"
+              className="ui-button ui-button-primary edf-export-primary"
             >
               <Download className="h-3.5 w-3.5" /> Export Clean ({stats.clean})
             </button>
@@ -240,14 +142,14 @@ export default function BacklinkCleaner() {
           <button
             onClick={analyzeRows}
             disabled={!rows.length}
-            className="flex items-center gap-1.5 rounded-lg bg-emerald-500 px-4 py-2 text-xs font-bold text-white shadow transition hover:bg-emerald-400 disabled:cursor-not-allowed disabled:opacity-40"
+            className="ui-button ui-button-primary edf-export-primary"
           >
             <Eye className="h-3.5 w-3.5" /> Extract Title/Meta/Status
           </button>
           <button
             onClick={analyzeRows}
             disabled={!rows.length}
-            className="flex items-center gap-1.5 rounded-lg border border-white/10 bg-white/[0.04] px-4 py-2 text-xs font-semibold text-white/60 hover:bg-white/[0.07] disabled:cursor-not-allowed disabled:opacity-40"
+            className="ui-button edf-clear-button"
           >
             <RefreshCw className="h-3.5 w-3.5" /> Re-analyze
           </button>

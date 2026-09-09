@@ -17,7 +17,7 @@ function getAuthUserId(user) {
     return user?.uid || user?.id || null;
 }
 
-// LocalStorage keys for persisting user preferences
+// Session storage keys for persisting user preferences
 const LS_KEYS = {
     ACTIVE_METRICS: 'yandexBulkAnalysis_activeMetrics',
     DATE_RANGE: 'yandexBulkAnalysis_dateRange',
@@ -136,8 +136,8 @@ const MultiMetricSparkline = ({ data, height = 50, activeMetrics = ['clicks', 'i
                         <stop offset="100%" stopColor="#10b981" stopOpacity={0.02} />
                     </linearGradient>
                     <linearGradient id="yandexGradientImpressions" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="0%" stopColor="#f97316" stopOpacity={0.3} />
-                        <stop offset="100%" stopColor="#f97316" stopOpacity={0.02} />
+                        <stop offset="0%" stopColor="#df3c27" stopOpacity={0.3} />
+                        <stop offset="100%" stopColor="#df3c27" stopOpacity={0.02} />
                     </linearGradient>
                     <linearGradient id="yandexGradientCtr" x1="0" y1="0" x2="0" y2="1">
                         <stop offset="0%" stopColor="#f59e0b" stopOpacity={0.3} />
@@ -153,9 +153,9 @@ const MultiMetricSparkline = ({ data, height = 50, activeMetrics = ['clicks', 'i
                 <ReferenceLine y={0} stroke="#e5e7eb" strokeWidth={1} />
                 <Tooltip content={<CustomTooltip />} />
                 {activeMetrics.includes('impressions') && (
-                    <Area type="monotone" dataKey="impressionsNorm" stroke="#f97316" strokeWidth={2}
+                        <Area type="monotone" dataKey="impressionsNorm" stroke="#df3c27" strokeWidth={2}
                         fill="url(#yandexGradientImpressions)" dot={false}
-                        activeDot={{ r: 3, fill: '#f97316', stroke: '#fff', strokeWidth: 1 }} />
+                            activeDot={{ r: 3, fill: '#df3c27', stroke: '#fff', strokeWidth: 1 }} />
                 )}
                 {activeMetrics.includes('clicks') && (
                     <Area type="monotone" dataKey="clicksNorm" stroke="#10b981" strokeWidth={2}
@@ -248,12 +248,12 @@ const SiteDetailView = ({ site, accessToken, yandexUserId, onBack }) => {
     const authUserId = getAuthUserId(user);
     const [activeTab, setActiveTab] = useState('dashboard');
     const [dateRange, setDateRange] = useState(() => {
-        try { return localStorage.getItem(LS_KEYS.DETAIL_DATE_RANGE) || '30'; }
+        try { return sessionStorage.getItem(LS_KEYS.DETAIL_DATE_RANGE) || '30'; }
         catch { return '30'; }
     });
     const [activeDetailMetrics, setActiveDetailMetrics] = useState(() => {
         try {
-            const saved = localStorage.getItem(LS_KEYS.DETAIL_ACTIVE_METRICS);
+            const saved = sessionStorage.getItem(LS_KEYS.DETAIL_ACTIVE_METRICS);
             return saved ? JSON.parse(saved) : ['impressions'];
         } catch { return ['impressions']; }
     });
@@ -263,11 +263,11 @@ const SiteDetailView = ({ site, accessToken, yandexUserId, onBack }) => {
     const datePickerRef = useRef(null);
 
     useEffect(() => {
-        try { localStorage.setItem(LS_KEYS.DETAIL_DATE_RANGE, dateRange); } catch { }
+        try { sessionStorage.setItem(LS_KEYS.DETAIL_DATE_RANGE, dateRange); } catch { }
     }, [dateRange]);
 
     useEffect(() => {
-        try { localStorage.setItem(LS_KEYS.DETAIL_ACTIVE_METRICS, JSON.stringify(activeDetailMetrics)); } catch { }
+        try { sessionStorage.setItem(LS_KEYS.DETAIL_ACTIVE_METRICS, JSON.stringify(activeDetailMetrics)); } catch { }
     }, [activeDetailMetrics]);
 
     const dateRangeOptions = [
@@ -416,10 +416,10 @@ const SiteDetailView = ({ site, accessToken, yandexUserId, onBack }) => {
     const displayName = site.unicode_host_url || site.ascii_host_url || 'Unknown';
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-slate-50 to-red-50">
+        <div className="bulk-page">
             {/* Header */}
             <div className="bg-white border-b border-gray-100 sticky top-0 z-10">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+                <div className="px-4 sm:px-6 lg:px-8 py-4">
                     <div className="flex items-center gap-4">
                         <button onClick={onBack} className="p-2 hover:bg-gray-100 rounded-lg transition-colors cursor-pointer">
                             <ArrowLeft className="w-5 h-5 text-gray-600" />
@@ -434,7 +434,7 @@ const SiteDetailView = ({ site, accessToken, yandexUserId, onBack }) => {
             </div>
 
             {/* Toolbar */}
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+            <div className="px-4 sm:px-6 lg:px-8 py-4">
                 <div className="flex items-center gap-3 flex-wrap">
                     {/* Metric Toggle Buttons */}
                     <div className="bg-gray-100 rounded-lg p-1 flex items-center gap-1">
@@ -482,7 +482,7 @@ const SiteDetailView = ({ site, accessToken, yandexUserId, onBack }) => {
             </div>
 
             {/* Tabs */}
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="px-4 sm:px-6 lg:px-8">
                 <div className="flex gap-1 bg-gray-100 rounded-xl p-1 w-fit">
                     {tabs.map((tab) => (
                         <button key={tab.id} onClick={() => setActiveTab(tab.id)}
@@ -494,7 +494,7 @@ const SiteDetailView = ({ site, accessToken, yandexUserId, onBack }) => {
             </div>
 
             {/* Content */}
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+            <div className="px-4 sm:px-6 lg:px-8 py-6">
                 {isLoading ? (
                     <div className="flex items-center justify-center py-20">
                         <Loader2 className="w-8 h-8 text-red-500 animate-spin" />
@@ -544,8 +544,8 @@ const SiteDetailView = ({ site, accessToken, yandexUserId, onBack }) => {
                                                 <AreaChart data={site.data.dailyData}>
                                                     <defs>
                                                         <linearGradient id="yandexImpressionsGradient" x1="0" y1="0" x2="0" y2="1">
-                                                            <stop offset="0%" stopColor="#f97316" stopOpacity={0.2} />
-                                                            <stop offset="100%" stopColor="#f97316" stopOpacity={0} />
+                                                            <stop offset="0%" stopColor="#df3c27" stopOpacity={0.2} />
+                                                            <stop offset="100%" stopColor="#df3c27" stopOpacity={0} />
                                                         </linearGradient>
                                                         <linearGradient id="yandexClicksGradient" x1="0" y1="0" x2="0" y2="1">
                                                             <stop offset="0%" stopColor="#10b981" stopOpacity={0.2} />
@@ -557,7 +557,7 @@ const SiteDetailView = ({ site, accessToken, yandexUserId, onBack }) => {
                                                     <YAxis tick={{ fontSize: 12 }} stroke="#9ca3af" />
                                                     <Tooltip contentStyle={{ backgroundColor: 'white', border: '1px solid #e5e7eb', borderRadius: '12px' }} />
                                                     <Legend />
-                                                    <Area type="monotone" dataKey="impressions" stroke="#f97316" strokeWidth={2} fill="url(#yandexImpressionsGradient)" name="Impressions" />
+                                                            <Area type="monotone" dataKey="impressions" stroke="#df3c27" strokeWidth={2} fill="url(#yandexImpressionsGradient)" name="Impressions" />
                                                     <Area type="monotone" dataKey="clicks" stroke="#10b981" strokeWidth={2} fill="url(#yandexClicksGradient)" name="Clicks" />
                                                 </AreaChart>
                                             </ResponsiveContainer>
@@ -682,24 +682,24 @@ const SiteDetailView = ({ site, accessToken, yandexUserId, onBack }) => {
 // Yandex Connect Screen Component
 const YandexConnectScreen = ({ onConnect, isLoading }) => {
     return (
-        <div className="min-h-screen bg-gradient-to-br from-slate-50 to-red-50 flex items-center justify-center p-6">
-            <div className="max-w-md w-full">
-                <div className="bg-white rounded-3xl p-8 shadow-xl border border-gray-100">
+        <div className="yandex-connect-wrap">
+            <div className="w-full">
+                <div className="gsc-state yandex-connect-card">
                     <div className="text-center mb-8">
                         {/* Yandex Logo */}
-                        <div className="w-20 h-20 bg-gradient-to-br from-red-500 to-amber-500 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg">
-                            <svg className="w-12 h-12 text-white" viewBox="0 0 24 24" fill="currentColor">
+                        <div className="gsc-state-tile">
+                            <svg className="h-5 w-5" viewBox="0 0 24 24" fill="currentColor">
                                 <path d="M2 12C2 6.477 6.477 2 12 2s10 4.477 10 10-4.477 10-10 10S2 17.523 2 12zm11.5-7h-3v14h2v-6h.5l2.5 6h2.2l-2.7-6.2c1.5-.4 2.5-1.7 2.5-3.3 0-2.5-1.8-4.5-4-4.5zm-1 6V7h1c1.1 0 2 .9 2 2s-.9 2-2 2h-1z" />
                             </svg>
                         </div>
-                        <h1 className="text-2xl font-bold text-gray-900 mb-2">Connect Yandex Webmaster</h1>
-                        <p className="text-gray-500">Analyze your Yandex search performance across all your websites</p>
+                        <h1 className="gsc-state-title font-display">Connect Yandex Webmaster</h1>
+                        <p className="gsc-state-body">Analyze your Yandex search performance across all your websites</p>
                     </div>
 
                     <button
                         onClick={onConnect}
                         disabled={isLoading}
-                        className="w-full flex items-center justify-center gap-3 px-6 py-4 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-xl font-semibold hover:from-red-600 hover:to-red-700 disabled:opacity-50 transition-all cursor-pointer shadow-lg hover:shadow-xl"
+                        className="ui-button ui-button-primary yandex-connect-button"
                     >
                         {isLoading ? (
                             <Loader2 className="w-5 h-5 animate-spin" />
@@ -713,11 +713,9 @@ const YandexConnectScreen = ({ onConnect, isLoading }) => {
                         )}
                     </button>
 
-                    <div className="mt-6 text-center">
-                        <p className="text-sm text-gray-500">
-                            By connecting, you authorize access to your Yandex Webmaster data
-                        </p>
-                    </div>
+                    <p className="yandex-connect-note">
+                        By connecting, you authorize access to your Yandex Webmaster data
+                    </p>
                 </div>
             </div>
         </div>
@@ -744,10 +742,10 @@ const YandexBulkAnalysisPage = () => {
     const [loadingStates, setLoadingStates] = useState({});
     const [error, setError] = useState('');
 
-    // UI State with localStorage persistence
+    // UI State with sessionStorage persistence
     const [activeMetrics, setActiveMetrics] = useState(() => {
         try {
-            const saved = localStorage.getItem(LS_KEYS.ACTIVE_METRICS);
+            const saved = sessionStorage.getItem(LS_KEYS.ACTIVE_METRICS);
             return saved ? JSON.parse(saved) : ['impressions'];
         } catch { return ['impressions']; }
     });
@@ -755,8 +753,8 @@ const YandexBulkAnalysisPage = () => {
     const [sortBy, setSortBy] = useState('impressions');
     const [selectedSite, setSelectedSite] = useState(null);
 
-    // Persist to localStorage
-    useEffect(() => { try { localStorage.setItem(LS_KEYS.ACTIVE_METRICS, JSON.stringify(activeMetrics)); } catch { } }, [activeMetrics]);
+    // Persist to sessionStorage
+    useEffect(() => { try { sessionStorage.setItem(LS_KEYS.ACTIVE_METRICS, JSON.stringify(activeMetrics)); } catch { } }, [activeMetrics]);
 
     // Check for saved Yandex connection
     useEffect(() => {
@@ -1065,8 +1063,9 @@ const YandexBulkAnalysisPage = () => {
     // Loading state
     if (isCheckingAuth) {
         return (
-            <div className="min-h-screen bg-gradient-to-br from-slate-50 to-red-50 flex items-center justify-center">
-                <Loader2 className="w-8 h-8 text-red-500 animate-spin" />
+            <div className="bulk-loading">
+                <Loader2 className="h-7 w-7 animate-spin" />
+                <span>Loading Yandex Webmaster data…</span>
             </div>
         );
     }
@@ -1083,10 +1082,10 @@ const YandexBulkAnalysisPage = () => {
 
     // Main Sites Grid
     return (
-        <div className="min-h-screen bg-gradient-to-br from-slate-50 to-red-50">
+        <div className="bulk-page">
             {/* Header */}
             <div className="bg-white border-b border-gray-100">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+                <div className="px-4 sm:px-6 lg:px-8 py-6">
                     <div className="flex items-center justify-between relative">
                         <div className="flex items-center gap-4 min-w-[140px]" />
 
@@ -1107,7 +1106,7 @@ const YandexBulkAnalysisPage = () => {
             </div>
 
             {/* Toolbar */}
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+            <div className="px-4 sm:px-6 lg:px-8 py-4">
                 <div className="flex items-center gap-3 flex-wrap">
                     {/* Search */}
                     <div className="relative flex-1 max-w-md">
@@ -1143,7 +1142,7 @@ const YandexBulkAnalysisPage = () => {
             </div>
 
             {/* Grid */}
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+            <div className="px-4 sm:px-6 lg:px-8 py-6">
                 {error && (
                     <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl flex items-center gap-3 text-red-600">
                         <AlertCircle className="w-5 h-5" />

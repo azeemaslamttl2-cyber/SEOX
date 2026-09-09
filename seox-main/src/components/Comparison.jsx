@@ -4,7 +4,7 @@ import { XCircle, CheckCircle2, ArrowRight } from "lucide-react";
 const issues = [
   { label: "E-E-A-T compliance gaps", value: "Detected", tone: "text-rose-400" },
   { label: "Core Web Vitals issues", value: "Found", tone: "text-rose-400" },
-  { label: "Crawl optimization needed", value: "12 Issues", tone: "text-teal-300" },
+  { label: "Crawl optimization needed", value: "12 Issues", tone: "text-amber-300" },
   { label: "Content quality scoring", value: "Low", tone: "text-rose-400" },
   { label: "Schema markup missing", value: "None", tone: "text-rose-400" },
 ];
@@ -100,7 +100,7 @@ export default function Comparison() {
               </div>
               <div>
                 <h3 className="font-display text-xl font-bold text-brand-300">
-                  AI Smart Seo Solution
+                  PGC Solution
                 </h3>
                 <p className="text-xs text-white/50">50+ optimization tools</p>
               </div>

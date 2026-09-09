@@ -1,4 +1,4 @@
-import { requireFirebaseAuthFromNodeRequest } from "../_lib/request-auth.js";
+import { requireAuthenticatedUser } from "../_lib/request-auth.js";
 import { fetchPublicHttpUrl, parsePublicHttpUrl } from "../_lib/url-security.js";
 
 // Shared Node-style handler used by the Cloudflare Pages Function wrapper.
@@ -15,7 +15,7 @@ const TEXT_TYPES = [
 
 export default async function handler(req, res) {
   try {
-    await requireFirebaseAuthFromNodeRequest(req);
+    await requireAuthenticatedUser(req);
 
     const targetRaw = req.query?.url;
     const targetParam = Array.isArray(targetRaw) ? targetRaw[0] : targetRaw;
@@ -34,7 +34,7 @@ export default async function handler(req, res) {
       signal: controller.signal,
       headers: {
         "user-agent":
-          "AISmartSeoBot/1.0 (+https://ai-smart-seo.local/crawler; compatible; site-audit)",
+          "SEOXBot/1.0 (+https://seox.local/crawler; compatible; site-audit)",
         accept:
           "text/html,application/xhtml+xml,application/xml;q=0.9,text/plain;q=0.8,*/*;q=0.5",
       },
@@ -86,7 +86,7 @@ function isTextContent(contentType = "") {
   return TEXT_TYPES.some((type) => lowered.includes(type));
 }
 
-function parseCrawlText(text, contentType, baseUrl) {
+export function parseCrawlText(text, contentType, baseUrl) {
   const lowered = contentType.toLowerCase();
   if (!text) return { links: [], resources: [], sitemaps: [], disallow: [] };
   if (lowered.includes("xml")) {

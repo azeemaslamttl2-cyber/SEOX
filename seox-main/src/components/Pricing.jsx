@@ -1,7 +1,7 @@
 import { motion } from "framer-motion";
 import { useState } from "react";
 import { Check, X } from "lucide-react";
-import { track } from "../lib/firebase.js";
+import { track } from "../lib/analytics.js";
 
 const plans = (yearly) => [
   {
@@ -13,6 +13,7 @@ const plans = (yearly) => [
     features: [
       { label: "Access to all SEO tools", included: true },
       { label: "Basic backlink directory", included: true },
+      { label: "Encyclopedia access", included: true },
       { label: "Priority support", included: false },
     ],
   },
@@ -131,7 +132,7 @@ export default function Pricing() {
                   className="pointer-events-none absolute -inset-[1px] rounded-2xl"
                   style={{
                     background:
-                      "linear-gradient(135deg, rgba(122,189,188,0.7), rgba(171,216,183,0.4), rgba(122,189,188,0.7))",
+                      "linear-gradient(135deg, rgba(249,115,22,0.7), rgba(251,191,36,0.4), rgba(249,115,22,0.7))",
                     padding: "1.5px",
                     WebkitMask:
                       "linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0)",
@@ -145,7 +146,7 @@ export default function Pricing() {
               {/* Badge */}
               {p.badge && (
                 <div className="absolute -top-3.5 left-1/2 z-10 -translate-x-1/2">
-                  <span className="whitespace-nowrap rounded-full bg-gradient-to-r from-brand-500 to-emerald-400 px-4 py-1 text-[11px] font-bold uppercase tracking-widest text-ink-900 shadow-brand-glow">
+                  <span className="whitespace-nowrap rounded-full bg-gradient-to-r from-brand-500 to-amber-400 px-4 py-1 text-[11px] font-bold uppercase tracking-widest text-ink-900 shadow-brand-glow">
                     {p.badge}
                   </span>
                 </div>
@@ -251,7 +252,7 @@ export default function Pricing() {
                   }
                   className={`mt-8 w-full rounded-full py-3 text-sm font-semibold transition-all duration-300 ${
                     p.highlight
-                      ? "bg-gradient-to-r from-brand-500 to-brand-400 text-white shadow-brand-glow hover:scale-[1.02] hover:shadow-[0_14px_50px_-8px_rgba(122,189,188,0.7)]"
+                      ? "bg-gradient-to-r from-brand-500 to-brand-400 text-white shadow-brand-glow hover:scale-[1.02] hover:shadow-[0_14px_50px_-8px_rgba(249,115,22,0.7)]"
                       : "border border-white/[0.12] bg-white/[0.03] text-white/80 hover:border-white/20 hover:bg-white/[0.06] hover:text-white"
                   }`}
                 >

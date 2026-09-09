@@ -273,7 +273,7 @@ function HeroGauge({ score, size = 140 }) {
       {/* Glow */}
       <div className="absolute inset-0 rounded-full bg-brand-500/20 blur-2xl" />
       <svg width={size} height={size} className="-rotate-90 relative z-10">
-        <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="rgba(255,255,255,0.04)" strokeWidth="10" />
+        <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="#e2e5ee" strokeWidth="10" />
         <circle
           cx={size / 2}
           cy={size / 2}
@@ -284,11 +284,11 @@ function HeroGauge({ score, size = 140 }) {
           strokeLinecap="round"
           strokeDasharray={circ}
           strokeDashoffset={offset}
-          style={{ filter: "drop-shadow(0 0 8px rgba(249,115,22,0.5))" }}
+          style={{ transition: "stroke-dashoffset 700ms ease" }}
         />
         <defs>
           <linearGradient id="gaugeGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-            <stop offset="0%" stopColor="#f97316" />
+            <stop offset="0%" stopColor="#df3c27" />
             <stop offset="100%" stopColor="#fbbf24" />
           </linearGradient>
         </defs>
@@ -312,7 +312,7 @@ function MiniArc({ percent, size = 36 }) {
   return (
     <div className="relative" style={{ width: size, height: size }}>
       <svg width={size} height={size} className="-rotate-90">
-        <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="3" />
+        <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="#e2e5ee" strokeWidth="3" />
         <circle
           cx={size / 2}
           cy={size / 2}
@@ -345,7 +345,7 @@ function normalizeAuditUrl(input) {
 
 function getApiUrls(path) {
   if (
-    import.meta.env.DEV &&
+    import.meta.env?.DEV &&
     typeof window !== "undefined" &&
     ["localhost", "127.0.0.1"].includes(window.location.hostname) &&
     window.location.port === "5173"
@@ -750,10 +750,10 @@ export default function EeatAudit() {
   }
 
   return (
-    <div className="mx-auto max-w-5xl">
+    <div className="">
 
       {/* ─────────── HERO: Split layout ─────────── */}
-      <div className="relative overflow-hidden rounded-3xl border border-white/[0.06] bg-ink-800">
+      <div className="eeat-hero relative overflow-hidden rounded-3xl border border-brand-600 bg-brand-500">
         {/* Background texture */}
         <div className="pointer-events-none absolute inset-0">
           <div className="absolute -right-20 -top-20 h-80 w-80 rounded-full bg-brand-500/[0.08] blur-[100px]" />
@@ -787,7 +787,7 @@ export default function EeatAudit() {
 
             {/* URL bar */}
             <div className="mt-5 flex items-center gap-2">
-              <div className="flex flex-1 items-center gap-2 rounded-xl border border-white/[0.08] bg-ink-900/80 px-4 py-2.5">
+              <div className="flex flex-1 items-center gap-2 rounded-xl border border-white/70 bg-white px-4 py-2.5">
                 <Globe className="h-4 w-4 text-brand-400/60" />
                 <input
                   value={displayUrl}
@@ -795,14 +795,14 @@ export default function EeatAudit() {
                   onKeyDown={(e) => {
                     if (e.key === "Enter") analyze();
                   }}
-                  className="flex-1 cursor-not-allowed bg-transparent text-sm text-white placeholder:text-white/25 focus:outline-none"
+                  className="flex-1 cursor-not-allowed bg-transparent text-sm text-college-blue placeholder:text-college-blue/60 focus:outline-none"
                   placeholder="Select a website in the nav"
                 />
               </div>
               <button
                 onClick={analyze}
                 disabled={loading || !hasProject}
-                className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-brand-500 to-amber-500 px-5 py-2.5 text-sm font-bold text-white shadow-lg shadow-brand-500/25 transition hover:shadow-brand-500/40 disabled:cursor-not-allowed disabled:opacity-60"
+                className="ui-button eeat-analyze-button rounded-xl"
               >
                 <Search className={`h-4 w-4 ${loading ? "animate-pulse" : ""}`} /> {loading ? "Analyzing..." : "Analyze"}
               </button>
@@ -815,17 +815,17 @@ export default function EeatAudit() {
 
             {/* Actions */}
             <div className="mt-3 flex items-center gap-2">
-              <button className="flex items-center gap-1.5 rounded-lg border border-brand-500/30 bg-brand-500/10 px-3 py-1.5 text-[11px] font-bold text-brand-300 transition hover:bg-brand-500/20">
+              <button className="ui-button eeat-secondary-button">
                 <Download className="h-3 w-3" /> Export PDF
               </button>
               <button
                 onClick={analyze}
                 disabled={loading || !hasProject}
-                className="flex items-center gap-1.5 rounded-lg border border-white/10 bg-white/[0.04] px-3 py-1.5 text-[11px] font-bold text-white/50 transition hover:bg-white/[0.08] disabled:cursor-not-allowed disabled:opacity-60"
+                className="ui-button eeat-secondary-button"
               >
                 <RefreshCw className={`h-3 w-3 ${loading ? "animate-spin" : ""}`} /> Re-scan
               </button>
-              <span className="ml-1 text-[11px] text-white/25">
+              <span className="ml-1 text-[11px] text-white">
                 <Clock className="mr-0.5 inline h-3 w-3" /> {d.cachedAgo}
               </span>
             </div>
@@ -834,7 +834,7 @@ export default function EeatAudit() {
           {/* Right column — Score gauge */}
           <div className="flex flex-col items-center gap-2 lg:pr-4">
             <HeroGauge score={d.score} />
-            <span className="rounded-full bg-brand-500/15 px-3 py-1 text-xs font-black uppercase tracking-wider text-brand-300">
+            <span className="eeat-rating rounded-full bg-brand-500/15 px-3 py-1 text-xs font-black uppercase tracking-wider text-brand-300">
               {d.rating}
             </span>
           </div>

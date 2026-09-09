@@ -564,7 +564,7 @@ const YoutubeSEOChecker = () => {
                                     <span className="font-medium">{videoData.channelName}</span>
                                 </p>
                                 <div className="flex flex-wrap items-center gap-4 text-sm">
-                                    {videoData.viewCount && (
+                                    {Number(videoData.viewCount) > 0 && (
                                         <div className="flex items-center gap-2 text-gray-600 bg-gray-100 px-3 py-1.5 rounded-full">
                                             <Eye className="w-4 h-4" />
                                             <span className="font-medium">{Number(videoData.viewCount).toLocaleString()} views</span>

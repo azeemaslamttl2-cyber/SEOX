@@ -34,15 +34,15 @@ const nav = [
     section: "SemanticsX GEO",
     items: [
       { label: "LLMs.txt Generator", to: "/geo/llms-generator", icon: FileText },
-      { label: "AI Model Index Checker", to: "/geo/ai-model-checker", icon: Cpu },
-      { label: "AI Model Compatibility", to: "/geo/ai-compatibility", icon: ShieldCheck },
+      { label: "AI Model Index", to: "/geo/ai-model-checker", icon: Cpu },
+      { label: "AI Compatibility", to: "/geo/ai-compatibility", icon: ShieldCheck },
     ],
   },
 ];
 
 export default function GeoSecondaryNav() {
   return (
-    <aside className="sticky top-0 hidden h-screen w-[232px] flex-shrink-0 overflow-y-auto border-r border-white/10 bg-ink-900/60 px-3 py-5 md:block">
+    <aside className="app-sidebar sticky top-0 hidden h-screen w-[232px] flex-shrink-0 overflow-y-auto border-r border-white/10 bg-ink-900/60 px-3 py-5 md:block">
       <nav className="space-y-5">
         {nav.map((section) => (
           <div key={section.section}>

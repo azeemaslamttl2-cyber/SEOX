@@ -106,7 +106,7 @@ export default function IssueTable({ rows, sparkColor }) {
                 </td>
                 <td className="px-3 py-2.5 text-right">
                   <div className="flex justify-end">
-                    <Sparkline values={r.spark} color={sparkColor || "#f97316"} />
+                    <Sparkline values={r.spark} color={sparkColor || "#df3c27"} />
                   </div>
                 </td>
                 <td className="py-2.5 text-right">

@@ -3,8 +3,8 @@ import ReportShell, { ChartCard } from "../../../components/auditor/ReportShell.
 import { Columns3 } from "lucide-react";
 import { useAuditData } from "../../../hooks/useAuditData.js";
 import { useCrawl } from "../../../context/CrawlContext.jsx";
-import { issueGroupsForCategory, issueRowsForGroups, TrackedIssuesPanel } from "./ReportInsights.jsx";
-import { duplicateClusters, duplicateSummary } from "./liveReportData.js";
+import { issueGroupsForCategory, issueRowsForGroups, TrackedIssuesPanel } from "../../../lib/auditor/reports/ReportInsights.jsx";
+import { duplicateClusters, duplicateSummary } from "../../../lib/auditor/reports/liveReportData.js";
 
 export default function DuplicatesReport() {
   const [tab, setTab] = useState("near");

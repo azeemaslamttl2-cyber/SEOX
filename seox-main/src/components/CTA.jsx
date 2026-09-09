@@ -1,6 +1,6 @@
 import { motion } from "framer-motion";
 import { ArrowRight, Sparkles, ShieldCheck, Zap } from "lucide-react";
-import { track } from "../lib/firebase.js";
+import { track } from "../lib/analytics.js";
 
 export default function CTA() {
   return (
@@ -11,7 +11,7 @@ export default function CTA() {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.6 }}
-          className="relative overflow-hidden rounded-3xl border border-brand-500/30 bg-gradient-to-br from-brand-600/30 via-brand-500/10 to-teal-500/20 p-10 text-center sm:p-16"
+          className="relative overflow-hidden rounded-3xl border border-brand-500/30 bg-gradient-to-br from-brand-600/30 via-brand-500/10 to-orange-500/20 p-10 text-center sm:p-16"
         >
           {/* Animated grid */}
           <div
@@ -25,7 +25,7 @@ export default function CTA() {
           />
           {/* Glow orbs */}
           <div className="absolute -left-20 -top-20 h-72 w-72 animate-float rounded-full bg-brand-500/40 blur-3xl" />
-          <div className="absolute -bottom-20 -right-20 h-72 w-72 animate-float-slow rounded-full bg-emerald-400/30 blur-3xl" />
+          <div className="absolute -bottom-20 -right-20 h-72 w-72 animate-float-slow rounded-full bg-amber-400/30 blur-3xl" />
 
           <div className="relative">
             <span className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-4 py-1.5 text-xs font-semibold text-white backdrop-blur">
@@ -37,7 +37,7 @@ export default function CTA() {
               Ready to <span className="gradient-text">dominate</span> AI search?
             </h2>
             <p className="mx-auto mt-5 max-w-xl text-white/70">
-              Join 18,500+ teams using AI Smart Seo to ship semantic SEO at unprecedented scale.
+              Join 18,500+ teams using PGC to ship semantic SEO at unprecedented scale.
             </p>
 
             <div className="mt-9 flex flex-wrap items-center justify-center gap-4">

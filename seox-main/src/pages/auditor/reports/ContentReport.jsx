@@ -3,7 +3,7 @@ import ReportShell, { ChartCard } from "../../../components/auditor/ReportShell.
 import DonutChart from "../../../components/auditor/DonutChart.jsx";
 import { useAuditData } from "../../../hooks/useAuditData.js";
 import { useCrawl } from "../../../context/CrawlContext.jsx";
-import { TrackedIssuesPanel } from "./ReportInsights.jsx";
+import { TrackedIssuesPanel } from "../../../lib/auditor/reports/ReportInsights.jsx";
 
 function isHtmlContentType(contentType, url) {
   const ct = (contentType || "").toLowerCase();
@@ -85,7 +85,7 @@ export default function ContentReport() {
       titleLength: [
         { label: "Optimal: 15-70 ch.", value: titleRows.filter((row) => row.count > 0 && row.length >= 15 && row.length <= 70).length, color: "#34d399" },
         { label: "Too short: <15 ch.", value: titleRows.filter((row) => row.count > 0 && row.length < 15).length, color: "#fbbf24" },
-        { label: "Too long: >70 ch.", value: titleRows.filter((row) => row.count > 0 && row.length > 70).length, color: "#f97316" },
+        { label: "Too long: >70 ch.", value: titleRows.filter((row) => row.count > 0 && row.length > 70).length, color: "#df3c27" },
       ],
       metaSetup: [
         { label: "Only one", value: metaRows.filter((row) => row.count === 1).length, color: "#34d399" },
@@ -95,7 +95,7 @@ export default function ContentReport() {
       metaLength: [
         { label: "Optimal: 100-300 ch.", value: metaRows.filter((row) => row.count > 0 && row.length >= 100 && row.length <= 300).length, color: "#34d399" },
         { label: "Too short: <100 ch.", value: metaRows.filter((row) => row.count > 0 && row.length < 100).length, color: "#fbbf24" },
-        { label: "Too long: >300 ch.", value: metaRows.filter((row) => row.count > 0 && row.length > 300).length, color: "#f97316" },
+        { label: "Too long: >300 ch.", value: metaRows.filter((row) => row.count > 0 && row.length > 300).length, color: "#df3c27" },
       ],
       h1Setup: [
         { label: "Only one", value: h1Rows.filter((row) => row.count === 1).length, color: "#34d399" },
@@ -105,7 +105,7 @@ export default function ContentReport() {
       h1Length: [
         { label: "Too short: <20 ch.", value: h1Rows.filter((row) => row.count > 0 && row.length < 20).length, color: "#fbbf24" },
         { label: "Optimal: 20-70 ch.", value: h1Rows.filter((row) => row.count > 0 && row.length >= 20 && row.length <= 70).length, color: "#34d399" },
-        { label: "Too long: >70 ch.", value: h1Rows.filter((row) => row.count > 0 && row.length > 70).length, color: "#f97316" },
+        { label: "Too long: >70 ch.", value: h1Rows.filter((row) => row.count > 0 && row.length > 70).length, color: "#df3c27" },
       ],
     };
   }, [latestUrls]);

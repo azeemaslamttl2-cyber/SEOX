@@ -55,7 +55,7 @@ async function fetchAdminData(token) {
 
       if (!isJson || !payload || !Array.isArray(payload.users)) {
         const error = new Error(
-          "Admin API did not return Firebase user data. In local development, run `npm run cloudflare:dev` and use the Cloudflare Pages URL."
+          "Admin API did not return local user data. Check that the local API is running."
         );
         error.fromAdminApi = false;
         throw error;

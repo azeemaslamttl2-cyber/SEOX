@@ -22,7 +22,7 @@ export default function DonutChart({ segments, size = 150, thickness = 18, cente
             cy={size / 2}
             r={radius}
             fill="none"
-            stroke="rgba(255,255,255,0.05)"
+            stroke="#e2e5ee"
             strokeWidth={thickness}
           />
           {/* Segments */}

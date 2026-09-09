@@ -7,7 +7,7 @@ export default function AuthLayout() {
   const isLogin = pathname.startsWith("/login");
 
   return (
-    <div className="relative min-h-screen overflow-hidden bg-ink-900 text-white">
+    <div className="auth-shell relative min-h-screen overflow-hidden bg-ink-900 text-white">
       {/* Background atmosphere */}
       <div className="pointer-events-none absolute inset-0 -z-10">
         <div className="absolute -top-40 left-1/4 h-[600px] w-[600px] rounded-full bg-brand-500/15 blur-[140px]" />
@@ -27,7 +27,7 @@ export default function AuthLayout() {
         <Link to="/" className="flex items-center gap-2.5">
           <Logo className="h-8 w-8" />
           <span className="font-display text-lg font-bold tracking-tight">
-            AI Smart <span className="text-brand-400">Seo</span>
+            PGC
           </span>
         </Link>
         <Link
@@ -59,7 +59,7 @@ export default function AuthLayout() {
 function BrandPanel({ isLogin }) {
   return (
     <div className="relative h-full">
-      <div className="relative overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-br from-brand-500/10 via-ink-800 to-ink-900 p-10">
+      <div className="auth-brand-panel relative overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-br from-brand-500/10 via-ink-800 to-ink-900 p-10">
         {/* Glow orbs */}
         <div className="pointer-events-none absolute -left-20 -top-20 h-72 w-72 animate-float rounded-full bg-brand-500/30 blur-3xl" />
         <div className="pointer-events-none absolute -bottom-24 -right-16 h-72 w-72 animate-float-slow rounded-full bg-amber-400/20 blur-3xl" />
@@ -67,7 +67,7 @@ function BrandPanel({ isLogin }) {
         <div className="relative">
           <span className="inline-flex items-center gap-2 rounded-full border border-brand-500/30 bg-brand-500/10 px-3.5 py-1.5 text-xs font-semibold uppercase tracking-wider text-brand-300">
             <span className="h-1.5 w-1.5 rounded-full bg-brand-400" />
-            2026 Intelligence Framework
+            PGC Intelligence Framework
           </span>
 
           <h2 className="mt-6 font-display text-3xl font-bold leading-tight tracking-tight xl:text-4xl">
@@ -87,7 +87,7 @@ function BrandPanel({ isLogin }) {
           <p className="mt-4 text-white/60">
             {isLogin
               ? "Sign in to access 60+ semantic SEO tools, your audit history and your team workspace."
-              : "Join 18,500+ marketers using AI Smart Seo to ship AI-native SEO at scale."}
+              : "Join 18,500+ marketers using PGC to ship AI-native SEO at scale."}
           </p>
 
           {/* Trust badges */}
@@ -104,7 +104,7 @@ function BrandPanel({ isLogin }) {
                 <span className="h-2 w-2 rounded-full bg-red-500/80" />
                 <span className="h-2 w-2 rounded-full bg-yellow-500/80" />
                 <span className="h-2 w-2 rounded-full bg-green-500/80" />
-                <span className="ml-3 text-xs text-white/50">AI Smart Seo Dashboard</span>
+                <span className="ml-3 text-xs text-white/50">PGC Dashboard</span>
               </div>
               <span className="rounded-full bg-emerald-500/15 px-2 py-0.5 text-[10px] font-bold text-emerald-400">
                 LIVE

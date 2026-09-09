@@ -21,7 +21,6 @@ const nav = [
       { label: "Low Hanging Keywords", to: "/keywords/low-hanging", icon: Cherry },
       { label: "Lost Keywords", to: "/keywords/lost", icon: TrendingDown },
       { label: "Branded Keywords", to: "/keywords/branded", icon: Tag },
-      { label: "SERP Checker", to: "/keywords/serp-checker", icon: Search },
       { label: "Keyword Cannibalization", to: "/keywords/cannibalization", icon: Copy },
     ],
   },
@@ -29,7 +28,7 @@ const nav = [
 
 export default function KeywordSecondaryNav() {
   return (
-    <aside className="sticky top-0 hidden h-screen w-[232px] flex-shrink-0 overflow-y-auto border-r border-white/10 bg-ink-900/60 px-3 py-5 md:block">
+    <aside className="app-sidebar sticky top-0 hidden h-screen w-[232px] flex-shrink-0 overflow-y-auto border-r border-white/10 bg-ink-900/60 px-3 py-5 md:block">
       <nav className="space-y-5">
         {nav.map((section) => (
           <div key={section.section}>

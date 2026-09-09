@@ -2,8 +2,8 @@ import DonutChart from "../../../components/auditor/DonutChart.jsx";
 import ReportShell, { ChartCard, StatCard } from "../../../components/auditor/ReportShell.jsx";
 import { useAuditData } from "../../../hooks/useAuditData.js";
 import { useCrawl } from "../../../context/CrawlContext.jsx";
-import { issueGroupsForCategory, issueRowsForGroups, TrackedIssuesPanel } from "./ReportInsights.jsx";
-import { resourceStats, safeSegments } from "./liveReportData.js";
+import { issueGroupsForCategory, issueRowsForGroups, TrackedIssuesPanel } from "../../../lib/auditor/reports/ReportInsights.jsx";
+import { resourceStats, safeSegments } from "../../../lib/auditor/reports/liveReportData.js";
 
 export default function CssReport() {
   const { issueCategories } = useAuditData();

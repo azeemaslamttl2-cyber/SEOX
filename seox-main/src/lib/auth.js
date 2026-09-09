@@ -1,47 +1,32 @@
-import {
-  createUserWithEmailAndPassword,
-  signInWithEmailAndPassword,
-  signOut,
-  GoogleAuthProvider,
-  signInWithPopup,
-  updateProfile,
-  sendPasswordResetEmail,
-  setPersistence,
-  browserLocalPersistence,
-  browserSessionPersistence,
-} from "firebase/auth";
-import { auth, track } from "./firebase.js";
+import { registerUser as registerMysqlUser, signIn as signInMysqlUser, logout as logoutMysqlUser, resetPassword as resetMysqlPassword } from "./mysqlAuth.js";
+import { clearSession } from "./authSession.js";
 
 export async function signUp({ email, password, displayName }) {
-  const cred = await createUserWithEmailAndPassword(auth, email, password);
-  if (displayName) {
-    await updateProfile(cred.user, { displayName });
-  }
-  track("sign_up", { method: "email" });
-  return cred.user;
+  const payload = await registerMysqlUser({ email, password, displayName });
+  return payload.user;
 }
 
 export async function signIn({ email, password, remember = true }) {
-  await setPersistence(auth, remember ? browserLocalPersistence : browserSessionPersistence);
-  const cred = await signInWithEmailAndPassword(auth, email, password);
-  track("login", { method: "email" });
-  return cred.user;
+  void remember;
+  const payload = await signInMysqlUser({ email, password });
+  return payload.user;
 }
 
-export async function signInWithGoogle() {
-  const provider = new GoogleAuthProvider();
-  provider.setCustomParameters({ prompt: "select_account" });
-  const cred = await signInWithPopup(auth, provider);
-  track("login", { method: "google" });
-  return cred.user;
+export function signInWithGoogle({ returnTo = "/dashboard" } = {}) {
+  if (typeof window === "undefined") throw new Error("Google sign-in is only available in a browser.");
+  window.location.assign(`/api/auth/google?returnTo=${encodeURIComponent(returnTo)}`);
 }
 
 export async function logout() {
-  await signOut(auth);
-  track("logout");
+  try {
+    await logoutMysqlUser();
+  } catch {
+    // Local logout must still complete when the server request is unavailable.
+  } finally {
+    clearSession();
+  }
 }
 
 export async function resetPassword(email) {
-  await sendPasswordResetEmail(auth, email);
-  track("password_reset_requested");
+  await resetMysqlPassword(email);
 }
