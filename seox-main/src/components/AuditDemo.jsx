@@ -1,3 +1,5 @@
+"use client";
+
 import { motion, useInView } from "framer-motion";
 import { useEffect, useRef, useState } from "react";
 import {
@@ -10,7 +12,7 @@ import {
   CheckCircle2,
   Globe,
 } from "lucide-react";
-import { track } from "../lib/firebase.js";
+import { track } from "../lib/analytics.js";
 
 const audits = [
   {
@@ -18,7 +20,7 @@ const audits = [
     name: "Experience",
     desc: "First-hand content signals",
     score: 88,
-    color: "from-brand-500 to-emerald-400",
+    color: "from-brand-500 to-amber-400",
     text: "text-brand-300",
     border: "border-brand-500/40",
   },
@@ -27,27 +29,27 @@ const audits = [
     name: "Expertise",
     desc: "Knowledge depth & credentials",
     score: 92,
-    color: "from-emerald-500 to-teal-400",
-    text: "text-emerald-300",
-    border: "border-emerald-500/40",
+    color: "from-amber-500 to-orange-400",
+    text: "text-amber-300",
+    border: "border-amber-500/40",
   },
   {
     icon: Award,
     name: "Authority",
     desc: "Backlink quality & domain trust",
     score: 76,
-    color: "from-teal-500 to-cyan-400",
-    text: "text-teal-300",
-    border: "border-teal-500/40",
+    color: "from-orange-500 to-rose-400",
+    text: "text-orange-300",
+    border: "border-orange-500/40",
   },
   {
     icon: Shield,
     name: "Trust",
     desc: "HTTPS, citations & transparency",
     score: 95,
-    color: "from-cyan-400 to-brand-500",
-    text: "text-cyan-300",
-    border: "border-cyan-500/40",
+    color: "from-yellow-400 to-brand-500",
+    text: "text-yellow-300",
+    border: "border-yellow-500/40",
   },
 ];
 
@@ -99,7 +101,7 @@ export default function AuditDemo() {
         className="container-px mt-12"
       >
         <div className="relative mx-auto max-w-4xl">
-          <div className="absolute -inset-3 rounded-[24px] bg-gradient-to-r from-brand-500/30 via-emerald-400/20 to-teal-500/30 blur-3xl" />
+          <div className="absolute -inset-3 rounded-[24px] bg-gradient-to-r from-brand-500/30 via-amber-400/20 to-orange-500/30 blur-3xl" />
           <div className="relative overflow-hidden rounded-2xl border border-white/10 bg-ink-800/80 shadow-2xl backdrop-blur-2xl">
             {/* Header */}
             <div className="flex items-center justify-between border-b border-white/10 bg-ink-700/60 px-5 py-3.5">
@@ -156,7 +158,7 @@ export default function AuditDemo() {
                 </div>
                 <div className="relative h-1.5 overflow-hidden rounded-full bg-white/5">
                   <div
-                    className="h-full rounded-full bg-gradient-to-r from-brand-500 via-emerald-400 to-brand-500 bg-[length:200%_100%]"
+                    className="h-full rounded-full bg-gradient-to-r from-brand-500 via-amber-400 to-brand-500 bg-[length:200%_100%]"
                     style={{
                       width: `${progress}%`,
                       animation: "gradient-x 2s linear infinite",
@@ -180,7 +182,7 @@ export default function AuditDemo() {
               {/* Footer summary */}
               <div className="grid grid-cols-3 gap-3 border-t border-white/10 pt-5">
                 <Stat label="Issues Found" value="12" tone="text-rose-400" />
-                <Stat label="Optimizations" value="34" tone="text-emerald-300" />
+                <Stat label="Optimizations" value="34" tone="text-amber-300" />
                 <Stat label="Overall Score" value="87/100" tone="text-brand-300" />
               </div>
             </div>

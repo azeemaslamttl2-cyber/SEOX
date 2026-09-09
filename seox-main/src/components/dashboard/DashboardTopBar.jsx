@@ -2,16 +2,19 @@ import { useState, useRef, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import {
   Search,
+  Bell,
+  Moon,
   LogOut,
   Shield,
+  Loader2,
+  ChevronDown,
 } from "lucide-react";
 import { useAuth } from "../../context/AuthContext.jsx";
 import { logout } from "../../lib/auth.js";
 import Avatar from "../Avatar.jsx";
-import NotificationButton from "../NotificationButton.jsx";
 import ProjectSelector from "../ProjectSelector.jsx";
 
-export default function DashboardTopBar() {
+export default function DashboardTopBar({ projectsLoading = false }) {
   const { user, isAdmin } = useAuth();
   const navigate = useNavigate();
   const [userOpen, setUserOpen] = useState(false);
@@ -35,10 +38,18 @@ export default function DashboardTopBar() {
   };
 
   return (
-    <header className="sticky top-0 z-20 flex h-14 items-center justify-between gap-4 border-b border-white/10 bg-ink-900/80 px-4 backdrop-blur-md lg:px-6">
+    <header className="app-topbar sticky top-0 z-20 flex h-14 items-center justify-between gap-4 border-b border-white/10 bg-ink-900/80 px-4 backdrop-blur-md lg:px-6">
       {/* Left: Project selector */}
       <div className="flex items-center gap-3">
         <ProjectSelector />
+        
+        {/* Project loading indicator */}
+        {projectsLoading && (
+          <div className="flex items-center gap-2 text-xs text-white/50" role="status">
+            <Loader2 className="h-3 w-3 animate-spin" />
+            <span>Loading projects…</span>
+          </div>
+        )}
 
         {/* Breadcrumb */}
         <div className="hidden items-center gap-2 text-sm lg:flex">
@@ -51,7 +62,7 @@ export default function DashboardTopBar() {
       {/* Right side */}
       <div className="flex items-center gap-3">
         {/* Search */}
-        <div className="hidden items-center gap-2 rounded-lg border border-white/10 bg-white/[0.03] px-3 py-1.5 lg:flex">
+        <div className="app-topbar-search hidden items-center gap-2 rounded-lg border border-white/10 bg-white/[0.03] px-3 py-1.5 lg:flex">
           <Search className="h-3.5 w-3.5 text-white/30" />
           <input
             placeholder="Search check points..."
@@ -59,29 +70,39 @@ export default function DashboardTopBar() {
           />
         </div>
 
+        {/* Dark mode toggle */}
+        <button aria-label="Toggle theme" className="ui-button-tertiary flex h-8 w-8 items-center justify-center rounded-lg text-white/40 transition hover:bg-white/[0.06] hover:text-white">
+          <Moon className="h-4 w-4" />
+        </button>
+
         {/* Notifications */}
-        <NotificationButton />
+        <button aria-label="Notifications" className="ui-button-tertiary relative flex h-8 w-8 items-center justify-center rounded-lg text-white/40 transition hover:bg-white/[0.06] hover:text-white">
+          <Bell className="h-4 w-4" />
+          <span className="absolute right-1.5 top-1.5 h-1.5 w-1.5 rounded-full bg-rose-500 ring-2 ring-white" />
+        </button>
 
         {/* User avatar / dropdown */}
         <div className="relative" ref={userRef}>
           <button
             onClick={() => setUserOpen((v) => !v)}
-            className="flex items-center gap-2 rounded-full transition hover:ring-2 hover:ring-white/10"
+            className="user-menu-button flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.04] py-1 pl-1 pr-3 text-sm text-white transition hover:bg-white/[0.08]"
+            type="button"
           >
             {user ? (
-              <Avatar user={user} size={32} />
+              <Avatar user={user} size={28} />
             ) : (
-              <div className="h-8 w-8 rounded-full bg-gradient-to-br from-brand-400 to-brand-600 ring-2 ring-white/10" />
+              <div className="h-7 w-7 rounded-full bg-gradient-to-br from-brand-400 to-brand-600 ring-2 ring-white/10" />
             )}
             {user && (
-              <span className="hidden text-sm font-medium text-white lg:block">
+              <span className="max-w-[120px] truncate text-sm font-medium text-white">
                 {user.displayName || "Admin"}
               </span>
             )}
+            <ChevronDown className={`h-3.5 w-3.5 text-white/50 transition-transform ${userOpen ? "rotate-180" : ""}`} />
           </button>
 
           {userOpen && user && (
-            <div className="absolute right-0 top-full mt-2 w-56 overflow-hidden rounded-xl border border-white/10 bg-ink-800/95 p-1.5 shadow-2xl backdrop-blur-2xl z-50">
+            <div role="menu" className="app-menu animate-scale-in absolute right-0 top-full mt-2 w-60 overflow-hidden rounded-xl border border-white/10 bg-ink-800/95 p-1.5 shadow-2xl backdrop-blur-2xl z-50">
               <div className="flex items-center gap-3 px-3 py-3">
                 <Avatar user={user} size={36} />
                 <div className="min-w-0">

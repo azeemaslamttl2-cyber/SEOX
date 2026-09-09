@@ -2,7 +2,7 @@ import {
   assertAdmin,
   listAuthUsers,
   readFirstCollection,
-} from "../_lib/firebase-rest.js";
+} from "../_lib/mysql-storage.js";
 import {
   corsHeaders,
   emptyResponse,

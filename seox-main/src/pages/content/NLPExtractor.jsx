@@ -24,52 +24,66 @@ export default function NLPExtractor() {
   }
 
   return (
-    <div className="mx-auto max-w-[900px] space-y-5">
-      {/* Hero */}
-      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-indigo-600 via-purple-500 to-pink-500 p-6">
-        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_60%_10%,rgba(255,255,255,0.1),transparent)]" />
-        <div className="relative z-10">
-          <div className="flex items-center gap-4">
-            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/15">
-              <Brain className="h-6 w-6 text-white" />
-            </div>
-            <div>
-              <h1 className="font-display text-xl font-black text-white">NLP Extractor</h1>
-              <p className="text-sm text-white/60">Extract SEO-optimizing NLP keywords from content</p>
-            </div>
+    <div className="ctool-page space-y-6">
+      <div className="ctool-hero">
+        <div className="ctool-hero-row">
+          <div className="ctool-hero-icon">
+            <Brain className="h-6 w-6" />
           </div>
-          <div className="mt-4 flex items-center gap-2">
-            <button onClick={() => setMode("url")} className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-bold transition ${mode === "url" ? "bg-white/20 text-white" : "text-white/50 hover:bg-white/10"}`}>
-              <Globe className="h-3.5 w-3.5" /> URL
-            </button>
-            <button onClick={() => setMode("text")} className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-bold transition ${mode === "text" ? "bg-white/20 text-white" : "text-white/50 hover:bg-white/10"}`}>
-              <Type className="h-3.5 w-3.5" /> Text
-            </button>
+          <div className="min-w-0">
+            <h1 className="ctool-title font-display">
+              NLP Extractor
+            </h1>
+            <p className="ctool-subtitle">
+              Extract SEO-optimizing NLP keywords from content and rank them by relevance, type, and sentiment.
+            </p>
           </div>
         </div>
       </div>
 
-      {/* Input */}
-      <div className="rounded-2xl border border-white/[0.08] bg-[#0d1117] p-6">
-        <div className="flex items-center gap-2 mb-3">
-          <Globe className="h-4 w-4 text-purple-400" />
-          <span className="text-sm font-bold text-white/80">Enter {mode === "url" ? "URL" : "Text"}</span>
-        </div>
-        {mode === "url" ? (
+      <div className="ctool-card">
+        <div className="mb-3 flex items-center justify-between gap-3">
           <div className="flex items-center gap-2">
-            <div className="flex flex-1 items-center gap-2 rounded-xl border border-white/[0.08] bg-[#010409] px-4 py-3">
-              <Globe className="h-4 w-4 text-white/20" />
+            <Globe className="ctool-card-icon h-4 w-4" />
+            <span className="ctool-card-title">Enter {mode === "url" ? "URL" : "Text"}</span>
+          </div>
+          <div className="ctool-seg">
+            <button
+              onClick={() => setMode("url")}
+              className={`ui-button transition ${
+                mode === "url" ? "ctool-seg-btn active" : "ctool-seg-btn"
+              }`}
+            >
+              <Globe className="h-3.5 w-3.5" />
+              <span>URL</span>
+            </button>
+            <button
+              onClick={() => setMode("text")}
+              className={`ui-button transition ${
+                mode === "text" ? "ctool-seg-btn active" : "ctool-seg-btn"
+              }`}
+            >
+              <Type className="h-3.5 w-3.5" />
+              <span>Text</span>
+            </button>
+          </div>
+        </div>
+
+        {mode === "url" ? (
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+            <div className="ctool-field flex-1">
+              <Globe className="h-4 w-4 text-white/25" />
               <input
                 value={url}
                 onChange={(e) => setUrl(e.target.value)}
-                className="flex-1 bg-transparent text-sm text-white/70 placeholder:text-white/20 focus:outline-none"
+                className="flex-1 bg-transparent text-sm text-white/80 placeholder:text-white/25 focus:outline-none"
                 placeholder="https://example.com/article"
               />
             </div>
             <button
               onClick={handleExtract}
               disabled={loading}
-              className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-purple-500 to-indigo-500 px-5 py-3 text-sm font-bold text-white shadow-lg shadow-purple-500/20 disabled:opacity-40"
+              className="ui-button ui-button-primary"
             >
               <Brain className="h-4 w-4" /> {loading ? "..." : "Extract NLP"}
             </button>
@@ -79,14 +93,14 @@ export default function NLPExtractor() {
             <textarea
               value={text}
               onChange={(e) => setText(e.target.value)}
-              rows={5}
-              className="w-full rounded-xl border border-white/[0.08] bg-[#010409] px-4 py-3 font-mono text-sm text-white/60 placeholder:text-white/15 focus:outline-none resize-none"
+              rows={6}
+              className="ctool-textarea"
               placeholder="Paste your content here..."
             />
             <button
               onClick={handleExtract}
               disabled={loading}
-              className="mt-3 flex items-center gap-2 rounded-xl bg-gradient-to-r from-purple-500 to-indigo-500 px-5 py-2.5 text-sm font-bold text-white shadow-lg shadow-purple-500/20 disabled:opacity-40"
+              className="ui-button ui-button-primary mt-3"
             >
               <Brain className="h-4 w-4" /> {loading ? "Extracting..." : "Extract NLP"}
             </button>
@@ -94,32 +108,45 @@ export default function NLPExtractor() {
         )}
       </div>
 
-      {/* Results */}
       {results && (
-        <div className="rounded-2xl border border-white/[0.08] bg-[#0d1117] p-5">
-          <h3 className="text-sm font-bold text-white/80 mb-4 flex items-center gap-2">
-            <Zap className="h-4 w-4 text-purple-400" /> NLP Keywords ({results.length})
-          </h3>
-          <div className="overflow-hidden rounded-xl border border-white/[0.06]">
-            <div className="grid grid-cols-[2fr_0.7fr_0.8fr_0.8fr] gap-3 bg-white/[0.02] px-4 py-2.5 border-b border-white/[0.06]">
-              <span className="text-[10px] font-bold uppercase tracking-wider text-white/30">Keyword</span>
-              <span className="text-[10px] font-bold uppercase tracking-wider text-white/30">Relevance</span>
-              <span className="text-[10px] font-bold uppercase tracking-wider text-white/30">Type</span>
-              <span className="text-[10px] font-bold uppercase tracking-wider text-white/30">Sentiment</span>
-            </div>
-            {results.map((r, i) => (
-              <div key={i} className={`grid grid-cols-[2fr_0.7fr_0.8fr_0.8fr] gap-3 px-4 py-3 hover:bg-white/[0.02] ${i < results.length - 1 ? "border-b border-white/[0.03]" : ""}`}>
-                <span className="text-sm text-white/70">{r.keyword}</span>
-                <div className="flex items-center gap-2">
-                  <div className="h-1.5 w-full max-w-[60px] rounded-full bg-white/[0.06]">
-                    <div className="h-full rounded-full bg-purple-400" style={{ width: `${r.relevance}%` }} />
-                  </div>
-                  <span className="text-[10px] text-white/40 font-mono">{r.relevance}%</span>
-                </div>
-                <span className="text-xs text-indigo-300/80 bg-indigo-500/10 rounded-full px-2 py-0.5 w-fit">{r.type}</span>
-                <span className={`text-xs ${r.sentiment === "Positive" ? "text-emerald-400" : "text-white/40"}`}>{r.sentiment}</span>
+        <div className="overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-[0_6px_24px_-12px_rgba(17,24,39,0.18)]">
+          <div className="flex items-center gap-2 border-b border-slate-200 bg-slate-50 px-5 py-3">
+            <Zap className="ctool-card-icon h-4 w-4" />
+            <h3 className="text-sm font-bold text-slate-800">NLP Keywords ({results.length})</h3>
+          </div>
+
+          <div className="overflow-x-auto">
+            <div className="min-w-full">
+              <div className="grid grid-cols-[2fr_0.9fr_0.8fr_0.8fr] gap-3 bg-slate-50 px-4 py-2.5 text-[10px] font-bold uppercase tracking-wider text-slate-500">
+                <span>Keyword</span>
+                <span>Relevance</span>
+                <span>Type</span>
+                <span>Sentiment</span>
               </div>
-            ))}
+
+              {results.map((r, i) => (
+                <div
+                  key={i}
+                  className={`grid grid-cols-[2fr_0.9fr_0.8fr_0.8fr] gap-3 px-4 py-3 text-sm ${
+                    i < results.length - 1 ? "border-b border-slate-100" : ""
+                  }`}
+                >
+                  <span className="text-slate-700">{r.keyword}</span>
+                  <div className="flex items-center gap-2">
+                    <div className="h-1.5 w-full max-w-[65px] rounded-full bg-slate-100">
+                      <div className="h-full rounded-full bg-brand-500" style={{ width: `${r.relevance}%` }} />
+                    </div>
+                    <span className="font-mono text-[10px] text-slate-500">{r.relevance}%</span>
+                  </div>
+                  <span className="app-badge app-badge-brand">
+                    {r.type}
+                  </span>
+                  <span className={`text-xs font-semibold ${r.sentiment === "Positive" ? "text-emerald-600" : "text-slate-500"}`}>
+                    {r.sentiment}
+                  </span>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       )}

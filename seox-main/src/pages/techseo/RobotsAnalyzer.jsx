@@ -40,7 +40,7 @@ function hasPattern(text, pattern) {
 
 function getApiUrls(path) {
   if (
-    import.meta.env.DEV &&
+    import.meta.env?.DEV &&
     typeof window !== "undefined" &&
     ["localhost", "127.0.0.1"].includes(window.location.hostname) &&
     window.location.port === "5173"
@@ -216,7 +216,7 @@ export default function RobotsAnalyzer() {
   function buildReportText() {
     const robotsUrl = currentRobotsUrl();
     return [
-      "AI Smart Seo Robots.txt Analysis",
+      "PGC Robots.txt Analysis",
       robotsUrl ? `URL: ${robotsUrl}` : `Input: ${displayUrl}`,
       `Checks: ${passedCount} passed, ${notFoundCount} not found`,
       "",
@@ -276,23 +276,23 @@ export default function RobotsAnalyzer() {
   const notFoundCount = d.checks.filter((c) => c.status === "notfound").length;
 
   return (
-    <div className="mx-auto max-w-5xl">
+    <div className="">
       {/* ─── Hero Header ─── */}
-      <div className="rounded-2xl bg-gradient-to-r from-orange-500 via-rose-500 to-rose-600 p-6 shadow-lg shadow-rose-500/20">
+      <div className="robots-hero rounded-2xl border border-brand-600 bg-brand-500 p-6">
         <div className="flex items-center gap-3">
-          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-white/15">
+          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-white/90">
             <Bot className="h-6 w-6 text-white" />
           </div>
           <div>
             <h1 className="font-display text-xl font-bold text-white">Robots.txt Analyzer</h1>
-            <p className="text-sm text-white/70">Fetch and analyze robots.txt files for SEO best practices</p>
+            <p className="text-sm text-white">Fetch and analyze robots.txt files for SEO best practices</p>
           </div>
         </div>
         <div className="mt-4">
           <button
             type="button"
             onClick={handleDownloadReport}
-            className="flex items-center gap-1.5 rounded-lg bg-emerald-500 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-emerald-400"
+            className="ui-button robots-report-button"
           >
             <Download className="h-3.5 w-3.5" /> Download Report
           </button>
@@ -300,18 +300,18 @@ export default function RobotsAnalyzer() {
       </div>
 
       {/* ─── Generator promo ─── */}
-      <div className="mt-4 flex items-center justify-between rounded-2xl bg-gradient-to-r from-violet-600/90 to-indigo-600/90 px-5 py-3">
+      <div className="robots-promo mt-4 flex items-center justify-between rounded-2xl px-5 py-3">
         <div className="flex items-center gap-3">
-          <FileText className="h-5 w-5 text-white/70" />
+          <FileText className="h-5 w-5" />
           <div>
-            <span className="text-sm font-semibold text-white">Need a custom robots.txt?</span>
-            <span className="ml-2 rounded bg-emerald-400 px-1.5 py-0.5 text-[10px] font-bold text-ink-900">New Tool</span>
-            <p className="text-xs text-white/60">Use our advanced generator to create the perfect robots.txt file for your site</p>
+            <span className="text-sm font-semibold">Need a custom robots.txt?</span>
+            <span className="ml-2 rounded bg-college-green px-1.5 py-0.5 text-[10px] font-bold text-white">New Tool</span>
+            <p className="text-xs">Use our advanced generator to create the perfect robots.txt file for your site</p>
           </div>
         </div>
         <Link
           to="/seo-tools/robots-generator"
-          className="flex items-center gap-1.5 rounded-lg border border-white/20 bg-white/10 px-4 py-2 text-xs font-semibold text-white transition hover:bg-white/20"
+          className="robots-promo-button ui-button"
         >
           Try Generator <ExternalLink className="h-3 w-3" />
         </Link>

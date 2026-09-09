@@ -1,9 +1,9 @@
 import {
-  firestoreTimestamp,
-  getFirestoreDocument,
-  patchFirestoreDocument,
-  verifyFirebaseIdToken,
-} from "../_lib/firebase-rest.js";
+  sqlTimestamp,
+  getStoredDocument,
+  upsertStoredDocument,
+  verifyAccessToken,
+} from "../_lib/mysql-storage.js";
 import {
   corsHeaders,
   emptyResponse,
@@ -66,7 +66,7 @@ async function getStripeAccount(stripe, accountId) {
 }
 
 async function getConnection(env, uid) {
-  return getFirestoreDocument(env, CONNECTIONS_COLLECTION, uid);
+  return getStoredDocument(env, CONNECTIONS_COLLECTION, uid);
 }
 
 async function handleStatus(env, stripe, decoded) {
@@ -87,13 +87,13 @@ async function handleConnect(request, env, stripe, decoded) {
       type: "express",
       email: decoded.email,
       metadata: {
-        firebaseUid: decoded.uid,
-        firebaseEmail: decoded.email || "",
+        userId: decoded.uid,
+        email: decoded.email || "",
       },
     });
 
-    const now = firestoreTimestamp();
-    await patchFirestoreDocument(env, CONNECTIONS_COLLECTION, decoded.uid, {
+    const now = sqlTimestamp();
+    await upsertStoredDocument(env, CONNECTIONS_COLLECTION, decoded.uid, {
       stripeAccountId: account.id,
       email: decoded.email || "",
       createdAt: now,
@@ -108,10 +108,10 @@ async function handleConnect(request, env, stripe, decoded) {
     type: "account_onboarding",
   });
 
-  await patchFirestoreDocument(env, CONNECTIONS_COLLECTION, decoded.uid, {
+  await upsertStoredDocument(env, CONNECTIONS_COLLECTION, decoded.uid, {
     email: decoded.email || "",
-    lastOnboardingLinkAt: firestoreTimestamp(),
-    updatedAt: firestoreTimestamp(),
+    lastOnboardingLinkAt: sqlTimestamp(),
+    updatedAt: sqlTimestamp(),
   });
 
   return { url: accountLink.url };
@@ -143,7 +143,7 @@ export async function onRequest({ request, env }) {
   }
 
   try {
-    const decoded = await verifyFirebaseIdToken(request, env);
+    const decoded = await verifyAccessToken(request, env);
     const stripe = getStripe(env);
 
     if (request.method === "GET") {

@@ -62,18 +62,21 @@ function projectDomain(value) {
 
 async function persistW3CValidationReport(env, projectId, sourceUrl, report) {
   configureMysqlConnection(env);
+  const normalizedProjectId = String(projectId || "").trim();
   const domain = projectDomain(sourceUrl);
-  const row = projectId
-    ? await queryOne(
-        "SELECT project_id, project_data FROM user_projects WHERE project_id = ? LIMIT 1",
-        [projectId]
-      )
-    : await queryOne(
-        `SELECT project_id, project_data FROM user_projects
-         WHERE LOWER(domain) = ? OR LOWER(full_url) LIKE ?
-         ORDER BY updated_at DESC LIMIT 1`,
-        [domain, `%${domain}%`]
-      );
+
+  let row = null;
+  if (normalizedProjectId) {
+    row = await queryOne(
+      "SELECT project_id, project_data FROM user_projects WHERE project_id = ? LIMIT 1",
+      [normalizedProjectId]
+    );
+  } else if (domain) {
+    row = await queryOne(
+      "SELECT project_id, project_data FROM user_projects WHERE domain = ? LIMIT 1",
+      [domain]
+    );
+  }
 
   if (!row) {
     const error = new Error("Project not found for W3C validation.");
@@ -86,7 +89,11 @@ async function persistW3CValidationReport(env, projectId, sourceUrl, report) {
     "UPDATE user_projects SET project_data = ?, updated_at = NOW() WHERE project_id = ?",
     [JSON.stringify(merged), row.project_id]
   );
-  return row.project_id;
+
+  return {
+    projectId: row.project_id,
+    merged,
+  };
 }
 
 async function validateWithW3C(url) {
@@ -165,21 +172,65 @@ export async function onRequest({ request, env }) {
       validated_at: summary.generatedAt,
       validator: response.data.validator,
     };
-    const savedProjectId = await persistW3CValidationReport(
-      env,
-      String(body?.project_id || body?.projectId || "").trim(),
-      targetUrl.toString(),
-      storedReport
-    );
 
-    response.message = "W3C validation completed and project data updated successfully";
+    let savedResult = null;
+    try {
+      savedResult = await persistW3CValidationReport(
+        env,
+        String(body?.project_id || body?.projectId || "").trim(),
+        targetUrl.toString(),
+        storedReport
+      );
+    } catch (saveError) {
+      const status = Number(saveError?.status) || 500;
+      return jsonResponse(
+        {
+          success: false,
+          message: "W3C validation completed, but the result could not be saved.",
+          error: saveError?.message || "Project data could not be updated.",
+          data: {
+            ...response.data,
+            project_id: String(body?.project_id || body?.projectId || "").trim(),
+            w3c_validation: storedReport,
+          },
+          database: {
+            updated: false,
+            field: "user_projects.project_data[\"w3c-validation\"]",
+          },
+        },
+        status,
+        headers
+      );
+    }
+
+    response.message = "W3C validation completed successfully and result saved.";
+    response.data.project_id = savedResult.projectId;
     response.data.w3c_validation = storedReport;
-    response.data.project_id = savedProjectId;
     response.data.saved_to_project_data = true;
 
-    return jsonResponse(response, 200, headers);
+    return jsonResponse(
+      {
+        success: true,
+        message: response.message,
+        data: response.data,
+        database: {
+          updated: true,
+          field: "user_projects.project_data[\"w3c-validation\"]",
+        },
+      },
+      200,
+      headers
+    );
   } catch (error) {
     const status = Number(error?.status) || 500;
-    return errorResponse(error?.message || "Unable to validate the provided URL.", status, headers);
+    return jsonResponse(
+      {
+        success: false,
+        message: "W3C validation failed.",
+        error: error?.message || "Unable to validate the provided URL.",
+      },
+      status,
+      headers
+    );
   }
 }

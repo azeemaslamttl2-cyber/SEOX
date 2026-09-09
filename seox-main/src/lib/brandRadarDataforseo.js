@@ -51,7 +51,7 @@ export function normalizeBrandInput(input) {
 export function readStoredBrandRadarConfig() {
   if (typeof window === "undefined") return DEFAULT_BRAND_RADAR_CONFIG;
   try {
-    const stored = JSON.parse(window.localStorage.getItem(STORAGE_KEY) || "null");
+    const stored = JSON.parse(window.sessionStorage.getItem(STORAGE_KEY) || "null");
     return normalizeConfig(stored || DEFAULT_BRAND_RADAR_CONFIG);
   } catch {
     return DEFAULT_BRAND_RADAR_CONFIG;
@@ -60,7 +60,7 @@ export function readStoredBrandRadarConfig() {
 
 export function saveBrandRadarConfig(config) {
   if (typeof window === "undefined") return;
-  window.localStorage.setItem(STORAGE_KEY, JSON.stringify(normalizeConfig(config)));
+  window.sessionStorage.setItem(STORAGE_KEY, JSON.stringify(normalizeConfig(config)));
 }
 
 export function buildBrandRadarSearch(config) {

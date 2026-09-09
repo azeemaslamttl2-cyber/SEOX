@@ -8,9 +8,9 @@ import {
   LinksDofollowInsights,
   LinksTopIncomingInsights,
   TrackedIssuesPanel,
-} from "./ReportInsights.jsx";
-import { linkExplorerHref } from "./reportLinks.js";
-import { linkStats } from "./liveReportData.js";
+} from "../../../lib/auditor/reports/ReportInsights.jsx";
+import { linkExplorerHref } from "../../../lib/auditor/reports/reportLinks.js";
+import { linkStats } from "../../../lib/auditor/reports/liveReportData.js";
 
 export default function LinksReport() {
   const { project, issueCategories } = useAuditData();

@@ -19,8 +19,8 @@ export default function SemanticTopicalMapPlaceholder() {
           In development
         </div>
         <p className="mt-2 max-w-2xl text-sm leading-6 text-white/55">
-          The SemanticsX source included this feature as a coming-soon route. AI Smart Seo now keeps the route
-          and navigation entry ready alongside the imported resources and AI agents.
+          The SemanticsX source included this feature as a coming-soon route. PGC now keeps the route
+          and navigation entry ready alongside the imported encyclopedia, resources, and AI agents.
         </p>
       </div>
     </div>

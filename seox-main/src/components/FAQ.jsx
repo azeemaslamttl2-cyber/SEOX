@@ -4,15 +4,15 @@ import { Plus, Minus } from "lucide-react";
 
 const faqs = [
   {
-    q: "How is AI Smart Seo different from Ahrefs or SEMrush?",
-    a: "We don't just track rankings — we engineer them. AI Smart Seo combines deep NLP entity extraction, AI content generation and an autonomous agent layer that fixes issues automatically. Other tools give you data; we give you results.",
+    q: "How is PGC different from Ahrefs or SEMrush?",
+    a: "We don't just track rankings — we engineer them. PGC combines deep NLP entity extraction, AI content generation and an autonomous agent layer that fixes issues automatically. Other tools give you data; we give you results.",
   },
   {
     q: "What is the E-E-A-T audit and why does it matter?",
     a: "E-E-A-T (Experience, Expertise, Authority, Trust) is Google's quality framework. Our scanner checks 60+ on-page and off-page signals across all four pillars and gives you a prioritized fix list — exactly what Google's quality raters look for.",
   },
   {
-    q: "Can AI Smart Seo optimize content for ChatGPT and Google AI Overviews?",
+    q: "Can PGC optimize content for ChatGPT and Google AI Overviews?",
     a: "Yes. Our AnswerEngine Optimizer (AEO) module structures content for retrieval by ChatGPT, Perplexity, Gemini and Google AI Overviews. It's built into every plan — no extra add-ons.",
   },
   {

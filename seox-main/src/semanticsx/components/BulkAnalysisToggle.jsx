@@ -46,14 +46,14 @@ const BulkAnalysisToggle = () => {
     };
 
     return (
-        <div className="bg-gray-100 rounded-full p-1 flex items-center gap-1 shadow-sm">
+        <div className="bulk-engine-switch">
             {options.map((opt) => {
                 const isActive = current === opt.id;
                 return (
                     <button
                         key={opt.id}
                         onClick={() => navigate(opt.path)}
-                        className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium transition-all ${isActive ? 'bg-white shadow text-gray-900' : 'text-gray-500 hover:text-gray-700'}`}
+                        className={`bulk-engine-btn ${isActive ? 'active' : ''}`}
                         aria-pressed={isActive}
                         aria-label={`${opt.label} Bulk Analysis`}
                     >

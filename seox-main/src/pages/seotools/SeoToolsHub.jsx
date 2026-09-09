@@ -1,64 +1,270 @@
+import { useState, useMemo } from "react";
 import { Link } from "react-router-dom";
-import { Wrench, Link2, Type, Globe, Hash, Eye, ArrowUpDown, Map, FileCode2, FileCode, Database, FileSpreadsheet, ChevronRight } from "lucide-react";
+import {
+  Wrench, Link2, Type, Globe, Hash, Eye, ArrowUpDown, Map, FileCode2,
+  FileCode, Database, ChevronRight, Search, Zap, ShieldCheck
+} from "lucide-react";
 
 const tools = [
-  { to: "/seo-tools/url-editor", label: "Ultimate URL Editor", Icon: Link2, gradient: "from-slate-700 to-cyan-700", btn: "from-cyan-600 to-sky-600" },
-  { to: "/seo-tools/text-editor", label: "Universal Text Editor", Icon: Type, gradient: "from-slate-700 to-violet-700", btn: "from-violet-600 to-purple-600" },
-  { to: "/seo-tools/domain-separator", label: "Domain Separator", Icon: Globe, gradient: "from-slate-700 to-sky-700", btn: "from-sky-600 to-blue-600" },
-  { to: "/seo-tools/word-counter", label: "Word Counter", Icon: Hash, gradient: "from-slate-700 to-emerald-700", btn: "from-emerald-600 to-teal-600" },
-  { to: "/seo-tools/bot-viewer", label: "Bot Viewer", Icon: Eye, gradient: "from-slate-700 to-indigo-700", btn: "from-indigo-600 to-blue-600" },
-  { to: "/seo-tools/da-pa-checker", label: "Bulk DA/PA Checker", Icon: ArrowUpDown, gradient: "from-slate-700 to-blue-700", btn: "from-blue-600 to-indigo-600" },
-  { to: "/seo-tools/sitemap-generator", label: "Sitemap Generator", Icon: Map, gradient: "from-slate-700 to-fuchsia-700", btn: "from-fuchsia-600 to-violet-600" },
-  { to: "/seo-tools/robots-generator", label: "Robots.txt Generator", Icon: FileCode2, gradient: "from-slate-700 to-indigo-700", btn: "from-indigo-600 to-violet-600" },
-  { to: "/seo-tools/sitemap-extractor", label: "XML Sitemap Extractor", Icon: FileCode, gradient: "from-slate-700 to-teal-700", btn: "from-teal-600 to-cyan-600" },
-  { to: "/seo-tools/meta-extractor", label: "Bulk Meta Extractor", Icon: Database, gradient: "from-slate-700 to-violet-700", btn: "from-violet-600 to-indigo-600" },
-  { to: "/seo-tools/csv-reporter", label: "Bulk CSV Reporter", Icon: FileSpreadsheet, gradient: "from-slate-700 to-emerald-700", btn: "from-teal-600 to-emerald-600" },
+  {
+    to: "/seo-tools/url-editor",
+    label: "Ultimate URL Editor",
+    category: "URL & Domains",
+    desc: "Batch normalize, encode/decode, clean tracking parameters, and reformat large lists of URLs.",
+    Icon: Link2,
+    iconClass: "tool-icon-blue",
+    tags: ["URL Cleaning", "Query Stripper", "Batch Mode"],
+    featured: true
+  },
+  {
+    to: "/seo-tools/text-editor",
+    label: "Universal Text Editor",
+    category: "URL & Domains",
+    desc: "Clean raw text datasets, remove unwanted HTML tags, apply regex find & replace, and reformat casing.",
+    Icon: Type,
+    iconClass: "tool-icon-purple",
+    tags: ["HTML Stripper", "Regex Replace", "Case Format"]
+  },
+  {
+    to: "/seo-tools/domain-separator",
+    label: "Domain Separator",
+    category: "URL & Domains",
+    desc: "Isolate root domains, subdomains, protocols, and TLD extensions from unformatted URL exports.",
+    Icon: Globe,
+    iconClass: "tool-icon-indigo",
+    tags: ["Root Domains", "Subdomains", "TLD Filter"]
+  },
+  {
+    to: "/seo-tools/word-counter",
+    label: "Word Counter",
+    category: "Analysis & Metrics",
+    desc: "Real-time word, sentence, and character counts with keyword density metrics and reading time calculation.",
+    Icon: Hash,
+    iconClass: "tool-icon-emerald",
+    tags: ["Keyword Density", "Character Stats", "Reading Time"]
+  },
+  {
+    to: "/seo-tools/bot-viewer",
+    label: "Bot Viewer",
+    category: "Analysis & Metrics",
+    desc: "Simulate user-agent HTTP requests from Googlebot, Bingbot, and custom search crawlers to inspect DOM output.",
+    Icon: Eye,
+    iconClass: "tool-icon-amber",
+    tags: ["Googlebot Sim", "User-Agent Header", "DOM Inspection"]
+  },
+  {
+    to: "/seo-tools/da-pa-checker",
+    label: "Bulk DA/PA Checker",
+    category: "Analysis & Metrics",
+    desc: "Verify Domain Authority, Page Authority, and spam scores across bulk domain lists for link prospecting.",
+    Icon: ArrowUpDown,
+    iconClass: "tool-icon-rose",
+    tags: ["Domain Authority", "Spam Score", "Prospecting"],
+    featured: true
+  },
+  {
+    to: "/seo-tools/sitemap-generator",
+    label: "Sitemap Generator",
+    category: "Indexing & Directives",
+    desc: "Generate valid search-engine-ready XML and HTML sitemaps with priority, changefreq, and lastmod tags.",
+    Icon: Map,
+    iconClass: "tool-icon-brand",
+    tags: ["XML Sitemap", "Priority Tags", "Google Spec"],
+    featured: true
+  },
+  {
+    to: "/seo-tools/robots-generator",
+    label: "Robots.txt Generator",
+    category: "Indexing & Directives",
+    desc: "Create, validate, and test custom robots.txt directives and crawl rules for major search engine user-agents.",
+    Icon: FileCode2,
+    iconClass: "tool-icon-cyan",
+    tags: ["Crawl Rules", "Disallow Syntax", "Bot Directives"]
+  },
+  {
+    to: "/seo-tools/sitemap-extractor",
+    label: "XML Sitemap Extractor",
+    category: "Indexing & Directives",
+    desc: "Fetch and extract all indexable URLs, images, and nested sub-sitemaps from any live XML sitemap URL.",
+    Icon: FileCode,
+    iconClass: "tool-icon-teal",
+    tags: ["URL Extraction", "Nested Sitemaps", "Export CSV"]
+  },
+  {
+    to: "/seo-tools/meta-extractor",
+    label: "Bulk Meta Extractor",
+    category: "Analysis & Metrics",
+    desc: "Scrape and extract page titles, meta descriptions, canonical URLs, and OpenGraph headers in batch.",
+    Icon: Database,
+    iconClass: "tool-icon-fuchsia",
+    tags: ["Meta Tags", "OpenGraph", "Canonical Check"]
+  },
 ];
 
+const categories = ["All Tools", "URL & Domains", "Indexing & Directives", "Analysis & Metrics"];
+
 export default function SeoToolsHub() {
+  const [selectedCategory, setSelectedCategory] = useState("All Tools");
+  const [searchQuery, setSearchQuery] = useState("");
+
+  const filteredTools = useMemo(() => {
+    return tools.filter((tool) => {
+      const matchesCategory = selectedCategory === "All Tools" || tool.category === selectedCategory;
+      const q = searchQuery.toLowerCase().trim();
+      const matchesSearch =
+        !q ||
+        tool.label.toLowerCase().includes(q) ||
+        tool.desc.toLowerCase().includes(q) ||
+        tool.category.toLowerCase().includes(q) ||
+        tool.tags.some((t) => t.toLowerCase().includes(q));
+      return matchesCategory && matchesSearch;
+    });
+  }, [selectedCategory, searchQuery]);
+
   return (
-    <div className="mx-auto max-w-[1200px] space-y-6">
-      {/* Hero */}
-      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-slate-800 via-indigo-800 to-blue-800 p-7">
-        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_70%_-20%,rgba(255,255,255,0.15),transparent)]" />
-        <div className="pointer-events-none absolute -bottom-10 -right-10 h-40 w-40 rounded-full bg-white/10 blur-3xl" />
-        <div className="relative z-10 flex items-center gap-4">
-          <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-white/15 backdrop-blur-md">
-            <Wrench className="h-7 w-7 text-white" />
+    <div className="seo-tools-hub-workspace ctool-page space-y-5 pb-8">
+      {/* Hero Header */}
+      <div className="seo-hub-hero">
+        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+          <div className="flex items-center gap-4">
+            <div className="ctool-hero-icon">
+              <Wrench className="h-5 w-5" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <h1 className="ctool-title font-display">
+                  SEO Tools Hub
+                </h1>
+                <span className="ctool-count-badge">
+                  10 Tools Available
+                </span>
+              </div>
+              <p className="ctool-subtitle">
+                Essential technical SEO utilities for URL normalization, sitemap generation, bot simulation, and meta data extraction.
+              </p>
+            </div>
           </div>
-          <div>
-            <h1 className="font-display text-2xl font-black text-white">SEO Tools</h1>
-            <p className="text-sm text-white/65">A collection of essential SEO utilities for professionals</p>
+
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="hub-chip">
+              <Zap className="h-3.5 w-3.5" /> Fast Execution
+            </span>
+            <span className="hub-chip">
+              <ShieldCheck className="h-3.5 w-3.5" /> Batch Ready
+            </span>
           </div>
         </div>
       </div>
 
-      {/* Tool Cards */}
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {tools.map((tool) => {
-          const Icon = tool.Icon;
-          return (
-            <Link
-              key={tool.to}
-              to={tool.to}
-              className="group relative overflow-hidden rounded-2xl border border-white/[0.08] bg-[#0d1117] p-6 transition-all hover:border-white/15 hover:-translate-y-1 hover:shadow-xl"
-            >
-              {/* Ambient glow */}
-              <div className={`pointer-events-none absolute -top-12 -right-12 h-40 w-40 rounded-full bg-gradient-to-br ${tool.gradient} opacity-10 blur-3xl transition-opacity group-hover:opacity-20`} />
+      {/* Filter and Search Controls */}
+      <div className="ctool-card hub-controls flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        {/* Search Bar */}
+        <div className="relative flex-1 max-w-md">
+          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 sres-search-icon" />
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Search tools by name, tag, or function..."
+            className="schema-input pl-10"
+          />
+        </div>
 
-              <div className="relative z-10 flex flex-col items-center text-center">
-                <div className={`flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br ${tool.gradient} shadow-lg`}>
-                  <Icon className="h-6 w-6 text-white" />
-                </div>
-                <h3 className="mt-4 text-sm font-bold text-white/85">{tool.label}</h3>
-                <div className={`mt-4 flex items-center gap-1 rounded-full bg-gradient-to-r ${tool.btn} px-4 py-1.5 text-[11px] font-bold text-white shadow-md transition group-hover:gap-2`}>
-                  Go to Tool <ChevronRight className="h-3 w-3 transition-transform group-hover:translate-x-0.5" />
-                </div>
-              </div>
-            </Link>
-          );
-        })}
+        {/* Category Pills */}
+        <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5">
+          {categories.map((cat) => (
+            <button
+              key={cat}
+              onClick={() => setSelectedCategory(cat)}
+              className={`cat-filter-btn ${
+                selectedCategory === cat
+                  ? "cat-filter-btn-active"
+                  : "cat-filter-btn-inactive"
+              }`}
+            >
+              {cat}
+            </button>
+          ))}
+        </div>
       </div>
+
+      {/* Tools Grid */}
+      {filteredTools.length === 0 ? (
+        <div className="ctool-empty">
+          <Wrench className="h-8 w-8 mb-2" />
+          <h3 className="ctool-empty-title">No SEO tools matched your search</h3>
+          <p className="ctool-empty-text">Try clearing your search query or selecting a different category filter.</p>
+          <button
+            onClick={() => { setSearchQuery(""); setSelectedCategory("All Tools"); }}
+            className="schema-addlink mt-3"
+          >
+            Reset Filters
+          </button>
+        </div>
+      ) : (
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {filteredTools.map((tool) => {
+            const Icon = tool.Icon;
+            return (
+              <Link
+                key={tool.to}
+                to={tool.to}
+                className="hub-tool group"
+              >
+                <div>
+                  {/* Top Bar: Icon + Category Badge */}
+                  <div className="flex items-center justify-between mb-3.5">
+                    <div className="tool-icon-box">
+                      <Icon />
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      {tool.featured && (
+                        <span className="app-badge app-badge-warning">
+                          ★ Featured
+                        </span>
+                      )}
+                      <span className="hub-cat-badge">
+                        {tool.category}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Title & Description */}
+                  <h3 className="hub-tool-title font-display">
+                    {tool.label}
+                  </h3>
+                  <p className="hub-tool-desc line-clamp-2">
+                    {tool.desc}
+                  </p>
+
+                  {/* Feature Tags */}
+                  <div className="mt-3 flex flex-wrap gap-1">
+                    {tool.tags.map((tag) => (
+                      <span
+                        key={tag}
+                        className="hub-tag"
+                      >
+                        {tag}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Footer Action */}
+                <div className="hub-tool-foot">
+                  <span className="hub-tool-ready">Ready to use</span>
+                  <div className="btn-tool-open">
+                    <span>Open Tool</span>
+                    <ChevronRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-1" />
+                  </div>
+                </div>
+              </Link>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }
+
+

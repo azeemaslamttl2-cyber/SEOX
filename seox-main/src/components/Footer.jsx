@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Twitter, Github, Linkedin, Youtube, Mail, Check } from "lucide-react";
 import Logo from "./Logo.jsx";
-import { track } from "../lib/firebase.js";
+import { track } from "../lib/analytics.js";
 
 const cols = [
   {
@@ -10,7 +10,7 @@ const cols = [
   },
   {
     title: "Resources",
-    links: ["Blog", "Help Center", "API Docs", "Case Studies", "Webinars"],
+    links: ["Blog", "Help Center", "API Docs", "SEO Encyclopedia", "Case Studies", "Webinars"],
   },
   {
     title: "Company",
@@ -45,9 +45,7 @@ export default function Footer() {
           <div>
             <a href="#" className="flex items-center gap-2.5">
               <Logo className="h-9 w-9" />
-              <span className="font-display text-xl font-bold tracking-tight">
-                AI Smart <span className="text-brand-400">Seo</span>
-              </span>
+              <span className="font-display text-xl font-bold tracking-tight">PGC</span>
             </a>
             <p className="mt-4 max-w-xs text-sm text-white/55">
               The 2026 Intelligence Framework. 60+ semantic SEO tools engineered to make your team
@@ -119,7 +117,7 @@ export default function Footer() {
 
         <div className="mt-12 flex flex-col items-center justify-between gap-4 border-t border-white/10 pt-6 sm:flex-row">
           <p className="text-xs text-white/40">
-            © {new Date().getFullYear()} AI Smart Seo. Engineered for AI-era search.
+            © {new Date().getFullYear()} PGC. Engineered for AI-era search.
           </p>
           <div className="flex items-center gap-2 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3 py-1 text-[11px] font-semibold text-emerald-400">
             <span className="relative flex h-2 w-2">

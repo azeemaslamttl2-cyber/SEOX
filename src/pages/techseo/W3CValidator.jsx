@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 import { useSelectedProjectDomain } from "../../hooks/useSelectedProjectDomain.js";
 import { useTechSeoToolResult } from "../../hooks/useTechSeoToolResult.js";
+import { getSessionToken } from "../../lib/authSession.js";
 
 const EMPTY_W3C_RESULT = {
   status: "idle",
@@ -44,8 +45,12 @@ export default function W3CValidator() {
   });
   const [isValidating, setIsValidating] = useState(false);
   const [localError, setLocalError] = useState("");
+  const [localResult, setLocalResult] = useState(null);
 
-  const result = savedResult && typeof savedResult === "object" ? savedResult : EMPTY_W3C_RESULT;
+  const hasSavedResult = Boolean(
+    savedResult && typeof savedResult === "object" && (savedResult.status !== "idle" || Array.isArray(savedResult.messages) || Number(savedResult.totalErrors || 0) || Number(savedResult.totalWarnings || 0))
+  );
+  const result = localResult || (savedResult && typeof savedResult === "object" ? savedResult : EMPTY_W3C_RESULT);
   const totalInfoMessages = Array.isArray(result.messages)
     ? result.messages.filter((item) => String(item?.type || "").toLowerCase() === "info").length
     : 0;
@@ -73,29 +78,51 @@ export default function W3CValidator() {
     setIsValidating(true);
 
     try {
-      const url = new URL("/api/tech-seo/w3c/validate", window.location.origin);
-      url.searchParams.set("url", projectUrl);
-      if (project?.id) url.searchParams.set("projectId", String(project.id));
-
+      const url = new URL("/api/tech-seo/w3c-validation", window.location.origin);
+      const adminToken = getSessionToken();
       const response = await fetch(url.toString(), {
-        headers: { Accept: "application/json" },
+        method: "POST",
+        headers: {
+          Accept: "application/json",
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          url: projectUrl,
+          project_id: project?.id || "",
+          projectId: project?.id || "",
+          admin_token: adminToken,
+        }),
       });
       const payload = await response.json().catch(() => ({}));
 
-      if (!response.ok) {
-        throw new Error(payload?.error || `W3C validation failed with HTTP ${response.status}`);
+      if (!response.ok || payload?.success === false) {
+        const backendMessage = payload?.message || payload?.error || `W3C validation failed with HTTP ${response.status}`;
+        if (payload?.database?.updated === false && payload?.message) {
+          throw new Error("Validation completed, but the result could not be saved.");
+        }
+        throw new Error(backendMessage);
       }
 
+      const apiResult = payload?.data || payload || EMPTY_W3C_RESULT;
       const normalized = {
         ...EMPTY_W3C_RESULT,
-        ...payload,
-        url: payload?.url || projectUrl,
-        messages: Array.isArray(payload?.messages) ? payload.messages : [],
-        validator: payload?.validator || EMPTY_W3C_RESULT.validator,
+        ...apiResult,
+        url: apiResult?.url || projectUrl,
+        status: apiResult?.status || "valid",
+        totalErrors: Number(apiResult?.totalErrors || apiResult?.errors || 0),
+        totalWarnings: Number(apiResult?.totalWarnings || apiResult?.warnings || 0),
+        totalMessages: Number(apiResult?.totalMessages || apiResult?.messages?.length || 0),
+        messages: Array.isArray(apiResult?.messages) ? apiResult.messages : [],
+        validator: apiResult?.validator || EMPTY_W3C_RESULT.validator,
       };
 
-      await saveResult(normalized);
+      setLocalResult(normalized);
+      setLocalError("");
+      if (payload?.database?.updated === false) {
+        setLocalError("Validation completed, but the result could not be saved.");
+      }
     } catch (error) {
+      setLocalResult(null);
       setLocalError(error?.message || "W3C validation is unavailable right now.");
     } finally {
       setIsValidating(false);
@@ -126,7 +153,7 @@ export default function W3CValidator() {
             className="ui-button ui-button-primary w3c-run-button"
           >
             {isValidating ? <RefreshCw className="h-4 w-4 animate-spin" /> : <Globe className="h-4 w-4" />}
-            {isValidating ? "Validating..." : result.status === "idle" ? "Run Validation" : "Run Validation Again"}
+            {isValidating ? "Running W3C validation..." : result.status === "idle" ? "Run Validation" : "Run Validation Again"}
           </button>
         </div>
 
@@ -152,6 +179,29 @@ export default function W3CValidator() {
         {(localError || persistenceError) && (
           <div className="app-alert app-alert-error mt-3">
             {localError || persistenceError}
+          </div>
+        )}
+
+        {!hasProject && !projectUrl && (
+          <div className="app-empty-state mt-4">
+            <Info className="h-6 w-6" />
+            <p>No W3C validation result is available for this project.</p>
+            <p>Select a project with a valid website URL before running validation.</p>
+          </div>
+        )}
+
+        {hasProject && projectUrl && !hasSavedResult && !isValidating && !localResult && (
+          <div className="app-empty-state mt-4">
+            <Info className="h-6 w-6" />
+            <p>No W3C validation results are available for this project.</p>
+            <p>Run validation to generate the latest W3C validation report.</p>
+          </div>
+        )}
+
+        {hasProject && projectUrl && !hasSavedResult && !isValidating && !localResult && false && (
+          <div className="app-empty-state mt-4">
+            <RefreshCw className="h-6 w-6 animate-spin" />
+            <p>Loading saved W3C validation results...</p>
           </div>
         )}
       </div>

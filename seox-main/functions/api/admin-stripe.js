@@ -1,8 +1,8 @@
 import {
   assertAdmin,
-  listFirestoreCollection,
+  listStoredCollection,
   lookupAuthUsers,
-} from "../_lib/firebase-rest.js";
+} from "../_lib/mysql-storage.js";
 import {
   corsHeaders,
   emptyResponse,
@@ -41,7 +41,7 @@ async function getStripeAccountSafe(stripe, accountId) {
 }
 
 async function handleList(env, stripe) {
-  const documents = await listFirestoreCollection(env, "stripeConnections", 500);
+  const documents = await listStoredCollection(env, "stripeConnections", 500);
   const connections = documents.map((document) => ({
     ...document,
     uid: document.id,

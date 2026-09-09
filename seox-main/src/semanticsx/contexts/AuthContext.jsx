@@ -5,7 +5,7 @@ const READ_KEY = "seox_semanticsx_read_articles";
 
 function readStore() {
   try {
-    return JSON.parse(localStorage.getItem(READ_KEY) || "{}");
+    return JSON.parse(sessionStorage.getItem(READ_KEY) || "{}");
   } catch {
     return {};
   }
@@ -13,7 +13,7 @@ function readStore() {
 
 function writeStore(store) {
   try {
-    localStorage.setItem(READ_KEY, JSON.stringify(store));
+    sessionStorage.setItem(READ_KEY, JSON.stringify(store));
   } catch {
     // Ignore storage failures; read progress is a convenience only.
   }

@@ -1,8 +1,10 @@
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import {
   Zap,
   ShieldCheck,
   FileSearch,
+  Link2,
   Bot,
   Activity,
   TrendingUp,
@@ -26,20 +28,13 @@ import { useDashboardGscMetrics } from "../hooks/useDashboardGscMetrics.js";
 import { useProjectToolChecks } from "../hooks/useProjectToolChecks.js";
 import { averageCompletedScore } from "../lib/projectToolChecks.js";
 import { formatNumber } from "../lib/techSeoTools.js";
-
-const DASHBOARD_TOOL_KEYS = [
-  "speed",
-  "eeat",
-  "semantic",
-  "crawlOptimization",
-  "robots",
-  "duplicate",
-];
+import SecurityCard from "../components/dashboard/SecurityCard.jsx";
+import GbpCard from "../components/dashboard/GbpCard.jsx";
 
 /* ------------------------------------------------------------------ */
 /*  SVG circular progress ring                                        */
 /* ------------------------------------------------------------------ */
-function CircularProgress({ value = 0, size = 80, strokeWidth = 6, color = "#fb923c" }) {
+function CircularProgress({ value = 0, size = 80, strokeWidth = 6, color = "#df3c27" }) {
   const radius = (size - strokeWidth) / 2;
   const circumference = 2 * Math.PI * radius;
   const offset = circumference - (value / 100) * circumference;
@@ -51,7 +46,7 @@ function CircularProgress({ value = 0, size = 80, strokeWidth = 6, color = "#fb9
         cy={size / 2}
         r={radius}
         fill="none"
-        stroke="rgba(255,255,255,0.06)"
+        stroke="#e2e5ee"
         strokeWidth={strokeWidth}
       />
       {/* Progress */}
@@ -110,7 +105,7 @@ function MetricSparkline({ data, dataKey, color }) {
 /* ------------------------------------------------------------------ */
 function MetricCard({ icon: Icon, label, value, color, iconBg, footer = "Waiting for data", sparklineData, sparklineKey }) {
   return (
-    <div className="group relative overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-b from-white/[0.04] to-white/[0.01] p-5 pb-3 transition-all duration-300 hover:border-brand-500/30 hover:-translate-y-1 hover:shadow-[0_16px_48px_-12px_rgba(249,115,22,0.2)]">
+    <div className="dashboard-metric-card group relative overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-b from-white/[0.04] to-white/[0.01] p-5 pb-3 transition-all duration-300 hover:border-brand-500/30 hover:-translate-y-1 hover:shadow-[0_16px_48px_-12px_rgba(249,115,22,0.2)]">
       <div className="flex items-center gap-2 text-xs text-white/50 mb-1">
         <span
           className="flex h-6 w-6 items-center justify-center rounded-md"
@@ -135,11 +130,11 @@ function MetricCard({ icon: Icon, label, value, color, iconBg, footer = "Waiting
 /*  Score card (Speed, E-E-A-T, On-Page, etc.)                        */
 /* ------------------------------------------------------------------ */
 function statusClass(status) {
-  if (status === "complete") return "bg-emerald-500/15 text-emerald-300";
-  if (status === "running") return "bg-blue-500/15 text-blue-300";
-  if (status === "error") return "bg-rose-500/15 text-rose-300";
-  if (status === "skipped") return "bg-amber-500/15 text-amber-300";
-  return "bg-white/[0.06] text-white/45";
+  if (status === "complete") return "border border-emerald-200 bg-emerald-50 text-emerald-700";
+  if (status === "running") return "border border-blue-200 bg-blue-50 text-blue-700";
+  if (status === "error") return "border border-rose-200 bg-rose-50 text-rose-700";
+  if (status === "skipped") return "border border-amber-200 bg-amber-50 text-amber-700";
+  return "border border-slate-200 bg-slate-50 text-slate-600";
 }
 
 function statusLabel(status) {
@@ -187,7 +182,7 @@ function ScoreCard({ icon: Icon, label, subtitle, score = null, status = "queued
       </div>
 
       <div className="mt-4 flex items-center justify-between">
-        <span className={`rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide ${statusClass(status)}`}>
+        <span className={`dashboard-score-status inline-flex min-w-[58px] justify-center rounded-md px-2.5 py-1.5 text-[10px] font-bold uppercase tracking-wide ${statusClass(status)}`}>
           {statusLabel(status)}
         </span>
         <div className="relative">
@@ -201,83 +196,79 @@ function ScoreCard({ icon: Icon, label, subtitle, score = null, status = "queued
   );
 }
 
-function GscConnectionNotice({ domain, gscMetrics }) {
-  const isLoading = gscMetrics.status === "loading";
-  const isError = gscMetrics.status === "error";
-  const title = isLoading
-    ? "Checking Search Console"
-    : isError
-    ? "Search Console unavailable"
-    : "No linked Search Console property";
-  const body = isLoading
-    ? `Checking whether ${domain} has a linked Google Search Console property.`
-    : isError
-    ? gscMetrics.detail || "Could not load Search Console for this project."
-    : gscMetrics.detail || `Add ${domain} as a project and connect the matching GSC property to show live dashboard metrics.`;
-
-  return (
-    <div className="mt-5 rounded-2xl border border-white/10 bg-gradient-to-b from-white/[0.04] to-white/[0.01] p-5">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex items-start gap-3">
-          <span className={`flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl ${isError ? "bg-rose-500/15" : "bg-sky-500/15"}`}>
-            <BarChart3 className={`h-5 w-5 ${isError ? "text-rose-300" : "text-sky-300"}`} />
-          </span>
-          <div>
-            <h3 className="font-display text-sm font-bold text-white">{title}</h3>
-            <p className="mt-1 max-w-2xl text-xs leading-relaxed text-white/45">{body}</p>
-          </div>
-        </div>
-        <Link
-          to="/gsc"
-          className="inline-flex items-center justify-center gap-1.5 rounded-full border border-white/10 bg-white/[0.04] px-3 py-1.5 text-xs font-semibold text-white/65 transition hover:bg-white/[0.08]"
-        >
-          Manage GSC
-          <ExternalLink className="h-3.5 w-3.5" />
-        </Link>
-      </div>
-    </div>
-  );
-}
-
 /* ------------------------------------------------------------------ */
 /*  Main Dashboard                                                    */
 /* ------------------------------------------------------------------ */
 export default function Dashboard() {
   const { user } = useAuth();
-  const { project, stats } = useCrawl();
-  const { checks, isRunning, rerun } = useProjectToolChecks(project, user);
-  const gscMetrics = useDashboardGscMetrics(project, user);
+  const { project, stats, storageReady } = useCrawl();
+  
+  // Only load tool checks and GSC metrics after:
+  // 1. A project is selected
+  // 2. CrawlContext is ready with database-loaded projects
+  // This ensures high-priority loading of projects before other data
+  const { checks, isRunning, rerun } = useProjectToolChecks(
+    storageReady ? project : null, 
+    user
+  );
+  const gscMetrics = useDashboardGscMetrics(
+    storageReady ? project : null, 
+    user
+  );
+  
   const domain = project?.domain || project?.url || "your-domain.com";
   const tools = checks?.tools || {};
-  const hasLinkedGsc = gscMetrics.status === "complete";
-  const metrics = hasLinkedGsc
-    ? gscMetrics.metrics
-    : { clicks: 0, impressions: 0, ctr: 0, position: 0 };
-  const visibleTools = Object.fromEntries(
-    DASHBOARD_TOOL_KEYS.map((key) => [key, tools[key]]).filter(([, value]) => value)
-  );
-  const overallScore = averageCompletedScore(visibleTools);
+  const metrics =
+    gscMetrics.status === "complete"
+      ? gscMetrics.metrics
+      : checks?.metrics || { clicks: 0, impressions: 0, ctr: 0, position: 0 };
+  const overallScore = averageCompletedScore(tools);
+  const [autoRunStarted, setAutoRunStarted] = useState(false);
+
+  useEffect(() => {
+    if (!project || isRunning || autoRunStarted) return;
+    if (!checks || checks.status === "complete") return;
+
+    setAutoRunStarted(true);
+    rerun().catch(() => {
+      // The tool run may fail silently; the dashboard state still updates.
+    });
+  }, [project, checks, isRunning, autoRunStarted, rerun]);
+
+  useEffect(() => {
+    setAutoRunStarted(false);
+  }, [project?.id]);
+
   const tool = (key) => tools[key] || { status: "queued", score: null, summary: "Waiting to run" };
+  const gscTool =
+    gscMetrics.status === "complete"
+      ? {
+          ...tool("gsc"),
+          status: "complete",
+          score: 100,
+          summary: `${formatNumber(gscMetrics.metrics.clicks)} clicks from GSC`,
+        }
+      : tool("gsc");
 
   return (
     <section className="pb-16">
       {/* Welcome banner */}
-      <div className="relative overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br from-brand-500/[0.08] via-ink-800 to-ink-900 p-6 sm:p-8">
-        <div className="pointer-events-none absolute -right-16 -top-16 h-56 w-56 animate-float-slow rounded-full bg-brand-500/20 blur-3xl" />
-        <div className="pointer-events-none absolute -bottom-20 -left-12 h-56 w-56 animate-float rounded-full bg-amber-400/15 blur-3xl" />
+      <div className="dashboard-welcome relative overflow-hidden rounded-2xl border border-brand-600 bg-brand-500 p-6 sm:p-8">
+        <div className="pointer-events-none absolute -right-16 -top-16 h-56 w-56 animate-float-slow rounded-full bg-college-blue/20 blur-3xl" />
+        <div className="pointer-events-none absolute -bottom-20 -left-12 h-56 w-56 animate-float rounded-full bg-college-yellow/20 blur-3xl" />
         <div className="relative">
           <h1 className="font-display text-2xl font-bold tracking-tight sm:text-3xl">
-            Welcome to <span className="gradient-text">AI Smart Seo</span>
+            Welcome to <span>PGC</span>
           </h1>
-          <p className="mt-1 text-sm text-white/55">
-            Monitoring <span className="font-medium text-white/70">{domain}</span> - Track your SEO performance
+          <p className="mt-1 text-sm text-white">
+            Monitoring <span className="font-medium text-white">{domain}</span> - Track your SEO performance
           </p>
           <div className="mt-5 flex flex-wrap items-center gap-3">
             <span className={`rounded-full px-3 py-1 text-xs font-bold uppercase tracking-wide ${isRunning ? "bg-blue-500/15 text-blue-300" : "bg-emerald-500/15 text-emerald-300"}`}>
               {isRunning ? "Checks running" : checks?.completedAt ? "Checks complete" : "Checks pending"}
             </span>
             {checks?.updatedAt && (
-              <span className="text-xs text-white/40">
+                <span className="text-xs text-white">
                 Updated {new Date(checks.updatedAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
               </span>
             )}
@@ -285,62 +276,64 @@ export default function Dashboard() {
               type="button"
               onClick={rerun}
               disabled={!project || isRunning}
-              className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/[0.04] px-3 py-1.5 text-xs font-semibold text-white/65 transition hover:bg-white/[0.08] disabled:cursor-not-allowed disabled:opacity-40"
+              className="ui-button ui-button-primary"
             >
               <RefreshCw className={`h-3.5 w-3.5 ${isRunning ? "animate-spin" : ""}`} />
               Run checks
             </button>
+            {gscMetrics.status === "skipped" && (
+              <Link to="/gsc" className="ui-button ui-button-secondary">
+                <Search className="h-3.5 w-3.5" />
+                Connect Google Search Console
+              </Link>
+            )}
           </div>
         </div>
       </div>
 
       {/* Top metrics row - Clicks, Impressions, CTR, Avg. Position */}
-      {hasLinkedGsc ? (
-        <div className="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-          <MetricCard
-            icon={MousePointerClick}
-            label="Clicks"
-            value={formatNumber(metrics.clicks)}
-            color="#7c5cf0"
-            iconBg="rgba(124,92,240,0.15)"
-            footer={metricFooter(gscMetrics, "clicks")}
-            sparklineData={gscMetrics.dailyData}
-            sparklineKey="clicks"
-          />
-          <MetricCard
-            icon={Eye}
-            label="Impressions"
-            value={formatNumber(metrics.impressions)}
-            color="#22c55e"
-            iconBg="rgba(34,197,94,0.15)"
-            footer={metricFooter(gscMetrics, "impressions")}
-            sparklineData={gscMetrics.dailyData}
-            sparklineKey="impressions"
-          />
-          <MetricCard
-            icon={TrendingUp}
-            label="CTR"
-            value={`${Number(metrics.ctr || 0).toFixed(2)}%`}
-            color="#f59e0b"
-            iconBg="rgba(245,158,11,0.15)"
-            footer={metricFooter(gscMetrics, "ctr")}
-            sparklineData={gscMetrics.dailyData}
-            sparklineKey="ctr"
-          />
-          <MetricCard
-            icon={BarChart3}
-            label="Avg. Position"
-            value={Number(metrics.position || 0).toFixed(1)}
-            color="#ef4444"
-            iconBg="rgba(239,68,68,0.15)"
-            footer={metricFooter(gscMetrics, "position")}
-            sparklineData={gscMetrics.dailyData}
-            sparklineKey="position"
-          />
-        </div>
-      ) : (
-        <GscConnectionNotice domain={domain} gscMetrics={gscMetrics} />
-      )}
+      <div className="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <MetricCard
+          icon={MousePointerClick}
+          label="Clicks"
+          value={formatNumber(metrics.clicks)}
+          color="#2d2b6f"
+          iconBg="rgba(124,92,240,0.15)"
+          footer={metricFooter(gscMetrics, "clicks")}
+          sparklineData={gscMetrics.dailyData}
+          sparklineKey="clicks"
+        />
+        <MetricCard
+          icon={Eye}
+          label="Impressions"
+          value={formatNumber(metrics.impressions)}
+          color="#22c55e"
+          iconBg="rgba(34,197,94,0.15)"
+          footer={metricFooter(gscMetrics, "impressions")}
+          sparklineData={gscMetrics.dailyData}
+          sparklineKey="impressions"
+        />
+        <MetricCard
+          icon={TrendingUp}
+          label="CTR"
+          value={`${Number(metrics.ctr || 0).toFixed(2)}%`}
+          color="#f59e0b"
+          iconBg="rgba(245,158,11,0.15)"
+          footer={metricFooter(gscMetrics, "ctr")}
+          sparklineData={gscMetrics.dailyData}
+          sparklineKey="ctr"
+        />
+        <MetricCard
+          icon={BarChart3}
+          label="Avg. Position"
+          value={Number(metrics.position || 0).toFixed(1)}
+          color="#ef4444"
+          iconBg="rgba(239,68,68,0.15)"
+          footer={metricFooter(gscMetrics, "position")}
+          sparklineData={gscMetrics.dailyData}
+          sparklineKey="position"
+        />
+      </div>
 
       {/* Score cards grid */}
       <div className="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
@@ -384,7 +377,7 @@ export default function Dashboard() {
           score={overallScore}
           status={checks?.status === "complete" ? "complete" : checks?.status || "queued"}
           summary="Available tool checks only"
-          color="#f97316"
+          color="#df3c27"
           iconBg="rgba(249,115,22,0.15)"
           to="/dashboard"
         />
@@ -424,7 +417,64 @@ export default function Dashboard() {
           iconBg="rgba(34,197,94,0.15)"
           to="/tech-seo/duplicate"
         />
+        <ScoreCard
+          icon={BarChart3}
+          label="GSC Audit"
+          subtitle="Search Console"
+          score={gscTool.score}
+          status={gscMetrics.status === "loading" ? "running" : gscTool.status}
+          summary={gscMetrics.status === "loading" ? "Fetching Search Console" : gscTool.summary}
+          color="#14b8a6"
+          iconBg="rgba(20,184,166,0.15)"
+          to="/tech-seo/gsc-audit"
+        />
       </div>
+
+      <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <ScoreCard
+          icon={BarChart3}
+          label="Bing Webmaster"
+          subtitle="Bing search data"
+          score={tool("bing").score}
+          status={tool("bing").status}
+          summary={tool("bing").summary}
+          color="#38bdf8"
+          iconBg="rgba(56,189,248,0.15)"
+          to="/tech-seo/bing"
+        />
+        <ScoreCard
+          icon={Link2}
+          label="Backlinks"
+          subtitle="Needs backlink export"
+          score={tool("backlinks").score}
+          status={tool("backlinks").status}
+          summary={tool("backlinks").summary}
+          color="#60a5fa"
+          iconBg="rgba(96,165,250,0.15)"
+          to="/tech-seo/backlinks"
+        />
+        <ScoreCard
+          icon={FileSearch}
+          label="Plagiarism"
+          subtitle="Needs DataForSEO"
+          score={tool("plagiarism").score}
+          status={tool("plagiarism").status}
+          summary={tool("plagiarism").summary}
+          color="#a78bfa"
+          iconBg="rgba(167,139,250,0.15)"
+          to="/tech-seo/plagiarism"
+        />
+      </div>
+
+      {/* Business Profile — connect, sync and jump into the module */}
+      {storageReady && project?.id ? (
+        <GbpCard projectId={project.id} projectLabel={project.name || project.domain} />
+      ) : null}
+
+      {/* Site security — scan and save from here */}
+      {storageReady && project?.id ? (
+        <SecurityCard projectId={project.id} projectLabel={project.name || project.domain} />
+      ) : null}
 
       {/* Quick Wins Alert */}
       {gscMetrics.quickWins?.length > 0 && (

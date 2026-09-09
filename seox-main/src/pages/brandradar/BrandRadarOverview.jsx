@@ -36,14 +36,14 @@ function StatCard({ icon: Icon, label, value, hint }) {
 
 function TabPills({ tabs, active, onChange }) {
   return (
-    <div className="flex gap-1 rounded-lg border border-white/10 bg-white/[0.02] p-1">
+    <div className="admin-tabs radar-tabs">
       {tabs.map((tab) => (
         <button
           key={tab}
+          type="button"
           onClick={() => onChange(tab)}
-          className={`rounded-md px-3 py-1.5 text-xs font-semibold transition ${
-            active === tab ? "bg-brand-500/20 text-brand-200" : "text-white/50 hover:text-white/80"
-          }`}
+          aria-pressed={active === tab}
+          className={`admin-tab ${active === tab ? "active" : ""}`}
         >
           {tab}
         </button>
@@ -90,17 +90,22 @@ export default function BrandRadarOverview() {
     <section className="space-y-5 pb-16">
       <BrandRadarDataForSeoStatus loading={metricsState.loading} error={metricsState.error} data={metricsState.data} />
 
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h1 className="font-display text-xl font-bold tracking-tight sm:text-2xl">
-            Overview: <span className="gradient-text">{config.brand}</span>
-          </h1>
-          <p className="mt-0.5 text-xs text-white/40">
-            {config.brand}{config.competitors.length ? ` vs. ${config.competitors.join(", ")}` : ""}
-          </p>
-        </div>
-        <div className="rounded-lg border border-white/10 bg-white/[0.03] px-3 py-1.5 text-xs text-white/55">
-          DataForSEO live metrics
+      <div className="radar-page-hero">
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <div className="radar-page-title flex items-center gap-3">
+            <Radar className="h-5 w-5" />
+            <div>
+              <h1 className="font-display">
+                Overview: <span className="radar-brand">{config.brand}</span>
+              </h1>
+              <p className="radar-page-description">
+                {config.brand}{config.competitors.length ? ` vs. ${config.competitors.join(", ")}` : ""}
+              </p>
+            </div>
+          </div>
+          <div className="rounded-lg border border-white/10 bg-white/[0.03] px-3 py-1.5 text-xs text-white/55">
+            DataForSEO live metrics
+          </div>
         </div>
       </div>
 

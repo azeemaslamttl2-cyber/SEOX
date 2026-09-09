@@ -83,22 +83,12 @@ function baseTool(def, status = "queued") {
   };
 }
 
-function reportChecks(checks = []) {
-  return checks.map((item) => ({
-    name: item.label || item.name || "Check",
-    pass: Boolean(item.pass),
-    detail: item.detail || item.priority || "",
-    status: item.status || (item.pass ? "complete" : "needs_attention"),
-  }));
-}
-
 function skippedTool(key, summary, detail = "") {
   const def = PROJECT_TOOL_DEFS.find((item) => item.key === key);
   return {
     ...baseTool(def, "skipped"),
     summary,
     detail,
-    checks: reportChecks([{ label: summary, pass: false, detail, status: "skipped" }]),
     updatedAt: nowIso(),
   };
 }
@@ -127,7 +117,7 @@ export function loadProjectToolChecks(project) {
   const key = storageKey(project);
   if (!key) return null;
   try {
-    const raw = localStorage.getItem(key);
+    const raw = sessionStorage.getItem(key);
     if (!raw) return null;
     const parsed = JSON.parse(raw);
     if (parsed?.version !== CHECK_VERSION) return null;
@@ -141,9 +131,9 @@ export function saveProjectToolChecks(project, data) {
   const key = storageKey(project);
   if (!key || !data) return;
   try {
-    localStorage.setItem(key, JSON.stringify(data));
+    sessionStorage.setItem(key, JSON.stringify(data));
   } catch {
-    // localStorage quota or private mode should not break the dashboard.
+    // sessionStorage quota or private mode should not break the dashboard.
   }
 }
 
@@ -183,13 +173,11 @@ function toolResult(score, summary, detail = "", extra = {}) {
 }
 
 function errorTool(error) {
-  const detail = error?.message || "The tool check failed.";
   return {
     status: "error",
     score: null,
     summary: "Could not run this check",
-    detail,
-    checks: reportChecks([{ label: "Tool run failed", pass: false, detail, status: "error" }]),
+    detail: error?.message || "The tool check failed.",
     updatedAt: nowIso(),
   };
 }
@@ -233,9 +221,7 @@ function runEeat(snapshot) {
   ];
   const failed = checks.filter((item) => !item.pass).map((item) => item.label);
   const score = scoreFromChecks(checks);
-  return toolResult(score, `${checks.length - failed.length}/${checks.length} trust signals passed`, failed.length ? `Needs: ${failed.slice(0, 4).join(", ")}` : "Core E-E-A-T signals were found.", {
-    checks: reportChecks(checks),
-  });
+  return toolResult(score, `${checks.length - failed.length}/${checks.length} trust signals passed`, failed.length ? `Needs: ${failed.slice(0, 4).join(", ")}` : "Core E-E-A-T signals were found.");
 }
 
 function runSemantic(snapshot) {
@@ -259,9 +245,7 @@ function runSemantic(snapshot) {
   ];
   const failed = checks.filter((item) => !item.pass).map((item) => item.label);
   const score = scoreFromChecks(checks);
-  return toolResult(score, `${formatNumber(words)} words, ${headings.length} headings`, failed.length ? `Needs: ${failed.slice(0, 4).join(", ")}` : "Semantic structure looks healthy.", {
-    checks: reportChecks(checks),
-  });
+  return toolResult(score, `${formatNumber(words)} words, ${headings.length} headings`, failed.length ? `Needs: ${failed.slice(0, 4).join(", ")}` : "Semantic structure looks healthy.");
 }
 
 async function runRobots(projectUrl) {
@@ -278,9 +262,7 @@ async function runRobots(projectUrl) {
     { pass: !blocksAll, label: "Site not fully blocked" },
   ];
   const score = scoreFromChecks(checks);
-  return toolResult(score, hasSitemap ? "robots.txt found with sitemap" : "robots.txt found", blocksAll ? "Robots.txt appears to block all crawlers." : `${lines.length} directive lines found.`, {
-    checks: reportChecks(checks),
-  });
+  return toolResult(score, hasSitemap ? "robots.txt found with sitemap" : "robots.txt found", blocksAll ? "Robots.txt appears to block all crawlers." : `${lines.length} directive lines found.`);
 }
 
 function runCrawlOptimization(snapshot) {
@@ -296,9 +278,7 @@ function runCrawlOptimization(snapshot) {
   checks.push({ pass: Boolean(audit.canonicalUrl || /rel=["']canonical["']/i.test(html)), label: "Canonical present", priority: "MEDIUM" });
   const found = checks.filter((item) => !item.pass);
   const score = scoreFromChecks(checks);
-  return toolResult(score, `${checks.length - found.length}/${checks.length} crawl checks clean`, found.length ? `Found: ${found.slice(0, 4).map((item) => item.label).join(", ")}` : "No obvious crawl bloat detected.", {
-    checks: reportChecks(checks),
-  });
+  return toolResult(score, `${checks.length - found.length}/${checks.length} crawl checks clean`, found.length ? `Found: ${found.slice(0, 4).map((item) => item.label).join(", ")}` : "No obvious crawl bloat detected.");
 }
 
 async function runSpeed(projectUrl, snapshot) {
@@ -315,37 +295,18 @@ async function runSpeed(projectUrl, snapshot) {
   const fallbackScore = Math.max(20, 100 - Math.round(loadTime / 80) - Math.max(0, resources - 80));
   const score = Number.isFinite(lighthouseScore) ? lighthouseScore * 100 : fallbackScore;
   const lcp = lighthouse?.lighthouseResult?.audits?.["largest-contentful-paint"]?.displayValue;
-  const checks = [
-    { pass: score >= 50, label: Number.isFinite(lighthouseScore) ? "PageSpeed performance signal" : "Crawler timing fallback", detail: `${Math.round(score)}/100` },
-    { pass: !loadTime || loadTime < 3000, label: "Crawler response under 3s", detail: loadTime ? `${loadTime} ms` : "Unknown" },
-    { pass: !resources || resources <= 120, label: "Resource count under 120", detail: resources ? `${resources} resources` : "Unknown" },
-  ];
-  return toolResult(score, lcp ? `LCP ${lcp}` : `${loadTime || "Unknown"} ms crawler response`, resources ? `${resources} resources discovered.` : "PageSpeed API unavailable; score uses live crawler timing.", {
-    checks: reportChecks(checks),
-  });
+  return toolResult(score, lcp ? `LCP ${lcp}` : `${loadTime || "Unknown"} ms crawler response`, resources ? `${resources} resources discovered.` : "PageSpeed API unavailable; score uses live crawler timing.");
 }
 
 async function runDuplicate(projectUrl) {
   const pagesToScan = await discoverInternalPages(projectUrl, 6);
   const { pages, skipped } = await fetchDuplicatePages(pagesToScan);
   if (pages.length < 2) {
-    const checks = [
-      { pass: pages.length > 0, label: "Crawlable pages found", detail: `${pages.length} page(s)` },
-      { pass: skipped.length === 0, label: "No pages skipped", detail: skipped.length ? `${skipped.length} skipped` : "None skipped" },
-    ];
-    return toolResult(100, `${pages.length} crawlable page found`, skipped.length ? `${skipped.length} page(s) skipped.` : "Not enough pages for duplicate comparison.", {
-      checks: reportChecks(checks),
-    });
+    return toolResult(100, `${pages.length} crawlable page found`, skipped.length ? `${skipped.length} page(s) skipped.` : "Not enough pages for duplicate comparison.");
   }
   const analyzed = analyzeDuplicatePages(pages);
-  const checks = [
-    { pass: analyzed.summary.uniquePercent >= 70, label: "Unique content", detail: `${analyzed.summary.uniquePercent}% unique` },
-    { pass: analyzed.summary.pagesWithDups === 0, label: "No pages with repeated text", detail: `${analyzed.summary.pagesWithDups} page(s)` },
-    { pass: analyzed.summary.pagesScanned >= 2, label: "Pages compared", detail: `${analyzed.summary.pagesScanned} pages` },
-  ];
   return toolResult(analyzed.summary.uniquePercent, `${analyzed.summary.uniquePercent}% unique content`, `${analyzed.summary.pagesScanned} pages scanned, ${analyzed.summary.pagesWithDups} with repeated text.`, {
     summaryData: analyzed.summary,
-    checks: reportChecks(checks),
   });
 }
 
@@ -370,10 +331,6 @@ async function runGsc(projectUrl, userId) {
     metrics: result.metrics,
     previousMetrics: result.previousMetrics,
     deltas: result.deltas,
-    checks: reportChecks([
-      { pass: true, label: "Search Console connected", detail: result.siteUrl },
-      { pass: result.metrics.impressions > 0, label: "Search impressions found", detail: `${formatNumber(result.metrics.impressions)} impressions` },
-    ]),
   });
 }
 
@@ -390,7 +347,7 @@ async function bingApi(action, apiKey, params = {}) {
 }
 
 async function runBing(projectUrl) {
-  const apiKey = localStorage.getItem(BING_KEY_STORAGE);
+  const apiKey = sessionStorage.getItem(BING_KEY_STORAGE);
   if (!apiKey) return skippedTool("bing", "Add Bing API key", "Bing Webmaster requires an API key.");
   const sitesPayload = await bingApi("getSites", apiKey);
   const siteUrl = findMatchingSite(sitesPayload.d || sitesPayload.sites || [], projectUrl);
@@ -405,14 +362,10 @@ async function runBing(projectUrl) {
   return toolResult(100, `${formatNumber(totals.clicks)} Bing clicks`, `${formatNumber(totals.impressions)} impressions from Bing Webmaster.`, {
     siteUrl,
     metrics: totals,
-    checks: reportChecks([
-      { pass: true, label: "Bing site matched", detail: siteUrl },
-      { pass: totals.impressions > 0, label: "Bing impressions found", detail: `${formatNumber(totals.impressions)} impressions` },
-    ]),
   });
 }
 
-export async function runProjectToolChecks(project, { userId, onUpdate, persist = true } = {}) {
+export async function runProjectToolChecks(project, { userId, onUpdate } = {}) {
   const projectUrl = normalizeProjectUrl(project);
   let state = createEmptyProjectToolChecks(project);
   state.status = "running";
@@ -421,7 +374,7 @@ export async function runProjectToolChecks(project, { userId, onUpdate, persist 
 
   const publish = () => {
     state = { ...state, tools: { ...state.tools }, metrics: { ...state.metrics } };
-    if (persist) saveProjectToolChecks(project, state);
+    saveProjectToolChecks(project, state);
     onUpdate?.(state);
   };
 

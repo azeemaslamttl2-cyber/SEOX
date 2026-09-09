@@ -137,46 +137,41 @@ const SemanticResourcesPage = () => {
     );
 
     return (
-        <div className="space-y-6 pb-12">
+        <div className="sres-page space-y-6 pb-12">
             {/* Hero Header */}
-            <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-brand-500 via-amber-500 to-amber-600 p-8">
-                <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_70%_20%,rgba(255,255,255,0.15),transparent)]" />
-                <div className="pointer-events-none absolute -right-12 -top-12 h-48 w-48 rounded-full bg-white/10 blur-3xl" />
-                <div className="pointer-events-none absolute -bottom-16 -left-8 h-40 w-40 rounded-full bg-amber-300/15 blur-3xl" />
-
-                <div className="relative text-center">
-                    <div className="flex items-center justify-center gap-3 mb-4">
-                        <div className="p-3 bg-white/15 rounded-2xl backdrop-blur-sm">
-                            <Sparkles className="w-7 h-7 text-white" />
-                        </div>
+            <div className="ctool-hero">
+                <div className="ctool-hero-row">
+                    <span className="ctool-hero-icon">
+                        <Sparkles className="w-5 h-5" />
+                    </span>
+                    <div className="min-w-0">
+                        <h1 className="ctool-title font-display">
+                            Semantic SEO Resources
+                        </h1>
+                        <p className="ctool-subtitle">
+                            Documents, topical maps, research websites, and tools for semantic SEO mastery
+                        </p>
                     </div>
-                    <h1 className="text-3xl md:text-4xl font-bold text-white mb-3 tracking-tight font-display">
-                        Semantic SEO Resources
-                    </h1>
-                    <div className="w-20 h-0.5 bg-white/30 mx-auto mb-3" />
-                    <p className="text-white/70 text-base max-w-2xl mx-auto">
-                        Documents, topical maps, research websites, and tools for semantic SEO mastery
-                    </p>
                 </div>
             </div>
 
             {/* Documents Section */}
-            <section className="rounded-2xl border border-white/[0.08] bg-[#0d1117] overflow-hidden">
+            <section className="sres-section">
                 <button
                     onClick={() => toggleSection('documents')}
-                    className="w-full flex items-center justify-between px-6 py-5 hover:bg-white/[0.02] transition-colors"
+                    className="sres-section-head"
                 >
-                    <div className="flex items-center gap-4">
-                        <div className="p-3 bg-gradient-to-br from-brand-500 to-amber-600 rounded-xl shadow-lg shadow-brand-500/20">
-                            <BookOpen className="w-5 h-5 text-white" />
+                    <div className="flex items-center gap-4 min-w-0">
+                        <div className="sres-section-icon">
+                            <BookOpen className="w-5 h-5" />
                         </div>
                         <div className="text-left">
-                            <h2 className="text-lg font-bold text-white">Documents & Notes</h2>
-                            <p className="text-sm text-white/40">Lecture notes and learning materials</p>
+                            <h2 className="sres-section-title">Documents & Notes</h2>
+                            <p className="sres-section-sub">Lecture notes and learning materials</p>
                         </div>
                     </div>
-                    <div className="p-2 rounded-full bg-white/[0.06]">
-                        {expandedSections.documents ? <ChevronUp className="w-5 h-5 text-white/40" /> : <ChevronDown className="w-5 h-5 text-white/40" />}
+                    <div className="sres-chevron">
+                        {expandedSections.documents ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
                     </div>
                 </button>
 
@@ -188,16 +183,16 @@ const SemanticResourcesPage = () => {
                                 href={doc.url}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="group relative overflow-hidden rounded-xl bg-white/[0.03] border border-white/[0.06] p-5 hover:border-brand-500/30 hover:shadow-lg hover:shadow-brand-500/5 transition-all duration-300"
+                                className="sres-card group"
                             >
                                 <div className="relative">
                                     <div className="flex items-center justify-between mb-3">
-                                        <div className="text-3xl">{doc.icon}</div>
-                                        <span className="px-2 py-0.5 bg-brand-500/15 text-brand-300 text-xs font-medium rounded-full">{doc.type}</span>
+                                        <span className="sres-card-emoji">{doc.icon}</span>
+                                        <span className="ctool-count-badge">{doc.type}</span>
                                     </div>
-                                    <h3 className="font-semibold text-white/80 mb-1 group-hover:text-brand-400 transition-colors line-clamp-2">{doc.name}</h3>
-                                    <p className="text-sm text-white/40 line-clamp-2">{doc.description}</p>
-                                    <div className="mt-4 flex items-center gap-1.5 text-xs text-brand-400 font-medium">
+                                    <h3 className="sres-card-title line-clamp-2">{doc.name}</h3>
+                                    <p className="sres-section-sub line-clamp-2">{doc.description}</p>
+                                    <div className="sres-card-link">
                                         <ExternalLink className="w-3.5 h-3.5" />
                                         <span>Open Document</span>
                                     </div>
@@ -209,22 +204,22 @@ const SemanticResourcesPage = () => {
             </section>
 
             {/* Slides Section */}
-            <section className="rounded-2xl border border-white/[0.08] bg-[#0d1117] overflow-hidden">
+            <section className="sres-section">
                 <button
                     onClick={() => toggleSection('slides')}
-                    className="w-full flex items-center justify-between px-6 py-5 hover:bg-white/[0.02] transition-colors"
+                    className="sres-section-head"
                 >
-                    <div className="flex items-center gap-4">
-                        <div className="p-3 bg-gradient-to-br from-rose-500 to-pink-600 rounded-xl shadow-lg shadow-rose-500/20">
-                            <Presentation className="w-5 h-5 text-white" />
+                    <div className="flex items-center gap-4 min-w-0">
+                        <div className="sres-section-icon">
+                            <Presentation className="w-5 h-5" />
                         </div>
                         <div className="text-left">
-                            <h2 className="text-lg font-bold text-white">Presentation Slides</h2>
-                            <p className="text-sm text-white/40">Semantic SEO presentation materials</p>
+                            <h2 className="sres-section-title">Presentation Slides</h2>
+                            <p className="sres-section-sub">Semantic SEO presentation materials</p>
                         </div>
                     </div>
-                    <div className="p-2 rounded-full bg-white/[0.06]">
-                        {expandedSections.slides ? <ChevronUp className="w-5 h-5 text-white/40" /> : <ChevronDown className="w-5 h-5 text-white/40" />}
+                    <div className="sres-chevron">
+                        {expandedSections.slides ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
                     </div>
                 </button>
 
@@ -234,36 +229,36 @@ const SemanticResourcesPage = () => {
                             href={SEO_SLIDES.url}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="group flex items-center gap-4 p-5 bg-white/[0.03] border border-white/[0.06] rounded-xl hover:border-rose-500/30 hover:shadow-lg hover:shadow-rose-500/5 transition-all"
+                            className="sres-card sres-row group"
                         >
-                            <div className="text-4xl">{SEO_SLIDES.icon}</div>
+                            <span className="sres-card-emoji">{SEO_SLIDES.icon}</span>
                             <div className="flex-1">
-                                <h3 className="font-semibold text-white/80 group-hover:text-rose-400 transition-colors">{SEO_SLIDES.name}</h3>
-                                <p className="text-sm text-white/40">{SEO_SLIDES.description}</p>
+                                <h3 className="sres-card-title">{SEO_SLIDES.name}</h3>
+                                <p className="sres-section-sub">{SEO_SLIDES.description}</p>
                             </div>
-                            <ExternalLink className="w-5 h-5 text-white/20 group-hover:text-rose-400" />
+                            <ExternalLink className="w-5 h-5" />
                         </a>
                     </div>
                 )}
             </section>
 
             {/* Topical Maps Section */}
-            <section className="rounded-2xl border border-white/[0.08] bg-[#0d1117] overflow-hidden">
+            <section className="sres-section">
                 <button
                     onClick={() => toggleSection('topicalMaps')}
-                    className="w-full flex items-center justify-between px-6 py-5 hover:bg-white/[0.02] transition-colors"
+                    className="sres-section-head"
                 >
-                    <div className="flex items-center gap-4">
-                        <div className="p-3 bg-gradient-to-br from-amber-500 to-amber-700 rounded-xl shadow-lg shadow-amber-500/20">
-                            <Map className="w-5 h-5 text-white" />
+                    <div className="flex items-center gap-4 min-w-0">
+                        <div className="sres-section-icon">
+                            <Map className="w-5 h-5" />
                         </div>
                         <div className="text-left">
-                            <h2 className="text-lg font-bold text-white">Topical Maps</h2>
-                            <p className="text-sm text-white/40">Build topical authority with structured content mapping</p>
+                            <h2 className="sres-section-title">Topical Maps</h2>
+                            <p className="sres-section-sub">Build topical authority with structured content mapping</p>
                         </div>
                     </div>
-                    <div className="p-2 rounded-full bg-white/[0.06]">
-                        {expandedSections.topicalMaps ? <ChevronUp className="w-5 h-5 text-white/40" /> : <ChevronDown className="w-5 h-5 text-white/40" />}
+                    <div className="sres-chevron">
+                        {expandedSections.topicalMaps ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
                     </div>
                 </button>
 
@@ -275,13 +270,13 @@ const SemanticResourcesPage = () => {
                                 href={map.url}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="group relative overflow-hidden rounded-xl bg-white/[0.03] border border-white/[0.06] p-5 hover:border-amber-500/30 hover:shadow-lg hover:shadow-amber-500/5 transition-all duration-300"
+                                className="sres-card group"
                             >
                                 <div className="relative">
-                                    <div className="text-3xl mb-3">{map.icon}</div>
-                                    <h3 className="font-semibold text-white/80 mb-1 group-hover:text-amber-400 transition-colors">{map.name}</h3>
-                                    <p className="text-sm text-white/40">{map.description}</p>
-                                    <div className="mt-4 flex items-center gap-1.5 text-xs text-amber-400 font-medium">
+                                    <span className="sres-card-emoji mb-3">{map.icon}</span>
+                                    <h3 className="sres-card-title">{map.name}</h3>
+                                    <p className="sres-section-sub">{map.description}</p>
+                                    <div className="sres-card-link">
                                         <ExternalLink className="w-3.5 h-3.5" />
                                         <span>Open Map</span>
                                     </div>
@@ -293,22 +288,22 @@ const SemanticResourcesPage = () => {
             </section>
 
             {/* Semantic Websites Section */}
-            <section className="rounded-2xl border border-white/[0.08] bg-[#0d1117] overflow-hidden">
+            <section className="sres-section">
                 <button
                     onClick={() => toggleSection('websites')}
-                    className="w-full flex items-center justify-between px-6 py-5 hover:bg-white/[0.02] transition-colors"
+                    className="sres-section-head"
                 >
-                    <div className="flex items-center gap-4">
-                        <div className="p-3 bg-gradient-to-br from-emerald-500 to-emerald-700 rounded-xl shadow-lg shadow-emerald-500/20">
-                            <Globe className="w-5 h-5 text-white" />
+                    <div className="flex items-center gap-4 min-w-0">
+                        <div className="sres-section-icon">
+                            <Globe className="w-5 h-5" />
                         </div>
                         <div className="text-left">
-                            <h2 className="text-lg font-bold text-white">Semantic Websites for Research</h2>
-                            <p className="text-sm text-white/40">{SEMANTIC_WEBSITES.length} hand-picked websites with excellent semantic SEO</p>
+                            <h2 className="sres-section-title">Semantic Websites for Research</h2>
+                            <p className="sres-section-sub">{SEMANTIC_WEBSITES.length} hand-picked websites with excellent semantic SEO</p>
                         </div>
                     </div>
-                    <div className="p-2 rounded-full bg-white/[0.06]">
-                        {expandedSections.websites ? <ChevronUp className="w-5 h-5 text-white/40" /> : <ChevronDown className="w-5 h-5 text-white/40" />}
+                    <div className="sres-chevron">
+                        {expandedSections.websites ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
                     </div>
                 </button>
 
@@ -316,13 +311,13 @@ const SemanticResourcesPage = () => {
                     <div className="px-6 pb-6">
                         {/* Search */}
                         <div className="mb-4 relative">
-                            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-white/20" />
+                            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 sres-search-icon" />
                             <input
                                 type="text"
                                 placeholder="Search by name or niche..."
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
-                                className="w-full pl-11 pr-4 py-3 bg-[#010409] border border-white/[0.08] rounded-xl text-white/70 placeholder-white/20 focus:outline-none focus:border-brand-500/40 focus:ring-2 focus:ring-brand-500/10 transition-all"
+                                className="sres-search-input pl-11 pr-4"
                             />
                         </div>
 
@@ -334,9 +329,9 @@ const SemanticResourcesPage = () => {
                                     href={site.url}
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    className="group flex items-center gap-3 p-3.5 bg-white/[0.02] border border-white/[0.06] rounded-xl hover:border-emerald-500/30 hover:bg-emerald-500/[0.04] transition-all"
+                                    className="sres-site group"
                                 >
-                                    <div className="w-10 h-10 rounded-xl bg-white/[0.06] border border-white/[0.08] flex items-center justify-center flex-shrink-0 overflow-hidden">
+                                    <div className="sres-favicon">
                                         <img
                                             src={getFaviconUrl(site.url, 64)}
                                             alt={`${site.name} logo`}
@@ -349,10 +344,10 @@ const SemanticResourcesPage = () => {
                                         />
                                     </div>
                                     <div className="min-w-0 flex-1">
-                                        <h4 className="text-sm font-medium text-white/70 truncate group-hover:text-emerald-400 transition-colors">{site.name}</h4>
-                                        <span className="text-xs text-white/30">{site.niche}</span>
+                                        <h4 className="sres-site-name">{site.name}</h4>
+                                        <span className="sres-site-niche">{site.niche}</span>
                                     </div>
-                                    <ExternalLink className="w-4 h-4 text-white/15 group-hover:text-emerald-400 flex-shrink-0" />
+                                    <ExternalLink className="w-4 h-4" />
                                 </a>
                             ))}
                         </div>
@@ -361,22 +356,22 @@ const SemanticResourcesPage = () => {
             </section>
 
             {/* Semantic Tools Section */}
-            <section className="rounded-2xl border border-white/[0.08] bg-[#0d1117] overflow-hidden">
+            <section className="sres-section">
                 <button
                     onClick={() => toggleSection('tools')}
-                    className="w-full flex items-center justify-between px-6 py-5 hover:bg-white/[0.02] transition-colors"
+                    className="sres-section-head"
                 >
-                    <div className="flex items-center gap-4">
-                        <div className="p-3 bg-gradient-to-br from-violet-500 to-purple-600 rounded-xl shadow-lg shadow-violet-500/20">
-                            <Link2 className="w-5 h-5 text-white" />
+                    <div className="flex items-center gap-4 min-w-0">
+                        <div className="sres-section-icon">
+                            <Link2 className="w-5 h-5" />
                         </div>
                         <div className="text-left">
-                            <h2 className="text-lg font-bold text-white">Semantic Tools</h2>
-                            <p className="text-sm text-white/40">Tools for entity research and knowledge graph visualization</p>
+                            <h2 className="sres-section-title">Semantic Tools</h2>
+                            <p className="sres-section-sub">Tools for entity research and knowledge graph visualization</p>
                         </div>
                     </div>
-                    <div className="p-2 rounded-full bg-white/[0.06]">
-                        {expandedSections.tools ? <ChevronUp className="w-5 h-5 text-white/40" /> : <ChevronDown className="w-5 h-5 text-white/40" />}
+                    <div className="sres-chevron">
+                        {expandedSections.tools ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
                     </div>
                 </button>
 
@@ -388,14 +383,14 @@ const SemanticResourcesPage = () => {
                                 href={tool.url}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="group flex items-center gap-4 p-5 bg-white/[0.03] border border-white/[0.06] rounded-xl hover:border-violet-500/30 hover:shadow-lg hover:shadow-violet-500/5 transition-all"
+                                className="sres-card sres-row group"
                             >
-                                <div className="text-4xl">{tool.icon}</div>
+                                <span className="sres-card-emoji">{tool.icon}</span>
                                 <div className="flex-1">
-                                    <h3 className="font-semibold text-white/80 group-hover:text-violet-400 transition-colors">{tool.name}</h3>
-                                    <p className="text-sm text-white/40">{tool.description}</p>
+                                    <h3 className="sres-card-title">{tool.name}</h3>
+                                    <p className="sres-section-sub">{tool.description}</p>
                                 </div>
-                                <ExternalLink className="w-5 h-5 text-white/20 group-hover:text-violet-400" />
+                                <ExternalLink className="w-5 h-5" />
                             </a>
                         ))}
                     </div>

@@ -9,6 +9,7 @@ import {
   AlertTriangle,
 } from "lucide-react";
 import { useSelectedProjectDomain } from "../../hooks/useSelectedProjectDomain.js";
+import { useTechSeoToolResult } from "../../hooks/useTechSeoToolResult.js";
 import {
   csvEscape,
   downloadTextFile,
@@ -20,6 +21,22 @@ import {
   stripHtml,
   wordCount,
 } from "../../lib/techSeoTools.js";
+
+const EMPTY_PLAGIARISM_RESULT = {
+  status: "idle",
+  sourceTitle: "",
+  sourceUrl: "",
+  sourceText: "",
+  totalWordsChecked: 0,
+  totalPhrases: 0,
+  phrasesWithMatches: 0,
+  matches: [],
+  uniqueScore: 0,
+  internalUniqueScore: 0,
+  warning: "",
+  error: "",
+  scannedAt: "",
+};
 
 function selectRepresentativePhrases(sentences, limit = 8) {
   if (sentences.length <= limit) return sentences.map((sentence) => extractPhrase(sentence));
@@ -59,10 +76,15 @@ async function searchPhrase(phrase) {
 }
 
 export default function PlagiarismChecker() {
-  const { projectUrl, hasProject, displayUrl } = useSelectedProjectDomain();
+  const { project, projectUrl, hasProject, displayUrl } = useSelectedProjectDomain();
+  const { result, saveResult, persistenceError } = useTechSeoToolResult({
+    toolKey: "plagiarism",
+    project,
+    projectUrl,
+    emptyResult: EMPTY_PLAGIARISM_RESULT,
+  });
   const [mode, setMode] = useState("url");
   const [text, setText] = useState("");
-  const [result, setResult] = useState(null);
   const [loading, setLoading] = useState(false);
   const [progress, setProgress] = useState("");
   const [error, setError] = useState("");
@@ -84,11 +106,37 @@ export default function PlagiarismChecker() {
     setLoading(true);
     setError("");
     setProgress("Loading source content...");
+    let source = {
+      sourceText: mode === "text" ? text : "",
+      sourceTitle: mode === "text" ? "Pasted text" : "",
+      sourceUrl: mode === "url" ? projectUrl : "",
+    };
     try {
-      const source = await getSource();
+      source = await getSource();
       const sentences = splitIntoSentences(source.sourceText);
-      if (!sentences.length) throw new Error("Could not extract enough sentences. Try a longer page or paste more text.");
-      const phrases = selectRepresentativePhrases(sentences, 8);
+      // Some valid pages use a single long paragraph without punctuation. Fall
+      // back to one phrase from the readable text instead of rejecting it.
+      const fallbackPhrase = extractPhrase(source.sourceText);
+      const phrases = sentences.length
+        ? selectRepresentativePhrases(sentences, 8)
+        : (wordCount(fallbackPhrase) >= 3 ? [fallbackPhrase] : []);
+
+      if (!phrases.length) {
+        const next = {
+          ...EMPTY_PLAGIARISM_RESULT,
+          status: "insufficient_content",
+          sourceTitle: source.sourceTitle,
+          sourceUrl: source.sourceUrl,
+          sourceText: source.sourceText,
+          totalWordsChecked: wordCount(source.sourceText),
+          error: "Not enough readable text was found to search for plagiarism. Try a longer page or paste at least three words.",
+          scannedAt: new Date().toISOString(),
+        };
+        await saveResult(next);
+        setError(next.error);
+        setProgress("");
+        return;
+      }
       const sourceDomain = source.sourceUrl ? new URL(source.sourceUrl).hostname.replace(/^www\./, "") : "";
       const matches = new Map();
       let serpWarning = "";
@@ -135,9 +183,11 @@ export default function PlagiarismChecker() {
       const maxMatchScore = webMatches[0]?.matchScore || 0;
       const uniqueScore = Math.max(0, Math.min(100, 100 - maxMatchScore));
 
-      setResult({
+      await saveResult({
+        status: serpWarning ? "completed_with_warning" : "completed",
         sourceTitle: source.sourceTitle,
         sourceUrl: source.sourceUrl,
+        sourceText: source.sourceText,
         totalWordsChecked: wordCount(source.sourceText),
         totalPhrases: phrases.length,
         phrasesWithMatches: new Set(webMatches.flatMap((match) => match.matchedPhrases)).size,
@@ -145,10 +195,30 @@ export default function PlagiarismChecker() {
         uniqueScore,
         internalUniqueScore: internalUniqueness(sentences),
         warning: serpWarning,
+        error: "",
+        scannedAt: new Date().toISOString(),
       });
       setProgress("");
     } catch (err) {
-      setError(err?.message || "Could not run plagiarism scan.");
+      const message = err?.message || "Could not run plagiarism scan.";
+      const failedResult = {
+        ...EMPTY_PLAGIARISM_RESULT,
+        status: "failed",
+        sourceTitle: source.sourceTitle,
+        sourceUrl: source.sourceUrl,
+        sourceText: source.sourceText,
+        totalWordsChecked: wordCount(source.sourceText),
+        error: message,
+        scannedAt: new Date().toISOString(),
+      };
+      try {
+        await saveResult(failedResult);
+      } catch (saveError) {
+        setError(saveError?.message || message);
+        return;
+      }
+      setError(message);
+      setProgress("");
     } finally {
       setLoading(false);
     }
@@ -176,47 +246,53 @@ export default function PlagiarismChecker() {
   }
 
   return (
-    <div className="mx-auto max-w-4xl">
-      <div className="flex justify-center">
-        <div className="rounded-full bg-gradient-to-r from-pink-500 to-violet-500 px-6 py-2.5 shadow-lg shadow-pink-500/25">
-          <div className="flex items-center gap-2 text-white">
+    <div className="">
+      {/* ─── Hero Header ─── */}
+      <div className="plagiarism-hero">
+        <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
+          <div className="plagiarism-title flex items-center gap-3">
             <ShieldCheck className="h-5 w-5" />
-            <span className="font-display text-lg font-bold">Plagiarism Checker</span>
+            <div>
+              <h1 className="font-display">Plagiarism Checker</h1>
+              <p className="plagiarism-description">
+                Search Google for exact-match phrases from a URL or pasted text using DataForSEO, with internal uniqueness checks included.
+              </p>
+            </div>
+          </div>
+          <div className="plagiarism-actions">
+            <button onClick={scan} disabled={loading || (mode === "url" && !hasProject)} className="ui-button ui-button-primary plagiarism-scan-button">
+              <Search className={`h-4 w-4 ${loading ? "animate-pulse" : ""}`} /> {loading ? "Scanning..." : "Scan Now"}
+            </button>
+            <button onClick={downloadReport} disabled={!result} className="ui-button plagiarism-download-button">
+              <Download className="h-4 w-4" /> Download
+            </button>
           </div>
         </div>
-      </div>
-      <p className="mx-auto mt-3 max-w-md text-center text-sm text-white/40">
-        Search Google for exact-match phrases from a URL or pasted text using DataForSEO, with internal uniqueness checks included.
-      </p>
 
-      <div className="mt-6 flex items-center justify-center gap-2">
-        <ModeButton active={mode === "url"} onClick={() => setMode("url")} icon={<Globe className="h-4 w-4" />}>URL</ModeButton>
-        <ModeButton active={mode === "text"} onClick={() => setMode("text")} icon={<FileText className="h-4 w-4" />}>Text</ModeButton>
-      </div>
-
-      <div className="mt-6 rounded-3xl border border-white/[0.06] bg-ink-800 p-8">
-        {mode === "url" ? (
-          <div className="flex items-center gap-2 rounded-xl border border-violet-500/30 bg-ink-900/80 px-4 py-3 ring-1 ring-violet-500/10">
-            <Globe className="h-4 w-4 text-violet-400/60" />
-            <input value={displayUrl} readOnly onKeyDown={(e) => e.key === "Enter" && scan()} className="flex-1 cursor-not-allowed bg-transparent text-sm text-white placeholder:text-white/30 focus:outline-none" placeholder="Select a website in the nav" />
+        {/* Source: URL or pasted text */}
+        <div className="plagiarism-source">
+          <div className="admin-tabs plagiarism-modes">
+            <ModeButton active={mode === "url"} onClick={() => setMode("url")} icon={<Globe className="h-4 w-4" />}>URL</ModeButton>
+            <ModeButton active={mode === "text"} onClick={() => setMode("text")} icon={<FileText className="h-4 w-4" />}>Text</ModeButton>
           </div>
-        ) : (
-          <textarea value={text} onChange={(e) => setText(e.target.value)} rows={8} className="w-full resize-none rounded-xl border border-white/[0.08] bg-ink-900/80 px-4 py-3 text-sm text-white placeholder:text-white/30 focus:outline-none" placeholder="Paste your text here to check for plagiarism..." />
+
+          {mode === "url" ? (
+            <div className="plagiarism-url-field">
+              <Globe className="h-4 w-4" />
+              <input value={displayUrl} readOnly onKeyDown={(e) => e.key === "Enter" && scan()} className="flex-1 cursor-not-allowed" placeholder="Select a website in the nav" />
+            </div>
+          ) : (
+            <textarea value={text} onChange={(e) => setText(e.target.value)} rows={8} className="plagiarism-textarea" placeholder="Paste your text here to check for plagiarism..." />
+          )}
+        </div>
+
+        {progress && <p className="plagiarism-progress">{progress}</p>}
+        {(error || persistenceError) && (
+          <div className="app-alert app-alert-error mt-3">{error || persistenceError}</div>
         )}
-
-        <div className="mt-5 flex justify-center gap-3">
-          <button onClick={scan} disabled={loading || (mode === "url" && !hasProject)} className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-violet-500 to-purple-600 px-8 py-3 text-sm font-bold text-white shadow-lg shadow-violet-500/30 transition hover:shadow-violet-500/50 disabled:opacity-60">
-            <Search className={`h-4 w-4 ${loading ? "animate-pulse" : ""}`} /> {loading ? "Scanning..." : "Scan Now"}
-          </button>
-          <button onClick={downloadReport} disabled={!result} className="flex items-center gap-2 rounded-xl border border-white/10 bg-white/[0.03] px-5 py-3 text-sm font-bold text-white/60 disabled:opacity-40">
-            <Download className="h-4 w-4" /> Download
-          </button>
-        </div>
-        {progress && <p className="mt-3 text-center text-xs text-violet-300">{progress}</p>}
-        {error && <p className="mt-3 text-center text-xs font-semibold text-rose-300">{error}</p>}
       </div>
 
-      {result && (
+      {result.status !== "idle" && (
         <div className="mt-5 rounded-2xl border border-white/[0.08] bg-white/[0.02] p-5">
           <div className="grid gap-3 md:grid-cols-4">
             <Score value={`${result.uniqueScore}%`} label="Web Uniqueness" color="text-emerald-300" />
@@ -260,7 +336,7 @@ export default function PlagiarismChecker() {
 
 function ModeButton({ active, onClick, icon, children }) {
   return (
-    <button onClick={onClick} className={`flex items-center gap-2 rounded-xl px-5 py-2.5 text-sm font-bold transition ${active ? "bg-violet-500/15 text-violet-300 ring-1 ring-violet-500/30" : "text-white/40 hover:bg-white/[0.04] hover:text-white/60"}`}>
+    <button onClick={onClick} className={`plagiarism-mode-tab flex items-center gap-2 rounded-xl border px-5 py-2.5 text-sm font-bold transition ${active ? "plagiarism-mode-tab-active" : "plagiarism-mode-tab-inactive"}`}>
       {icon} {children}
     </button>
   );

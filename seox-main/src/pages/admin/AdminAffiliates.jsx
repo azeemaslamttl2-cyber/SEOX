@@ -17,7 +17,7 @@ import {
 } from "lucide-react";
 import { useAdminData } from "../../hooks/useAdminData.js";
 
-const avatarColors = ["#8b5cf6", "#3b82f6", "#10b981", "#ec4899", "#f97316"];
+const avatarColors = ["#2d2b6f", "#4197cb", "#6abf4b", "#c76c61", "#df3c27"];
 
 /* ================================================================
    Stat Card
@@ -157,7 +157,7 @@ export default function AdminAffiliates() {
                     </div>
                   </td>
                   <td style={{ textAlign: "right", fontWeight: 600 }}>{affiliate.referrals}</td>
-                  <td style={{ textAlign: "right", fontWeight: 600, fontFamily: "'Space Grotesk', sans-serif" }}>
+                  <td style={{ textAlign: "right", fontWeight: 600, fontFamily: "'Gotham', 'Century Gothic', sans-serif" }}>
                     Rs {affiliate.earnings.toLocaleString()}
                   </td>
                   <td style={{ textAlign: "right", fontWeight: 600, color: "#10b981" }}>

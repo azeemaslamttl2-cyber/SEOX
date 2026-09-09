@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import { useAuth } from "../../context/AuthContext.jsx";
 import { useSelectedProjectDomain } from "../../hooks/useSelectedProjectDomain.js";
+import { useTechSeoToolResult } from "../../hooks/useTechSeoToolResult.js";
 import { restoreGscSession } from "../../lib/gscSession.js";
 import { csvEscape, downloadTextFile, formatNumber } from "../../lib/techSeoTools.js";
 
@@ -43,6 +44,36 @@ const EMPTY_GSC_AUDIT_DATA = {
   deadPages: [],
   indexingIssues: [],
 };
+
+function asRecord(value) {
+  return value && typeof value === "object" && !Array.isArray(value) ? value : {};
+}
+
+function asArray(value) {
+  return Array.isArray(value) ? value.filter(Boolean) : [];
+}
+
+// Results are persisted and may predate fields added to this screen. Normalize
+// them before render so an incomplete cached or database result cannot crash it.
+function normalizeGscAuditData(value, projectUrl = "") {
+  const source = asRecord(value);
+  return {
+    ...EMPTY_GSC_AUDIT_DATA,
+    ...source,
+    selectedSite: typeof source.selectedSite === "string" ? source.selectedSite : projectUrl,
+    dateLabel: typeof source.dateLabel === "string" ? source.dateLabel : EMPTY_GSC_AUDIT_DATA.dateLabel,
+    metrics: { ...EMPTY_GSC_AUDIT_DATA.metrics, ...asRecord(source.metrics) },
+    chartData: asArray(source.chartData),
+    topQueries: asArray(source.topQueries),
+    topPages: asArray(source.topPages),
+    quickWins: asArray(source.quickWins),
+    highPotentialPages: asArray(source.highPotentialPages),
+    penalizedPages: asArray(source.penalizedPages),
+    rankedPages: asArray(source.rankedPages),
+    deadPages: asArray(source.deadPages),
+    indexingIssues: asArray(source.indexingIssues),
+  };
+}
 
 function getUserId(user) {
   return user?.uid || user?.id || "";
@@ -93,7 +124,12 @@ function hostFromAnySite(siteUrl) {
 function findMatchingSiteForProject(sites, projectUrl, projectDomain) {
   const domain = String(projectDomain || hostFromAnySite(projectUrl)).toLowerCase();
   if (!domain) return "";
-  const projectOrigin = projectUrl ? new URL(projectUrl).origin.replace(/\/$/, "").toLowerCase() : "";
+  let projectOrigin = "";
+  try {
+    projectOrigin = projectUrl ? new URL(projectUrl).origin.replace(/\/$/, "").toLowerCase() : "";
+  } catch {
+    // A malformed project URL simply cannot be matched to a URL-prefix property.
+  }
   const match = sites.find((site) => {
     const siteUrl = site?.siteUrl || site?.url || site;
     const siteHost = hostFromAnySite(siteUrl);
@@ -241,10 +277,16 @@ function buildGscResult({ selectedSite, rangeDays, dailyRows, queryRows, pageRow
 
 export default function GscAudit() {
   const { user } = useAuth();
-  const { projectUrl, projectDomain, hasProject, displayUrl } = useSelectedProjectDomain();
+  const { project, projectUrl, projectDomain, hasProject, displayUrl } = useSelectedProjectDomain();
   const userId = getUserId(user);
-  const [data, setData] = useState(() => ({ ...EMPTY_GSC_AUDIT_DATA, selectedSite: projectUrl }));
-  const d = data;
+  const { result: savedGscResult, saveResult: saveGscResult, persistenceError } = useTechSeoToolResult({
+    toolKey: "gsc",
+    project,
+    projectUrl,
+    emptyResult: EMPTY_GSC_AUDIT_DATA,
+  });
+  const [data, setData] = useState(() => normalizeGscAuditData(null, projectUrl));
+  const d = normalizeGscAuditData(data, projectUrl);
   const [token, setToken] = useState("");
   const [sites, setSites] = useState([]);
   const [selectedSite, setSelectedSite] = useState("");
@@ -265,9 +307,17 @@ export default function GscAudit() {
     didAutoFetch.current = false;
     hasFetchedLive.current = false;
     setSelectedSite("");
-    setData({ ...EMPTY_GSC_AUDIT_DATA, selectedSite: projectUrl });
+    setData(normalizeGscAuditData(null, projectUrl));
     setError("");
   }, [projectUrl]);
+
+  // Load saved GSC result when component mounts or when project changes
+  useEffect(() => {
+    if (savedGscResult && savedGscResult.metrics && Object.keys(savedGscResult).length > 1) {
+      setData(normalizeGscAuditData(savedGscResult, projectUrl));
+      hasFetchedLive.current = true;
+    }
+  }, [savedGscResult]);
 
   const maxClicks = Math.max(1, ...d.chartData.map((p) => p.clicks || 0));
   const maxImpressions = Math.max(1, ...d.chartData.map((p) => p.impressions || 0));
@@ -380,6 +430,15 @@ export default function GscAudit() {
       const next = buildGscResult({ selectedSite: site, rangeDays: dateRange, dailyRows, queryRows, pageRows, pageQueryRows, prevPageQueryRows });
       next.sitesAvailable = sites.length || d.sitesAvailable;
       setData(next);
+      
+      // Persist the GSC result to project_data
+      try {
+        await saveGscResult(next);
+      } catch (saveErr) {
+        console.warn("Failed to save GSC result:", saveErr?.message);
+        // Don't break the UI if saving fails - just log the warning
+      }
+      
       hasFetchedLive.current = true;
     } catch (err) {
       setError(err?.message || "Could not fetch GSC analytics.");
@@ -417,53 +476,53 @@ export default function GscAudit() {
   }
 
   return (
-    <div className="mx-auto max-w-5xl">
-      <div className="flex justify-center">
-        <div className="rounded-full bg-gradient-to-r from-emerald-500 to-teal-500 px-6 py-2.5 shadow-lg shadow-emerald-500/25">
-          <div className="flex items-center gap-2 text-white">
+    <div className="">
+      {/* ─── Hero Header ─── */}
+      <div className="gsc-audit-hero">
+        <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
+          <div className="gsc-audit-title flex items-center gap-3">
             <BarChart3 className="h-5 w-5" />
-            <span className="font-display text-lg font-bold">GSC Audit</span>
+            <div>
+              <h1 className="font-display">GSC Audit</h1>
+              <p className="gsc-audit-description">
+                Analyze Search Console performance, page opportunities, and traffic movement from live GSC data.
+              </p>
+            </div>
           </div>
-        </div>
-      </div>
-      <p className="mt-3 text-center text-sm text-white/45">
-        Analyze Search Console performance, page opportunities, and traffic movement from live GSC data.
-      </p>
 
-      <div className="mt-6 rounded-2xl border border-white/[0.06] bg-white/[0.02] p-5">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <div className="flex items-center gap-2">
-            <span className="max-w-[260px] truncate rounded-lg border border-white/10 bg-ink-900 px-3 py-2 text-xs text-white/70">
-              {selectedSite || displayUrl}
-            </span>
-            <select value={dateRange} onChange={(e) => setDateRange(e.target.value)} className="rounded-lg border border-white/10 bg-ink-900 px-3 py-2 text-xs text-white/70 focus:outline-none">
+          <button onClick={downloadReport} className="ui-button ui-button-primary gsc-audit-download">
+            <Download className="h-4 w-4" /> Download Report
+          </button>
+        </div>
+
+        {/* Site + range + status meta row */}
+        <div className="gsc-audit-meta">
+          <div className="flex min-w-0 flex-1 items-center gap-2.5">
+            <Globe className="h-4 w-4 flex-shrink-0" />
+            <span className="gsc-audit-meta-label">Property</span>
+            <span className="gsc-audit-site truncate">{selectedSite || d.selectedSite || displayUrl}</span>
+          </div>
+          <div className="flex flex-shrink-0 items-center gap-2">
+            <select value={dateRange} onChange={(e) => setDateRange(e.target.value)} className="gsc-audit-range">
               {RANGE_OPTIONS.map((days) => <option key={days} value={days}>Last {days} days</option>)}
             </select>
-          </div>
-          <div className="flex items-center gap-2">
-            <button onClick={downloadReport} className="flex items-center gap-1.5 rounded-lg bg-gradient-to-r from-brand-500 to-amber-500 px-4 py-2 text-xs font-bold text-white shadow">
-              <Download className="h-3.5 w-3.5" /> Download Report
-            </button>
+            <span className="gsc-audit-status">
+              <Calendar className="h-3.5 w-3.5" /> {d.dateLabel}
+            </span>
           </div>
         </div>
-        {loading && <p className="mt-3 text-xs text-white/40 animate-pulse">Fetching live data from Google Search Console…</p>}
-        {error && <p className="mt-3 text-xs font-semibold text-rose-300">{error}</p>}
+
+        {loading && <p className="gsc-audit-note">Fetching live data from Google Search Console…</p>}
+        {(error || persistenceError) && (
+          <div className="app-alert app-alert-error mt-3">{error || persistenceError}</div>
+        )}
       </div>
 
-      <div className="mt-4 flex items-center justify-between">
-        <span className="flex items-center gap-2 rounded-full bg-emerald-500/15 px-4 py-1.5 text-xs font-bold text-emerald-300">
-          <Calendar className="h-3.5 w-3.5" /> {d.dateLabel}
-        </span>
-        <span className="flex items-center gap-2 rounded-lg border border-white/10 bg-ink-900/60 px-3 py-1.5 text-xs text-white/60">
-          <Globe className="h-3.5 w-3.5 text-brand-400" /> {selectedSite || d.selectedSite}
-        </span>
-      </div>
-
-      <div className="mt-4 grid grid-cols-4 overflow-hidden rounded-2xl">
-        <MetricCard value={d.metrics.clicks} label="Total Clicks" color="from-sky-500 to-blue-600" />
-        <MetricCard value={d.metrics.impressions} label="Total Impressions" color="from-emerald-500 to-teal-600" />
-        <MetricCard value={d.metrics.ctr} label="Average CTR" color="from-indigo-500 to-violet-600" />
-        <MetricCard value={d.metrics.position} label="Average Position" color="from-brand-500 to-orange-600" />
+      <div className="mt-5 grid grid-cols-2 gap-4 lg:grid-cols-4">
+        <MetricCard value={d.metrics.clicks} label="Total Clicks" color="metric-clicks" />
+        <MetricCard value={d.metrics.impressions} label="Total Impressions" color="metric-impressions" />
+        <MetricCard value={d.metrics.ctr} label="Average CTR" color="metric-ctr" />
+        <MetricCard value={d.metrics.position} label="Average Position" color="metric-position" />
       </div>
 
       <div className="mt-6 rounded-2xl border border-white/[0.06] bg-white/[0.02] p-5">
@@ -473,7 +532,7 @@ export default function GscAudit() {
         </div>
         <div className="overflow-x-auto">
           <svg viewBox={`0 0 ${chartW} ${chartH}`} className="w-full" style={{ minWidth: 500 }}>
-            {[0, 0.25, 0.5, 0.75, 1].map((f) => <line key={f} x1={0} y1={f * chartH} x2={chartW} y2={f * chartH} stroke="rgba(255,255,255,0.04)" />)}
+            {[0, 0.25, 0.5, 0.75, 1].map((f) => <line key={f} x1={0} y1={f * chartH} x2={chartW} y2={f * chartH} stroke="#eef0f5" />)}
             <path d={impressionsPath} fill="none" stroke="#a78bfa" strokeWidth="2" opacity="0.7" />
             <path d={clicksPath} fill="none" stroke="#60a5fa" strokeWidth="2.5" />
           </svg>
@@ -522,9 +581,9 @@ function linePath(rows, key, maxValue, chartW, chartH) {
 
 function MetricCard({ value, label, color }) {
   return (
-    <div className={`bg-gradient-to-br ${color} px-5 py-4 text-center`}>
-      <div className="font-display text-2xl font-black text-white">{value}</div>
-      <div className="text-[11px] text-white/60">{label}</div>
+    <div className={`gsc-audit-metric ${color}`}>
+      <div className="gsc-audit-metric-label">{label}</div>
+      <div className="gsc-audit-metric-value">{value}</div>
     </div>
   );
 }

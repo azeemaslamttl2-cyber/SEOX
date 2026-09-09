@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   Link2,
   Download,
@@ -12,149 +12,21 @@ import {
   ChevronDown,
 } from "lucide-react";
 import { useSelectedProjectDomain } from "../../hooks/useSelectedProjectDomain.js";
+import { useTechSeoToolResult } from "../../hooks/useTechSeoToolResult.js";
 import { downloadTextFile, formatNumber } from "../../lib/techSeoTools.js";
+import { analyzeBacklink, DEFAULT_CHECKS, parseBacklinkText } from "../../lib/backlinksAnalyzer.js";
+import { buildBacklinksToolResult } from "../../lib/backlinksPersistence.js";
 
-const ADULT_GAMBLING_KEYWORDS = ["casino", "poker", "gambling", "bet", "slots", "adult", "xxx", "porn", "sex", "escort", "dating", "lottery", "betting", "blackjack", "roulette"];
-const SPAMMY_TLDS = [".xyz", ".info", ".online", ".site", ".top", ".club", ".work", ".click", ".link", ".space", ".pro", ".icu", ".buzz", ".monster", ".bond", ".homes", ".shop", ".store", ".live", ".life", ".fun", ".biz"];
-const FOREIGN_TLD_LANGUAGES = {
-  ".ru": "Russian",
-  ".cn": "Chinese",
-  ".jp": "Japanese",
-  ".kr": "Korean",
-  ".br": "Portuguese",
-  ".de": "German",
-  ".fr": "French",
-  ".it": "Italian",
-  ".es": "Spanish",
-  ".pl": "Polish",
-  ".tr": "Turkish",
-  ".in": "Indian",
-  ".pk": "Pakistani",
-  ".ir": "Persian",
-};
-
-const DEFAULT_CHECKS = {
-  foreign: true,
-  spammy_tld: true,
-  adult_gambling: true,
-  low_quality: true,
-  irrelevant: true,
-};
-
-function parseCSVLine(line, delimiter = ",") {
-  if (delimiter === "\t") return line.split("\t").map((value) => value.trim().replace(/^["']|["']$/g, ""));
-  const result = [];
-  let current = "";
-  let inQuotes = false;
-  for (let i = 0; i < line.length; i += 1) {
-    const char = line[i];
-    if (char === "\"") inQuotes = !inQuotes;
-    else if (char === "," && !inQuotes) {
-      result.push(current.trim());
-      current = "";
-    } else current += char;
-  }
-  result.push(current.trim());
-  return result;
-}
-
-function extractDomainFromUrl(value) {
-  try {
-    return new URL(/^https?:\/\//i.test(value) ? value : `https://${value}`).hostname.replace(/^www\./, "");
-  } catch {
-    return String(value || "").replace(/^(https?:\/\/)?(www\.)?/i, "").split(/[/?#]/)[0];
-  }
-}
-
-function extractTld(domain) {
-  const parts = String(domain || "").split(".").filter(Boolean);
-  if (parts.length < 2) return "";
-  const last = parts[parts.length - 1];
-  const secondLast = parts[parts.length - 2];
-  if (["co", "com", "org", "net", "edu", "gov"].includes(secondLast) && parts.length > 2) return `.${secondLast}.${last}`;
-  return `.${last}`;
-}
-
-function parseBacklinkText(text) {
-  const lines = String(text || "").trim().split(/\r?\n/).filter(Boolean);
-  if (!lines.length) return { results: [], format: "domain" };
-  const delimiter = lines[0].includes("\t") ? "\t" : ",";
-  const headers = parseCSVLine(lines[0], delimiter).map((header) => header.trim().replace(/['"]/g, "").toLowerCase());
-  const domainIndex = headers.findIndex((header) => header === "domain" || header.includes("referring domain"));
-  const sourceUrlIndex = headers.findIndex((header) => header === "source url" || header === "source_url" || header === "source page title and url");
-  const urlIndex = headers.findIndex((header) => (header.includes("url") || header.includes("link") || header.includes("backlink")) && header !== "target url");
-  const scoreIndex = headers.findIndex((header) => header === "dr" || header.includes("ascore") || header.includes("da") || header.includes("domain rating") || header.includes("domain authority") || header.includes("authority score"));
-  const countryIndex = headers.findIndex((header) => header.includes("country"));
-  const linksIndex = headers.findIndex((header) => header === "backlinks" || header.includes("links to target") || header.includes("ref domains") || header === "ext. links" || header === "external links");
-  const trafficIndex = headers.findIndex((header) => header === "traffic");
-  const format = sourceUrlIndex !== -1 ? "url" : "domain";
-
-  const results = [];
-  const seen = new Set();
-  for (let i = 1; i < lines.length; i += 1) {
-    const values = parseCSVLine(lines[i], delimiter);
-    const sourceUrl = sourceUrlIndex !== -1 ? values[sourceUrlIndex]?.trim().replace(/['"]/g, "") : "";
-    const rawDomain = domainIndex !== -1 ? values[domainIndex]?.trim().replace(/['"]/g, "") : "";
-    const rawUrl = sourceUrl || (urlIndex !== -1 ? values[urlIndex]?.trim().replace(/['"]/g, "") : "");
-    const domain = rawDomain || extractDomainFromUrl(rawUrl);
-    if (!domain || domain.length < 3 || seen.has(`${domain}-${rawUrl}`)) continue;
-    seen.add(`${domain}-${rawUrl}`);
-    results.push({
-      id: i,
-      domain,
-      url: rawUrl || `https://${domain}`,
-      sourceUrl: sourceUrl || "",
-      tld: extractTld(domain),
-      dr: scoreIndex !== -1 ? parseInt(String(values[scoreIndex] || "").replace(/[^\d]/g, ""), 10) || 0 : 0,
-      country: countryIndex !== -1 ? String(values[countryIndex] || "").trim().toUpperCase() : "",
-      backlinks: linksIndex !== -1 ? parseInt(String(values[linksIndex] || "").replace(/[^\d]/g, ""), 10) || 0 : 0,
-      traffic: trafficIndex !== -1 ? parseInt(String(values[trafficIndex] || "").replace(/[^\d]/g, ""), 10) || 0 : 0,
-    });
-  }
-  return { results, format };
-}
-
-function analyzeBacklink(link, keywords, checks = DEFAULT_CHECKS) {
-  const flags = [];
-  const domain = link.domain.toLowerCase();
-  const tld = link.tld.toLowerCase();
-
-  if (checks.foreign) {
-    const matchedTld = Object.keys(FOREIGN_TLD_LANGUAGES).find((item) => tld === item || tld.endsWith(item));
-    if (matchedTld) flags.push({ type: "foreign", severity: "high", message: `Foreign (${FOREIGN_TLD_LANGUAGES[matchedTld]})` });
-  }
-  if (checks.spammy_tld && SPAMMY_TLDS.some((item) => tld === item || tld.endsWith(item))) {
-    flags.push({ type: "spammy_tld", severity: "critical", message: `Spammy TLD (${tld})` });
-  }
-  if (checks.adult_gambling && ADULT_GAMBLING_KEYWORDS.some((keyword) => domain.includes(keyword))) {
-    flags.push({ type: "adult_gambling", severity: "medium", message: "Adult/gambling content" });
-  }
-  if (checks.low_quality && link.dr <= 5) {
-    flags.push({ type: "low_quality", severity: "info", message: `Low quality (AS/DR: ${link.dr})` });
-  }
-  if (checks.irrelevant && keywords.length > 0) {
-    const relevant = keywords.some((keyword) => domain.includes(keyword));
-    if (!relevant) flags.push({ type: "irrelevant", severity: "low", message: "Irrelevant niche" });
-  }
-  return { ...link, flags };
-}
-
-function seedRows(data) {
-  return data.domains.map((row, index) => analyzeBacklink({
-    id: index + 1,
-    domain: row.domain,
-    url: `https://${row.domain}`,
-    sourceUrl: "",
-    tld: row.tld,
-    dr: row.as,
-    country: row.country === "—" ? "" : row.country,
-    backlinks: row.links,
-    traffic: 0,
-  }, data.nicheKeywords.toLowerCase().split(",").map((item) => item.trim()).filter(Boolean)));
-}
+const EMPTY_BACKLINKS_RESULT = buildBacklinksToolResult({});
 
 export default function BacklinksAudit() {
-  const { displayUrl } = useSelectedProjectDomain();
+  const { project, projectUrl, displayUrl } = useSelectedProjectDomain();
+  const { result: savedResult, saveResult, persistenceError } = useTechSeoToolResult({
+    toolKey: "backlinks",
+    project,
+    projectUrl,
+    emptyResult: EMPTY_BACKLINKS_RESULT,
+  });
   const [backlinks, setBacklinks] = useState([]);
   const [fileName, setFileName] = useState("No file loaded");
   const [filter, setFilter] = useState("all");
@@ -162,6 +34,18 @@ export default function BacklinksAudit() {
   const [nicheKeywords, setNicheKeywords] = useState("");
   const [pasteInput, setPasteInput] = useState("");
   const [enabledChecks, setEnabledChecks] = useState(DEFAULT_CHECKS);
+
+  useEffect(() => {
+    if (!savedResult || typeof savedResult !== "object") return;
+    const nextBacklinks = Array.isArray(savedResult.backlinks) ? savedResult.backlinks : [];
+    setBacklinks(nextBacklinks);
+    setFileName(savedResult.fileName || "No file loaded");
+    setCsvFormat(savedResult.csvFormat || "domain");
+    setNicheKeywords(savedResult.nicheKeywords || "");
+    setPasteInput(savedResult.pasteInput || "");
+    setFilter(savedResult.filter || "all");
+    setEnabledChecks(savedResult.enabledChecks && typeof savedResult.enabledChecks === "object" ? { ...DEFAULT_CHECKS, ...savedResult.enabledChecks } : DEFAULT_CHECKS);
+  }, [savedResult]);
 
   const keywords = useMemo(() => nicheKeywords.toLowerCase().split(",").map((item) => item.trim()).filter(Boolean), [nicheKeywords]);
   const analyzedBacklinks = useMemo(() => backlinks.map((link) => analyzeBacklink(link, keywords, enabledChecks)), [backlinks, keywords, enabledChecks]);
@@ -180,11 +64,27 @@ export default function BacklinksAudit() {
     clean: analyzedBacklinks.filter((link) => link.flags.length === 0).length,
   }), [analyzedBacklinks]);
 
+  async function persistBacklinks(nextBacklinks, nextFileName, nextCsvFormat, nextNicheKeywords, nextPasteInput, nextEnabledChecks, nextFilter) {
+    const payload = buildBacklinksToolResult({
+      backlinks: nextBacklinks,
+      fileName: nextFileName,
+      csvFormat: nextCsvFormat,
+      nicheKeywords: nextNicheKeywords,
+      pasteInput: nextPasteInput,
+      enabledChecks: nextEnabledChecks,
+      filter: nextFilter,
+    });
+    await saveResult(payload);
+  }
+
   function loadText(text, nextName = "Pasted CSV") {
     const parsed = parseBacklinkText(text);
-    setCsvFormat(parsed.format);
-    setBacklinks(parsed.results);
+    const nextBacklinks = parsed.results;
+    const nextCsvFormat = parsed.format;
+    setCsvFormat(nextCsvFormat);
+    setBacklinks(nextBacklinks);
     setFileName(nextName);
+    void persistBacklinks(nextBacklinks, nextName, nextCsvFormat, nicheKeywords, pasteInput, enabledChecks, filter);
   }
 
   function handleFileUpload(file) {
@@ -202,7 +102,7 @@ export default function BacklinksAudit() {
     });
     const content = [
       "# Google Disavow File",
-      "# Generated by AI Smart Seo Backlinks Audit",
+      "# Generated by PGC Backlinks Audit",
       `# Flagged links: ${flagged.length}`,
       `# Date: ${new Date().toISOString().split("T")[0]}`,
       "",
@@ -215,26 +115,41 @@ export default function BacklinksAudit() {
     setBacklinks([]);
     setPasteInput("");
     setFileName("No file loaded");
+    void persistBacklinks([], "No file loaded", csvFormat, nicheKeywords, "", enabledChecks, filter);
   }
 
   return (
-    <div className="mx-auto max-w-6xl">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-rose-500/20 ring-1 ring-rose-500/30">
-            <Link2 className="h-5 w-5 text-rose-400" />
+    <div className="">
+      {/* ─── Hero Header ─── */}
+      <div className="backlinks-hero">
+        <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
+          <div className="backlinks-title flex items-center gap-3">
+            <Link2 className="h-5 w-5" />
+            <div>
+              <h1 className="font-display">Backlinks Audit</h1>
+              <p className="backlinks-description">Upload Semrush, Ahrefs, or simple backlink CSV/TSV files and generate disavow candidates.</p>
+            </div>
           </div>
-          <div>
-            <h1 className="font-display text-xl font-black text-white">Backlinks Audit</h1>
-            <p className="text-xs text-white/40">Upload Semrush, Ahrefs, or simple backlink CSV/TSV files and generate disavow candidates.</p>
+          <button onClick={exportDisavow} className="ui-button ui-button-primary backlinks-export-button">
+            <Download className="h-4 w-4" /> Export Disavow (.txt)
+          </button>
+        </div>
+
+        {/* Source + target meta row */}
+        <div className="backlinks-meta">
+          <div className="flex min-w-0 flex-1 items-center gap-2.5">
+            <span className="backlinks-meta-label">Target</span>
+            <span className="backlinks-meta-value truncate">{displayUrl}</span>
+          </div>
+          <div className="flex flex-shrink-0 flex-wrap items-center gap-2">
+            <span className="backlinks-meta-label">File</span>
+            <span className="backlinks-meta-file truncate">{fileName}</span>
+            <span className="admin-badge badge-warning">{csvFormat.toUpperCase()} Format</span>
           </div>
         </div>
-        <button onClick={exportDisavow} className="flex items-center gap-1.5 rounded-lg bg-rose-500 px-4 py-2 text-xs font-bold text-white shadow transition hover:bg-rose-400">
-          <Download className="h-3.5 w-3.5" /> Export Disavow (.txt)
-        </button>
       </div>
 
-      <div className="mt-6 grid grid-cols-7 gap-2">
+      <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-7">
         <StatPill value={formatNumber(stats.total)} label="Total Links" color="text-blue-400" />
         <StatPill value={stats.spammy} label="Spammy TLDs" color="text-amber-400" />
         <StatPill value={stats.foreign} label="Foreign Lang." color="text-rose-400" />
@@ -244,50 +159,55 @@ export default function BacklinksAudit() {
         <StatPill value={stats.clean} label="Clean" color="text-emerald-400" />
       </div>
 
-      <div className="mt-5 rounded-2xl border border-white/[0.06] bg-white/[0.02] p-4">
+      <div className="backlinks-panel mt-5">
         <div className="flex flex-wrap items-center gap-3">
-          <label className="flex cursor-pointer items-center gap-1.5 rounded-lg bg-violet-500 px-3 py-1.5 text-[10px] font-bold text-white">
-            <Upload className="h-3 w-3" /> Upload CSV/TSV
+          <label className="backlinks-upload">
+            <Upload className="h-3.5 w-3.5" /> Upload CSV/TSV
             <input type="file" accept=".csv,.tsv,.txt" className="hidden" onChange={(e) => handleFileUpload(e.target.files?.[0])} />
           </label>
-          <div className="flex items-center gap-2 rounded-lg border border-white/10 bg-ink-900/60 px-3 py-1.5">
-            <span className="text-[10px] text-white/35">File:</span>
-            <span className="max-w-[260px] truncate text-[11px] text-white/60">{fileName}</span>
-          </div>
-          <div className="flex items-center gap-2 rounded-lg border border-white/10 bg-ink-900/60 px-3 py-1.5">
-            <span className="text-[10px] text-white/35">Target:</span>
-            <span className="max-w-[260px] truncate text-[11px] text-white/60">{displayUrl}</span>
-          </div>
-          <span className="rounded-full bg-amber-500/15 px-2.5 py-0.5 text-[10px] font-bold text-amber-300">{csvFormat.toUpperCase()} Format</span>
           <FilterSelect value={filter} onChange={setFilter} />
-          <button onClick={clearAll} className="flex items-center gap-1 text-[10px] text-rose-300 hover:underline">
-            <RefreshCw className="h-3 w-3" /> Clear All
+          <button onClick={clearAll} className="backlinks-clear-button">
+            <RefreshCw className="h-3.5 w-3.5" /> Clear All
           </button>
         </div>
 
+        {(persistenceError) && <p className="mt-3 text-xs font-semibold text-rose-300">{persistenceError}</p>}
+
         <div className="mt-3 grid gap-3 lg:grid-cols-[1fr_1fr]">
           <div>
-            <label className="text-[11px] text-white/40">Update niche keywords (comma-separated)</label>
+            <label className="backlinks-field-label">Update niche keywords (comma-separated)</label>
             <input
               value={nicheKeywords}
-              onChange={(e) => setNicheKeywords(e.target.value)}
-              className="mt-1 w-full rounded-lg border border-white/10 bg-ink-900/60 px-3 py-2 text-xs text-white/70 placeholder:text-white/25 focus:outline-none"
+              onChange={(e) => {
+                const nextValue = e.target.value;
+                setNicheKeywords(nextValue);
+                void persistBacklinks(backlinks, fileName, csvFormat, nextValue, pasteInput, enabledChecks, filter);
+              }}
+              className="backlinks-input mt-1.5 w-full"
               placeholder="SEO, marketing, web design"
             />
           </div>
           <div>
-            <label className="text-[11px] text-white/40">Paste CSV/TSV export</label>
+            <label className="backlinks-field-label">Paste CSV/TSV export</label>
             <div className="mt-1 flex gap-2">
-              <textarea value={pasteInput} onChange={(e) => setPasteInput(e.target.value)} rows={2} className="flex-1 rounded-lg border border-white/10 bg-ink-900/60 px-3 py-2 text-xs text-white/70 placeholder:text-white/25 focus:outline-none" placeholder="Domain,DR,Backlinks,Country..." />
-              <button onClick={() => loadText(pasteInput)} className="rounded-lg bg-brand-500 px-3 text-xs font-bold text-white">Analyze</button>
+              <textarea value={pasteInput} onChange={(e) => {
+                const nextValue = e.target.value;
+                setPasteInput(nextValue);
+                void persistBacklinks(backlinks, fileName, csvFormat, nicheKeywords, nextValue, enabledChecks, filter);
+              }} rows={2} className="backlinks-input flex-1" placeholder="Domain,DR,Backlinks,Country..." />
+              <button onClick={() => loadText(pasteInput)} className="ui-button backlinks-analyze-button">Analyze</button>
             </div>
           </div>
         </div>
 
         <div className="mt-3 flex flex-wrap gap-3">
           {Object.entries(enabledChecks).map(([key, value]) => (
-            <label key={key} className="flex items-center gap-1.5 text-[10px] text-white/45">
-              <input type="checkbox" checked={value} onChange={(e) => setEnabledChecks((prev) => ({ ...prev, [key]: e.target.checked }))} className="h-3 w-3 accent-brand-500" />
+            <label key={key} className="backlinks-check">
+              <input type="checkbox" checked={value} onChange={(e) => {
+                const nextEnabledChecks = { ...enabledChecks, [key]: e.target.checked };
+                setEnabledChecks(nextEnabledChecks);
+                void persistBacklinks(backlinks, fileName, csvFormat, nicheKeywords, pasteInput, nextEnabledChecks, filter);
+              }} className="h-3.5 w-3.5" />
               {key.replace(/_/g, " ")}
             </label>
           ))}
@@ -350,7 +270,7 @@ function FilterSelect({ value, onChange }) {
   return (
     <div className="flex items-center gap-1.5 rounded-lg border border-white/10 bg-ink-900/60 px-3 py-1.5">
       <Filter className="h-3 w-3 text-white/30" />
-      <select value={value} onChange={(e) => onChange(e.target.value)} className="bg-transparent text-[11px] text-white/60 focus:outline-none">
+      <select value={value} onChange={(e) => onChange(e.target.value)} className="appearance-none bg-transparent text-[11px] text-white/60 focus:outline-none">
         <option value="all">All Backlinks</option>
         <option value="clean">Clean</option>
         <option value="critical">Critical</option>
@@ -368,9 +288,9 @@ function FilterSelect({ value, onChange }) {
 
 function StatPill({ value, label, color }) {
   return (
-    <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] py-3 text-center">
-      <div className={`font-display text-xl font-black ${color}`}>{value}</div>
-      <div className="text-[9px] text-white/35">{label}</div>
+    <div className="backlinks-stat">
+      <div className="backlinks-stat-label">{label}</div>
+      <div className={`backlinks-stat-value ${color}`}>{value}</div>
     </div>
   );
 }

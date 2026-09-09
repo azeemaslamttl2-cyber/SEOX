@@ -1,4 +1,4 @@
-import { ChevronDown, Search } from "lucide-react";
+import { ChevronDown, MessageSquare, Search } from "lucide-react";
 import BrandRadarDataForSeoStatus from "../../components/brandradar/BrandRadarDataForSeoStatus.jsx";
 import {
   formatCompactNumber,
@@ -25,16 +25,21 @@ export default function BrandRadarAIResponses() {
     <section className="space-y-5 pb-16">
       <BrandRadarDataForSeoStatus loading={mentionsState.loading} error={mentionsState.error} data={mentionsState.data} />
 
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h1 className="font-display text-xl font-bold tracking-tight">AI Responses: {config.brand}</h1>
-          <p className="mt-0.5 text-xs text-white/40">
-            Live DataForSEO LLM mentions search results from Google AI Overview.
-          </p>
-        </div>
-        <div className="flex items-center gap-2 rounded-lg border border-white/10 bg-white/[0.03] px-3 py-1.5 text-xs text-white/55">
-          {formatCompactNumber(mentionsState.data?.total_count || responses.length)} results
-          <ChevronDown className="h-3 w-3 text-white/35" />
+      <div className="radar-page-hero">
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <div className="radar-page-title flex items-center gap-3">
+            <MessageSquare className="h-5 w-5" />
+            <div>
+              <h1 className="font-display">AI Responses: <span className="radar-brand">{config.brand}</span></h1>
+              <p className="radar-page-description">
+                Live DataForSEO LLM mentions search results from Google AI Overview.
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2 rounded-lg border border-white/10 bg-white/[0.03] px-3 py-1.5 text-xs text-white/55">
+            {formatCompactNumber(mentionsState.data?.total_count || responses.length)} results
+            <ChevronDown className="h-3 w-3 text-white/35" />
+          </div>
         </div>
       </div>
 

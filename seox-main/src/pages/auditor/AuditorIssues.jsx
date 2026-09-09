@@ -1,6 +1,6 @@
 import { useState, useMemo } from "react";
 import { useSearchParams } from "react-router-dom";
-import { Code2, Download, ChevronDown, Filter } from "lucide-react";
+import { AlertTriangle, ChevronDown, Code2, Download, Filter } from "lucide-react";
 import IssueTable from "../../components/auditor/IssueTable.jsx";
 import { useAuditData } from "../../hooks/useAuditData.js";
 
@@ -58,11 +58,12 @@ export default function AuditorIssues() {
   }, [issueCategories, searchQuery, tab]);
 
   return (
-    <div className="mx-auto max-w-[1500px] space-y-4">
+    <div className="space-y-4">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="auditor-hero flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <h1 className="font-display text-xl font-bold tracking-tight">All issues</h1>
+          <h1 className="font-display text-xl font-bold tracking-tight">
+            <AlertTriangle className="h-5 w-5" />All issues</h1>
           <span className="rounded-full bg-rose-500/20 px-2 py-0.5 text-[11px] font-bold text-rose-300">
             {tabs.find((item) => item.key === "actual")?.count || 0}
           </span>
@@ -149,6 +150,15 @@ export default function AuditorIssues() {
             </section>
           );
         })}
+
+        {!filtered.some((cat) => (cat.subgroups ? cat.subgroups.length > 0 : cat.items.length > 0)) && (
+          <div className="rounded-2xl border border-white/10 bg-ink-800/60 p-8 text-center backdrop-blur">
+            <p className="text-sm font-semibold text-white">No issues found in this view</p>
+            <p className="mt-1 text-xs text-white/50">
+              {searchQuery ? `No issues matching "${searchQuery}".` : "No audit issues found for this project filter."}
+            </p>
+          </div>
+        )}
       </div>
     </div>
   );

@@ -29,7 +29,7 @@ const nav = [
 
 export default function BrandRadarSecondaryNav() {
   return (
-    <aside className="sticky top-0 hidden h-screen w-[232px] flex-shrink-0 overflow-y-auto border-r border-white/10 bg-ink-900/60 px-3 py-5 md:block no-scrollbar">
+    <aside className="app-sidebar sticky top-0 hidden h-screen w-[232px] flex-shrink-0 overflow-y-auto border-r border-white/10 bg-ink-900/60 px-3 py-5 md:block no-scrollbar">
       <nav className="space-y-5">
         {nav.map((section) => (
           <div key={section.section}>

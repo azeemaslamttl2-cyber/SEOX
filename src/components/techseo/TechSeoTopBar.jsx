@@ -10,6 +10,7 @@ const titles = {
   "/tech-seo/crawl": "Crawl Optimization",
   "/tech-seo/speed": "Speed Optimization",
   "/tech-seo/w3c": "W3C Validation",
+  "/tech-seo/wordpress-security": "WordPress Security",
   "/tech-seo/gsc-audit": "GSC Audit",
   "/tech-seo/bing": "Bing Webmaster",
   "/tech-seo/backlinks": "Backlinks Audit",

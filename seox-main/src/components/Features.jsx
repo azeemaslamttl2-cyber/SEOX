@@ -99,7 +99,7 @@ export default function Features() {
           </span>
           <h2 className="mt-5 font-display text-4xl font-bold tracking-tight sm:text-5xl">
             Complete SEO Optimizations by{" "}
-            <span className="gradient-text">AI Smart Seo</span>
+            <span className="gradient-text">PGC</span>
           </h2>
           <p className="mx-auto mt-4 max-w-2xl text-white/60">
             50+ professional tools covering every aspect of SEO — from technical audits to AI-powered

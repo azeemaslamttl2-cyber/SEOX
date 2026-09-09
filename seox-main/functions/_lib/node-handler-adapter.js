@@ -96,6 +96,13 @@ function createResponseAdapter() {
 
 export async function runNodeHandler(context, handler) {
   exposeEnvironment(context.env);
+  if (typeof context?.env === "object" && context.env !== null) {
+    for (const [key, value] of Object.entries(context.env)) {
+      if (typeof value === "string" && process.env[key] === undefined) {
+        process.env[key] = value;
+      }
+    }
+  }
 
   const url = new URL(context.request.url);
   const headers = Object.fromEntries(
@@ -110,6 +117,7 @@ export async function runNodeHandler(context, handler) {
     headers,
     query: parseQuery(url),
     body: await parseBody(context.request.clone()),
+    env: context.env,
   };
   const res = createResponseAdapter();
 

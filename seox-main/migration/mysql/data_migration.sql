@@ -1,0 +1,1 @@
+-- Placeholder data migration script for Firestore-to-MySQL cutover

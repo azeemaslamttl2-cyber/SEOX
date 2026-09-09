@@ -39,6 +39,7 @@ const nav = [
       { label: "Duplicate Checker", to: "/tech-seo/duplicate", icon: Copy },
       { label: "Plagiarism Checker", to: "/tech-seo/plagiarism", icon: FileSearch },
       { label: "Screaming Frog", to: "/tech-seo/screaming-frog", icon: FileStack },
+      { label: "WordPress Security", to: "/tech-seo/wordpress-security", icon: ShieldCheck },
     ],
   },
 ];

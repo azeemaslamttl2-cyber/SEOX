@@ -5,27 +5,27 @@ import {
   Zap,
   BookOpen,
   Wrench,
-  Link2,
-  Database,
+  Lightbulb,
+  Download,
 } from "lucide-react";
 
 const nav = [
   {
     section: "Off-Page SEO",
     items: [
-      { label: "AI Link Builder", to: "/off-page/ai-link-builder", icon: Link2 },
-      { label: "CSV Generator", to: "/off-page/csv-generator", icon: Database },
       { label: "Expired Domain Finder", to: "/off-page/expired-domains", icon: Globe },
       { label: "Backlink Cleaner", to: "/off-page/backlink-cleaner", icon: RefreshCw },
       { label: "Backlink Indexer", to: "/off-page/backlink-indexer", icon: Zap },
       { label: "Backlink Directory", to: "/off-page/backlink-directory", icon: BookOpen },
+      { label: "AI Link Builder", to: "/off-page/ai-link-builder", icon: Lightbulb },
+      { label: "CSV Generator", to: "/off-page/csv-generator", icon: Download },
     ],
   },
 ];
 
 export default function OffPageSecondaryNav() {
   return (
-    <aside className="sticky top-0 hidden h-screen w-[232px] flex-shrink-0 overflow-y-auto border-r border-white/10 bg-ink-900/60 px-3 py-5 md:block">
+    <aside className="app-sidebar sticky top-0 hidden h-screen w-[232px] flex-shrink-0 overflow-y-auto border-r border-white/10 bg-ink-900/60 px-3 py-5 md:block">
       <nav className="space-y-5">
         {nav.map((section) => (
           <div key={section.section}>

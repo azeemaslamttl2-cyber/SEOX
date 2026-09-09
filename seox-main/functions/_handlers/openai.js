@@ -1,4 +1,4 @@
-import { requireFirebaseAuthFromNodeRequest } from "../_lib/request-auth.js";
+import { requireAuthenticatedUser } from "../_lib/request-auth.js";
 
 // Unified AI API endpoint for Content Writer - supports OpenAI, OpenRouter, Claude, DeepSeek, and Gemini.
 
@@ -18,7 +18,7 @@ export default async function handler(req, res) {
 
     try {
         try {
-            await requireFirebaseAuthFromNodeRequest(req);
+            await requireAuthenticatedUser(req);
         } catch (error) {
             return res.status(error?.status || 401).json({ error: error?.message || 'Unauthorized' });
         }
@@ -220,8 +220,8 @@ export default async function handler(req, res) {
                 headers: {
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${apiKey}`,
-                    'HTTP-Referer': req.headers.origin || 'https://www.aismartseo.com',
-                    'X-Title': 'AI Smart Seo Content Writer'
+                    'HTTP-Referer': req.headers.origin || 'https://www.seox.com',
+                    'X-Title': 'SEOX Content Writer'
                 },
                 body: JSON.stringify({
                     model: model || 'openai/gpt-4o-mini',

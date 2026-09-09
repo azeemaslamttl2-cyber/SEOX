@@ -6,18 +6,20 @@ import {
   saveProjectToolChecks,
   shouldRunProjectToolChecks,
 } from "../lib/projectToolChecks.js";
-import { useNotifications } from "../context/NotificationsContext.jsx";
+import { loadToolResult, saveToolResult } from "../lib/projectsApi.js";
+
+const DASHBOARD_CHECKS_KEY = "dashboardChecks";
 
 function userIdFor(user) {
   return user?.uid || user?.id || "";
 }
 
 export function useProjectToolChecks(project, user) {
-  const { notify } = useNotifications();
   const userId = userIdFor(user);
   const projectKey = project?.id || project?.fullUrl || project?.domain || "";
   const runIdRef = useRef(0);
   const autoStartedRef = useRef("");
+  const [hydratedKey, setHydratedKey] = useState("");
   const [checks, setChecks] = useState(() => {
     return project ? loadProjectToolChecks(project) || createEmptyProjectToolChecks(project) : null;
   });
@@ -25,10 +27,53 @@ export function useProjectToolChecks(project, user) {
   useEffect(() => {
     if (!project) {
       setChecks(null);
+      setHydratedKey("");
       return;
     }
-    setChecks(loadProjectToolChecks(project) || createEmptyProjectToolChecks(project));
-  }, [projectKey, project]);
+    const nextHydratedKey = `${userId}:${projectKey}`;
+    const cachedChecks = loadProjectToolChecks(project) || createEmptyProjectToolChecks(project);
+    setChecks(cachedChecks);
+
+    if (!userId || !project.id) {
+      setHydratedKey(nextHydratedKey);
+      return undefined;
+    }
+
+    let cancelled = false;
+    loadToolResult(userId, { projectId: project.id, toolKey: DASHBOARD_CHECKS_KEY })
+      .then((storedChecks) => {
+        if (cancelled || !storedChecks) return;
+        saveProjectToolChecks(project, storedChecks);
+        setChecks(storedChecks);
+      })
+      .catch(() => {
+        // The session cache remains available if the database is temporarily unavailable.
+      })
+      .finally(() => {
+        if (!cancelled) setHydratedKey(nextHydratedKey);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [project, projectKey, userId]);
+
+  const persistChecks = useCallback(
+    (nextChecks) => {
+      saveProjectToolChecks(project, nextChecks);
+      if (!userId || !project?.id) return;
+
+      saveToolResult(userId, {
+        projectId: project.id,
+        projectUrl: nextChecks.projectUrl || project.fullUrl || project.url || "",
+        toolKey: DASHBOARD_CHECKS_KEY,
+        result: nextChecks,
+      }).catch(() => {
+        // Keep the cache as a short-lived fallback; the next run can retry the write.
+      });
+    },
+    [project, userId]
+  );
 
   const runChecks = useCallback(
     async ({ force = false } = {}) => {
@@ -44,41 +89,22 @@ export function useProjectToolChecks(project, user) {
       const initial = createEmptyProjectToolChecks(project);
       initial.status = "running";
       setChecks(initial);
-      saveProjectToolChecks(project, initial);
+      persistChecks(initial);
 
       return runProjectToolChecks(project, {
         userId,
         onUpdate: (next) => {
-          if (runIdRef.current === runId) setChecks(next);
+          if (runIdRef.current !== runId) return;
+          setChecks(next);
+          persistChecks(next);
         },
-      })
-        .then((next) => {
-          const tools = Object.values(next?.tools || {});
-          const completed = tools.filter((tool) => tool.status === "complete").length;
-          const failed = tools.filter((tool) => tool.status === "error").length;
-          notify({
-            type: failed ? "warning" : "success",
-            title: "Dashboard checks complete",
-            body: `${completed} checks completed for ${project.name || project.domain || "your website"}.`,
-            href: "/dashboard",
-          });
-          return next;
-        })
-        .catch((error) => {
-          notify({
-            type: "error",
-            title: "Dashboard checks failed",
-            body: error?.message || "Could not complete the dashboard checks.",
-            href: "/dashboard",
-          });
-          throw error;
-        });
+      });
     },
-    [notify, project, userId]
+    [persistChecks, project, userId]
   );
 
   useEffect(() => {
-    if (!project) return;
+    if (!project || hydratedKey !== `${userId}:${projectKey}`) return;
     const loaded = loadProjectToolChecks(project);
     const autoKey = `${projectKey}:${loaded?.completedAt || "empty"}`;
     if (autoStartedRef.current === autoKey) return;
@@ -86,7 +112,7 @@ export function useProjectToolChecks(project, user) {
       autoStartedRef.current = autoKey;
       runChecks();
     }
-  }, [project, projectKey, runChecks]);
+  }, [hydratedKey, project, projectKey, runChecks, userId]);
 
   return {
     checks,

@@ -66,7 +66,7 @@ function DonutChart({ data }) {
 /* ================================================================
    SVG Area/Line Chart
    ================================================================ */
-function AreaChart({ points, color = "#fb923c", height = 140, labels = [] }) {
+function AreaChart({ points, color = "#df3c27", height = 140, labels = [] }) {
   const maxVal = Math.max(...points);
   const w = 500;
   const h = height;
@@ -93,8 +93,8 @@ function AreaChart({ points, color = "#fb923c", height = 140, labels = [] }) {
         const val = Math.round(frac * maxVal);
         return (
           <g key={frac}>
-            <line x1={pad} y1={y} x2={w - pad} y2={y} stroke="rgba(255,255,255,0.06)" strokeWidth="1" />
-            <text x={pad - 8} y={y + 4} textAnchor="end" fill="rgba(255,255,255,0.3)" fontSize="10" fontFamily="Inter">
+            <line x1={pad} y1={y} x2={w - pad} y2={y} stroke="#eef0f5" strokeWidth="1" />
+            <text x={pad - 8} y={y + 4} textAnchor="end" fill="#727a94" fontSize="10" fontFamily="Gotham, Century Gothic, sans-serif">
               {val ? `Rs ${(val / 1000).toFixed(0)}k` : "Rs 0"}
             </text>
           </g>
@@ -104,10 +104,10 @@ function AreaChart({ points, color = "#fb923c", height = 140, labels = [] }) {
       <path d={linePath} fill="none" stroke={color} strokeWidth="2.5" strokeLinejoin="round" />
       {pathPoints.map((p, i) => {
         const [x, y] = p.split(",").map(Number);
-        return <circle key={i} cx={x} cy={y} r="3" fill="#08080b" stroke={color} strokeWidth="2" />;
+        return <circle key={i} cx={x} cy={y} r="3" fill="#ffffff" stroke={color} strokeWidth="2" />;
       })}
       {labels.map((label, i) => (
-        <text key={i} x={pad + i * stepX} y={h + 14} textAnchor="middle" fill="rgba(255,255,255,0.35)" fontSize="10" fontFamily="Inter">
+        <text key={i} x={pad + i * stepX} y={h + 14} textAnchor="middle" fill="#727a94" fontSize="10" fontFamily="Gotham, Century Gothic, sans-serif">
           {label}
         </text>
       ))}
@@ -118,7 +118,7 @@ function AreaChart({ points, color = "#fb923c", height = 140, labels = [] }) {
 /* ================================================================
    Dual Line Chart (Search Console Performance)
    ================================================================ */
-function DualLineChart({ series1, series2, color1 = "#fb923c", color2 = "#7c5cf0", labels = [] }) {
+function DualLineChart({ series1, series2, color1 = "#df3c27", color2 = "#2d2b6f", labels = [] }) {
   const allPoints = [...series1, ...series2];
   const maxVal = Math.max(...allPoints);
   const w = 500;
@@ -134,12 +134,12 @@ function DualLineChart({ series1, series2, color1 = "#fb923c", color2 = "#7c5cf0
       <path d={`M${toPath(series1)}`} fill="none" stroke={color1} strokeWidth="2.5" strokeLinejoin="round" />
       <path d={`M${toPath(series2)}`} fill="none" stroke={color2} strokeWidth="2.5" strokeLinejoin="round" />
       {labels.map((l, i) => (
-        <text key={i} x={pad + i * stepX} y={h + 14} textAnchor="middle" fill="rgba(255,255,255,0.3)" fontSize="9" fontFamily="Inter">{l}</text>
+        <text key={i} x={pad + i * stepX} y={h + 14} textAnchor="middle" fill="#727a94" fontSize="9" fontFamily="Gotham, Century Gothic, sans-serif">{l}</text>
       ))}
       <circle cx={w / 2 - 60} cy={h + 26} r="4" fill={color1} />
-      <text x={w / 2 - 52} y={h + 30} fill="rgba(255,255,255,0.5)" fontSize="10" fontFamily="Inter">Clicks</text>
+      <text x={w / 2 - 52} y={h + 30} fill="rgba(255,255,255,0.5)" fontSize="10" fontFamily="Gotham, Century Gothic, sans-serif">Clicks</text>
       <circle cx={w / 2 + 20} cy={h + 26} r="4" fill={color2} />
-      <text x={w / 2 + 28} y={h + 30} fill="rgba(255,255,255,0.5)" fontSize="10" fontFamily="Inter">Impressions</text>
+      <text x={w / 2 + 28} y={h + 30} fill="rgba(255,255,255,0.5)" fontSize="10" fontFamily="Gotham, Century Gothic, sans-serif">Impressions</text>
     </svg>
   );
 }
@@ -167,12 +167,12 @@ function UserGrowthChart({ data, labels }) {
       </defs>
       {[0, 0.5, 1].map((f) => {
         const y = h - pad - f * (h - pad * 2);
-        return <line key={f} x1={pad} y1={y} x2={w - pad} y2={y} stroke="rgba(255,255,255,0.06)" strokeWidth="1" />;
+        return <line key={f} x1={pad} y1={y} x2={w - pad} y2={y} stroke="#eef0f5" strokeWidth="1" />;
       })}
       <path d={areaPath} fill="url(#ug-grad)" />
       <path d={linePath} fill="none" stroke="#22c55e" strokeWidth="2" strokeLinejoin="round" />
       {labels.map((l, i) => (
-        <text key={i} x={pad + i * stepX} y={h + 10} textAnchor="middle" fill="rgba(255,255,255,0.3)" fontSize="9" fontFamily="Inter">{l}</text>
+        <text key={i} x={pad + i * stepX} y={h + 10} textAnchor="middle" fill="#727a94" fontSize="9" fontFamily="Gotham, Century Gothic, sans-serif">{l}</text>
       ))}
     </svg>
   );
@@ -263,7 +263,7 @@ export default function AdminDashboard() {
   const userTypeData = [
     { label: "Free", value: stats.freeUsers, color: "#3b82f6" },
     { label: "Professional", value: stats.professionalUsers, color: "#22c55e" },
-    { label: "Enterprise", value: stats.enterpriseUsers, color: "#fb923c" },
+    { label: "Enterprise", value: stats.enterpriseUsers, color: "#df3c27" },
     { label: "Admin", value: stats.admins, color: "#ef4444" },
   ];
 
@@ -275,7 +275,7 @@ export default function AdminDashboard() {
     name: user.name,
     email: user.email,
     plan: user.level,
-    color: ["#3b82f6", "#f59e0b", "#8b5cf6", "#ef4444", "#22c55e", "#ec4899", "#06b6d4", "#f97316"][index % 8],
+    color: ["#4197cb", "#ffc600", "#2d2b6f", "#c76c61", "#6abf4b", "#df3c27", "#4197cb", "#df3c27"][index % 8],
   }));
 
   return (
@@ -287,7 +287,7 @@ export default function AdminDashboard() {
             <LayoutGrid className="h-6 w-6 text-brand-400" />
             Dashboard Overview
           </h1>
-          <p className="mt-1 text-sm text-white/45">Real-time metrics from Firebase</p>
+          <p className="mt-1 text-sm text-white/45">Metrics from the local database</p>
         </div>
         <button
           onClick={refresh}
@@ -305,7 +305,7 @@ export default function AdminDashboard() {
         <StatCard icon={DollarSign} value={formatCurrency(stats.lifetimeIncome)} label="Lifetime Revenue" color="#22c55e" iconBg="rgba(34,197,94,0.15)" />
         <StatCard icon={Users} value={formatNumber(stats.totalUsers)} label="Total Users" color="#3b82f6" iconBg="rgba(59,130,246,0.15)" />
         <StatCard icon={Percent} value={`${stats.conversionRate.toFixed(1)}%`} label="Conversion Rate" color="#f59e0b" iconBg="rgba(245,158,11,0.15)" />
-        <StatCard icon={Crown} value={formatNumber(stats.lifetimeEnterprise)} label="Lifetime Enterprise" color="#fb923c" iconBg="rgba(251,146,60,0.15)" />
+        <StatCard icon={Crown} value={formatNumber(stats.lifetimeEnterprise)} label="Lifetime Enterprise" color="#df3c27" iconBg="rgba(223,60,39,0.15)" />
       </div>
 
       {/* Lifetime Deals Income + User Types */}
@@ -315,7 +315,7 @@ export default function AdminDashboard() {
             <Crown className="h-4 w-4 text-amber-400" />
             Lifetime Deals Income
           </h3>
-          <AreaChart points={lifetimeIncomeData} color="#fb923c" height={140} labels={lifetimeLabels} />
+          <AreaChart points={lifetimeIncomeData} color="#df3c27" height={140} labels={lifetimeLabels} />
           <div className="grid grid-cols-3 gap-3 mt-5">
             <div className="text-center rounded-xl border border-white/10 p-4">
               <div className="text-[11px] text-white/40 mb-1">Lifetime Users</div>
@@ -352,7 +352,7 @@ export default function AdminDashboard() {
             { label: "Total Signups", value: stats.totalUsers, color: "#3b82f6" },
             { label: "Free Active", value: stats.freeUsers, color: "#60a5fa" },
             { label: "Professional", value: stats.professionalUsers, color: "#22c55e" },
-            { label: "Enterprise", value: stats.enterpriseUsers, color: "#fb923c" },
+            { label: "Enterprise", value: stats.enterpriseUsers, color: "#df3c27" },
           ];
           const maxValue = Math.max(...funnelStages.map(s => s.value), 1);
           return (
@@ -491,7 +491,7 @@ export default function AdminDashboard() {
             const monthlyRev = stats.monthlyEnterprise * 800;
             const total = lifetimeRev + monthlyRev;
             const segments = [
-              { label: "Lifetime Deals", value: lifetimeRev, count: stats.lifetimeEnterprise, color: "#fb923c", unit: "Rs 5,000/user" },
+              { label: "Lifetime Deals", value: lifetimeRev, count: stats.lifetimeEnterprise, color: "#df3c27", unit: "Rs 5,000/user" },
               { label: "Monthly Subs", value: monthlyRev, count: stats.monthlyEnterprise, color: "#22c55e", unit: "Rs 800/mo" },
             ];
             return (

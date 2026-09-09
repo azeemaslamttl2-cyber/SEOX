@@ -12,7 +12,7 @@ import {
 } from "lucide-react";
 import Logo from "./Logo.jsx";
 import Avatar from "./Avatar.jsx";
-import { track } from "../lib/firebase.js";
+import { track } from "../lib/analytics.js";
 import { useAuth } from "../context/AuthContext.jsx";
 import { logout } from "../lib/auth.js";
 
@@ -21,7 +21,7 @@ const links = [
   { label: "Pricing", to: "/#pricing" },
   { label: "Help", to: "/#faq" },
   { label: "Desktop App", to: "/#cta" },
-  { label: "Free SEO Audit", to: "https://www.aismartseo.com/tech-seo/eeat" },
+  { label: "Free SEO Audit", to: "/tech-seo/eeat" },
 ];
 
 export default function Navbar() {
@@ -74,9 +74,7 @@ export default function Navbar() {
       <div className="container-px flex h-16 items-center justify-between">
         <Link to="/" className="flex items-center gap-2.5">
           <Logo className="h-8 w-8" />
-          <span className="font-display text-lg font-bold tracking-tight">
-            AI Smart <span className="text-brand-400">Seo</span>
-          </span>
+          <span className="font-display text-lg font-bold tracking-tight">PGC</span>
         </Link>
 
         <nav className="hidden items-center gap-8 lg:flex">
@@ -98,7 +96,8 @@ export default function Navbar() {
             <div className="relative" ref={menuRef}>
               <button
                 onClick={() => setMenuOpen((v) => !v)}
-                className="flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.04] py-1 pl-1 pr-3 transition hover:bg-white/[0.08]"
+                className="home-user-menu-button flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.04] py-1 pl-1 pr-3 transition hover:bg-white/[0.08]"
+                type="button"
               >
                 <Avatar user={user} size={28} />
                 <span className="max-w-[120px] truncate text-sm font-medium text-white">
@@ -112,7 +111,7 @@ export default function Navbar() {
               </button>
 
               {menuOpen && (
-                <div className="absolute right-0 mt-2 w-64 overflow-hidden rounded-2xl border border-white/10 bg-ink-800/95 p-1.5 shadow-2xl backdrop-blur-2xl">
+                <div className="home-user-menu absolute right-0 mt-2 w-64 overflow-hidden rounded-2xl border border-white/10 bg-ink-800/95 p-1.5 shadow-2xl backdrop-blur-2xl">
                   <div className="flex items-center gap-3 px-3 py-3">
                     <Avatar user={user} size={36} />
                     <div className="min-w-0">

@@ -32,7 +32,7 @@ test("summarizeW3CResponse reports totals and locations from the validator paylo
   assert.equal(summary.messages[1].type, "warning");
 });
 
-test("mergeW3CValidationReport preserves unrelated project_data and updates only w3_validation", () => {
+test("mergeW3CValidationReport preserves unrelated project_data and updates only w3c-validation", () => {
   const existing = {
     site_info: { url: "https://example.com" },
     seo: { score: 85 },
@@ -52,19 +52,20 @@ test("mergeW3CValidationReport preserves unrelated project_data and updates only
 
   assert.deepEqual(merged.site_info, { url: "https://example.com" });
   assert.deepEqual(merged.seo, { score: 85 });
-  assert.equal(merged.w3_validation.status, "valid");
-  assert.equal(merged.w3_validation.totalErrors, 0);
-  assert.equal(merged.w3_validation.messages[0].type, "info");
-  assert.equal(merged.w3_validation.validator.name, "W3C Nu Html Checker");
+  assert.equal(merged["w3c-validation"].status, "valid");
+  assert.equal(merged["w3c-validation"].totalErrors, 0);
+  assert.equal(merged["w3c-validation"].messages[0].type, "info");
+  assert.equal(merged["w3c-validation"].validator.name, "W3C Nu Html Checker");
+  assert.equal("w3_validation" in merged, false);
 });
 
 test("mergeW3CValidationReport handles empty or malformed existing data safely", () => {
   assert.deepEqual(mergeW3CValidationReport(null, { status: "valid" }), {
-    w3_validation: { status: "valid" },
+    "w3c-validation": { status: "valid" },
   });
 
   assert.deepEqual(mergeW3CValidationReport("bad-data", { status: "warning" }), {
-    w3_validation: { status: "warning" },
+    "w3c-validation": { status: "warning" },
   });
 });
 

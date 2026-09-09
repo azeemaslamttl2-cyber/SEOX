@@ -106,9 +106,9 @@ export function createCrawlSession(project) {
   };
 }
 
-export async function fetchCrawlTarget(url) {
+export async function fetchCrawlTarget(url, options = {}) {
   const started = performance.now();
-  const response = await fetch(`${CRAWL_ENDPOINT}?url=${encodeURIComponent(url)}`);
+  const response = await fetch(`${CRAWL_ENDPOINT}?url=${encodeURIComponent(url)}`, options);
   const payload = await response.json().catch(() => null);
   if (!response.ok) {
     throw new Error(payload?.error || `Could not crawl ${url}`);

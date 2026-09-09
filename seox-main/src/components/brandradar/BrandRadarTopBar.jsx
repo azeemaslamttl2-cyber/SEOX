@@ -1,9 +1,7 @@
 import { useLocation } from "react-router-dom";
-import { Search } from "lucide-react";
-import { useAuth } from "../../context/AuthContext.jsx";
-import Avatar from "../Avatar.jsx";
-import NotificationButton from "../NotificationButton.jsx";
+import { Search, Bell, Moon } from "lucide-react";
 import ProjectSelector from "../ProjectSelector.jsx";
+import UserMenu from "../UserMenu.jsx";
 
 const titles = {
   "/brand-radar": "Brand Radar",
@@ -26,7 +24,6 @@ const titles = {
 
 export default function BrandRadarTopBar() {
   const { pathname } = useLocation();
-  const { user } = useAuth();
   const title = titles[pathname] || "Brand Radar";
 
   return (
@@ -51,12 +48,14 @@ export default function BrandRadarTopBar() {
             className="w-48 bg-transparent text-xs text-white placeholder:text-white/30 focus:outline-none"
           />
         </div>
-        <NotificationButton />
-        {user ? (
-          <Avatar user={user} size={32} />
-        ) : (
-          <div className="h-8 w-8 rounded-full bg-gradient-to-br from-brand-400 to-brand-600 ring-2 ring-white/10" />
-        )}
+        <button className="flex h-8 w-8 items-center justify-center rounded-lg text-white/40 transition hover:bg-white/[0.06] hover:text-white">
+          <Moon className="h-4 w-4" />
+        </button>
+        <button className="relative flex h-8 w-8 items-center justify-center rounded-lg text-white/40 transition hover:bg-white/[0.06] hover:text-white">
+          <Bell className="h-4 w-4" />
+          <span className="absolute right-1 top-1 h-2 w-2 rounded-full bg-rose-500" />
+        </button>
+        <UserMenu />
       </div>
     </header>
   );

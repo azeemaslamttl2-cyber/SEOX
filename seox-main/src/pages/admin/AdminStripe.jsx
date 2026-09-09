@@ -10,7 +10,7 @@ import {
   ShieldCheck,
   Wallet,
 } from "lucide-react";
-import { auth } from "../../lib/firebase.js";
+import { getSessionToken } from '../../lib/authSession.js';
 import { formatNumber } from "../../hooks/useAdminData.js";
 
 function StatCard({ icon: Icon, value, label, color, iconBg }) {
@@ -55,10 +55,8 @@ export default function AdminStripe() {
   const [error, setError] = useState("");
 
   const requestAdminStripe = useCallback(async (options = {}) => {
-    const user = auth.currentUser;
-    if (!user) throw new Error("Sign in before opening Stripe Management.");
-
-    const token = await user.getIdToken();
+    const token = getSessionToken();
+    if (!token) throw new Error("Sign in before opening Stripe Management.");
     const response = await fetch("/api/admin-stripe", {
       ...options,
       headers: {
@@ -117,10 +115,8 @@ export default function AdminStripe() {
     setError("");
 
     try {
-      const user = auth.currentUser;
-      if (!user) throw new Error("Sign in before connecting Stripe.");
-
-      const token = await user.getIdToken();
+      const token = getSessionToken();
+      if (!token) throw new Error("Sign in before connecting Stripe.");
       const response = await fetch("/api/stripe-connect", {
         method: "POST",
         headers: {
@@ -193,7 +189,7 @@ export default function AdminStripe() {
       </div>
 
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
-        <StatCard icon={CreditCard} value={formatNumber(summary.total)} label="Connected" color="#fb923c" iconBg="rgba(251,146,60,0.15)" />
+        <StatCard icon={CreditCard} value={formatNumber(summary.total)} label="Connected" color="#df3c27" iconBg="rgba(223,60,39,0.15)" />
         <StatCard icon={CheckCircle2} value={formatNumber(summary.complete)} label="Ready" color="#22c55e" iconBg="rgba(34,197,94,0.15)" />
         <StatCard icon={Wallet} value={formatNumber(summary.payoutsEnabled)} label="Payouts Enabled" color="#3b82f6" iconBg="rgba(59,130,246,0.15)" />
         <StatCard icon={AlertCircle} value={formatNumber(summary.actionNeeded)} label="Action Needed" color="#f59e0b" iconBg="rgba(245,158,11,0.15)" />

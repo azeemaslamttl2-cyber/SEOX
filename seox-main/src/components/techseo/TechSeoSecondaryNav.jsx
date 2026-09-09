@@ -1,4 +1,4 @@
-import { NavLink, useLocation } from "react-router-dom";
+import { NavLink } from "react-router-dom";
 import {
   ShieldCheck,
   Bot,
@@ -10,6 +10,7 @@ import {
   Copy,
   FileSearch,
   Brain,
+  FileStack,
 } from "lucide-react";
 
 const nav = [
@@ -21,6 +22,7 @@ const nav = [
       { label: "Robots.txt Analyzer", to: "/tech-seo/robots", icon: Bot },
       { label: "Crawl Optimization", to: "/tech-seo/crawl", icon: Zap },
       { label: "Speed Optimization", to: "/tech-seo/speed", icon: Gauge },
+      { label: "W3C Validation", to: "/tech-seo/w3c", icon: ShieldCheck },
     ],
   },
   {
@@ -36,14 +38,15 @@ const nav = [
       { label: "Backlinks Audit", to: "/tech-seo/backlinks", icon: Link2 },
       { label: "Duplicate Checker", to: "/tech-seo/duplicate", icon: Copy },
       { label: "Plagiarism Checker", to: "/tech-seo/plagiarism", icon: FileSearch },
-      { label: "Screaming Frog", to: "/tech-seo/screaming-frog", icon: FileSearch },
+      { label: "Screaming Frog", to: "/tech-seo/screaming-frog", icon: FileStack },
+      { label: "WordPress Security", to: "/tech-seo/wordpress-security", icon: ShieldCheck },
     ],
   },
 ];
 
 export default function TechSeoSecondaryNav() {
   return (
-    <aside className="sticky top-0 hidden h-screen w-[232px] flex-shrink-0 overflow-y-auto border-r border-white/10 bg-ink-900/60 px-3 py-5 md:block">
+    <aside className="app-sidebar sticky top-0 hidden h-screen w-[232px] flex-shrink-0 overflow-y-auto border-r border-white/10 bg-ink-900/60 px-3 py-5 md:block">
       <nav className="space-y-5">
         {nav.map((section) => (
           <div key={section.section}>
@@ -56,6 +59,7 @@ export default function TechSeoSecondaryNav() {
                 <li key={item.to}>
                   <NavLink
                     to={item.to}
+                    end
                     className={({ isActive }) =>
                       `flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-[13px] transition-colors ${
                         isActive

@@ -1,8 +1,8 @@
 import {
-  deleteFirestoreDocument,
-  getFirestoreDocument,
-  patchFirestoreDocument,
-} from "../_lib/firebase-rest.js";
+  deleteStoredDocument,
+  getStoredDocument,
+  upsertStoredDocument,
+} from "../_lib/mysql-storage.js";
 
 const BING_API_BASE = "https://ssl.bing.com/webmaster/api.svc/json";
 const YANDEX_API_BASE = "https://api.webmaster.yandex.net/v4";
@@ -11,6 +11,18 @@ const YANDEX_USERINFO_ENDPOINT = "https://login.yandex.ru/info";
 
 function runtimeEnv(req) {
   return req?.env || (typeof process !== "undefined" ? process.env : {}) || {};
+}
+
+function getBingApiKey(req) {
+  const env = runtimeEnv(req);
+  return (
+    req?.query?.apikey ||
+    req?.body?.apikey ||
+    env.BING_WEBMASTER_API_KEY ||
+    env.BING_API_KEY ||
+    env.VITE_BING_WEBMASTER_API_KEY ||
+    ""
+  );
 }
 
 function yandexTokenCollection(userId) {
@@ -99,12 +111,12 @@ async function refreshYandexToken(env, userId, refreshToken, clientId, clientSec
 
   const tokens = await refreshResponse.json().catch(() => ({}));
   if (!refreshResponse.ok || !tokens.access_token) {
-    await deleteFirestoreDocument(env, yandexTokenCollection(userId), "tokens");
+    await deleteStoredDocument(env, yandexTokenCollection(userId), "tokens");
     return { success: false };
   }
 
   const expiresAt = Date.now() + Number(tokens.expires_in || 365 * 24 * 60 * 60) * 1000;
-  await patchFirestoreDocument(env, yandexTokenCollection(userId), "tokens", {
+  await upsertStoredDocument(env, yandexTokenCollection(userId), "tokens", {
     accessToken: tokens.access_token,
     refreshToken: tokens.refresh_token || refreshToken,
     expiresAt,
@@ -122,7 +134,7 @@ async function readStoredYandexToken(env, req, requestedUserId) {
   const userId = scopedUserId(req, requestedUserId);
   if (!userId) return null;
 
-  const storedTokens = await getFirestoreDocument(
+  const storedTokens = await getStoredDocument(
     env,
     yandexTokenCollection(userId),
     "tokens"
@@ -176,23 +188,24 @@ export default async function handler(req, res) {
 }
 
 async function handleBing(req, res, action) {
-  const { apikey, siteUrl } = req.query || {};
-  if (!apikey) {
+  const { siteUrl } = req.query || {};
+  const apiKey = getBingApiKey(req);
+  if (!apiKey) {
     return res.status(400).json({ error: "Bing Webmaster API key is required" });
   }
 
   let endpoint = "";
   if (action === "getSites") {
-    endpoint = `${BING_API_BASE}/GetUserSites?apikey=${encodeURIComponent(apikey)}`;
+    endpoint = `${BING_API_BASE}/GetUserSites?apikey=${encodeURIComponent(apiKey)}`;
   } else if (action === "getStats") {
     if (!siteUrl) return res.status(400).json({ error: "siteUrl is required for getStats" });
-    endpoint = `${BING_API_BASE}/GetQueryStats?apikey=${encodeURIComponent(apikey)}&siteUrl=${encodeURIComponent(siteUrl)}`;
+    endpoint = `${BING_API_BASE}/GetQueryStats?apikey=${encodeURIComponent(apiKey)}&siteUrl=${encodeURIComponent(siteUrl)}`;
   } else if (action === "getPageStats") {
     if (!siteUrl) return res.status(400).json({ error: "siteUrl is required for getPageStats" });
-    endpoint = `${BING_API_BASE}/GetPageStats?apikey=${encodeURIComponent(apikey)}&siteUrl=${encodeURIComponent(siteUrl)}`;
+    endpoint = `${BING_API_BASE}/GetPageStats?apikey=${encodeURIComponent(apiKey)}&siteUrl=${encodeURIComponent(siteUrl)}`;
   } else if (action === "getCrawlStats") {
     if (!siteUrl) return res.status(400).json({ error: "siteUrl is required for getCrawlStats" });
-    endpoint = `${BING_API_BASE}/GetCrawlStats?apikey=${encodeURIComponent(apikey)}&siteUrl=${encodeURIComponent(siteUrl)}`;
+    endpoint = `${BING_API_BASE}/GetCrawlStats?apikey=${encodeURIComponent(apiKey)}&siteUrl=${encodeURIComponent(siteUrl)}`;
   } else {
     return res.status(400).json({ error: "Invalid Bing action" });
   }
@@ -351,11 +364,11 @@ async function handleYandexOAuth(req, res, action, env, params) {
       return res.status(400).json({ error: "Token exchange failed", details: tokens });
     }
 
-    const previous = await getFirestoreDocument(env, yandexTokenCollection(userId), "tokens");
+    const previous = await getStoredDocument(env, yandexTokenCollection(userId), "tokens");
     const userInfo = await fetchYandexUserInfo(tokens.access_token).catch(() => ({}));
     const expiresAt = Date.now() + Number(tokens.expires_in || 365 * 24 * 60 * 60) * 1000;
 
-    await patchFirestoreDocument(
+    await upsertStoredDocument(
       env,
       yandexTokenCollection(userId),
       "tokens",
@@ -395,7 +408,7 @@ async function handleYandexOAuth(req, res, action, env, params) {
 
   if (action === "oauth-refresh") {
     if (!userId) return res.status(400).json({ error: "Missing userId" });
-    const storedTokens = await getFirestoreDocument(env, yandexTokenCollection(userId), "tokens");
+    const storedTokens = await getStoredDocument(env, yandexTokenCollection(userId), "tokens");
     const refresh = await refreshYandexToken(
       env,
       userId,
@@ -409,7 +422,7 @@ async function handleYandexOAuth(req, res, action, env, params) {
 
   if (action === "oauth-disconnect") {
     if (!userId) return res.status(400).json({ error: "Missing userId" });
-    await deleteFirestoreDocument(env, yandexTokenCollection(userId), "tokens");
+    await deleteStoredDocument(env, yandexTokenCollection(userId), "tokens");
     return res.status(200).json({ success: true });
   }
 

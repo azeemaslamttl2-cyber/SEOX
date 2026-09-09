@@ -3,7 +3,7 @@
 //   ?action=geocode  → geocode proxy (was /api/geocode)
 //   ?action=indexnow → IndexNow submission (was /api/indexnow)
 
-import { requireFirebaseAuthFromNodeRequest } from "../_lib/request-auth.js";
+import { requireAuthenticatedUser } from "../_lib/request-auth.js";
 
 export default async function handler(req, res) {
     res.setHeader('Access-Control-Allow-Origin', '*');
@@ -13,7 +13,7 @@ export default async function handler(req, res) {
     if (req.method === 'OPTIONS') return res.status(200).end();
 
     try {
-        await requireFirebaseAuthFromNodeRequest(req);
+        await requireAuthenticatedUser(req);
     } catch (error) {
         return res.status(error?.status || 401).json({ error: error?.message || 'Unauthorized' });
     }
@@ -53,7 +53,7 @@ export default async function handler(req, res) {
         try {
             const nominatimUrl = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address)}&limit=1`;
             const nominatimResponse = await fetch(nominatimUrl, {
-                headers: { 'User-Agent': 'AISmartSeo-SERP-Checker/1.0' }
+                headers: { 'User-Agent': 'SEOX-SERP-Checker/1.0' }
             });
 
             if (nominatimResponse.ok) {

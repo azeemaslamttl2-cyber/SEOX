@@ -1,10 +1,16 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
     FileText, Link2, Globe, Loader2, Copy, Download, Check,
     AlertCircle, ChevronRight, Sparkles, Map, RefreshCw
 } from 'lucide-react';
+import { useAuth } from '../../context/AuthContext.jsx';
+import { useSelectedProjectDomain } from '../../hooks/useSelectedProjectDomain.js';
+import { loadToolResult, saveToolResult } from '../../lib/projectsApi.js';
 
 const LlmsTxtGenerator = () => {
+    const { user } = useAuth();
+    const { project, projectUrl } = useSelectedProjectDomain();
+    const userId = user?.uid || user?.id || '';
     const [activeTab, setActiveTab] = useState('crawl'); // 'crawl' or 'sitemap'
     const [url, setUrl] = useState('');
     const [isExtracting, setIsExtracting] = useState(false);
@@ -13,6 +19,56 @@ const LlmsTxtGenerator = () => {
     const [llmsTxt, setLlmsTxt] = useState('');
     const [error, setError] = useState('');
     const [copied, setCopied] = useState(false);
+
+    useEffect(() => {
+        setUrl(projectUrl || '');
+        setExtractedUrls([]);
+        setLlmsTxt('');
+
+        if (!userId || !project?.id) return undefined;
+
+        let cancelled = false;
+        loadToolResult(userId, { projectId: project.id, toolKey: 'llmsTxt' })
+            .then((storedResult) => {
+                if (cancelled || !storedResult) return;
+                setUrl(storedResult.url || projectUrl || '');
+                setExtractedUrls(Array.isArray(storedResult.extractedUrls) ? storedResult.extractedUrls : []);
+                setLlmsTxt(storedResult.llmsTxt || '');
+            })
+            .catch(() => {
+                // The page remains usable if no previous result exists.
+            });
+
+        return () => {
+            cancelled = true;
+        };
+    }, [project?.id, projectUrl, userId]);
+
+    const persistCrawlResult = async (nextExtractedUrls, nextLlmsTxt = llmsTxt) => {
+        if (!userId) return;
+
+        const targetUrl = url.startsWith('http') ? url : `https://${url}`;
+        const projectId = project?.id || (() => {
+            try {
+                return new URL(targetUrl).hostname.replace(/^www\./, '').toLowerCase();
+            } catch {
+                return '';
+            }
+        })();
+        if (!projectId) return;
+
+        await saveToolResult(userId, {
+            projectId,
+            projectUrl: projectUrl || targetUrl,
+            toolKey: 'llmsTxt',
+            result: {
+                url: targetUrl,
+                extractedUrls: nextExtractedUrls,
+                llmsTxt: nextLlmsTxt,
+                updatedAt: new Date().toISOString(),
+            },
+        });
+    };
 
     // Extract URLs from website or sitemap
     const handleExtract = async () => {
@@ -25,6 +81,8 @@ const LlmsTxtGenerator = () => {
         setIsExtracting(true);
         setExtractedUrls([]);
         setLlmsTxt('');
+
+        let generatedText = '';
 
         try {
             let extractedData = [];
@@ -166,6 +224,11 @@ const LlmsTxtGenerator = () => {
             }
 
             setExtractedUrls(urlsWithTitles);
+            try {
+                await persistCrawlResult(urlsWithTitles);
+            } catch (persistError) {
+                setError(persistError?.message || 'Could not save crawl result');
+            }
         } catch (err) {
             console.error('Extraction error:', err);
             setError(err.message || 'Failed to extract URLs');
@@ -245,11 +308,18 @@ Generate ONLY the LLMs.txt content, no explanations.`;
             // Clean up markdown code block markers if present
             let cleanedText = data.text || '';
             cleanedText = cleanedText.replace(/^```(?:text|txt)?\s*\n?/i, '').replace(/\n?```\s*$/i, '').trim();
-            setLlmsTxt(cleanedText || generateFallbackLlmsTxt());
+            generatedText = cleanedText || generateFallbackLlmsTxt();
         } catch (err) {
             console.error('Generation error:', err);
             // Use fallback generation
-            setLlmsTxt(generateFallbackLlmsTxt());
+            generatedText = generateFallbackLlmsTxt();
+        }
+
+        setLlmsTxt(generatedText);
+        try {
+            await persistCrawlResult(extractedUrls, generatedText);
+        } catch (persistError) {
+            setError(persistError?.message || 'Could not save generated LLMs.txt');
         } finally {
             setIsGenerating(false);
         }
@@ -303,56 +373,50 @@ For more information, visit the main website at ${extractedUrls[0]?.url || url}
     };
 
     return (
-        <div className="bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 pb-12">
+        <div className="ctool-page space-y-5">
             {/* Hero Section */}
-            <div className="relative overflow-hidden">
-                <div className="absolute inset-0 bg-[url('data:image/svg+xml,...')] opacity-10"></div>
-                <div className="max-w-6xl mx-auto px-6 py-16 relative">
-                    <div className="flex items-center gap-2 mb-4">
-                        <span className="px-3 py-1 bg-purple-500/20 border border-purple-500/30 rounded-full text-purple-300 text-xs font-medium">
-                            ✕ GEO SEO TOOL
-                        </span>
+            <div className="ctool-hero">
+                <div className="ctool-hero-row">
+                    <span className="ctool-hero-icon">
+                        <FileText className="w-5 h-5" />
+                    </span>
+                    <div className="min-w-0">
+                        <div className="flex items-center gap-2 mb-1">
+                            <span className="app-badge app-badge-brand">GEO SEO TOOL</span>
+                        </div>
+                        <h1 className="ctool-title font-display">LLMs.txt Generator</h1>
+                        <p className="ctool-subtitle">
+                            Generate an LLMs.txt file for your website to help AI models understand your content structure.
+                            Choose to crawl your website or use your sitemap for URL extraction.
+                        </p>
                     </div>
-                    <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">
-                        LLMs.txt Generator
-                    </h1>
-                    <p className="text-lg text-gray-300 max-w-2xl">
-                        Generate an LLMs.txt file for your website to help AI models understand your content structure.
-                        Choose to crawl your website or use your sitemap for URL extraction.
-                    </p>
                 </div>
             </div>
 
-            <div className="max-w-6xl mx-auto px-6 pb-24 -mt-4">
-                <div className="grid lg:grid-cols-2 gap-8">
+            <div className="space-y-5">
+                <div className="grid items-start gap-5 lg:grid-cols-2">
                     {/* Left Panel - Input */}
-                    <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
-                        <div className="p-6 border-b border-gray-100">
-                            <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-                                <Globe className="w-5 h-5 text-purple-600" />
+                    <div className="ctool-card llms-card">
+                        <div className="llms-card-head">
+                            <h2 className="schema-card-title flex items-center gap-2">
+                                <Globe className="w-5 h-5 ctool-accent" />
                                 Extract Website URLs
                             </h2>
                         </div>
 
                         {/* Tab Selector */}
-                        <div className="p-4 bg-gray-50 border-b border-gray-100">
-                            <div className="flex gap-2">
+                        <div className="llms-tabbar">
+                            <div className="llms-tabgroup">
                                 <button
                                     onClick={() => { setActiveTab('crawl'); setExtractedUrls([]); setLlmsTxt(''); }}
-                                    className={`flex-1 py-2.5 px-4 rounded-lg text-sm font-medium transition-all ${activeTab === 'crawl'
-                                        ? 'bg-purple-600 text-white shadow-lg'
-                                        : 'bg-white text-gray-600 hover:bg-gray-100 border border-gray-200'
-                                        }`}
+                                    className={`ui-button ctool-seg-btn flex-1 ${activeTab === 'crawl' ? 'active' : ''}`}
                                 >
                                     <Globe className="w-4 h-4 inline mr-2" />
                                     Crawl Website
                                 </button>
                                 <button
                                     onClick={() => { setActiveTab('sitemap'); setExtractedUrls([]); setLlmsTxt(''); }}
-                                    className={`flex-1 py-2.5 px-4 rounded-lg text-sm font-medium transition-all ${activeTab === 'sitemap'
-                                        ? 'bg-purple-600 text-white shadow-lg'
-                                        : 'bg-white text-gray-600 hover:bg-gray-100 border border-gray-200'
-                                        }`}
+                                    className={`ui-button ctool-seg-btn flex-1 ${activeTab === 'sitemap' ? 'active' : ''}`}
                                 >
                                     <Map className="w-4 h-4 inline mr-2" />
                                     Use Sitemap
@@ -363,7 +427,7 @@ For more information, visit the main website at ${extractedUrls[0]?.url || url}
                         <div className="p-6 space-y-4">
                             {/* URL Input */}
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                <label className="schema-label">
                                     {activeTab === 'crawl' ? 'Website URL' : 'Sitemap URL'}
                                 </label>
                                 <input
@@ -374,12 +438,12 @@ For more information, visit the main website at ${extractedUrls[0]?.url || url}
                                         ? 'https://example.com'
                                         : 'https://example.com/sitemap.xml'
                                     }
-                                    className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 outline-none transition"
+                                    className="schema-input schema-input-lg"
                                 />
                             </div>
 
                             {error && (
-                                <div className="flex items-center gap-2 text-red-600 text-sm bg-red-50 px-4 py-3 rounded-lg">
+                                <div className="app-alert app-alert-error">
                                     <AlertCircle className="w-4 h-4" />
                                     {error}
                                 </div>
@@ -389,7 +453,7 @@ For more information, visit the main website at ${extractedUrls[0]?.url || url}
                             <button
                                 onClick={handleExtract}
                                 disabled={isExtracting || !url.trim()}
-                                className="w-full py-3 bg-purple-600 hover:bg-purple-700 disabled:bg-gray-300 text-white rounded-xl font-semibold transition-all flex items-center justify-center gap-2"
+                                className="ui-button ui-button-primary w-full"
                             >
                                 {isExtracting ? (
                                     <>
@@ -407,17 +471,17 @@ For more information, visit the main website at ${extractedUrls[0]?.url || url}
                             {/* Extracted URLs Preview */}
                             {extractedUrls.length > 0 && (
                                 <div className="mt-6">
-                                    <h3 className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
+                                    <h3 className="stool-title mb-3 flex items-center gap-2">
                                         <Link2 className="w-4 h-4" />
                                         Extracted URLs ({extractedUrls.length})
                                     </h3>
-                                    <div className="max-h-64 overflow-y-auto border border-gray-200 rounded-lg divide-y divide-gray-100">
+                                    <div className="llms-list max-h-64 overflow-y-auto">
                                         {extractedUrls.map((item, idx) => (
-                                            <div key={idx} className="p-3 hover:bg-gray-50 transition">
-                                                <p className="text-sm font-medium text-gray-900 truncate">
+                                            <div key={idx} className="llms-list-row">
+                                                <p className="llms-list-title truncate">
                                                     {item.title || 'Untitled'}
                                                 </p>
-                                                <p className="text-xs text-gray-500 truncate">{item.url}</p>
+                                                <p className="ctool-help-text truncate">{item.url}</p>
                                             </div>
                                         ))}
                                     </div>
@@ -426,7 +490,7 @@ For more information, visit the main website at ${extractedUrls[0]?.url || url}
                                     <button
                                         onClick={handleGenerate}
                                         disabled={isGenerating}
-                                        className="w-full mt-4 py-3 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 disabled:from-gray-300 disabled:to-gray-400 text-white rounded-xl font-semibold transition-all flex items-center justify-center gap-2"
+                                        className="ui-button ui-button-primary w-full mt-4"
                                     >
                                         {isGenerating ? (
                                             <>
@@ -446,24 +510,24 @@ For more information, visit the main website at ${extractedUrls[0]?.url || url}
                     </div>
 
                     {/* Right Panel - Output */}
-                    <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
-                        <div className="p-6 border-b border-gray-100 flex items-center justify-between">
-                            <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-                                <FileText className="w-5 h-5 text-purple-600" />
+                    <div className="ctool-card llms-card">
+                        <div className="llms-card-head flex items-center justify-between">
+                            <h2 className="schema-card-title flex items-center gap-2">
+                                <FileText className="w-5 h-5 ctool-accent" />
                                 Generated LLMs.txt
                             </h2>
                             {llmsTxt && (
                                 <div className="flex gap-2">
                                     <button
                                         onClick={handleCopy}
-                                        className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-gray-600 hover:text-purple-600 hover:bg-purple-50 rounded-lg transition"
+                                        className="ui-button ctool-tool-btn"
                                     >
-                                        {copied ? <Check className="w-4 h-4 text-green-600" /> : <Copy className="w-4 h-4" />}
+                                        {copied ? <Check className="w-4 h-4 chat-copied" /> : <Copy className="w-4 h-4" />}
                                         {copied ? 'Copied!' : 'Copy'}
                                     </button>
                                     <button
                                         onClick={handleDownload}
-                                        className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-white bg-purple-600 hover:bg-purple-700 rounded-lg transition"
+                                        className="ui-button ui-button-primary llms-sm"
                                     >
                                         <Download className="w-4 h-4" />
                                         Download
@@ -474,16 +538,16 @@ For more information, visit the main website at ${extractedUrls[0]?.url || url}
 
                         <div className="p-6">
                             {llmsTxt ? (
-                                <pre className="bg-gray-900 text-gray-100 p-6 rounded-xl text-sm font-mono overflow-x-auto max-h-[500px] overflow-y-auto whitespace-pre-wrap">
+                                <pre className="stool-code overflow-x-auto max-h-[500px] overflow-y-auto whitespace-pre-wrap">
                                     {llmsTxt}
                                 </pre>
                             ) : (
-                                <div className="flex flex-col items-center justify-center py-20 text-center">
-                                    <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mb-4">
-                                        <FileText className="w-8 h-8 text-purple-400" />
+                                <div className="llms-empty">
+                                    <div className="ctool-empty-icon mb-4">
+                                        <FileText className="w-6 h-6" />
                                     </div>
-                                    <h3 className="text-lg font-medium text-gray-900 mb-2">No LLMs.txt Generated Yet</h3>
-                                    <p className="text-gray-500 text-sm max-w-xs">
+                                    <h3 className="ctool-empty-title">No LLMs.txt Generated Yet</h3>
+                                    <p className="ctool-empty-text">
                                         Extract URLs from your website first, then click "Generate LLMs.txt" to create your file.
                                     </p>
                                 </div>
@@ -493,26 +557,26 @@ For more information, visit the main website at ${extractedUrls[0]?.url || url}
                 </div>
 
                 {/* Info Section */}
-                <div className="mt-8 mb-8 bg-white/10 backdrop-blur-sm rounded-2xl border border-white/20 p-8">
-                    <h3 className="text-lg font-semibold text-white mb-6">What is LLMs.txt?</h3>
-                    <div className="grid md:grid-cols-3 gap-8">
-                        <div className="bg-white/5 rounded-xl p-5 border border-white/10">
-                            <h4 className="font-medium text-white mb-3 flex items-center gap-2">
+                <div className="ctool-card">
+                    <h3 className="geo-section-title font-display mb-5">What is LLMs.txt?</h3>
+                    <div className="grid gap-4 md:grid-cols-3">
+                        <div className="llms-feature">
+                            <h4 className="llms-feature-title flex items-center gap-2">
                                 <span className="text-xl">📄</span> Purpose
                             </h4>
-                            <p className="text-sm text-gray-300 leading-relaxed">LLMs.txt helps AI language models understand your website's content structure and purpose.</p>
+                            <p className="llms-feature-text">LLMs.txt helps AI language models understand your website's content structure and purpose.</p>
                         </div>
-                        <div className="bg-white/5 rounded-xl p-5 border border-white/10">
-                            <h4 className="font-medium text-white mb-3 flex items-center gap-2">
+                        <div className="llms-feature">
+                            <h4 className="llms-feature-title flex items-center gap-2">
                                 <span className="text-xl">🤖</span> AI Integration
                             </h4>
-                            <p className="text-sm text-gray-300 leading-relaxed">Similar to robots.txt for search engines, LLMs.txt guides AI models on how to interpret your content.</p>
+                            <p className="llms-feature-text">Similar to robots.txt for search engines, LLMs.txt guides AI models on how to interpret your content.</p>
                         </div>
-                        <div className="bg-white/5 rounded-xl p-5 border border-white/10">
-                            <h4 className="font-medium text-white mb-3 flex items-center gap-2">
+                        <div className="llms-feature">
+                            <h4 className="llms-feature-title flex items-center gap-2">
                                 <span className="text-xl">📍</span> Placement
                             </h4>
-                            <p className="text-sm text-gray-300 leading-relaxed">Place the generated file at your website root: <code className="bg-white/20 px-2 py-0.5 rounded text-purple-200">yourdomain.com/llms.txt</code></p>
+                            <p className="llms-feature-text">Place the generated file at your website root: <code className="llms-code-inline">yourdomain.com/llms.txt</code></p>
                         </div>
                     </div>
                 </div>

@@ -1,22 +1,14 @@
-import { useMemo } from "react";
 import { NavLink, useLocation, useParams } from "react-router-dom";
 import { Zap, ChevronRight } from "lucide-react";
-import { useCrawl } from "../../context/CrawlContext.jsx";
 import { useGscInsights } from "../../context/GscInsightsContext.jsx";
-import { filterSitesByProjects } from "../../lib/domainMatching.js";
 
 export default function GscSecondaryNav() {
   const { siteId } = useParams();
   const { pathname } = useLocation();
-  const { projects } = useCrawl();
-  const { handleSignIn, normalizedSites } = useGscInsights();
-  const profileSites = useMemo(
-    () => filterSitesByProjects(normalizedSites, projects),
-    [normalizedSites, projects]
-  );
+  const { handleSignIn, normalizedSites, selectedSiteInfo } = useGscInsights();
   const isBulkAnalysis = pathname.includes("bulk-analysis");
   const activeSiteId = isBulkAnalysis ? null : siteId;
-  const site = profileSites.find((s) => s.id === activeSiteId) || null;
+  const site = normalizedSites.find((s) => s.id === activeSiteId) || selectedSiteInfo;
 
   const nav = activeSiteId
     ? [
@@ -35,7 +27,7 @@ export default function GscSecondaryNav() {
           section: "GSC Insights",
           items: [
             { label: "GSC Insights", to: "/gsc", end: true },
-            { label: "Bulk Analysis", to: "/gsc/bulk-analysis" },
+            { label: "Google Bulk Analysis", to: "/gsc/bulk-analysis" },
             { label: "Bing Bulk Analysis", to: "/gsc/bing-bulk-analysis" },
             { label: "Yandex Bulk Analysis", to: "/gsc/yandex-bulk-analysis" },
           ],
@@ -43,7 +35,7 @@ export default function GscSecondaryNav() {
       ];
 
   return (
-    <aside className="sticky top-0 hidden h-screen w-[232px] flex-shrink-0 overflow-y-auto border-r border-white/10 bg-ink-900/60 px-3 py-5 md:block">
+    <aside className="app-sidebar sticky top-0 hidden h-full w-[232px] flex-shrink-0 overflow-y-auto border-r border-white/10 bg-ink-900/60 px-3 py-5 md:block">
       <nav className="space-y-5">
         {nav.map((section) => (
           <div key={section.section}>
@@ -86,7 +78,7 @@ export default function GscSecondaryNav() {
               <Zap className="h-3.5 w-3.5" /> Connect more sites
             </div>
             <p className="mt-1 text-[11px] leading-relaxed text-white/55">
-              Link additional Google Search Console properties to AI Smart Seo.
+              Link additional Google Search Console properties to PGC.
             </p>
             <button
               onClick={handleSignIn}

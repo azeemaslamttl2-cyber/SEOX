@@ -6,9 +6,9 @@ const testimonials = [
     name: "Sarah Chen",
     role: "Head of Growth, NovaCart",
     rating: 5,
-    text: "We replaced Ahrefs, SurferSEO and Clearscope with AI Smart Seo in one week. Organic traffic jumped 218% in 90 days.",
+    text: "We replaced Ahrefs, SurferSEO and Clearscope with PGC in one week. Organic traffic jumped 218% in 90 days.",
     avatar: "SC",
-    color: "from-brand-500 to-emerald-400",
+    color: "from-brand-500 to-amber-400",
   },
   {
     name: "Marcus Reid",
@@ -16,7 +16,7 @@ const testimonials = [
     rating: 5,
     text: "The E-E-A-T scanner caught 4 content quality gaps Google was punishing us for. Rankings recovered the next crawl cycle.",
     avatar: "MR",
-    color: "from-emerald-500 to-teal-500",
+    color: "from-amber-500 to-orange-500",
   },
   {
     name: "Aisha Patel",
@@ -24,7 +24,7 @@ const testimonials = [
     rating: 5,
     text: "AI Content Writer is the only tool that doesn't read like AI. We publish 40 articles a month — and they all rank.",
     avatar: "AP",
-    color: "from-teal-500 to-cyan-400",
+    color: "from-orange-500 to-rose-400",
   },
   {
     name: "David Kim",
@@ -32,23 +32,23 @@ const testimonials = [
     rating: 5,
     text: "The semantic clustering reduced our keyword research from days to minutes. Our team is now 10x faster.",
     avatar: "DK",
-    color: "from-cyan-400 to-brand-500",
+    color: "from-yellow-400 to-brand-500",
   },
   {
     name: "Lina Brooks",
     role: "Agency Owner, BrightSeed",
     rating: 5,
-    text: "I run 27 client sites through AI Smart Seo. The white-label reports alone justified the Enterprise plan.",
+    text: "I run 27 client sites through PGC. The white-label reports alone justified the Enterprise plan.",
     avatar: "LB",
-    color: "from-brand-400 to-teal-600",
+    color: "from-brand-400 to-orange-600",
   },
   {
     name: "Tomás García",
     role: "CMO, Helio AI",
     rating: 5,
-    text: "We rank for 14 AI Overviews in our niche. AI Smart Seo is the only tool that optimizes for ChatGPT and Google together.",
+    text: "We rank for 14 AI Overviews in our niche. PGC is the only tool that optimizes for ChatGPT and Google together.",
     avatar: "TG",
-    color: "from-emerald-400 to-teal-500",
+    color: "from-amber-400 to-orange-500",
   },
 ];
 
@@ -62,7 +62,7 @@ export default function Testimonials() {
             Real teams. <span className="gradient-text">Real growth.</span>
           </h2>
           <p className="mx-auto mt-4 max-w-2xl text-white/60">
-            From scrappy founders to global enterprise SEO teams — AI Smart Seo scales with you.
+            From scrappy founders to global enterprise SEO teams — PGC scales with you.
           </p>
         </div>
 

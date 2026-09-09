@@ -26,88 +26,103 @@ export default function UniqueNGrams() {
   }
 
   return (
-    <div className="mx-auto max-w-[900px] space-y-5">
-      {/* Hero */}
-      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-violet-600 via-purple-600 to-indigo-600 p-6">
-        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_80%_80%,rgba(255,255,255,0.08),transparent)]" />
-        <div className="relative z-10">
-          <div className="flex items-center gap-4">
-            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/15">
-              <Sparkles className="h-6 w-6 text-white" />
-            </div>
-            <div>
-              <h1 className="font-display text-xl font-black text-white">Unique N-Grams Generator</h1>
-              <p className="text-sm text-white/60">Generate original word sequences for SEO authority</p>
-            </div>
+    <div className="ctool-page space-y-6">
+      <div className="ctool-hero">
+        <div className="ctool-hero-row">
+          <div className="ctool-hero-icon">
+            <Sparkles className="h-6 w-6" />
           </div>
-          <div className="mt-4 rounded-xl bg-white/10 border border-white/15 p-3">
-            <p className="text-xs text-amber-200 font-semibold mb-1">🌟 Why Use Unique N-Grams?</p>
-            <p className="text-[11px] text-white/50">
-              Unique n-grams are specific, original sequences of words not commonly found elsewhere. They help your content stand out and signal to search engines that you're providing specialized, valuable information—boosting your authority and ranking potential.
+          <div className="min-w-0">
+            <h1 className="ctool-title font-display">
+              Unique N-Grams Generator
+            </h1>
+            <p className="ctool-subtitle">
+              Generate original, high-value word combinations that help your content stand out in search.
             </p>
           </div>
-          {/* Input */}
-          <div className="mt-4 flex items-center gap-2">
-            <input
-              value={topic}
-              onChange={(e) => setTopic(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && handleGenerate()}
-              className="flex-1 rounded-xl bg-white/10 border border-white/20 px-4 py-2.5 text-sm text-white placeholder:text-white/40 focus:outline-none focus:border-white/40"
-              placeholder="Enter a topic (e.g., hot water benefits, laptop maintenance)"
-            />
-            <button
-              onClick={handleGenerate}
-              disabled={loading}
-              className="flex items-center gap-2 rounded-xl bg-white/20 px-5 py-2.5 text-sm font-bold text-white hover:bg-white/25 transition disabled:opacity-40"
-            >
-              <Sparkles className="h-4 w-4" /> {loading ? "..." : "Generate"}
-            </button>
-          </div>
-          {error && (
-            <p className="mt-3 rounded-lg border border-amber-300/20 bg-amber-300/10 px-3 py-2 text-[11px] text-amber-100/80">
-              {error}
-            </p>
-          )}
         </div>
       </div>
 
-      {/* Empty / Results */}
-      {!results ? (
-        <div className="rounded-2xl border border-white/[0.08] bg-[#0d1117] p-12 flex flex-col items-center justify-center">
-          <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-violet-500/10">
-            <Sparkles className="h-6 w-6 text-violet-400/50" />
-          </div>
-          <h3 className="mt-4 text-base font-bold text-white/25">Generate Unique N-Grams</h3>
-          <p className="mt-1 max-w-sm text-center text-sm text-white/15">
-            Enter any topic to generate unique, uncommon word sequences that will help your content stand out and rank higher.
+      <div className="ctool-card">
+        <div className="mb-3 flex items-center gap-2">
+          <Sparkles className="ctool-card-icon h-4 w-4" />
+          <span className="ctool-card-title">Topic</span>
+        </div>
+
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+          <input
+            value={topic}
+            onChange={(e) => setTopic(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && handleGenerate()}
+            className="ctool-input flex-1"
+            placeholder="Enter a topic (e.g., hot water benefits, laptop maintenance)"
+          />
+          <button
+            onClick={handleGenerate}
+            disabled={loading}
+            className="ui-button ui-button-primary"
+          >
+            <Sparkles className="h-4 w-4" /> {loading ? "Generating..." : "Generate"}
+          </button>
+        </div>
+
+        {error && (
+          <p className="app-alert app-alert-warning mt-3">
+            {error}
           </p>
-          <div className="mt-4 rounded-xl border border-rose-500/20 bg-rose-500/[0.04] px-4 py-3 max-w-md">
-            <p className="text-[11px] text-white/50">
-              <span className="text-rose-300 font-bold">🌶 Example</span><br />
+        )}
+      </div>
+
+      {!results ? (
+        <div className="ctool-empty">
+          <div className="ctool-empty-icon">
+            <Sparkles className="h-6 w-6" />
+          </div>
+          <h3 className="ctool-empty-title">Generate Unique N-Grams</h3>
+          <p className="ctool-empty-text">
+            Enter any topic to generate unique, uncommon word sequences that help your content stand out and rank higher.
+          </p>
+
+          <div className="ctool-note mt-4 mx-auto max-w-lg text-left">
+            <p className="text-[11px] text-slate-700">
+              <span className="ctool-note-lead mr-1">Example</span>
               For "health benefits of hot water", instead of generic phrases, get unique ones like "drinking hot water after dinner" or "drinking hot water during winter" that have less competition.
             </p>
           </div>
+
           <div className="mt-4 flex flex-wrap justify-center gap-2">
             {d.exampleTopics.map((t) => (
               <button
                 key={t}
                 onClick={() => setTopic(t)}
-                className="rounded-lg border border-white/[0.08] bg-white/[0.03] px-3 py-1.5 text-xs text-white/40 hover:text-white/60 hover:bg-white/[0.05] transition"
-              >{t}</button>
+                className="ctool-chip"
+              >
+                {t}
+              </button>
             ))}
           </div>
         </div>
       ) : (
-        <div className="rounded-2xl border border-white/[0.08] bg-[#0d1117] p-6">
-          <h3 className="text-sm font-bold text-white/80 mb-4 flex items-center gap-2">
-            <Lightbulb className="h-4 w-4 text-amber-400" /> Generated Unique N-Grams ({results.length})
-          </h3>
-          <div className="space-y-2">
+        <div className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-[0_6px_24px_-12px_rgba(17,24,39,0.18)]">
+          <div className="mb-4 flex items-center gap-3">
+            <div className="ctool-empty-icon h-9 w-9">
+              <Lightbulb className="ctool-card-icon h-4 w-4" />
+            </div>
+            <div>
+              <h3 className="text-sm font-bold text-slate-800">Generated Unique N-Grams</h3>
+              <p className="text-[11px] text-slate-500">{results.length} items generated</p>
+            </div>
+          </div>
+
+          <div className="flex flex-wrap gap-2">
             {results.map((ngram, i) => (
-              <div key={i} className="flex items-center gap-3 rounded-xl border border-white/[0.06] bg-[#010409] px-4 py-3 hover:bg-white/[0.02] transition cursor-pointer">
-                <span className="flex h-6 w-6 items-center justify-center rounded-full bg-violet-500/15 text-[10px] font-bold text-violet-300">{i + 1}</span>
-                <span className="text-sm text-white/60">{ngram}</span>
-              </div>
+              <button
+                key={i}
+                className="ctool-chip ctool-chip-btn"
+                title={ngram}
+              >
+                <span>{ngram}</span>
+              </button>
             ))}
           </div>
         </div>

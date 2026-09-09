@@ -1,0 +1,138 @@
+CREATE DATABASE IF NOT EXISTS code_step_mysql_migration;
+USE code_step_mysql_migration;
+
+CREATE TABLE IF NOT EXISTS project_files (
+  id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  path VARCHAR(500) NOT NULL,
+  category VARCHAR(50) NULL,
+  language VARCHAR(50) NULL,
+  notes TEXT NULL,
+  PRIMARY KEY (id),
+  UNIQUE KEY uq_project_files_path (path)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS configuration_files (
+  id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  path VARCHAR(500) NOT NULL,
+  config_type VARCHAR(100) NOT NULL,
+  current_value_summary TEXT NULL,
+  replacement_strategy VARCHAR(255) NULL,
+  notes TEXT NULL,
+  PRIMARY KEY (id),
+  UNIQUE KEY uq_configuration_files_path (path)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS firestore_collections (
+  id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  collection_name VARCHAR(255) NOT NULL,
+  source_file VARCHAR(500) NULL,
+  description TEXT NULL,
+  document_fields_json JSON NULL,
+  inferred_types_json JSON NULL,
+  relationships_json JSON NULL,
+  mysql_table_name VARCHAR(255) NULL,
+  notes TEXT NULL,
+  PRIMARY KEY (id),
+  UNIQUE KEY uq_firestore_collections_name (collection_name)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS database_schema_mapping (
+  id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  firestore_collection VARCHAR(255) NOT NULL,
+  mysql_table VARCHAR(255) NOT NULL,
+  mapping_notes TEXT NULL,
+  PRIMARY KEY (id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS api_endpoints (
+  id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  path VARCHAR(255) NOT NULL,
+  method VARCHAR(10) NOT NULL,
+  handler_file VARCHAR(500) NULL,
+  uses_firebase_auth TINYINT(1) NOT NULL DEFAULT 0,
+  uses_firestore TINYINT(1) NOT NULL DEFAULT 0,
+  notes TEXT NULL,
+  PRIMARY KEY (id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS functions (
+  id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  name VARCHAR(255) NOT NULL,
+  file_path VARCHAR(500) NOT NULL,
+  kind VARCHAR(100) NULL,
+  uses_firebase TINYINT(1) NOT NULL DEFAULT 0,
+  uses_firestore TINYINT(1) NOT NULL DEFAULT 0,
+  notes TEXT NULL,
+  PRIMARY KEY (id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS components (
+  id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  name VARCHAR(255) NOT NULL,
+  file_path VARCHAR(500) NOT NULL,
+  category VARCHAR(100) NULL,
+  uses_firebase TINYINT(1) NOT NULL DEFAULT 0,
+  uses_firestore TINYINT(1) NOT NULL DEFAULT 0,
+  notes TEXT NULL,
+  PRIMARY KEY (id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS migration_tasks (
+  id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  task_name VARCHAR(255) NOT NULL,
+  priority VARCHAR(50) NOT NULL,
+  status VARCHAR(50) NOT NULL DEFAULT 'planned',
+  summary TEXT NULL,
+  estimated_effort VARCHAR(100) NULL,
+  PRIMARY KEY (id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS dependencies (
+  id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  source_file VARCHAR(500) NOT NULL,
+  target_file VARCHAR(500) NOT NULL,
+  dependency_type VARCHAR(100) NOT NULL,
+  notes TEXT NULL,
+  PRIMARY KEY (id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS issues (
+  id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  severity VARCHAR(50) NOT NULL,
+  title VARCHAR(255) NOT NULL,
+  details TEXT NULL,
+  PRIMARY KEY (id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS warnings (
+  id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  title VARCHAR(255) NOT NULL,
+  details TEXT NULL,
+  PRIMARY KEY (id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS recommendations (
+  id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  priority VARCHAR(50) NOT NULL,
+  title VARCHAR(255) NOT NULL,
+  details TEXT NULL,
+  PRIMARY KEY (id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS progress_status (
+  id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  phase VARCHAR(100) NOT NULL,
+  status VARCHAR(50) NOT NULL,
+  completed_items INT NULL,
+  notes TEXT NULL,
+  PRIMARY KEY (id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS firestore_operations (
+  id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  file_path VARCHAR(500) NOT NULL,
+  operation_name VARCHAR(100) NOT NULL,
+  target_collection VARCHAR(255) NULL,
+  notes TEXT NULL,
+  PRIMARY KEY (id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

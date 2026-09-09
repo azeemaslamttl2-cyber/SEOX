@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import { signUp, signInWithGoogle } from "../lib/auth.js";
 import { getAuthErrorMessage } from "../lib/authErrors.js";
+import { persistAuthUser } from "../lib/authSession.js";
 
 function scorePassword(pwd) {
   let score = 0;
@@ -66,7 +67,11 @@ export default function Register() {
 
     setLoading(true);
     try {
-      await signUp({ email, password, displayName: name });
+      const user = await signUp({ email, password, displayName: name });
+      if (typeof window !== "undefined") {
+        persistAuthUser(user, true);
+        window.dispatchEvent(new Event("mysql-auth-changed"));
+      }
       navigate("/dashboard", { replace: true });
     } catch (err) {
       setError(getAuthErrorMessage(err));
@@ -79,8 +84,7 @@ export default function Register() {
     setError("");
     setGoogleLoading(true);
     try {
-      await signInWithGoogle();
-      navigate("/dashboard", { replace: true });
+      signInWithGoogle({ returnTo: "/dashboard" });
     } catch (err) {
       setError(getAuthErrorMessage(err));
     } finally {

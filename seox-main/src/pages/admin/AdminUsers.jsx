@@ -17,7 +17,7 @@ import {
 import { formatNumber, useAdminData } from "../../hooks/useAdminData.js";
 import { normalizeTier } from "../../lib/tiers.js";
 
-const avatarColors = ["#8b5cf6", "#3b82f6", "#f59e0b", "#22c55e", "#ef4444", "#ec4899", "#06b6d4", "#f97316", "#6366f1", "#14b8a6"];
+const avatarColors = ["#2d2b6f", "#4197cb", "#ffc600", "#6abf4b", "#c76c61", "#df3c27", "#4197cb", "#df3c27", "#2d2b6f", "#6abf4b"];
 
 /* ================================================================
    Level Badge

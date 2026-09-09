@@ -1,4 +1,4 @@
-import { requireFirebaseAuthFromNodeRequest } from "../_lib/request-auth.js";
+import { requireAuthenticatedUser } from "../_lib/request-auth.js";
 import { fetchPublicHttpUrl, parsePublicHttpUrl } from "../_lib/url-security.js";
 
 const MAX_HTML_BYTES = 5_000_000;
@@ -15,7 +15,7 @@ export default async function handler(req, res) {
   }
 
   try {
-    await requireFirebaseAuthFromNodeRequest(req);
+    await requireAuthenticatedUser(req);
   } catch (error) {
     return res.status(error?.status || 401).json({ error: error?.message || "Unauthorized" });
   }

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
   Mail,
@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import { signIn, signInWithGoogle, resetPassword } from "../lib/auth.js";
 import { getAuthErrorMessage } from "../lib/authErrors.js";
+import { persistAuthUser } from "../lib/authSession.js";
 
 export default function Login() {
   const navigate = useNavigate();
@@ -27,12 +28,57 @@ export default function Login() {
   const [error, setError] = useState("");
   const [resetSent, setResetSent] = useState(false);
 
+  function decodeBase64Url(value) {
+    let base64 = String(value || "")
+      .replace(/-/g, "+")
+      .replace(/_/g, "/");
+    while (base64.length % 4 !== 0) {
+      base64 += "=";
+    }
+    return base64;
+  }
+
+  useEffect(() => {
+    const query = new URLSearchParams(location.search);
+    const oauthError = query.get("google_error");
+    if (oauthError) {
+      setError(oauthError);
+      window.history.replaceState({}, "", location.pathname);
+      return;
+    }
+
+    const oauthPayload = new URLSearchParams(location.hash.slice(1)).get("google_auth");
+    if (!oauthPayload) return;
+    try {
+      const base64 = decodeBase64Url(oauthPayload);
+      const bytes = Uint8Array.from(atob(base64), (char) => char.charCodeAt(0));
+      const payload = JSON.parse(new TextDecoder().decode(bytes));
+      if (!payload?.user?.accessToken) throw new Error("Google sign-in did not return a session.");
+      persistAuthUser(payload.user, true);
+      window.dispatchEvent(new Event("mysql-auth-changed"));
+      window.history.replaceState({}, "", location.pathname);
+      navigate(payload.returnTo || "/dashboard", { replace: true });
+    } catch (err) {
+      setError(err?.message || "Could not complete Google sign-in.");
+    }
+  }, [location.pathname, location.search, location.hash, navigate]);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
     setLoading(true);
     try {
-      await signIn({ email, password, remember });
+      const user = await signIn({ email, password, remember });
+      try {
+        console.debug('signIn returned user:', user);
+        console.debug('will navigate to:', from);
+      } catch (e) {
+        // ignore
+      }
+      if (typeof window !== "undefined") {
+        persistAuthUser(user, remember);
+        window.dispatchEvent(new Event("mysql-auth-changed"));
+      }
       navigate(from, { replace: true });
     } catch (err) {
       setError(getAuthErrorMessage(err));
@@ -45,8 +91,7 @@ export default function Login() {
     setError("");
     setGoogleLoading(true);
     try {
-      await signInWithGoogle();
-      navigate(from, { replace: true });
+      signInWithGoogle({ returnTo: from });
     } catch (err) {
       setError(getAuthErrorMessage(err));
     } finally {
@@ -70,10 +115,10 @@ export default function Login() {
   };
 
   return (
-    <div>
+    <div className="login-form">
       <h1 className="font-display text-3xl font-bold tracking-tight">Welcome back</h1>
       <p className="mt-2 text-sm text-white/55">
-        New to AI Smart Seo?{" "}
+        New to PGC?{" "}
         <Link to="/register" className="font-semibold text-brand-300 hover:underline">
           Create an account
         </Link>

@@ -1,0 +1,17 @@
+{
+  "$schema": "../../node_modules/wrangler/config-schema.json",
+  "name": "seox-gbp-scheduler",
+  "main": "index.js",
+  "compatibility_date": "2026-06-12",
+  "triggers": {
+    // Every 5 minutes. Scheduled posts publish within one tick of their time.
+    "crons": ["*/5 * * * *"]
+  },
+  "vars": {
+    // The Pages deployment this worker drives.
+    "SEOX_BASE_URL": "https://your-domain.example"
+  }
+  // GBP_SCHEDULER_TOKEN is a secret, not a var:
+  //   wrangler secret put GBP_SCHEDULER_TOKEN --config worker/gbp-scheduler/wrangler.jsonc
+  // Set the same value on the Pages project.
+}

@@ -1,7 +1,7 @@
 import { useLocation } from "react-router-dom";
-import { Search } from "lucide-react";
-import NotificationButton from "../NotificationButton.jsx";
+import { Search, Bell, Moon } from "lucide-react";
 import ProjectSelector from "../ProjectSelector.jsx";
+import UserMenu from "../UserMenu.jsx";
 
 const titles = {
   "/on-page/analyzer": "On-Page SEO Analyzer",
@@ -33,8 +33,14 @@ export default function OnPageTopBar() {
             placeholder="Search check points..."
           />
         </div>
-        <NotificationButton />
-        <div className="h-8 w-8 rounded-full bg-gradient-to-br from-brand-400 to-amber-400" />
+        <button className="flex h-8 w-8 items-center justify-center rounded-lg text-white/40 hover:bg-white/[0.04]">
+          <Moon className="h-4 w-4" />
+        </button>
+        <button className="relative flex h-8 w-8 items-center justify-center rounded-lg text-white/40 hover:bg-white/[0.04]">
+          <Bell className="h-4 w-4" />
+          <span className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-rose-500" />
+        </button>
+        <UserMenu />
       </div>
     </header>
   );

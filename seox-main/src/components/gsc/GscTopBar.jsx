@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
 import {
   ChevronDown,
@@ -8,15 +8,10 @@ import {
   Search,
   Plus,
 } from "lucide-react";
-import { useAuth } from "../../context/AuthContext.jsx";
-import { useCrawl } from "../../context/CrawlContext.jsx";
 import { useGscInsights } from "../../context/GscInsightsContext.jsx";
-import { filterSitesByProjects } from "../../lib/domainMatching.js";
-import Avatar from "../Avatar.jsx";
+import UserMenu from "../UserMenu.jsx";
 
 export default function GscTopBar() {
-  const { user } = useAuth();
-  const { projects } = useCrawl();
   const {
     error,
     handleSignIn,
@@ -24,19 +19,16 @@ export default function GscTopBar() {
     isSignedIn,
     isStartingConnection,
     normalizedSites,
+    selectedSiteInfo,
     setSelectedSite,
   } = useGscInsights();
   const navigate = useNavigate();
   const { pathname } = useLocation();
   const { siteId } = useParams();
   const [switcherOpen, setSwitcherOpen] = useState(false);
-  const profileSites = useMemo(
-    () => filterSitesByProjects(normalizedSites, projects),
-    [normalizedSites, projects]
-  );
   const activeSiteId = pathname.includes("bulk-analysis") ? null : siteId;
   const currentSite = activeSiteId
-    ? profileSites.find((site) => site.id === activeSiteId) || null
+    ? normalizedSites.find((site) => site.id === activeSiteId) || selectedSiteInfo
     : null;
 
   return (
@@ -75,13 +67,7 @@ export default function GscTopBar() {
                     properties here.
                   </div>
                 )}
-                {normalizedSites.length > 0 && profileSites.length === 0 && (
-                  <div className="px-3 py-4 text-xs leading-relaxed text-white/50">
-                    No Search Console properties match your saved projects.
-                    Add the domain as a project to show it here.
-                  </div>
-                )}
-                {profileSites.map((site) => {
+                {normalizedSites.map((site) => {
                   const active = site.id === activeSiteId;
                   return (
                     <button
@@ -170,7 +156,7 @@ export default function GscTopBar() {
             {gscEmail}
           </span>
         )}
-        {user && <Avatar user={user} size={32} className="ml-1" />}
+        <UserMenu />
       </div>
     </header>
   );

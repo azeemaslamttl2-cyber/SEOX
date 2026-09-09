@@ -28,18 +28,17 @@ import {
   normalizeEvidenceUrl,
 } from "../lib/auditIssues.js";
 import {
-  deleteCrawlProjectState,
-  loadCrawlStorage,
-  requestDurableCrawlStorage,
-  saveCrawlMetadata,
-  saveCrawlProjectStates,
-} from "../lib/crawlStorage.js";
+  loadProjects,
+  saveProjectWithMeta,
+  deleteProject,
+  saveProjectMeta,
+  saveProjectData,
+} from "../lib/projectsApi.js";
 import {
-  loadFirestoreProjects,
-  saveFirestoreProjectWithMeta,
-  deleteFirestoreProject,
-  saveFirestoreMeta,
-} from "../lib/firestoreProjects.js";
+  loadCrawlStorage,
+  saveCrawlProjectStates,
+  deleteCrawlProjectState,
+} from "../lib/crawlStorage.js";
 import { useAuth } from "./AuthContext.jsx";
 
 const CrawlContext = createContext(null);
@@ -56,21 +55,21 @@ const LS_SELECTED_PROJECT = "seox.crawl.selectedProjectId";
 const LS_DELETED_PROJECTS = "seox.crawl.deletedProjectIds";
 const STATE_FLUSH_MS = 750;
 const MOCK_PROJECT_IDS = new Set([
-  "ai-smart-seo",
-  "ai-smart-seo-com",
+  "crawlus",
+  "crawlus-com",
   "atlas-commerce",
   "scaxa-ae",
-  "aismartseo-com",
+  "seox-io",
 ]);
 const MOCK_PROJECT_HOSTS = new Set([
-  "aismartseo.com",
-  "www.aismartseo.com",
+  "crawlus.com",
+  "www.crawlus.com",
   "atlascommerce.com",
   "www.atlascommerce.com",
   "scaxa.ae",
   "www.scaxa.ae",
-  "app.aismartseo.com",
-  "www.app.aismartseo.com",
+  "seox.io",
+  "www.seox.io",
 ]);
 
 const emptyStats = () => ({
@@ -90,7 +89,7 @@ const emptyProjectState = () => ({
   stats: emptyStats(),
 });
 
-/* ---------------- localStorage helpers ---------------- */
+/* ---------------- sessionStorage helpers ---------------- */
 
 function reviveDates(obj) {
   if (!obj) return obj;
@@ -132,11 +131,21 @@ function reviveProjectState(raw) {
 
 function readJson(key, fallback) {
   try {
-    const raw = localStorage.getItem(key);
+    const raw =
+      (typeof sessionStorage !== "undefined" ? sessionStorage.getItem(key) : null) ||
+      (typeof localStorage !== "undefined" ? localStorage.getItem(key) : null);
     return raw ? JSON.parse(raw) : fallback;
   } catch {
     return fallback;
   }
+}
+
+function writeJson(key, value) {
+  try {
+    const serialized = JSON.stringify(value);
+    if (typeof sessionStorage !== "undefined") sessionStorage.setItem(key, serialized);
+    if (typeof localStorage !== "undefined") localStorage.setItem(key, serialized);
+  } catch {}
 }
 
 function mergeProjects(...lists) {
@@ -280,95 +289,27 @@ export function CrawlProvider({ children }) {
   const stateFlushTimerRef = useRef(null);
   const stateWriteChainRef = useRef(Promise.resolve());
 
-  const persistMetadataFallback = useCallback((nextProjects, nextSelectedProjectId, nextDeletedProjectIds) => {
-    const writeMetadata = () => {
-      localStorage.setItem(LS_PROJECTS, JSON.stringify(nextProjects));
-      localStorage.setItem(LS_DELETED_PROJECTS, JSON.stringify(nextDeletedProjectIds));
-      if (nextSelectedProjectId) {
-        localStorage.setItem(LS_SELECTED_PROJECT, JSON.stringify(nextSelectedProjectId));
-        const selected = nextProjects.find((item) => item.id === nextSelectedProjectId);
-        if (selected) localStorage.setItem(LS_PROJECT, JSON.stringify(selected));
-      } else {
-        localStorage.removeItem(LS_SELECTED_PROJECT);
-        localStorage.removeItem(LS_PROJECT);
-      }
-    };
-
-    try {
-      writeMetadata();
-    } catch {
-      try {
-        // Older builds stored full crawl state in localStorage. If that stale
-        // payload fills quota, clear it and retry only the lightweight metadata
-        // needed to restore the project picker after refresh.
-        localStorage.removeItem(LS_PROJECT_STATES);
-        localStorage.removeItem(LS_STATE);
-        writeMetadata();
-      } catch {
-        /* localStorage is only the fast fallback; IndexedDB remains primary. */
-      }
-    }
+  const persistMetadataFallback = useCallback(() => {
+    // Project metadata is persisted through the database-backed /api/projects endpoint.
+    // Keep this callback as a no-op so the browser does not maintain a second source of truth.
   }, []);
-
-  const persistLegacyProjectStates = useCallback((states) => {
-    try {
-      localStorage.setItem(LS_PROJECT_STATES, JSON.stringify(states));
-    } catch {
-      // IndexedDB is the primary store because full audits exceed localStorage quotas.
-    }
-  }, []);
-
-  const flushProjectStateWrites = useCallback(() => {
-    if (stateFlushTimerRef.current) {
-      clearTimeout(stateFlushTimerRef.current);
-      stateFlushTimerRef.current = null;
-    }
-
-    const entries = Array.from(dirtyProjectStatesRef.current.entries());
-    dirtyProjectStatesRef.current.clear();
-    if (!entries.length) return stateWriteChainRef.current;
-
-    stateWriteChainRef.current = stateWriteChainRef.current
-      .catch(() => undefined)
-      .then(() => saveCrawlProjectStates(entries))
-      .then(() => {
-        setStorageError(null);
-        try {
-          localStorage.removeItem(LS_PROJECT_STATES);
-          localStorage.removeItem(LS_STATE);
-        } catch {
-          // The durable write already succeeded.
-        }
-      })
-      .catch((error) => {
-        persistLegacyProjectStates(latestProjectStatesRef.current);
-        setStorageError(error);
-      });
-
-    return stateWriteChainRef.current;
-  }, [persistLegacyProjectStates]);
 
   useEffect(() => {
     let cancelled = false;
 
     const hydrate = async () => {
       try {
-        // Load from IndexedDB
-        const stored = await loadCrawlStorage();
-        if (cancelled) return;
-
-        // Load from Firestore (non-blocking — if it fails we just skip)
-        let firestoreData = { projects: [], selectedProjectId: null, deletedProjectIds: [] };
+        let dbData = { projects: [], selectedProjectId: null, deletedProjectIds: [] };
+        let databaseLoaded = false;
         try {
           if (authUserId) {
-            firestoreData = await loadFirestoreProjects(authUserId);
+            dbData = await loadProjects(authUserId);
+            databaseLoaded = true;
           }
         } catch {
-          // Firestore unavailable — continue with local data only
+          // Database-backed project load is non-blocking; fall back to the in-memory seed state.
         }
-        if (cancelled) return;
 
-        const storedMetadata = stored.metadata || {};
         const currentProjects = latestProjectsRef.current || initial.projects;
         const currentSelectedProjectId =
           latestSelectedProjectIdRef.current || initial.selectedProjectId;
@@ -378,21 +319,50 @@ export function CrawlProvider({ children }) {
           latestProjectStatesRef.current || initial.projectStates;
         const hasRuntimeProjectStateChanges =
           currentProjectStates !== initial.projectStates;
+
+        // Move eligible legacy browser projects into MySQL once. Thereafter, MySQL
+        // is the authenticated user's source of truth rather than sessionStorage.
+        if (authUserId && databaseLoaded) {
+          const deletedIds = new Set([
+            ...initial.deletedProjectIds,
+            ...currentDeletedProjectIds,
+            ...(dbData.deletedProjectIds || []),
+          ]);
+          const databaseProjectIds = new Set((dbData.projects || []).map((item) => item.id));
+          const browserOnlyProjects = mergeProjects(initial.projects, currentProjects).filter(
+            (item) =>
+              item?.id &&
+              !deletedIds.has(item.id) &&
+              !databaseProjectIds.has(item.id) &&
+              !isMockProject(item) &&
+              (!item.owner_uid || String(item.owner_uid) === String(authUserId))
+          );
+
+          if (browserOnlyProjects.length) {
+            await Promise.allSettled(
+              browserOnlyProjects.map((item) =>
+                saveProjectWithMeta(authUserId, item, {
+                  selectedProjectId: currentSelectedProjectId || item.id,
+                  deletedProjectIds: Array.from(deletedIds),
+                })
+              )
+            );
+            dbData = await loadProjects(authUserId);
+          }
+        }
+        if (cancelled) return;
         const restoredDeletedProjectIds = Array.from(
           new Set([
             ...initial.deletedProjectIds,
             ...currentDeletedProjectIds,
-            ...(storedMetadata.deletedProjectIds || []),
-            ...(firestoreData.deletedProjectIds || []),
+            ...(dbData.deletedProjectIds || []),
           ])
         );
         const deleted = new Set(restoredDeletedProjectIds);
-        const restoredProjects = mergeProjects(
-          defaultProjects,
-          initial.projects,
-          storedMetadata.projects || [],
-          firestoreData.projects || [],
-          currentProjects
+        const restoredProjects = (
+          databaseLoaded
+            ? mergeProjects(dbData.projects || [])
+            : mergeProjects(defaultProjects, initial.projects, currentProjects)
         ).filter((item) => !deleted.has(item.id) && !isMockProject(item));
         const availableProjectIds = new Set(restoredProjects.map((item) => item.id));
         const restoredSelectedProjectId =
@@ -400,9 +370,9 @@ export function CrawlProvider({ children }) {
           availableProjectIds.has(currentSelectedProjectId)
             ? currentSelectedProjectId
             : null) ||
-          (storedMetadata.selectedProjectId &&
-          availableProjectIds.has(storedMetadata.selectedProjectId)
-            ? storedMetadata.selectedProjectId
+          (dbData.selectedProjectId &&
+          availableProjectIds.has(dbData.selectedProjectId)
+            ? dbData.selectedProjectId
             : null) ||
           (initial.selectedProjectId &&
           availableProjectIds.has(initial.selectedProjectId)
@@ -410,22 +380,45 @@ export function CrawlProvider({ children }) {
             : null) ||
           restoredProjects[0]?.id ||
           null;
-        const restoredProjectStates = Object.fromEntries(
-          Object.entries(stored.projectStates || {})
-            .filter(([id]) => availableProjectIds.has(id))
-            .map(([id, state]) => [id, reviveProjectState(state)])
-        );
-        const mergedProjectStates = {
-          ...initial.projectStates,
-          ...restoredProjectStates,
-          ...(hasRuntimeProjectStateChanges ? currentProjectStates : {}),
-        };
+        let localCrawlStorage = { projectStates: {} };
+        try {
+          localCrawlStorage = await loadCrawlStorage();
+        } catch {
+          // IndexedDB load is non-blocking
+        }
 
-        Object.entries(mergedProjectStates).forEach(([id, state]) => {
-          if (!stored.projectStates?.[id]) {
-            dirtyProjectStatesRef.current.set(id, state);
+        const serverProjectStates = {};
+        (dbData.projects || []).forEach((proj) => {
+          if (proj?.id && proj?.project_data) {
+            const auditorData = proj.project_data.auditor;
+            const rawState =
+              (auditorData && typeof auditorData === "object"
+                ? (auditorData.stats ? { status: auditorData.status || "complete", stats: auditorData.stats } : { status: "complete", stats: auditorData })
+                : null) ||
+              proj.project_data.crawlState ||
+              proj.project_data.auditState ||
+              (proj.project_data.auditIssues ? { status: "complete", stats: proj.project_data } : null);
+            if (rawState) {
+              serverProjectStates[proj.id] = reviveProjectState(rawState);
+            }
           }
         });
+
+        const idbStates = localCrawlStorage?.projectStates
+          ? Object.fromEntries(
+              Object.entries(localCrawlStorage.projectStates).map(([id, state]) => [
+                id,
+                reviveProjectState(state),
+              ])
+            )
+          : {};
+
+        const mergedProjectStates = {
+          ...initial.projectStates,
+          ...idbStates,
+          ...serverProjectStates,
+          ...(hasRuntimeProjectStateChanges ? currentProjectStates : {}),
+        };
 
         latestProjectsRef.current = restoredProjects;
         latestSelectedProjectIdRef.current = restoredSelectedProjectId;
@@ -441,7 +434,6 @@ export function CrawlProvider({ children }) {
         setSelectedProjectId(restoredSelectedProjectId);
         setDeletedProjectIds(restoredDeletedProjectIds);
         setProjectStates(mergedProjectStates);
-        void requestDurableCrawlStorage();
       } catch (error) {
         if (!cancelled) setStorageError(error);
       } finally {
@@ -486,88 +478,45 @@ export function CrawlProvider({ children }) {
     latestProjectStatesRef.current = projectStates;
   }, [projectStates]);
 
-  useEffect(() => {
-    try {
-      localStorage.setItem(LS_PROJECTS, JSON.stringify(projects));
-    } catch {
-      /* ignore quota errors */
-    }
-  }, [projects]);
-
+  // Persist projectStates to IndexedDB, localStorage/sessionStorage, and debounced to MySQL
   useEffect(() => {
     if (!storageReady) return;
 
-    saveCrawlMetadata({
-      projects,
-      selectedProjectId: project?.id || null,
-      deletedProjectIds,
-    }).catch((error) => setStorageError(error));
-  }, [deletedProjectIds, project, projects, storageReady]);
+    writeJson(LS_PROJECT_STATES, projectStates);
 
-  useEffect(() => {
-    try {
-      localStorage.setItem(LS_DELETED_PROJECTS, JSON.stringify(deletedProjectIds));
-    } catch {
-      /* ignore quota errors */
+    const entries = Object.entries(projectStates).filter(
+      ([, state]) => state?.stats?.crawledCount > 0 || state?.status === "crawling"
+    );
+    if (entries.length) {
+      saveCrawlProjectStates(entries).catch(() => {});
     }
-  }, [deletedProjectIds]);
 
-  useEffect(() => {
-    try {
-      if (project) {
-        localStorage.setItem(LS_SELECTED_PROJECT, JSON.stringify(project.id));
-        localStorage.setItem(LS_PROJECT, JSON.stringify(project));
-      } else {
-        localStorage.removeItem(LS_SELECTED_PROJECT);
-        localStorage.removeItem(LS_PROJECT);
+    const uid = uidRef.current;
+    if (uid && project?.id && projectStates[project.id]) {
+      const activeState = projectStates[project.id];
+      if (activeState?.stats?.crawledCount > 0) {
+        clearTimeout(stateFlushTimerRef.current);
+        stateFlushTimerRef.current = setTimeout(() => {
+          const auditorPayload = {
+            status: activeState.status,
+            stats: activeState.stats,
+            totalUrls: activeState.stats?.crawledCount || 0,
+            updatedAt: new Date().toISOString(),
+          };
+          saveProjectData(uid, {
+            projectId: project.id,
+            key: "auditor",
+            value: auditorPayload,
+          }).catch(() => {});
+          saveProjectData(uid, {
+            projectId: project.id,
+            key: "crawlState",
+            value: activeState,
+          }).catch(() => {});
+        }, STATE_FLUSH_MS);
       }
-    } catch {
-      /* ignore quota errors */
     }
-  }, [project]);
-
-  useEffect(() => {
-    if (!storageReady) {
-      observedProjectStatesRef.current = projectStates;
-      return;
-    }
-
-    const previousStates = observedProjectStatesRef.current;
-    Object.entries(projectStates).forEach(([id, state]) => {
-      if (previousStates[id] !== state) {
-        dirtyProjectStatesRef.current.set(id, state);
-      }
-    });
-    observedProjectStatesRef.current = projectStates;
-
-    if (dirtyProjectStatesRef.current.size && !stateFlushTimerRef.current) {
-      stateFlushTimerRef.current = setTimeout(
-        flushProjectStateWrites,
-        STATE_FLUSH_MS
-      );
-    }
-  }, [flushProjectStateWrites, projectStates, storageReady]);
-
-  useEffect(() => {
-    if (!storageReady) return;
-
-    const flushBeforeExit = () => {
-      Object.entries(latestProjectStatesRef.current).forEach(([id, state]) => {
-        if (observedProjectStatesRef.current[id] !== state) {
-          dirtyProjectStatesRef.current.set(id, state);
-        }
-      });
-      flushProjectStateWrites();
-    };
-
-    window.addEventListener("pagehide", flushBeforeExit);
-    document.addEventListener("visibilitychange", flushBeforeExit);
-    return () => {
-      window.removeEventListener("pagehide", flushBeforeExit);
-      document.removeEventListener("visibilitychange", flushBeforeExit);
-      flushBeforeExit();
-    };
-  }, [flushProjectStateWrites, storageReady]);
+  }, [projectStates, storageReady, project?.id]);
 
   // Keep the visible duration/scheduled count moving while real network requests run.
   useEffect(() => {
@@ -768,23 +717,11 @@ export function CrawlProvider({ children }) {
     latestDeletedProjectIdsRef.current = nextDeletedProjectIds;
     persistMetadataFallback(nextProjects, normalized.id, nextDeletedProjectIds);
 
-    // Eagerly persist to IndexedDB so the project survives refresh even if
-    // the storageReady-gated effect hasn't fired yet.
-    const durableWrite = saveCrawlMetadata(metadata)
-      .then(() => {
-        setStorageError(null);
-        return true;
-      })
-      .catch((error) => {
-        setStorageError(error);
-        return false;
-      });
-
     const uid = uidRef.current;
     const onlineWrite = skipOnline
       ? Promise.resolve(false)
       : uid
-      ? saveFirestoreProjectWithMeta(uid, normalized, {
+      ? saveProjectWithMeta(uid, normalized, {
         selectedProjectId: normalized.id,
         deletedProjectIds: nextDeletedProjectIds,
       })
@@ -810,9 +747,6 @@ export function CrawlProvider({ children }) {
         previousSelectedProjectId,
         previousDeletedProjectIds
       );
-      saveCrawlMetadata(previousMetadata).catch(() => {
-        /* localStorage fallback already written above */
-      });
       setProjects(previousProjects);
       setDeletedProjectIds(previousDeletedProjectIds);
       setSelectedProjectId(previousSelectedProjectId);
@@ -821,13 +755,14 @@ export function CrawlProvider({ children }) {
     setProjects(nextProjects);
     setDeletedProjectIds(nextDeletedProjectIds);
     setSelectedProjectId(normalized.id);
-    return { project: normalized, durableWrite, onlineWrite, rollback };
+    return { project: normalized, onlineWrite, rollback };
   }, [persistMetadataFallback]);
 
   const selectProject = useCallback(
     (projectId) => {
       const currentProjects = latestProjectsRef.current;
-      if (currentProjects.some((item) => item.id === projectId)) {
+      const selectedProject = currentProjects.find((item) => item.id === projectId);
+      if (selectedProject) {
         latestSelectedProjectIdRef.current = projectId;
         persistMetadataFallback(
           currentProjects,
@@ -836,10 +771,10 @@ export function CrawlProvider({ children }) {
         );
         setSelectedProjectId(projectId);
 
-        // Persist selection to Firestore
+        // Persist project selection and project info to MySQL
         const uid = uidRef.current;
         if (uid) {
-          saveFirestoreMeta(uid, {
+          saveProjectWithMeta(uid, selectedProject, {
             selectedProjectId: projectId,
             deletedProjectIds: latestDeletedProjectIdsRef.current,
           }).catch(() => {});
@@ -868,17 +803,11 @@ export function CrawlProvider({ children }) {
       latestSelectedProjectIdRef.current = nextSelectedProjectId;
       latestDeletedProjectIdsRef.current = nextDeletedProjectIds;
       persistMetadataFallback(remaining, nextSelectedProjectId, nextDeletedProjectIds);
-      saveCrawlMetadata({
-        projects: remaining,
-        selectedProjectId: nextSelectedProjectId,
-        deletedProjectIds: nextDeletedProjectIds,
-      }).catch(() => { /* localStorage fallback already written */ });
 
-      // Persist to Firestore (fire-and-forget)
       const uid = uidRef.current;
       if (uid) {
-        deleteFirestoreProject(uid, projectId).catch(() => {});
-        saveFirestoreMeta(uid, {
+        deleteProject(uid, projectId).catch(() => {});
+        saveProjectMeta(uid, {
           selectedProjectId: nextSelectedProjectId,
           deletedProjectIds: nextDeletedProjectIds,
         }).catch(() => {});
@@ -888,7 +817,7 @@ export function CrawlProvider({ children }) {
       setSelectedProjectId(nextSelectedProjectId);
       delete crawlerSessionsRef.current[projectId];
       dirtyProjectStatesRef.current.delete(projectId);
-      deleteCrawlProjectState(projectId).catch((error) => setStorageError(error));
+      deleteCrawlProjectState(projectId).catch(() => {});
       setProjectStates((states) => {
         const { [projectId]: _deleted, ...rest } = states;
         latestProjectStatesRef.current = rest;
@@ -972,26 +901,52 @@ export function CrawlProvider({ children }) {
 
   const setProject = useCallback(
     (nextProject) => {
-      const {
-        project: normalized,
-        durableWrite,
-        onlineWrite,
-        rollback,
-      } = upsertProject(nextProject, { requireOnline: true });
+      const { project: normalized, onlineWrite, rollback } = upsertProject(nextProject, { requireOnline: true });
 
-      return Promise.allSettled([durableWrite, onlineWrite]).then((results) => {
-        const onlineResult = results[1];
+      return Promise.allSettled([onlineWrite]).then((results) => {
+        const onlineResult = results[0];
         if (onlineResult.status === "rejected") {
           const error = onlineResult.reason;
           rollback();
           setStorageError(error);
           throw error;
         }
+
         return normalized;
       });
     },
     [upsertProject]
   );
+
+  // Project selectors can request a fresh database snapshot when opened, so a
+  // newly-created project is immediately available without reloading the app.
+  const refreshProjects = useCallback(async () => {
+    if (!authUserId) return [];
+
+    const dbData = await loadProjects(authUserId);
+    // This explicit refresh is used by the project dropdown.  Do not combine
+    // it with browser state or hide rows based on client-side seed/deletion
+    // rules: the API response from user_projects is the source of truth.
+    const nextProjects = (dbData.projects || []).map(normalizeProject);
+    const availableIds = new Set(nextProjects.map((item) => item.id));
+    const nextSelectedId =
+      (latestSelectedProjectIdRef.current && availableIds.has(latestSelectedProjectIdRef.current)
+        ? latestSelectedProjectIdRef.current
+        : null) ||
+      (dbData.selectedProjectId && availableIds.has(dbData.selectedProjectId)
+        ? dbData.selectedProjectId
+        : null) ||
+      nextProjects[0]?.id ||
+      null;
+
+    latestProjectsRef.current = nextProjects;
+    latestSelectedProjectIdRef.current = nextSelectedId;
+    latestDeletedProjectIdsRef.current = dbData.deletedProjectIds || [];
+    setProjects(nextProjects);
+    setSelectedProjectId(nextSelectedId);
+    setDeletedProjectIds(dbData.deletedProjectIds || []);
+    return nextProjects;
+  }, [authUserId]);
 
   return (
     <CrawlContext.Provider
@@ -1011,6 +966,7 @@ export function CrawlProvider({ children }) {
         resumeCrawl,
         resetCrawl,
         setProject,
+        refreshProjects,
       }}
     >
       {children}

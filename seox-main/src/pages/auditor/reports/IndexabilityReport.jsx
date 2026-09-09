@@ -3,8 +3,8 @@ import ReportShell, { StatCard, ChartCard, DepthBars } from "../../../components
 import DonutChart from "../../../components/auditor/DonutChart.jsx";
 import { useAuditData } from "../../../hooks/useAuditData.js";
 import { useCrawl } from "../../../context/CrawlContext.jsx";
-import { IndexabilityDonutInsights, TrackedIssuesPanel } from "./ReportInsights.jsx";
-import { pageExplorerHref } from "./reportLinks.js";
+import { IndexabilityDonutInsights, TrackedIssuesPanel } from "../../../lib/auditor/reports/ReportInsights.jsx";
+import { pageExplorerHref } from "../../../lib/auditor/reports/reportLinks.js";
 
 function isHtmlContentType(contentType, url) {
   const ct = (contentType || "").toLowerCase();
@@ -111,7 +111,7 @@ export default function IndexabilityReport() {
               <ChartCard title="Non-indexability causes" hint>
                 <DonutChart
                   segments={[
-                    { label: "Non-200", value: non200Count, color: "#f97316" },
+                    { label: "Non-200", value: non200Count, color: "#df3c27" },
                     { label: "Noindex", value: noindexCount, color: "#fbbf24" },
                   ]}
                   size={170}

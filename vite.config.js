@@ -3,6 +3,7 @@ import react from "@vitejs/plugin-react";
 import fs from "node:fs";
 import { onRequest as autocompleteOnRequest } from "./functions/api/autocomplete.js";
 import { onRequest as gscTokenOnRequest } from "./functions/api/gsc-token.js";
+import { onRequest as wordpressSecurityOnRequest } from "./functions/api/tech-seo/wordpress-security.js";
 import { onRequest as deepseekSettingsOnRequest } from "./functions/api/deepseek-settings.js";
 import { onRequest as pagespeedOnRequest } from "./functions/api/pagespeed.js";
 import { onRequest as speedOnRequest } from "./functions/api/tech-seo/speed.js";
@@ -891,6 +892,29 @@ function speedApiPlugin() {
     name: "seox-speed-api",
     configureServer: registerSpeedMiddleware,
     configurePreviewServer: registerSpeedMiddleware,
+  };
+}
+
+function registerWordpressSecurityMiddleware(server) {
+  server.middlewares.use("/api/tech-seo/wordpress-security", async (req, res) => {
+    try {
+      const request = await createWebRequest(req, "/api/tech-seo/wordpress-security");
+      const response = await wordpressSecurityOnRequest({ request, env: loadDevApiEnv() });
+      await sendWebResponse(res, response);
+    } catch (error) {
+      sendJson(res, error?.status || 500, {
+        error: "WordPress security scan failed",
+        message: error?.message || "Unknown error",
+      });
+    }
+  });
+}
+
+function wordpressSecurityApiPlugin() {
+  return {
+    name: "seox-wordpress-security-api",
+    configureServer: registerWordpressSecurityMiddleware,
+    configurePreviewServer: registerWordpressSecurityMiddleware,
   };
 }
 
@@ -1816,7 +1840,7 @@ function sendJson(res, status, payload) {
 }
 
 export default defineConfig({
-  plugins: [react(), proxyApiPlugin(), deepseekApiPlugin(), deepseekSettingsApiPlugin(), fetchUrlMetaApiPlugin(), pagespeedApiPlugin(), speedApiPlugin(), screamingFrogApiPlugin(), webmasterApiPlugin(), autocompleteApiPlugin(), gscTokenApiPlugin(), projectsApiPlugin(), projectDetailsApiPlugin(), backlinksAnalyzeApiPlugin(), w3cValidationApiPlugin(), expiredDomainsCheckApiPlugin(), backlinkCleanerApiPlugin(), backlinkIndexerApiPlugin(), keywordResearchApiPlugin(), ubersuggestApiPlugin(), authApiPlugin(), contentOutlineApiPlugin(), textEditorApiPlugin(), domainSeparatorApiPlugin(), wordCounterApiPlugin(), botViewerApiPlugin(), daPaCheckerApiPlugin(), metaExtractorApiPlugin(), sitemapExtractorApiPlugin(), seoToolsApiPlugin(), promptTrackingApiPlugin(), brandSentimentApiPlugin(), citationFlowApiPlugin(), competitorResearchApiPlugin(), internalLinksApiPlugin(), aiChatApiPlugin(), llmsGeneratorApiPlugin(), aiModelCheckerApiPlugin(), aiCompatibilityApiPlugin(), semanticWriterEditorApiPlugin(), contentWriterApiPlugin(), auditorApiPlugin(), crawlerApiPlugin()],
+  plugins: [react(), proxyApiPlugin(), deepseekApiPlugin(), deepseekSettingsApiPlugin(), fetchUrlMetaApiPlugin(), pagespeedApiPlugin(), speedApiPlugin(), wordpressSecurityApiPlugin(), screamingFrogApiPlugin(), webmasterApiPlugin(), autocompleteApiPlugin(), gscTokenApiPlugin(), projectsApiPlugin(), projectDetailsApiPlugin(), backlinksAnalyzeApiPlugin(), w3cValidationApiPlugin(), expiredDomainsCheckApiPlugin(), backlinkCleanerApiPlugin(), backlinkIndexerApiPlugin(), keywordResearchApiPlugin(), ubersuggestApiPlugin(), authApiPlugin(), contentOutlineApiPlugin(), textEditorApiPlugin(), domainSeparatorApiPlugin(), wordCounterApiPlugin(), botViewerApiPlugin(), daPaCheckerApiPlugin(), metaExtractorApiPlugin(), sitemapExtractorApiPlugin(), seoToolsApiPlugin(), promptTrackingApiPlugin(), brandSentimentApiPlugin(), citationFlowApiPlugin(), competitorResearchApiPlugin(), internalLinksApiPlugin(), aiChatApiPlugin(), llmsGeneratorApiPlugin(), aiModelCheckerApiPlugin(), aiCompatibilityApiPlugin(), semanticWriterEditorApiPlugin(), contentWriterApiPlugin(), auditorApiPlugin(), crawlerApiPlugin()],
   server: {
     port: 3000,
     host: true,

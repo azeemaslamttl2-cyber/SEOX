@@ -3,8 +3,8 @@ import DonutChart from "../../../components/auditor/DonutChart.jsx";
 import ReportShell, { ChartCard } from "../../../components/auditor/ReportShell.jsx";
 import { useAuditData } from "../../../hooks/useAuditData.js";
 import { useCrawl } from "../../../context/CrawlContext.jsx";
-import { issueGroupsForCategory, issueRowsForGroups, TrackedIssuesPanel } from "./ReportInsights.jsx";
-import { fileSizeSegments, loadTimeSegments, safeSegments } from "./liveReportData.js";
+import { issueGroupsForCategory, issueRowsForGroups, TrackedIssuesPanel } from "../../../lib/auditor/reports/ReportInsights.jsx";
+import { fileSizeSegments, loadTimeSegments, safeSegments } from "../../../lib/auditor/reports/liveReportData.js";
 
 export default function PerformanceReport() {
   const { issueCategories } = useAuditData();
@@ -18,7 +18,7 @@ export default function PerformanceReport() {
   const encodingSegments = Object.entries(encodingCounts).map(([label, value], index) => ({
     label,
     value,
-    color: ["#34d399", "#f97316", "#fbbf24", "#60a5fa"][index % 4],
+    color: ["#6abf4b", "#df3c27", "#ffc600", "#4197cb"][index % 4],
   }));
   const issueGroups = issueGroupsForCategory(
     issueCategories.find((category) => category.title === "Usability and performance")
@@ -50,7 +50,7 @@ export default function PerformanceReport() {
 
             <div>
               <p className="mb-3 text-[11px] font-bold uppercase tracking-wider text-white/40">
-                AI Smart Seo metrics
+                Crawlus metrics
               </p>
               <div className="grid gap-4 lg:grid-cols-2">
                 <ChartCard title="Time to first byte distribution" hint>

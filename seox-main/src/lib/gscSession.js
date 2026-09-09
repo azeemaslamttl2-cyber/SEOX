@@ -1,4 +1,4 @@
-import { auth } from "./firebase.js";
+import { clearSession, getSessionToken } from './authSession.js';
 
 const GSC_ACCESS_TOKEN_KEY = "seox_gsc_access_token";
 const GSC_TOKEN_EXPIRY_KEY = "seox_gsc_token_expiry";
@@ -13,9 +13,9 @@ function parseExpiry(value) {
 
 export function readStoredGscSession({ minValidityMs = GSC_EXPIRY_SKEW_MS } = {}) {
   try {
-    const accessToken = localStorage.getItem(GSC_ACCESS_TOKEN_KEY);
-    const rawExpiry = localStorage.getItem(GSC_TOKEN_EXPIRY_KEY);
-    const googleEmail = localStorage.getItem(GSC_EMAIL_KEY);
+    const accessToken = sessionStorage.getItem(GSC_ACCESS_TOKEN_KEY);
+    const rawExpiry = sessionStorage.getItem(GSC_TOKEN_EXPIRY_KEY);
+    const googleEmail = sessionStorage.getItem(GSC_EMAIL_KEY);
     const expiresAt = parseExpiry(rawExpiry);
 
     if (!accessToken || !expiresAt) return null;
@@ -35,32 +35,30 @@ export function readStoredGscSession({ minValidityMs = GSC_EXPIRY_SKEW_MS } = {}
 export function writeStoredGscSession({ accessToken, expiresAt, googleEmail }) {
   if (!accessToken || !expiresAt) return;
 
-  localStorage.setItem(GSC_ACCESS_TOKEN_KEY, accessToken);
-  localStorage.setItem(GSC_TOKEN_EXPIRY_KEY, new Date(expiresAt).toISOString());
+  sessionStorage.setItem(GSC_ACCESS_TOKEN_KEY, accessToken);
+  sessionStorage.setItem(GSC_TOKEN_EXPIRY_KEY, new Date(expiresAt).toISOString());
 
-  if (googleEmail) localStorage.setItem(GSC_EMAIL_KEY, googleEmail);
-  else localStorage.removeItem(GSC_EMAIL_KEY);
+  if (googleEmail) sessionStorage.setItem(GSC_EMAIL_KEY, googleEmail);
+  else sessionStorage.removeItem(GSC_EMAIL_KEY);
 }
 
 export function clearStoredGscSession() {
-  localStorage.removeItem(GSC_ACCESS_TOKEN_KEY);
-  localStorage.removeItem(GSC_TOKEN_EXPIRY_KEY);
-  localStorage.removeItem(GSC_EMAIL_KEY);
+  sessionStorage.removeItem(GSC_ACCESS_TOKEN_KEY);
+  sessionStorage.removeItem(GSC_TOKEN_EXPIRY_KEY);
+  sessionStorage.removeItem(GSC_EMAIL_KEY);
 }
 
-export async function fetchServerGscSession(userId) {
+export async function fetchServerGscSession(userId, projectId = "") {
   if (!userId) return null;
 
   const headers = new Headers({ "Content-Type": "application/json" });
-  const currentUser = auth.currentUser;
-  if (currentUser) {
-    headers.set("Authorization", `Bearer ${await currentUser.getIdToken()}`);
-  }
+  const token = getSessionToken();
+  if (token) headers.set('Authorization', `Bearer ${token}`);
 
   const response = await fetch("/api/gsc-token", {
     method: "POST",
     headers,
-    body: JSON.stringify({ action: "get", userId }),
+    body: JSON.stringify({ action: "get", userId, projectId: projectId || null }),
   });
   const data = await response.json().catch(() => ({}));
 
@@ -80,14 +78,14 @@ export async function fetchServerGscSession(userId) {
   return session;
 }
 
-export async function restoreGscSession({ userId, preferServer = true } = {}) {
+export async function restoreGscSession({ userId, projectId = "", preferServer = true } = {}) {
   const localSession = readStoredGscSession();
 
   if (!preferServer && localSession) return localSession;
 
   if (userId) {
     try {
-      const serverSession = await fetchServerGscSession(userId);
+      const serverSession = await fetchServerGscSession(userId, projectId);
       if (serverSession?.connected) return serverSession;
     } catch (error) {
       if (!localSession) throw error;
@@ -97,11 +95,11 @@ export async function restoreGscSession({ userId, preferServer = true } = {}) {
   return localSession || { connected: false };
 }
 
-export async function ensureValidGscSession({ userId } = {}) {
+export async function ensureValidGscSession({ userId, projectId = "" } = {}) {
   const localSession = readStoredGscSession();
   if (localSession) return localSession;
   if (!userId) return null;
 
-  const serverSession = await fetchServerGscSession(userId);
+  const serverSession = await fetchServerGscSession(userId, projectId);
   return serverSession?.connected ? serverSession : null;
 }

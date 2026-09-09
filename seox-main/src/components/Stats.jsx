@@ -4,9 +4,9 @@ import { TrendingUp, Users, Globe, Award } from "lucide-react";
 
 const stats = [
   { icon: Users, label: "Active Marketers", value: 18500, suffix: "+", color: "text-brand-300" },
-  { icon: Globe, label: "Sites Audited", value: 4200000, suffix: "+", color: "text-emerald-300" },
-  { icon: TrendingUp, label: "Avg Traffic Lift", value: 312, suffix: "%", color: "text-teal-300" },
-  { icon: Award, label: "Industry Awards", value: 27, suffix: "", color: "text-cyan-300" },
+  { icon: Globe, label: "Sites Audited", value: 4200000, suffix: "+", color: "text-amber-300" },
+  { icon: TrendingUp, label: "Avg Traffic Lift", value: 312, suffix: "%", color: "text-orange-300" },
+  { icon: Award, label: "Industry Awards", value: 27, suffix: "", color: "text-yellow-300" },
 ];
 
 function formatNumber(n) {

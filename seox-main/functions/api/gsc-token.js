@@ -1,9 +1,9 @@
 import {
-  deleteFirestoreDocument,
-  getFirestoreDocument,
-  patchFirestoreDocument,
-  verifyFirebaseIdToken,
-} from "../_lib/firebase-rest.js";
+  deleteStoredDocument,
+  getStoredDocument,
+  upsertStoredDocument,
+  verifyAccessToken,
+} from "../_lib/mysql-storage.js";
 import {
   corsHeaders,
   emptyResponse,
@@ -17,8 +17,10 @@ const USERINFO_ENDPOINT = "https://www.googleapis.com/oauth2/v2/userinfo";
 const GOOGLE_AUTH_ENDPOINT = "https://accounts.google.com/o/oauth2/v2/auth";
 const GSC_SCOPE = "https://www.googleapis.com/auth/webmasters.readonly";
 
-function gscTokenCollection(userId) {
-  return `users/${userId}/gscConnection`;
+function gscTokenCollection(userId, projectId) {
+  return projectId
+    ? `users/${userId}/projects/${projectId}/gscConnection`
+    : `users/${userId}/gscConnection`;
 }
 
 function cleanFields(fields) {
@@ -40,7 +42,7 @@ function encodeState(payload) {
   return Buffer.from(json, "utf8").toString("base64");
 }
 
-function createServerGscAuthUrl({ clientId, redirectUri, returnTo, source }) {
+function createServerGscAuthUrl({ clientId, redirectUri, returnTo, source, projectId, projectDomain, projectUrl }) {
   const params = new URLSearchParams({
     client_id: clientId,
     redirect_uri: redirectUri,
@@ -48,7 +50,13 @@ function createServerGscAuthUrl({ clientId, redirectUri, returnTo, source }) {
     scope: `${GSC_SCOPE} https://www.googleapis.com/auth/userinfo.email`,
     access_type: "offline",
     prompt: "consent",
-    state: encodeState({ source: source || "gsc-insights", returnTo: returnTo || "/gsc" }),
+    state: encodeState({
+      source: source || "gsc-insights",
+      returnTo: returnTo || "/gsc",
+      projectId: projectId || null,
+      projectDomain: projectDomain || null,
+      projectUrl: projectUrl || null,
+    }),
   });
 
   return `${GOOGLE_AUTH_ENDPOINT}?${params.toString()}`;
@@ -64,7 +72,7 @@ async function fetchGoogleEmail(accessToken) {
   return data.email || null;
 }
 
-async function refreshStoredTokens(env, userId, storedTokens) {
+async function refreshStoredTokens(env, userId, storedTokens, projectId) {
   if (!storedTokens?.refreshToken) {
     return jsonResponse(
       { error: "No refresh token available. Please reconnect Search Console." },
@@ -88,7 +96,7 @@ async function refreshStoredTokens(env, userId, storedTokens) {
   const data = await refreshResponse.json().catch(() => ({}));
 
   if (!refreshResponse.ok || !data.access_token) {
-    await deleteFirestoreDocument(env, gscTokenCollection(userId), "tokens");
+    await deleteStoredDocument(env, gscTokenCollection(userId, projectId), "tokens");
     return jsonResponse(
       {
         error: "Token refresh failed. Please reconnect Search Console.",
@@ -102,7 +110,7 @@ async function refreshStoredTokens(env, userId, storedTokens) {
   const expiresAt = Date.now() + Number(data.expires_in || 3600) * 1000;
   const googleEmail = storedTokens.googleEmail || (await fetchGoogleEmail(data.access_token));
 
-  await patchFirestoreDocument(env, gscTokenCollection(userId), "tokens", {
+  await upsertStoredDocument(env, gscTokenCollection(userId, projectId), "tokens", {
     ...storedTokens,
     accessToken: data.access_token,
     expiresAt,
@@ -135,9 +143,9 @@ export async function onRequest({ request, env }) {
   }
 
   try {
-    const decoded = await verifyFirebaseIdToken(request, env);
+    const decoded = await verifyAccessToken(request, env);
     const body = await readJson(request);
-    const { action, code, userId, redirectUri, returnTo, source } = body;
+    const { action, code, userId, projectId, projectDomain, projectUrl, redirectUri, returnTo, source } = body;
     const scopedUserId = decoded.uid;
     const { clientId, clientSecret } = getOAuthConfig(env);
 
@@ -162,6 +170,9 @@ export async function onRequest({ request, env }) {
             redirectUri,
             returnTo,
             source,
+            projectId,
+            projectDomain,
+            projectUrl,
           }),
         },
         200,
@@ -175,6 +186,14 @@ export async function onRequest({ request, env }) {
       }
       if (userId && userId !== scopedUserId) {
         return jsonResponse({ error: "Cannot connect Search Console for another user" }, 403, headers);
+      }
+      if (projectId) {
+        const project = await getStoredDocument(
+          env,
+          `users/${scopedUserId}/projects`,
+          projectId
+        );
+        if (!project) return jsonResponse({ error: "Project was not found" }, 404, headers);
       }
 
       const tokenResponse = await fetch(TOKEN_ENDPOINT, {
@@ -198,26 +217,36 @@ export async function onRequest({ request, env }) {
         );
       }
 
-      const previous = await getFirestoreDocument(
+      const previous = await getStoredDocument(
         env,
-        gscTokenCollection(scopedUserId),
+        gscTokenCollection(scopedUserId, projectId),
         "tokens"
       );
       const expiresAt = Date.now() + Number(tokens.expires_in || 3600) * 1000;
       const googleEmail = await fetchGoogleEmail(tokens.access_token);
 
-      await patchFirestoreDocument(
-        env,
-        gscTokenCollection(scopedUserId),
-        "tokens",
-        cleanFields({
-          accessToken: tokens.access_token,
-          refreshToken: tokens.refresh_token || previous?.refreshToken || null,
-          expiresAt,
-          googleEmail: googleEmail || previous?.googleEmail || null,
-          updatedAt: new Date().toISOString(),
-        })
-      );
+      try {
+        await upsertStoredDocument(
+          env,
+          gscTokenCollection(scopedUserId, projectId),
+          "tokens",
+          cleanFields({
+            accessToken: tokens.access_token,
+            refreshToken: tokens.refresh_token || previous?.refreshToken || null,
+            expiresAt,
+            googleEmail: googleEmail || previous?.googleEmail || null,
+            updatedAt: new Date().toISOString(),
+          })
+        );
+      } catch (dbError) {
+        const errorMsg = dbError?.message || String(dbError);
+        console.error('GSC token storage error:', { error: errorMsg, userId: scopedUserId });
+        return jsonResponse(
+          { error: `Failed to save GSC connection: ${errorMsg}` },
+          500,
+          headers
+        );
+      }
 
       return jsonResponse(
         {
@@ -237,9 +266,9 @@ export async function onRequest({ request, env }) {
         return jsonResponse({ error: "Cannot read Search Console tokens for another user" }, 403, headers);
       }
 
-      const storedTokens = await getFirestoreDocument(
+      const storedTokens = await getStoredDocument(
         env,
-        gscTokenCollection(scopedUserId),
+        gscTokenCollection(scopedUserId, projectId),
         "tokens"
       );
 
@@ -248,7 +277,7 @@ export async function onRequest({ request, env }) {
       }
 
       if (Number(storedTokens.expiresAt || 0) <= Date.now() + 120000) {
-        return refreshStoredTokens(env, scopedUserId, storedTokens);
+        return refreshStoredTokens(env, scopedUserId, storedTokens, projectId);
       }
 
       return jsonResponse(
@@ -268,19 +297,19 @@ export async function onRequest({ request, env }) {
         return jsonResponse({ error: "Cannot refresh Search Console tokens for another user" }, 403, headers);
       }
 
-      const storedTokens = await getFirestoreDocument(
+      const storedTokens = await getStoredDocument(
         env,
         gscTokenCollection(scopedUserId),
         "tokens"
       );
-      return refreshStoredTokens(env, scopedUserId, storedTokens);
+      return refreshStoredTokens(env, scopedUserId, storedTokens, projectId);
     }
 
     if (action === "disconnect") {
       if (userId && userId !== scopedUserId) {
         return jsonResponse({ error: "Cannot disconnect Search Console for another user" }, 403, headers);
       }
-      await deleteFirestoreDocument(env, gscTokenCollection(scopedUserId), "tokens");
+      await deleteStoredDocument(env, gscTokenCollection(scopedUserId, projectId), "tokens");
       return jsonResponse({ success: true }, 200, headers);
     }
 

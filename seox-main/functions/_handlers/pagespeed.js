@@ -1,4 +1,4 @@
-import { requireFirebaseAuthFromNodeRequest } from "../_lib/request-auth.js";
+import { requireAuthenticatedUser } from "../_lib/request-auth.js";
 import { parsePublicHttpUrl } from "../_lib/url-security.js";
 
 // Shared Node-style handler used by the Cloudflare Pages Function wrapper.
@@ -11,7 +11,7 @@ export default async function handler(req, res) {
   if (req.method !== "GET") return res.status(405).json({ error: "Method not allowed" });
 
   try {
-    await requireFirebaseAuthFromNodeRequest(req);
+    await requireAuthenticatedUser(req);
   } catch (error) {
     return res.status(error?.status || 401).json({ error: error?.message || "Unauthorized" });
   }
@@ -25,7 +25,7 @@ export default async function handler(req, res) {
     return res.status(error?.status || 400).json({ error: error?.message || "Invalid URL format" });
   }
 
-  const apiKey = process.env.PAGESPEED_API_KEY;
+  const apiKey = req?.env?.PAGESPEED_API_KEY || process.env.PAGESPEED_API_KEY;
   if (!apiKey) {
     return res.status(500).json({ error: "PageSpeed API key not configured on server" });
   }

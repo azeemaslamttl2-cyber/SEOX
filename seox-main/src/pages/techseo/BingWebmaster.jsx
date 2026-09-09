@@ -14,10 +14,12 @@ import {
   ChevronDown,
   ChevronUp,
 } from "lucide-react";
+import { useAuth } from "../../context/AuthContext.jsx";
 import { useSelectedProjectDomain } from "../../hooks/useSelectedProjectDomain.js";
+import { useTechSeoToolResult } from "../../hooks/useTechSeoToolResult.js";
 import { csvEscape, downloadTextFile, formatNumber } from "../../lib/techSeoTools.js";
+import { getSessionToken } from "../../lib/authSession.js";
 
-const BING_KEY_STORAGE = "bing_webmaster_api_key";
 const API_KEY_STEPS = [
   "Go to Bing Webmaster Tools",
   "Click on Settings (gear icon) in the sidebar",
@@ -25,25 +27,73 @@ const API_KEY_STEPS = [
   "Copy the key and paste it above",
 ];
 
+const BING_KEY_STORAGE = "bing_webmaster_api_key";
+const EMPTY_BING_RESULT = {
+  metrics: { clicks: "0", impressions: "0", ctr: "0.00%", position: "0.00" },
+  topQueries: [],
+  topPages: [],
+};
+
 function normalizeBingSite(site) {
-  return site?.Url || site?.url || site;
+  if (!site) return "";
+  if (typeof site === "string") return site;
+  return (
+    site.Url ||
+    site.url ||
+    site.SiteUrl ||
+    site.siteUrl ||
+    normalizeBingSite(site.site) ||
+    normalizeBingSite(site.Site) ||
+    ""
+  );
+}
+
+function bingSitesFromPayload(payload) {
+  const value = payload?.d ?? payload?.sites ?? payload?.results ?? [];
+  if (Array.isArray(value)) return value;
+  if (Array.isArray(value?.results)) return value.results;
+  if (Array.isArray(value?.sites)) return value.sites;
+  return [];
 }
 
 function hostFromSite(siteUrl) {
   try {
-    return new URL(siteUrl).hostname.replace(/^www\./i, "").toLowerCase();
+    const value = String(siteUrl || "").trim();
+    return new URL(/^https?:\/\//i.test(value) ? value : `https://${value}`).hostname.replace(/^www\./i, "").toLowerCase();
   } catch {
     return String(siteUrl || "").replace(/^https?:\/\//i, "").replace(/^www\./i, "").split(/[/?#]/)[0].toLowerCase();
   }
 }
 
+function canonicalBingSiteUrl(siteUrl) {
+  const value = String(siteUrl || "").trim();
+  if (!value) return "";
+  try {
+    const url = new URL(/^https?:\/\//i.test(value) ? value : `https://${value}`);
+    url.hostname = url.hostname.replace(/^www\./i, "").toLowerCase();
+    url.pathname = url.pathname.replace(/\/+$/, "");
+    return url.toString().replace(/\/$/, "").toLowerCase();
+  } catch {
+    return value.replace(/\/+$/, "").toLowerCase();
+  }
+}
+
+function isValidBingApiKey(key) {
+  if (!key || typeof key !== "string") return false;
+  const trimmed = key.trim();
+  if (trimmed.length < 20) return false;
+  if (/\s/.test(trimmed)) return false;
+  if (/abc123/i.test(trimmed)) return false;
+  return /^[A-Za-z0-9_-]+$/.test(trimmed);
+}
+
 function findMatchingBingSite(sites, projectUrl, projectDomain) {
-  const domain = String(projectDomain || hostFromSite(projectUrl)).toLowerCase();
+  const domain = hostFromSite(projectDomain || projectUrl);
   if (!domain) return "";
-  const origin = projectUrl ? new URL(projectUrl).origin.replace(/\/$/, "").toLowerCase() : "";
+  const origin = projectUrl ? canonicalBingSiteUrl(projectUrl) : "";
   const match = sites.find((site) => {
     const siteUrl = normalizeBingSite(site);
-    return hostFromSite(siteUrl) === domain || String(siteUrl || "").replace(/\/$/, "").toLowerCase() === origin;
+    return hostFromSite(siteUrl) === domain || canonicalBingSiteUrl(siteUrl) === origin;
   });
   return normalizeBingSite(match) || "";
 }
@@ -98,8 +148,25 @@ function buildBingData(selectedSite, rawQueries, rawPages) {
 }
 
 export default function BingWebmaster() {
+  const authContext = useAuth();
   const { projectUrl, projectDomain, hasProject, displayUrl } = useSelectedProjectDomain();
-  const [apiKey, setApiKey] = useState(() => localStorage.getItem(BING_KEY_STORAGE) || "");
+  const { result: savedBingResult, saveResult: saveBingResult, persistenceError } = useTechSeoToolResult({
+    toolKey: "bing",
+    project: authContext?.project || null,
+    projectUrl,
+    emptyResult: EMPTY_BING_RESULT,
+  });
+  const [apiKey, setApiKey] = useState(() => {
+    try {
+      const envKey =
+        (typeof import.meta !== "undefined" && import.meta.env && import.meta.env.VITE_BING_WEBMASTER_API_KEY) ||
+        (typeof process !== "undefined" && process.env && process.env.VITE_BING_WEBMASTER_API_KEY) ||
+        "";
+      return sessionStorage.getItem(BING_KEY_STORAGE) || envKey || "";
+    } catch {
+      return (typeof process !== "undefined" && process.env && process.env.VITE_BING_WEBMASTER_API_KEY) || "";
+    }
+  });
   const [showKey, setShowKey] = useState(false);
   const [sites, setSites] = useState([]);
   const [selectedSite, setSelectedSite] = useState("");
@@ -114,17 +181,31 @@ export default function BingWebmaster() {
     setError("");
   }, [projectUrl]);
 
+  // Load saved Bing result when available
+  useEffect(() => {
+    if (savedBingResult && savedBingResult.totals) {
+      setPerformanceData(savedBingResult);
+    }
+  }, [savedBingResult]);
+
   function toggleSection(key) {
     setOpenSections((prev) => ({ ...prev, [key]: !prev[key] }));
   }
 
   async function bingApi(action, params = {}) {
+    const trimmedKey = apiKey.trim();
+    if (!isValidBingApiKey(trimmedKey)) {
+      throw new Error("Please enter a valid Bing Webmaster API key.");
+    }
+
     const url = new URL("/api/webmaster-api", window.location.origin);
     url.searchParams.set("service", "bing");
     url.searchParams.set("action", action);
-    url.searchParams.set("apikey", apiKey.trim());
+    url.searchParams.set("apikey", trimmedKey);
     Object.entries(params).forEach(([key, value]) => url.searchParams.set(key, value));
-    const response = await fetch(url.toString());
+    const token = getSessionToken();
+    const headers = token ? { Authorization: `Bearer ${token}` } : undefined;
+    const response = await fetch(url.toString(), { headers });
     const payload = await response.json().catch(() => null);
     if (!response.ok) throw new Error(payload?.error || `Bing API returned HTTP ${response.status}`);
     return payload;
@@ -135,12 +216,16 @@ export default function BingWebmaster() {
       setError("Enter your Bing Webmaster API key first.");
       return;
     }
+    if (!isValidBingApiKey(apiKey)) {
+      setError("Please enter a valid Bing Webmaster API key.");
+      return;
+    }
     setLoading(true);
     setError("");
     try {
-      localStorage.setItem(BING_KEY_STORAGE, apiKey.trim());
+      sessionStorage.setItem(BING_KEY_STORAGE, apiKey.trim());
       const payload = await bingApi("getSites");
-      const list = payload.d || payload.sites || [];
+      const list = bingSitesFromPayload(payload);
       setSites(list);
       const matchedSite = findMatchingBingSite(list, projectUrl, projectDomain);
       if (matchedSite) setSelectedSite(matchedSite);
@@ -157,6 +242,10 @@ export default function BingWebmaster() {
     const site = selectedSite || findMatchingBingSite(sites, projectUrl, projectDomain);
     if (!apiKey.trim()) {
       setError("Enter your Bing Webmaster API key first.");
+      return;
+    }
+    if (!isValidBingApiKey(apiKey)) {
+      setError("Please enter a valid Bing Webmaster API key.");
       return;
     }
     if (!hasProject) {
@@ -176,6 +265,14 @@ export default function BingWebmaster() {
       ]);
       const next = buildBingData(site, statsData.d || statsData.queries || [], pagesData.d || pagesData.pages || []);
       setPerformanceData(next);
+      
+      // Persist the Bing result to project_data
+      try {
+        await saveBingResult(next);
+      } catch (saveErr) {
+        console.warn("Failed to save Bing result:", saveErr?.message);
+        // Don't break the UI if saving fails - just log the warning
+      }
     } catch (err) {
       setError(err?.message || "Could not fetch Bing performance data.");
     } finally {
@@ -184,7 +281,7 @@ export default function BingWebmaster() {
   }
 
   function clearConnection() {
-    localStorage.removeItem(BING_KEY_STORAGE);
+    sessionStorage.removeItem(BING_KEY_STORAGE);
     setApiKey("");
     setSites([]);
     setSelectedSite("");
@@ -215,23 +312,30 @@ export default function BingWebmaster() {
   }
 
   return (
-    <div className="mx-auto max-w-5xl">
-      <div className="flex items-center justify-center gap-3">
-        <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-brand-500/20 ring-1 ring-brand-500/30">
-          <BarChart3 className="h-6 w-6 text-brand-400" />
-        </div>
-        <div>
-          <div className="flex items-center gap-2">
-            <h1 className="font-display text-2xl font-black text-white">Bing Webmaster Audit</h1>
-            <HelpCircle className="h-4 w-4 text-white/25" />
+    <div className="">
+      {/* ─── Hero Header ─── */}
+      <div className="bing-hero">
+        <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
+          <div className="bing-title flex items-center gap-3">
+            <BarChart3 className="h-5 w-5" />
+            <div>
+              <div className="flex items-center gap-2">
+                <h1 className="font-display">Bing Webmaster Audit</h1>
+                <HelpCircle className="bing-help h-4 w-4" />
+              </div>
+              <p className="bing-description">Connect Bing Webmaster Tools to analyze query, page, and CTR opportunities.</p>
+            </div>
           </div>
-          <p className="text-sm text-white/40">Connect Bing Webmaster Tools to analyze query, page, and CTR opportunities.</p>
-        </div>
-      </div>
 
-      <div className="mt-8 rounded-3xl border border-white/[0.06] bg-ink-800 p-6">
-        <div className="grid gap-3 lg:grid-cols-[1.4fr_1fr_auto]">
-          <div className="flex items-center gap-2 rounded-xl border border-white/[0.08] bg-ink-900/80 px-4 py-3">
+          <button onClick={fetchSites} disabled={loading} className="ui-button ui-button-primary bing-connect-button">
+            {loading ? "Connecting..." : "Connect Bing"}
+          </button>
+        </div>
+
+        {/* Credentials + property meta row */}
+        <div className="bing-meta">
+          <div className="bing-key-field">
+            <Key className="h-4 w-4" />
             <Key className="h-4 w-4 text-brand-400/70" />
             <input
               type={showKey ? "text" : "password"}
@@ -240,37 +344,38 @@ export default function BingWebmaster() {
               placeholder="Enter your Bing Webmaster API key"
               className="flex-1 bg-transparent text-sm text-white placeholder:text-white/25 focus:outline-none"
             />
-            <button onClick={() => setShowKey(!showKey)} className="text-white/30 hover:text-white/60">
+            <button onClick={() => setShowKey(!showKey)} className="bing-key-toggle" aria-label={showKey ? "Hide API key" : "Show API key"}>
               {showKey ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
             </button>
           </div>
-          <div className="truncate rounded-xl border border-white/10 bg-ink-900 px-4 py-3 text-sm text-white/70">
-            {selectedSite || displayUrl}
-          </div>
-          <button onClick={fetchSites} disabled={loading} className="rounded-xl bg-gradient-to-r from-brand-500 to-amber-500 px-5 py-3 text-sm font-bold text-white shadow-lg shadow-brand-500/25 transition hover:shadow-brand-500/40 disabled:opacity-60">
-            {loading ? "Connecting..." : "Connect Bing"}
-          </button>
+          <span className="bing-site truncate">{selectedSite || displayUrl}</span>
         </div>
 
-        <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
-          <p className="text-xs text-white/40">
-            API key path: <span className="text-brand-300">Bing Webmaster Tools - Settings - API Access</span>
+        <div className="bing-actions">
+          <p className="bing-hint">
+            API key path: <span>Bing Webmaster Tools - Settings - API Access</span>
           </p>
-          <div className="flex items-center gap-2">
-            <button onClick={analyze} disabled={loading} className="flex items-center gap-1.5 rounded-lg bg-emerald-500 px-4 py-2 text-xs font-bold text-white disabled:opacity-60">
+          <div className="flex flex-wrap items-center gap-2">
+            <button onClick={analyze} disabled={loading} className="ui-button bing-analyze-button">
               <RefreshCw className={`h-3.5 w-3.5 ${loading ? "animate-spin" : ""}`} /> Analyze Site
             </button>
-            <button onClick={downloadReport} disabled={!performanceData} className="flex items-center gap-1.5 rounded-lg border border-white/10 bg-white/[0.03] px-4 py-2 text-xs font-bold text-white/70 disabled:opacity-40">
+            <button onClick={downloadReport} disabled={!performanceData} className="ui-button bing-secondary-button">
               <Download className="h-3.5 w-3.5" /> Download CSV
             </button>
-            <button onClick={clearConnection} className="rounded-lg border border-white/10 px-3 py-2 text-xs text-white/45 hover:bg-white/[0.04]">Clear</button>
+            <button onClick={clearConnection} className="ui-button bing-secondary-button">Clear</button>
           </div>
         </div>
 
-        {error && <p className="mt-3 flex items-center gap-2 text-xs font-semibold text-rose-300"><AlertTriangle className="h-3.5 w-3.5" /> {error}</p>}
+        {(error || persistenceError) && (
+          <div className="app-alert app-alert-error mt-3">
+            <AlertTriangle className="h-4 w-4 flex-shrink-0" /> {error || persistenceError}
+          </div>
+        )}
+      </div>
 
-        <div className="mt-6 border-t border-white/[0.06] pt-5">
-          <h3 className="text-sm font-bold text-white/70">How to get your API key:</h3>
+      {/* ─── Setup guide ─── */}
+      <div className="bing-guide">
+          <h3 className="bing-guide-title">How to get your API key:</h3>
           <ol className="mt-3 space-y-2.5">
             {API_KEY_STEPS.map((step, i) => (
               <li key={i} className="flex items-start gap-3">
@@ -285,7 +390,6 @@ export default function BingWebmaster() {
               </li>
             ))}
           </ol>
-        </div>
       </div>
 
       {performanceData && (
