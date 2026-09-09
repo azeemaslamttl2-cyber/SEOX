@@ -78,12 +78,116 @@ export function categorizeResources(resources = []) {
   return buckets;
 }
 
+function resourceBucket(item) {
+  const type = String(item?.resourceType || item?.type || "").toLowerCase();
+  const url = resourceUrl(item).toLowerCase();
+  return type.includes("css") || /\.css(?:[?#]|$)/.test(url) ? "css"
+    : type.includes("javascript") || type.includes("script") || /\.m?js(?:[?#]|$)/.test(url) ? "javascript"
+    : type.includes("image") || /\.(?:jpe?g|png|gif|webp|avif|svg|ico)(?:[?#]|$)/.test(url) ? "images"
+    : type.includes("font") || /\.(?:woff2?|ttf|otf|eot)(?:[?#]|$)/.test(url) ? "fonts"
+    : type.includes("video") || /\.(?:mp4|webm|mov)(?:[?#]|$)/.test(url) ? "videos"
+    : type.includes("html") || type.includes("document") ? "html" : "other";
+}
+
+const RESOURCE_AUDITS = {
+  "unused-css-rules": { problem: "unused_css", bucket: "css", description: "A significant amount of CSS is unused on this page." },
+  "unused-javascript": { problem: "unused_javascript", bucket: "javascript", description: "A significant amount of JavaScript is unused during the page load." },
+  "render-blocking-resources": { problem: "render_blocking_resource", description: "This resource delays the initial rendering of the page." },
+  "uses-responsive-images": { problem: "improperly_sized_image", bucket: "images", description: "The image is larger than its displayed dimensions and should be resized." },
+  "modern-image-formats": { problem: "outdated_image_format", bucket: "images", description: "The image could be served in a more efficient modern format." },
+  "efficient-animated-content": { problem: "inefficient_animated_image", bucket: "images", description: "This animated image is inefficient and should use a more suitable format." },
+  "legacy-javascript": { problem: "legacy_javascript", bucket: "javascript", description: "This JavaScript includes legacy syntax that increases download and processing cost." },
+  "uses-long-cache-ttl": { problem: "short_cache_ttl", description: "This resource has a cache lifetime that is shorter than recommended." },
+  "uses-text-compression": { problem: "uncompressed_resource", description: "This resource is not transferred with efficient text compression." },
+};
+
+function itemDetails(item) {
+  return Object.fromEntries(
+    Object.entries(item || {}).filter(([key, value]) =>
+      key !== "url" && key !== "node" && key !== "location" && key !== "source" &&
+      ["string", "number", "boolean"].includes(typeof value)
+    )
+  );
+}
+
+export function findProblemResources(lighthouseResults = []) {
+  const records = new Map();
+
+  for (const lhr of lighthouseResults) {
+    for (const [auditId, audit] of Object.entries(lhr?.audits || {})) {
+      const config = RESOURCE_AUDITS[auditId] || {
+        problem: `performance_${auditId.replace(/[^a-z0-9]+/gi, "_")}`,
+        description: audit?.title || "A performance problem was detected for this resource.",
+      };
+      if (!audit || audit.score !== 0 || !Array.isArray(audit.details?.items)) continue;
+
+      for (const item of audit.details.items) {
+        const url = resourceUrl(item);
+        if (!url) continue;
+        const bucket = config.bucket || resourceBucket(item);
+        const key = url;
+        const details = itemDetails(item);
+        const record = records.get(key) || {
+          resource_url: url,
+          resource_type: bucket === "css" ? "css"
+            : bucket === "javascript" ? "javascript"
+            : bucket === "images" ? "image"
+            : bucket === "fonts" ? "font"
+            : bucket === "videos" ? "video"
+            : bucket === "html" ? "html"
+            : String(item.resourceType || item.type || "other").toLowerCase(),
+          problems: [],
+          details: {},
+          recommended_actions: [],
+          bucket,
+        };
+        if (!record.problems.some((problem) => problem.type === config.problem)) {
+          record.problems.push({
+            type: config.problem,
+            description: config.description || audit.title || "A performance problem was detected for this resource.",
+            details,
+          });
+        }
+        Object.assign(record.details, details);
+        const recommendation = audit.title || "Optimize this resource based on the reported metrics.";
+        if (!record.recommended_actions.includes(recommendation)) record.recommended_actions.push(recommendation);
+        records.set(key, record);
+      }
+    }
+  }
+
+  const buckets = { css: [], javascript: [], images: [], fonts: [], videos: [], html: [], other: [] };
+  const publicRecords = [];
+  for (const record of records.values()) {
+    const { bucket, ...publicRecord } = record;
+    if (publicRecord.recommended_actions.length === 1) {
+      publicRecord.recommended_action = publicRecord.recommended_actions[0];
+    }
+    delete publicRecord.recommended_actions;
+    buckets[bucket].push(publicRecord);
+    publicRecords.push(publicRecord);
+  }
+  return { ...buckets, all: publicRecords };
+}
+
+function problemSummary(problems) {
+  const counts = Object.fromEntries(Object.entries(problems).filter(([bucket]) => bucket !== "all").map(([bucket, items]) => [
+    bucket,
+    new Set(items.map((item) => item.resource_url)).size,
+  ]));
+  return {
+    total_problematic_resources: problems.all.length,
+    ...counts,
+  };
+}
+
 export function buildSpeedResult(targetUrl, mobileData, desktopData, crawlData, resourceData = {}, options = {}) {
   const mobileLhr = mobileData?.lighthouseResult || {};
   const desktopLhr = desktopData?.lighthouseResult || {};
   const audits = desktopLhr.audits || mobileLhr.audits || {};
   const audit = crawlData?.audit || {};
   const resources = Array.isArray(crawlData?.resources) ? crawlData.resources : [];
+  const problems = findProblemResources([mobileLhr, desktopLhr]);
   const cdnHits = collectCdnHits(resources);
   const mobileScore = scoreFromCategory(mobileData) || Math.max(0, Math.min(100, 100 - Math.round((crawlData?.loadTime || 0) / 100)));
   const desktopScore = scoreFromCategory(desktopData) || mobileScore;
@@ -145,7 +249,10 @@ export function buildSpeedResult(targetUrl, mobileData, desktopData, crawlData, 
       cdnResources: cdnHits.length,
       cdnExamples: cdnHits.slice(0, 5),
     },
-    resourceDetails: resourceData && Object.keys(resourceData).length ? resourceData : categorizeResources(resources),
+    resourceDetails: resourceData && Object.keys(resourceData).length ? resourceData : problems,
+    problems,
+    problematic_resources: problems.all,
+    problem_summary: problemSummary(problems),
   };
 
   if (options.includeRaw) {

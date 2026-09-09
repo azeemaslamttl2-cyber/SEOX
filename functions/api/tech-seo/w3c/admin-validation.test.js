@@ -18,3 +18,4 @@ test('admin validation route rejects missing admin token and returns app-style e
   assert.equal(payload.success, false);
   assert.match(String(payload.message || payload.error || ''), /admin_token/i);
 });
+

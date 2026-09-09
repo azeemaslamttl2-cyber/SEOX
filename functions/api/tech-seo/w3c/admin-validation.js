@@ -1,6 +1,6 @@
-import { configureMysqlConnection, queryOne } from "../../../_lib/mysql.js";
+import { configureMysqlConnection, queryOne, update } from "../../../_lib/mysql.js";
 import { jsonResponse, corsHeaders } from "../../../_lib/http.js";
-import { normalizeW3CInputUrl, summarizeW3CResponse, buildW3CApiResult } from "./validate.js";
+import { mergeW3CValidationReport, normalizeW3CInputUrl, summarizeW3CResponse, buildW3CApiResult } from "./validate.js";
 
 const MAX_TOKEN_LENGTH = 512;
 
@@ -39,6 +39,54 @@ async function verifyAdminToken(token, env) {
     throw error;
   }
   return admin;
+}
+
+function parseProjectData(value) {
+  if (!value) return {};
+  if (typeof value === "object" && !Array.isArray(value)) return value;
+  try {
+    const parsed = JSON.parse(value);
+    return parsed && typeof parsed === "object" && !Array.isArray(parsed) ? parsed : {};
+  } catch {
+    return {};
+  }
+}
+
+function projectDomain(value) {
+  try {
+    return new URL(value).hostname.replace(/^www\./i, "").toLowerCase();
+  } catch {
+    return "";
+  }
+}
+
+async function persistW3CValidationReport(env, projectId, sourceUrl, report) {
+  configureMysqlConnection(env);
+  const domain = projectDomain(sourceUrl);
+  const row = projectId
+    ? await queryOne(
+        "SELECT project_id, project_data FROM user_projects WHERE project_id = ? LIMIT 1",
+        [projectId]
+      )
+    : await queryOne(
+        `SELECT project_id, project_data FROM user_projects
+         WHERE LOWER(domain) = ? OR LOWER(full_url) LIKE ?
+         ORDER BY updated_at DESC LIMIT 1`,
+        [domain, `%${domain}%`]
+      );
+
+  if (!row) {
+    const error = new Error("Project not found for W3C validation.");
+    error.status = 404;
+    throw error;
+  }
+
+  const merged = mergeW3CValidationReport(parseProjectData(row.project_data), report);
+  await update(
+    "UPDATE user_projects SET project_data = ?, updated_at = NOW() WHERE project_id = ?",
+    [JSON.stringify(merged), row.project_id]
+  );
+  return row.project_id;
 }
 
 async function validateWithW3C(url) {
@@ -105,6 +153,29 @@ export async function onRequest({ request, env }) {
         docs: "https://validator.w3.org/nu/about.html",
       },
     });
+    const storedReport = {
+      url: targetUrl.toString(),
+      status: summary.status === "issues" || summary.status === "warning" ? "completed" : "completed",
+      error_count: summary.totalErrors,
+      warning_count: summary.totalWarnings,
+      errors: summary.messages.filter((item) => item.type === "error"),
+      warnings: summary.messages.filter((item) => item.type === "warning"),
+      messages: summary.messages,
+      total_messages: summary.totalMessages,
+      validated_at: summary.generatedAt,
+      validator: response.data.validator,
+    };
+    const savedProjectId = await persistW3CValidationReport(
+      env,
+      String(body?.project_id || body?.projectId || "").trim(),
+      targetUrl.toString(),
+      storedReport
+    );
+
+    response.message = "W3C validation completed and project data updated successfully";
+    response.data.w3c_validation = storedReport;
+    response.data.project_id = savedProjectId;
+    response.data.saved_to_project_data = true;
 
     return jsonResponse(response, 200, headers);
   } catch (error) {

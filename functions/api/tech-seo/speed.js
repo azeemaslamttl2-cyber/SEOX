@@ -139,17 +139,12 @@ async function pageSpeed(target, strategy, env) {
 }
 
 export async function onRequest({ request, env }) {
-  const headers = { ...corsHeaders("GET, POST, OPTIONS"), "Cache-Control": "no-store" };
+  const headers = { ...corsHeaders("POST, OPTIONS"), "Cache-Control": "no-store" };
   if (request.method === "OPTIONS") return emptyResponse(204, headers);
-  if (request.method !== "GET" && request.method !== "POST") {
-    return jsonResponse({ success: false, error: "Method not allowed. Use GET." }, 405, headers);
-  }
+  if (request.method !== "POST") return jsonResponse({ success: false, error: "Method not allowed. Use POST." }, 405, headers);
 
   try {
-    const query = new URL(request.url).searchParams;
-    const body = request.method === "GET"
-      ? { admin_token: query.get("admin_token") || "", url: query.get("url") || "" }
-      : await readJson(request);
+    const body = await readJson(request);
     const user = await authenticate(request, body, env);
     if (!String(body?.url || "").trim()) fail("url is required.", 400);
     const target = parsePublicHttpUrl(normalizeSpeedUrl(body.url), "url");
@@ -162,7 +157,7 @@ export async function onRequest({ request, env }) {
       pageSpeed(target.toString(), "mobile", env),
       pageSpeed(target.toString(), "desktop", env),
     ]);
-    const result = buildSpeedResult(target.toString(), mobileData, desktopData, crawlData, {}, { includeRaw: true });
+    const result = buildSpeedResult(target.toString(), mobileData, desktopData, crawlData);
     const latest = await queryOne(
       "SELECT project_data FROM user_projects WHERE project_id = ? AND (user_id = ? OR ? IS NULL) LIMIT 1",
       [project.project_id, user.uid, user.uid]

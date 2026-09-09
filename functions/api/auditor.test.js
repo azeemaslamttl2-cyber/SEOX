@@ -66,6 +66,28 @@ test('Auditor API validates missing project_id and url', async () => {
   assert.match(data.message, /project_id or url is required/i);
 });
 
+test('Auditor API accepts configured admin token in the bearer header', async () => {
+  const response = await onRequest({
+    request: request({}, { headers: { Authorization: 'Bearer valid-token' } }),
+    env: { ADMIN_TOKEN: 'valid-token' },
+  });
+  const data = await response.json();
+  assert.equal(response.status, 400);
+  assert.equal(data.status, 'validation_error');
+  assert.match(data.message, /project_id or url/i);
+});
+
+test('Auditor API accepts camelCase adminToken in the request body', async () => {
+  const response = await onRequest({
+    request: request({ adminToken: 'valid-token' }),
+    env: { ADMIN_TOKEN: 'valid-token' },
+  });
+  const data = await response.json();
+  assert.equal(response.status, 400);
+  assert.equal(data.status, 'validation_error');
+  assert.match(data.message, /project_id or url/i);
+});
+
 test('Auditor calculation engine produces all 24 menu sections with complete data', () => {
   const sampleProject = {
     id: 'proj_test_123',
