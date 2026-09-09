@@ -367,6 +367,26 @@ async function persistToolResultToProjectData(userId, projectId, toolKey, result
 }
 
 async function loadToolResult(userId, projectId, toolKey) {
+  // The speed endpoint writes directly to user_projects.project_data.speed.
+  // Read that canonical value first so a prior tool_results row cannot mask a
+  // newer API result after the page is refreshed.
+  if (toolKey === "speed") {
+    const row = await queryOne(
+      `SELECT project_data, full_url, updated_at
+       FROM user_projects
+       WHERE user_id = ? AND project_id = ? LIMIT 1`,
+      [userId, projectId]
+    );
+    const result = parseObjectField(row?.project_data).speed;
+    if (result && typeof result === "object" && !Array.isArray(result)) {
+      return {
+        result,
+        projectUrl: row.full_url || result.url || "",
+        updatedAt: row.updated_at || null,
+      };
+    }
+  }
+
   // Tool results have their own table so each analysis can be loaded without
   // rewriting the entire project's JSON payload.
   const stored = await queryOne(
@@ -400,7 +420,14 @@ async function loadToolResult(userId, projectId, toolKey) {
 
   if (row && row.project_data) {
     const data = stripToolResultsFromProjectData(row.project_data);
-    return data[toolKey] || null;
+    const result = data[toolKey];
+    if (result && typeof result === "object" && !Array.isArray(result)) {
+      return {
+        result,
+        projectUrl: result.url || "",
+        updatedAt: null,
+      };
+    }
   }
   return null;
 }
