@@ -157,7 +157,7 @@ export async function onRequest({ request, env }) {
       pageSpeed(target.toString(), "mobile", env),
       pageSpeed(target.toString(), "desktop", env),
     ]);
-    const result = buildSpeedResult(target.toString(), mobileData, desktopData, crawlData, {}, { includeRaw: true });
+    const result = buildSpeedResult(target.toString(), mobileData, desktopData, crawlData);
     const latest = await queryOne(
       "SELECT project_data FROM user_projects WHERE project_id = ? AND (user_id = ? OR ? IS NULL) LIMIT 1",
       [project.project_id, user.uid, user.uid]

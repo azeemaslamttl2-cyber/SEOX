@@ -3,21 +3,41 @@ import process from 'node:process';
 
 let pool = null;
 let connectionEnv = process.env;
+let connectionKey = null;
+
+function getConnectionKey(env = process.env) {
+  return [
+    env.MYSQL_HOST || "",
+    env.MYSQL_PORT || "3306",
+    env.MYSQL_USER || "",
+    env.MYSQL_PASSWORD || "",
+    env.MYSQL_DATABASE || "",
+  ].join("\u001f");
+}
 
 // Vite loads .env files for its configuration but does not copy those values
 // into process.env.  API middleware supplies that loaded environment per
 // request, so retain it for the MySQL helpers used by the API handler.
 export function configureMysqlConnection(env) {
-  if (env && env !== connectionEnv) {
+  if (!env) return;
+  const nextKey = getConnectionKey(env);
+  if (connectionKey === null) connectionKey = getConnectionKey(connectionEnv);
+  if (nextKey === connectionKey) {
     connectionEnv = env;
-    pool = null;
-  } else if (!connectionEnv && env) {
-    connectionEnv = env;
+    return;
   }
+
+  const previousPool = pool;
+  connectionEnv = env;
+  connectionKey = nextKey;
+  pool = null;
+  if (previousPool) previousPool.end().catch(() => {});
 }
 
 export function getPool(env = connectionEnv) {
   if (!pool) {
+    connectionEnv = env;
+    connectionKey = getConnectionKey(env);
     pool = mysql.createPool({
       host: env.MYSQL_HOST,
       port: Number(env.MYSQL_PORT),

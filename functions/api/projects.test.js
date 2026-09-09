@@ -280,6 +280,37 @@ test("saveToolResult persists speed_test result to project_data", () => {
   assert.deepEqual(loaded.result.mobile.score, 65);
 });
 
+test("saveToolResult persists the complete speed problem response without losing project data", () => {
+  const userId = "user-speed-problems";
+  const projectId = "proj-speed-problems";
+  const problematicResources = [
+    {
+      resource_url: "https://example.com/app.js",
+      resource_type: "javascript",
+      problems: [{ type: "unused_javascript", description: "Unused JavaScript detected." }],
+      details: { wastedBytes: 1200 },
+    },
+  ];
+  const speedResult = {
+    url: "https://example.com/",
+    problematic_resources: problematicResources,
+    problems: { css: [], javascript: problematicResources, images: [], fonts: [], videos: [], html: [], other: [], all: problematicResources },
+    problem_summary: { total_problematic_resources: 1, javascript: 1 },
+  };
+
+  setupUserProject(userId, projectId, { eeat: { score: 80 }, robots: { status: "ok" } });
+  const saveResult = mockSaveToolResult(userId, projectId, "speed", {
+    result: speedResult,
+    projectUrl: "https://example.com",
+  });
+
+  assert.equal(saveResult.success, true);
+  const stored = mockData.users.get(`${userId}:${projectId}`).project_data;
+  assert.deepEqual(stored.speed.problematic_resources, problematicResources);
+  assert.deepEqual(stored.eeat, { score: 80 });
+  assert.deepEqual(stored.robots, { status: "ok" });
+});
+
 test("saveToolResult persists duplicate result to project_data", () => {
   const userId = "user-dup";
   const projectId = "proj-dup2";

@@ -32,15 +32,18 @@ function normalizeToken(value) {
 
 async function authenticate(request, body, env) {
   const authorization = String(request.headers.get('authorization') || '').replace(/^Bearer\s+/i, '').trim();
+  const token = authorization || normalizeToken(body?.admin_token || body?.adminToken);
+
   if (authorization) {
     try {
       return await requireUser(request, env);
-    } catch {
-      fail('Invalid or expired session.', 401);
+    } catch (sessionError) {
+      if (sessionError?.status === 503) throw sessionError;
     }
   }
 
-  const token = normalizeToken(body?.admin_token);
+  if (!token) fail('admin_token is required.', 400);
+  if (token.length > MAX_TOKEN_LENGTH) fail('Invalid admin token.', 401);
   const configured = String(env?.ADMIN_TOKEN || '').trim();
   if (configured && token === configured) return { id: 'configured-admin', uid: 'configured-admin' };
 

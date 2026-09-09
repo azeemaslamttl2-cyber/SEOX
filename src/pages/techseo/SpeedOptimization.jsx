@@ -29,6 +29,18 @@ const EMPTY_SPEED_RESULT = {
   sections: [],
   opportunities: [],
   resourceSummary: { totalResources: 0, cdnResources: 0, cdnExamples: [] },
+  problems: { css: [], javascript: [], images: [], fonts: [], videos: [], html: [], other: [], all: [] },
+  problematic_resources: [],
+  problem_summary: {
+    total_problematic_resources: 0,
+    css: 0,
+    javascript: 0,
+    images: 0,
+    fonts: 0,
+    videos: 0,
+    html: 0,
+    other: 0,
+  },
 };
 
 /* ── Score Ring Component ── */
@@ -94,6 +106,7 @@ export default function SpeedOptimization() {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [error, setError] = useState("");
   const [openSections, setOpenSections] = useState({});
+  const [openAffected, setOpenAffected] = useState({});
 
   useEffect(() => {
     setPagePath("");
@@ -103,6 +116,32 @@ export default function SpeedOptimization() {
 
   function toggleSection(id) {
     setOpenSections((prev) => ({ ...prev, [id]: !prev[id] }));
+  }
+
+  function resourcesForCheck(sectionId, checkName) {
+    const typeMap = {
+      "Remove Unused CSS": "unused_css",
+      "Remove Unused JavaScript": "unused_javascript",
+      "Avoid Render Blocking": "render_blocking_resource",
+      "Properly Size Images": "improperly_sized_image",
+      "Serve Next-Gen Formats": "outdated_image_format",
+      "Avoid Legacy JavaScript": "legacy_javascript",
+      "Enable Text Compression": "uncompressed_resource",
+      "Efficient Cache Policy": "short_cache_ttl",
+    };
+    const problemType = typeMap[checkName];
+    const resources = Array.isArray(d.problematic_resources)
+      ? d.problematic_resources
+      : Object.values(d.problems || {}).flat().filter((item) => item?.resource_url);
+    if (!problemType) return [];
+    return resources.filter((resource) =>
+      resource.problems?.some((problem) => problem.type === problemType)
+    );
+  }
+
+  function toggleAffected(sectionId, checkName) {
+    const key = `${sectionId}:${checkName}`;
+    setOpenAffected((prev) => ({ ...prev, [key]: !prev[key] }));
   }
 
   async function analyzeSpeed() {
@@ -333,11 +372,45 @@ export default function SpeedOptimization() {
                         {check.status === "pass" ? "✓ Pass" : "✕ Fail"}
                       </span>
                     </div>
-                    {check.affected > 0 && (
-                      <button className="mt-1 ml-8 flex items-center gap-1 text-[11px] text-blue-300 hover:underline">
-                        <ChevronDown className="h-3 w-3" /> Show {check.affected} affected resources
-                      </button>
-                    )}
+                    {check.affected > 0 && (() => {
+                      const affectedKey = `${section.id}:${check.name}`;
+                      const affectedResources = resourcesForCheck(section.id, check.name);
+                      const isOpen = Boolean(openAffected[affectedKey]);
+                      return (
+                        <div className="ml-8 mt-1">
+                          <button
+                            onClick={() => toggleAffected(section.id, check.name)}
+                            className="flex items-center gap-1 text-[11px] text-blue-300 hover:underline"
+                          >
+                            {isOpen ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
+                            {isOpen ? "Hide" : "Show"} {check.affected} affected resources
+                          </button>
+                          {isOpen && (
+                            <div className="mt-2 space-y-1 border-l border-blue-400/20 pl-3">
+                              {affectedResources.length ? affectedResources.map((resource) => (
+                                <a
+                                  key={resource.resource_url}
+                                  href={resource.resource_url}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  className="flex items-start gap-2 text-[11px] text-white/60 hover:text-blue-200"
+                                >
+                                  <ExternalLink className="mt-0.5 h-3 w-3 flex-shrink-0" />
+                                  <span className="min-w-0">
+                                    <span className="block break-all">{resource.resource_url}</span>
+                                    <span className="block text-white/35">
+                                      {resource.problems?.map((problem) => problem.description).join("; ")}
+                                    </span>
+                                  </span>
+                                </a>
+                              )) : (
+                                <span className="text-[11px] text-white/40">The affected URLs were not returned for this check.</span>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })()}
                   </div>
                 ))}
               </div>

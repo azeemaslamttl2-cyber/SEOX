@@ -1,13 +1,27 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { buildSpeedResult } from "../../../src/lib/speedTestResult.js";
+import { buildSpeedResult, findProblemResources } from "../../../src/lib/speedTestResult.js";
 import { mergeSpeedProjectData } from "./speed.js";
 
-test("speed result preserves every discovered resource URL by category", () => {
+test("speed result exposes only resources with detected performance problems", () => {
   const result = buildSpeedResult(
     "https://example.com/",
-    {},
-    {},
+    { lighthouseResult: { audits: {
+      "unused-css-rules": {
+        score: 0,
+        title: "Remove unused CSS",
+        details: { items: [{ url: "https://cdn.example.com/app.css", totalBytes: 82341, wastedBytes: 45231 }] },
+      },
+      "unused-javascript": {
+        score: 0,
+        title: "Remove unused JavaScript",
+        details: { items: [{ url: "https://cdn.example.com/app.js", totalBytes: 154320, wastedBytes: 78231 }] },
+      },
+      "modern-image-formats": {
+        score: 1,
+        details: { items: [{ url: "https://images.example.com/hero.webp" }] },
+      },
+    } } },
     {
       loadTime: 120,
       resources: [
@@ -20,17 +34,42 @@ test("speed result preserves every discovered resource URL by category", () => {
       ],
       audit: {},
     },
-    {},
-    { includeRaw: true }
+    {}
   );
 
-  assert.equal(result.resourceDetails.css[0].url, "https://cdn.example.com/site.css");
-  assert.equal(result.resourceDetails.javascript[0].url, "https://cdn.example.com/app.js");
-  assert.equal(result.resourceDetails.images[0].url, "https://images.example.com/hero.webp");
-  assert.equal(result.resourceDetails.fonts[0].url, "https://fonts.example.com/site.woff2");
-  assert.equal(result.resourceDetails.videos[0].url, "https://video.example.com/intro.mp4");
-  assert.equal(result.resourceDetails.other[0].url, "https://example.com/data.json");
-  assert.equal(result.resources.length, 6);
+  assert.equal(result.problems.css.length, 1);
+  assert.equal(result.problems.css[0].resource_url, "https://cdn.example.com/app.css");
+  assert.equal(result.problems.javascript[0].problems[0].type, "unused_javascript");
+  assert.equal(result.problems.images.length, 0);
+  assert.equal(result.problems.fonts.length, 0);
+  assert.equal(result.problem_summary.total_problematic_resources, 2);
+  assert.equal(result.resources, undefined);
+});
+
+test("resource problems from mobile and desktop audits are deduplicated", () => {
+  const problems = findProblemResources([
+    { audits: {
+      "render-blocking-resources": { score: 0, title: "Render blocking resources", details: { items: [{ url: "https://example.com/app.js", wastedMs: 120 }] } },
+      "unused-javascript": { score: 0, title: "Remove unused JavaScript", details: { items: [{ url: "https://example.com/app.js", wastedBytes: 500 }] } },
+    } },
+  ]);
+
+  assert.equal(problems.javascript.length, 1);
+  assert.equal(problems.javascript[0].problems.length, 2);
+  assert.equal(problems.javascript[0].details.wastedMs, 120);
+  assert.equal(problems.all.length, 1);
+});
+
+test("all resource types are returned when a failed audit provides a URL", () => {
+  const problems = findProblemResources([{ audits: {
+    "font-display": { score: 0, details: { items: [{ url: "https://example.com/site.woff2", resourceType: "Font" }] } },
+    "video-size": { score: 0, details: { items: [{ url: "https://example.com/intro.mp4", resourceType: "Video" }] } },
+    "document-size": { score: 0, details: { items: [{ url: "https://example.com/", resourceType: "Document" }] } },
+    "json-transfer": { score: 0, details: { items: [{ url: "https://example.com/data.json", resourceType: "XHR" }] } },
+  } }]);
+
+  assert.equal(problems.all.length, 4);
+  assert.deepEqual(problems.all.map((item) => item.resource_type), ["font", "video", "html", "xhr"]);
 });
 
 test("speed project merge preserves unrelated project data", () => {
