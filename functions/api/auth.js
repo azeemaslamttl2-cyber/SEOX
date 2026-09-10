@@ -3,6 +3,7 @@ import process from 'node:process';
 import { createPool } from 'mysql2/promise';
 import { SignJWT, jwtVerify } from 'jose';
 import { issueAccessToken } from '../_lib/auth-token.js';
+import { getAdminSetting, getAdminSettings } from '../_lib/app-settings.js';
 
 function normalizeEmail(email) {
   return String(email || '').trim().toLowerCase();
@@ -86,10 +87,11 @@ async function serializeUser(row, env) {
   };
 }
 
-function googleConfig(env = process.env) {
+async function googleConfig(env = process.env) {
+  const settings = await getAdminSettings(['google_client_id', 'google_client_secret'], env);
   return {
-    clientId: String(env.GOOGLE_CLIENT_ID || env.VITE_GOOGLE_CLIENT_ID || '').trim(),
-    clientSecret: String(env.GOOGLE_CLIENT_SECRET || '').trim(),
+    clientId: String(settings.google_client_id || '').trim(),
+    clientSecret: String(settings.google_client_secret || '').trim(),
   };
 }
 
@@ -142,8 +144,8 @@ function appOrigin(request, env = process.env) {
   return isLoopbackHostname(requestUrl.hostname) ? 'https://aismart.thetowertech.com' : requestUrl.origin;
 }
 
-function googleCallbackUrl(request, env) {
-  const override = String(env.GOOGLE_AUTH_REDIRECT_URI || env.GOOGLE_OAUTH_REDIRECT_URI || '').trim();
+async function googleCallbackUrl(request, env) {
+  const override = String(await getAdminSetting('google_auth_redirect_uri', env)).trim();
   if (override) {
     try {
       const url = new URL(override);
@@ -199,15 +201,15 @@ async function findOrCreateGoogleUser(pool, profile, env) {
 export async function onRequestGet({ request, env }) {
   try {
     const url = new URL(request.url);
-    const { clientId, clientSecret } = googleConfig(env);
+    const { clientId, clientSecret } = await googleConfig(env);
 
     if (url.pathname.endsWith('/google')) {
       if (!clientId || !clientSecret) {
-        return loginErrorRedirect(request, 'Google sign-in is not configured. Add GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET.', env);
+        return loginErrorRedirect(request, 'Google sign-in is not configured. Add the Google Client ID and Client Secret in Settings > General.', env);
       }
       const params = new URLSearchParams({
         client_id: clientId,
-        redirect_uri: googleCallbackUrl(request, env),
+        redirect_uri: await googleCallbackUrl(request, env),
         response_type: 'code',
         scope: 'openid email profile',
         state: await createGoogleState(url.searchParams.get('returnTo'), env),
@@ -218,7 +220,7 @@ export async function onRequestGet({ request, env }) {
 
     if (url.pathname.endsWith('/google/callback')) {
       if (!clientId || !clientSecret) {
-        return loginErrorRedirect(request, 'Google sign-in is not configured. Add GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET.', env);
+        return loginErrorRedirect(request, 'Google sign-in is not configured. Add the Google Client ID and Client Secret in Settings > General.', env);
       }
       if (url.searchParams.get('error')) {
         return loginErrorRedirect(request, url.searchParams.get('error_description') || 'Google sign-in was cancelled.', env);
@@ -235,7 +237,7 @@ export async function onRequestGet({ request, env }) {
           code,
           client_id: clientId,
           client_secret: clientSecret,
-          redirect_uri: googleCallbackUrl(request, env),
+          redirect_uri: await googleCallbackUrl(request, env),
           grant_type: 'authorization_code',
         }),
       });

@@ -3,6 +3,7 @@ import { corsHeaders, emptyResponse, jsonResponse, readJson } from "../../_lib/h
 import { fetchPublicHttpUrl, parsePublicHttpUrl } from "../../_lib/url-security.js";
 import { parseCrawlText } from "../../_handlers/crawler-fetch.js";
 import { buildSpeedResult, normalizeSpeedUrl } from "../../../src/lib/speedTestResult.js";
+import { getAdminSetting } from "../../_lib/app-settings.js";
 
 const PAGE_SPEED_URL = "https://www.googleapis.com/pagespeedonline/v5/runPagespeed";
 function fail(message, status = 400) {
@@ -110,8 +111,8 @@ async function crawlTarget(target) {
 }
 
 async function pageSpeed(target, strategy, env) {
-  const apiKey = env?.PAGESPEED_API_KEY || process.env.PAGESPEED_API_KEY;
-  if (!apiKey) return { error: "PageSpeed API key not configured on server" };
+  const apiKey = await getAdminSetting("pagespeed_api_key", env);
+  if (!apiKey) return { error: "PageSpeed API key not configured. Add it in Settings > General." };
   const url = new URL(PAGE_SPEED_URL);
   url.searchParams.set("url", target);
   url.searchParams.set("key", apiKey);

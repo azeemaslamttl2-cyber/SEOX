@@ -32,6 +32,8 @@ import {
   Network,
   CreditCard,
   BrainCircuit,
+  SlidersHorizontal,
+  FolderKanban,
 } from "lucide-react";
 
 const nav = [
@@ -39,6 +41,7 @@ const nav = [
     section: "Overview",
     items: [
       { label: "Dashboard", to: "/dashboard", icon: LayoutDashboard },
+      { label: "Projects", to: "/projects", icon: FolderKanban },
     ],
   },
   {
@@ -118,6 +121,7 @@ const nav = [
   {
     section: "Settings",
     items: [
+      { label: "General", to: "/settings/general", icon: SlidersHorizontal },
       { label: "Stripe", to: "/settings/stripe", icon: CreditCard },
       { label: "DeepSeek API", to: "/settings/deepseek", icon: BrainCircuit },
     ],

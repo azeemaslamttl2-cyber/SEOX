@@ -25,6 +25,8 @@ import { onRequest as screamingFrogOnRequest } from "./functions/api/tech-seo/sc
 import { onRequest as screamingFrogReportDownloadOnRequest } from "./functions/api/tech-seo/screaming-frog/report-download.js";
 import { onRequest as screamingFrogUrlReportsOnRequest } from "./functions/api/tech-seo/screaming-frog/url-reports.js";
 import { onRequest as projectsOnRequest } from "./functions/api/projects.js";
+import { onRequest as generalSettingsOnRequest } from "./functions/api/settings/general.js";
+import { onRequest as publicSettingsOnRequest } from "./functions/api/settings/public.js";
 import { onRequest as projectDetailsOnRequest } from "./functions/api/project-details.js";
 import { onRequest as backlinksAnalyzeOnRequest } from "./functions/api/tech-seo/backlinks/analyze.js";
 import { onRequest as w3cValidateOnRequest } from "./functions/api/tech-seo/w3c/validate.js";
@@ -134,8 +136,13 @@ function sendUnauthorized(res, error) {
   });
 }
 
+// DELETE carries a JSON body in this API (for example the project id sent to
+// /api/projects), so it must be forwarded like the other write methods -
+// dropping it leaves the handler with an empty body.
+const METHODS_WITH_BODY = ["POST", "PUT", "PATCH", "DELETE"];
+
 async function readRawBody(req) {
-  if (!req || !["POST", "PUT", "PATCH"].includes(req.method)) return undefined;
+  if (!req || !METHODS_WITH_BODY.includes(req.method)) return undefined;
 
   return new Promise((resolve) => {
     const chunks = [];
@@ -544,6 +551,43 @@ function backlinksAnalyzeApiPlugin() {
     },
     configurePreviewServer(server) {
       registerBacklinksAnalyzeMiddleware(server);
+    },
+  };
+}
+
+// General Settings API. `admin_settings` is the single source of truth for the
+// application-wide credentials, so these routes must run in the Node process
+// that serves /api/* - registered for `vite dev` AND `vite preview` (:4173).
+const SETTINGS_ROUTES = {
+  "/api/settings/general": generalSettingsOnRequest,
+  "/api/settings/public": publicSettingsOnRequest,
+};
+
+function registerSettingsMiddleware(server) {
+  for (const [mountPath, handler] of Object.entries(SETTINGS_ROUTES)) {
+    server.middlewares.use(mountPath, async (req, res) => {
+      try {
+        const request = await createWebRequest(req, mountPath);
+        const response = await handler({ request, env: loadDevApiEnv() });
+        await sendWebResponse(res, response);
+      } catch (error) {
+        sendJson(res, error?.status || 500, {
+          error: "Settings request failed",
+          message: error?.message || "Unknown error",
+        });
+      }
+    });
+  }
+}
+
+function settingsApiPlugin() {
+  return {
+    name: "seox-settings-api",
+    configureServer(server) {
+      registerSettingsMiddleware(server);
+    },
+    configurePreviewServer(server) {
+      registerSettingsMiddleware(server);
     },
   };
 }
@@ -1952,7 +1996,7 @@ function sendJson(res, status, payload) {
 }
 
 export default defineConfig({
-  plugins: [react(), proxyApiPlugin(), deepseekApiPlugin(), deepseekSettingsApiPlugin(), fetchUrlMetaApiPlugin(), pagespeedApiPlugin(), speedApiPlugin(), wordpressSecurityApiPlugin(), screamingFrogApiPlugin(), webmasterApiPlugin(), autocompleteApiPlugin(), gscTokenApiPlugin(), gbpApiPlugin(), projectsApiPlugin(), projectDetailsApiPlugin(), backlinksAnalyzeApiPlugin(), w3cValidationApiPlugin(), expiredDomainsCheckApiPlugin(), backlinkCleanerApiPlugin(), backlinkIndexerApiPlugin(), keywordResearchApiPlugin(), ubersuggestApiPlugin(), authApiPlugin(), contentOutlineApiPlugin(), aiHelperApiPlugin(), textEditorApiPlugin(), domainSeparatorApiPlugin(), wordCounterApiPlugin(), botViewerApiPlugin(), daPaCheckerApiPlugin(), metaExtractorApiPlugin(), sitemapExtractorApiPlugin(), seoToolsApiPlugin(), promptTrackingApiPlugin(), brandSentimentApiPlugin(), citationFlowApiPlugin(), competitorResearchApiPlugin(), internalLinksApiPlugin(), aiChatApiPlugin(), llmsGeneratorApiPlugin(), aiModelCheckerApiPlugin(), aiCompatibilityApiPlugin(), semanticWriterEditorApiPlugin(), contentWriterApiPlugin(), auditorApiPlugin(), crawlerApiPlugin()],
+  plugins: [react(), proxyApiPlugin(), deepseekApiPlugin(), deepseekSettingsApiPlugin(), fetchUrlMetaApiPlugin(), pagespeedApiPlugin(), speedApiPlugin(), wordpressSecurityApiPlugin(), screamingFrogApiPlugin(), webmasterApiPlugin(), autocompleteApiPlugin(), gscTokenApiPlugin(), gbpApiPlugin(), projectsApiPlugin(), projectDetailsApiPlugin(), settingsApiPlugin(), backlinksAnalyzeApiPlugin(), w3cValidationApiPlugin(), expiredDomainsCheckApiPlugin(), backlinkCleanerApiPlugin(), backlinkIndexerApiPlugin(), keywordResearchApiPlugin(), ubersuggestApiPlugin(), authApiPlugin(), contentOutlineApiPlugin(), aiHelperApiPlugin(), textEditorApiPlugin(), domainSeparatorApiPlugin(), wordCounterApiPlugin(), botViewerApiPlugin(), daPaCheckerApiPlugin(), metaExtractorApiPlugin(), sitemapExtractorApiPlugin(), seoToolsApiPlugin(), promptTrackingApiPlugin(), brandSentimentApiPlugin(), citationFlowApiPlugin(), competitorResearchApiPlugin(), internalLinksApiPlugin(), aiChatApiPlugin(), llmsGeneratorApiPlugin(), aiModelCheckerApiPlugin(), aiCompatibilityApiPlugin(), semanticWriterEditorApiPlugin(), contentWriterApiPlugin(), auditorApiPlugin(), crawlerApiPlugin()],
   server: {
     port: 3000,
     host: true,

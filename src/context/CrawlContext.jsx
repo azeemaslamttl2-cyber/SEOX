@@ -160,15 +160,37 @@ function mergeProjects(...lists) {
   return Array.from(map.values());
 }
 
+// Covers every field the project editor can change, so an edit that only
+// touches the audit settings still propagates from ProjectsContext into the
+// crawl-side list.
+const SIGNATURE_FIELDS = [
+  "id",
+  "name",
+  "domain",
+  "protocol",
+  "scope",
+  "folder",
+  "schedule",
+  "userAgent",
+  "user_agent",
+  "urlLimit",
+  "url_limit",
+  "renderJs",
+  "render_js",
+  "respectRobots",
+  "respect_robots",
+  "notifyEmail",
+  "notify_email",
+  "updated_at",
+  "updatedAt",
+];
+
 function projectListSignature(list) {
   return (list || [])
     .map((item) =>
       [
-        item?.id,
-        item?.name,
-        item?.domain,
+        ...SIGNATURE_FIELDS.map((field) => item?.[field]),
         item?.fullUrl || item?.full_url || item?.url,
-        item?.updated_at,
       ].join("~")
     )
     .join("|");
@@ -533,7 +555,33 @@ export function CrawlProvider({ children }) {
     if (syncedSharedProjectsRef.current === sharedProjects) return;
     syncedSharedProjectsRef.current = sharedProjects;
 
-    const deleted = new Set(latestDeletedProjectIdsRef.current || []);
+    // A project deleted through ProjectsContext leaves crawl artefacts behind,
+    // so release them here. Only ids genuinely absent from the shared inventory
+    // count as deleted - never one merely filtered out of the list below.
+    const sharedIds = new Set((sharedProjects || []).map((item) => String(item?.id || item?.project_id)));
+    (latestProjectsRef.current || []).forEach((item) => {
+      if (!item?.id || sharedIds.has(String(item.id))) return;
+      delete crawlerSessionsRef.current[item.id];
+      dirtyProjectStatesRef.current.delete(item.id);
+      deleteCrawlProjectState(item.id).catch(() => {});
+      setProjectStates((states) => {
+        if (!(item.id in states)) return states;
+        const { [item.id]: _removed, ...rest } = states;
+        latestProjectStatesRef.current = rest;
+        return rest;
+      });
+    });
+
+    // Tombstones are unioned rather than replaced so a local deletion that has
+    // not reached the shared context yet is never resurrected. Applied before
+    // the early return below, which only guards the project list itself.
+    const nextDeletedProjectIds = Array.from(
+      new Set([...(latestDeletedProjectIdsRef.current || []), ...(sharedDeletedProjectIds || [])])
+    );
+    latestDeletedProjectIdsRef.current = nextDeletedProjectIds;
+    setDeletedProjectIds(nextDeletedProjectIds);
+
+    const deleted = new Set(nextDeletedProjectIds);
     const nextProjects = mergeProjects(sharedProjects).filter(
       (item) => !deleted.has(item.id) && !isMockProject(item)
     );
@@ -554,7 +602,14 @@ export function CrawlProvider({ children }) {
     latestSelectedProjectIdRef.current = nextSelectedId;
     setProjects(nextProjects);
     setSelectedProjectId(nextSelectedId);
-  }, [authUserId, sharedProjects, sharedProjectsReady, sharedSelectedProjectId, storageReady]);
+  }, [
+    authUserId,
+    sharedDeletedProjectIds,
+    sharedProjects,
+    sharedProjectsReady,
+    sharedSelectedProjectId,
+    storageReady,
+  ]);
 
   // Persist projectStates to IndexedDB, localStorage/sessionStorage, and debounced to MySQL
   useEffect(() => {

@@ -233,26 +233,53 @@ export function ProjectsProvider({ children }) {
    * CRUD - persist first, then update the context in place.
    * ------------------------------------------------------------------ */
 
-  const saveProject = useCallback(
-    async (project, meta = {}) => {
+  /**
+   * Persists a project and publishes it to the context.
+   *
+   * `saveProjectWithMeta` also rewrites the account-wide meta (selected project
+   * and the deleted-project tombstones) for every row, so both must carry the
+   * current values unless the caller deliberately changes them - otherwise an
+   * ordinary edit would silently reselect the project and erase the tombstones.
+   */
+  const persistProject = useCallback(
+    async (project, { selectedProjectId, deletedProjectIds }) => {
       const currentUid = uidRef.current;
       if (!currentUid || !project?.id) return null;
-      const nextSelectedProjectId = meta.selectedProjectId || project.id;
+
       const response = await saveProjectWithMeta(currentUid, project, {
-        selectedProjectId: nextSelectedProjectId,
-        deletedProjectIds: meta.deletedProjectIds || [],
+        selectedProjectId,
+        deletedProjectIds,
       });
-      // The POST response echoes the database row shape (project_id/project_name/
-      // stringified project_data), so the client-side project object we just
-      // persisted is the accurate value to publish. Either way, no extra GET.
-      applyProjectUpsert(project, { selectedProjectId: nextSelectedProjectId });
+      // Only reached when the write succeeded; a rejection leaves the context
+      // untouched. The POST echoes the database row shape (project_id /
+      // stringified project_data), so the client object we just persisted is
+      // the accurate value to publish - and no extra GET is needed either way.
+      applyProjectUpsert(project, { selectedProjectId });
       return response;
     },
     [applyProjectUpsert]
   );
 
-  const addProject = saveProject;
-  const updateProject = saveProject;
+  /** Creating a project selects it, matching the existing creation flow. */
+  const addProject = useCallback(
+    (project, meta = {}) =>
+      persistProject(project, {
+        selectedProjectId: meta.selectedProjectId || project?.id,
+        deletedProjectIds: meta.deletedProjectIds ?? payloadRef.current.deletedProjectIds,
+      }),
+    [persistProject]
+  );
+
+  /** Editing a project leaves the current selection alone. */
+  const updateProject = useCallback(
+    (project, meta = {}) =>
+      persistProject(project, {
+        selectedProjectId:
+          meta.selectedProjectId ?? payloadRef.current.selectedProjectId ?? project?.id,
+        deletedProjectIds: meta.deletedProjectIds ?? payloadRef.current.deletedProjectIds,
+      }),
+    [persistProject]
+  );
 
   const removeProject = useCallback(
     async (projectId) => {

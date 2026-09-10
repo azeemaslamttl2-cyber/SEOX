@@ -1,8 +1,4 @@
-import {
-  assertAdmin,
-  getStoredDocument,
-  upsertStoredDocument,
-} from "../_lib/mysql-storage.js";
+import { assertAdmin } from "../_lib/mysql-storage.js";
 import {
   corsHeaders,
   emptyResponse,
@@ -10,36 +6,39 @@ import {
   jsonResponse,
   readJson,
 } from "../_lib/http.js";
+import {
+  getAdminSettingMeta,
+  getAdminSettings,
+  maskSecret,
+  saveAdminSettings,
+} from "../_lib/app-settings.js";
 
-const SETTINGS_COLLECTION = "adminSettings";
-const SETTINGS_DOCUMENT = "apis";
-
-function settingsCollection(env) {
-  return env.ADMIN_SETTINGS_COLLECTION || SETTINGS_COLLECTION;
-}
-
-function maskSecret(value) {
-  const secret = String(value || "");
-  if (!secret) return "";
-  const suffix = secret.slice(-4);
-  return suffix ? `••••${suffix}` : "••••";
-}
-
-function publicSettings(document = {}, env = {}) {
-  const savedLogin = document.dataforseoLogin || "";
-  const savedPassword = document.dataforseoPassword || "";
-  const envLogin = env.DATAFORSEO_LOGIN || "";
-  const envPassword = env.DATAFORSEO_PASSWORD || "";
+/**
+ * Admin > APIs screen (DataForSEO credentials).
+ *
+ * This route predates the General Settings page and keeps its original request
+ * and response contract, but it now reads and writes the same `admin_settings`
+ * rows through the shared settings service. Both screens therefore edit one
+ * credential rather than two copies of it.
+ */
+async function publicSettings(env) {
+  const values = await getAdminSettings(["dataforseo_login", "dataforseo_password"], env);
+  const login = values.dataforseo_login || "";
+  const password = values.dataforseo_password || "";
+  const loginMeta = await getAdminSettingMeta("dataforseo_login", env);
+  const passwordMeta = await getAdminSettingMeta("dataforseo_password", env);
 
   return {
     dataforseo: {
-      login: savedLogin,
-      hasSavedCredentials: Boolean(savedLogin && savedPassword),
-      hasSavedPassword: Boolean(savedPassword),
-      passwordPreview: maskSecret(savedPassword),
-      envConfigured: Boolean(envLogin && envPassword),
-      updatedAt: document.dataforseoUpdatedAt || "",
-      updatedBy: document.dataforseoUpdatedBy || "",
+      login,
+      hasSavedCredentials: Boolean(login && password),
+      hasSavedPassword: Boolean(password),
+      passwordPreview: maskSecret(password),
+      // "Configured from the environment" now means the value is still coming
+      // from the .env migration fallback rather than from admin_settings.
+      envConfigured: loginMeta.source === "env" || passwordMeta.source === "env",
+      updatedAt: passwordMeta.updatedAt || loginMeta.updatedAt || "",
+      updatedBy: passwordMeta.updatedBy || loginMeta.updatedBy || "",
     },
   };
 }
@@ -54,11 +53,9 @@ export async function onRequest({ request, env }) {
 
   try {
     const decoded = await assertAdmin(request, env);
-    const collection = settingsCollection(env);
 
     if (request.method === "GET") {
-      const document = await getStoredDocument(env, collection, SETTINGS_DOCUMENT);
-      return jsonResponse(publicSettings(document || {}, env), 200, headers);
+      return jsonResponse(await publicSettings(env), 200, headers);
     }
 
     if (request.method === "POST") {
@@ -66,20 +63,19 @@ export async function onRequest({ request, env }) {
       const login = String(body.dataforseoLogin || "").trim();
       const password = String(body.dataforseoPassword || "").trim();
       const clearPassword = Boolean(body.clearDataforseoPassword);
-      const existing = await getStoredDocument(env, collection, SETTINGS_DOCUMENT);
 
-      const fields = {
-        dataforseoLogin: login,
-        dataforseoUpdatedAt: new Date().toISOString(),
-        dataforseoUpdatedBy: decoded.email || decoded.uid || "",
-      };
+      const values = { dataforseo_login: login };
+      // An empty password means "leave unchanged" unless the caller explicitly
+      // asked to clear it, so the UI never has to echo the stored secret back.
+      if (clearPassword) values.dataforseo_password = "";
+      else if (password) values.dataforseo_password = password;
 
-      if (password || clearPassword || !existing?.dataforseoPassword) {
-        fields.dataforseoPassword = clearPassword ? "" : password;
-      }
+      await saveAdminSettings(values, {
+        env,
+        updatedBy: decoded.email || decoded.uid || "",
+      });
 
-      const saved = await upsertStoredDocument(env, collection, SETTINGS_DOCUMENT, fields);
-      return jsonResponse(publicSettings(saved, env), 200, headers);
+      return jsonResponse(await publicSettings(env), 200, headers);
     }
 
     return jsonResponse({ error: "Method not allowed" }, 405, headers);

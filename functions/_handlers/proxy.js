@@ -1,12 +1,10 @@
 import { requireAuthenticatedUser } from "../_lib/request-auth.js";
 import { fetchPublicHttpUrl } from "../_lib/url-security.js";
-import { getStoredDocument } from "../_lib/mysql-storage.js";
+import { getAdminSettings } from "../_lib/app-settings.js";
 
 const MAX_PROXY_BODY_BYTES = 5_000_000;
 const DATAFORSEO_API_BASE = 'https://api.dataforseo.com/v3';
 const DATAFORSEO_MENTION_PLATFORMS = new Set(['google', 'chat_gpt']);
-const API_SETTINGS_COLLECTION = 'adminSettings';
-const API_SETTINGS_DOCUMENT = 'apis';
 
 function compactString(value, maxLength = 250) {
     return String(value || '').trim().slice(0, maxLength);
@@ -130,30 +128,32 @@ function firstTaskResult(data) {
     return data?.tasks?.[0]?.result?.[0] || null;
 }
 
-async function getSavedDataForSeoCredentials() {
+async function getSavedDataForSeoCredentials(env) {
     try {
-        const collection = process.env.ADMIN_SETTINGS_COLLECTION || API_SETTINGS_COLLECTION;
-        const settings = await getStoredDocument(process.env, collection, API_SETTINGS_DOCUMENT);
+        // admin_settings is the source of truth; the service handles the legacy
+        // `apis` document and the .env migration fallback internally.
+        const saved = await getAdminSettings(['dataforseo_login', 'dataforseo_password'], env);
         return {
-            login: String(settings?.dataforseoLogin || '').trim(),
-            password: String(settings?.dataforseoPassword || '').trim()
+            login: String(saved.dataforseo_login || '').trim(),
+            password: String(saved.dataforseo_password || '').trim()
         };
     } catch (error) {
-        console.warn('Could not load saved DataForSEO credentials:', error?.message || error);
+        // Never log the credential values themselves.
+        console.warn('Could not load DataForSEO credentials:', error?.message || error);
         return { login: '', password: '' };
     }
 }
 
-async function resolveDataForSeoCredentials(body = {}) {
+async function resolveDataForSeoCredentials(body = {}, env) {
     const requestLogin = typeof body?.dataforseoLogin === 'string' ? body.dataforseoLogin.trim() : '';
     const requestPassword = typeof body?.dataforseoApiKey === 'string'
         ? body.dataforseoApiKey.trim()
         : (typeof body?.dataforseoPassword === 'string' ? body.dataforseoPassword.trim() : '');
-    const saved = await getSavedDataForSeoCredentials();
+    const saved = await getSavedDataForSeoCredentials(env);
 
     return {
-        login: requestLogin || saved.login || process.env.DATAFORSEO_LOGIN || process.env.VITE_DATAFORSEO_LOGIN || '',
-        password: requestPassword || saved.password || process.env.DATAFORSEO_PASSWORD || process.env.VITE_DATAFORSEO_PASSWORD || ''
+        login: requestLogin || saved.login,
+        password: requestPassword || saved.password
     };
 }
 
@@ -230,12 +230,12 @@ async function handleDataForSEO(req, res) {
     const {
         login: DATAFORSEO_LOGIN,
         password: DATAFORSEO_PASSWORD
-    } = await resolveDataForSeoCredentials(req.body);
+    } = await resolveDataForSeoCredentials(req.body, req?.env);
 
     if (!DATAFORSEO_LOGIN || !DATAFORSEO_PASSWORD) {
         return res.status(500).json({
             error: 'DataforSEO API credentials not configured',
-            message: 'Please add DataForSEO credentials in Admin > APIs or set DATAFORSEO_LOGIN and DATAFORSEO_PASSWORD environment variables'
+            message: 'Please add the DataForSEO login and password in Settings > General.'
         });
     }
 

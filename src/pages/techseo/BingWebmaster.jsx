@@ -156,15 +156,14 @@ export default function BingWebmaster() {
     projectUrl,
     emptyResult: EMPTY_BING_RESULT,
   });
+  // Optional per-session override only. The configured key lives in
+  // admin_settings and is applied server-side, so it is never shipped to the
+  // browser; leaving this blank uses the configured key.
   const [apiKey, setApiKey] = useState(() => {
     try {
-      const envKey =
-        (typeof import.meta !== "undefined" && import.meta.env && import.meta.env.VITE_BING_WEBMASTER_API_KEY) ||
-        (typeof process !== "undefined" && process.env && process.env.VITE_BING_WEBMASTER_API_KEY) ||
-        "";
-      return sessionStorage.getItem(BING_KEY_STORAGE) || envKey || "";
+      return sessionStorage.getItem(BING_KEY_STORAGE) || "";
     } catch {
-      return (typeof process !== "undefined" && process.env && process.env.VITE_BING_WEBMASTER_API_KEY) || "";
+      return "";
     }
   });
   const [showKey, setShowKey] = useState(false);
@@ -194,14 +193,15 @@ export default function BingWebmaster() {
 
   async function bingApi(action, params = {}) {
     const trimmedKey = apiKey.trim();
-    if (!isValidBingApiKey(trimmedKey)) {
+    if (trimmedKey && !isValidBingApiKey(trimmedKey)) {
       throw new Error("Please enter a valid Bing Webmaster API key.");
     }
 
     const url = new URL("/api/webmaster-api", window.location.origin);
     url.searchParams.set("service", "bing");
     url.searchParams.set("action", action);
-    url.searchParams.set("apikey", trimmedKey);
+    // No override typed: the server uses the key from Settings > General.
+    if (trimmedKey) url.searchParams.set("apikey", trimmedKey);
     Object.entries(params).forEach(([key, value]) => url.searchParams.set(key, value));
     const token = getSessionToken();
     const headers = token ? { Authorization: `Bearer ${token}` } : undefined;
@@ -212,18 +212,14 @@ export default function BingWebmaster() {
   }
 
   async function fetchSites() {
-    if (!apiKey.trim()) {
-      setError("Enter your Bing Webmaster API key first.");
-      return;
-    }
-    if (!isValidBingApiKey(apiKey)) {
+    if (apiKey.trim() && !isValidBingApiKey(apiKey)) {
       setError("Please enter a valid Bing Webmaster API key.");
       return;
     }
     setLoading(true);
     setError("");
     try {
-      sessionStorage.setItem(BING_KEY_STORAGE, apiKey.trim());
+      if (apiKey.trim()) sessionStorage.setItem(BING_KEY_STORAGE, apiKey.trim());
       const payload = await bingApi("getSites");
       const list = bingSitesFromPayload(payload);
       setSites(list);
@@ -240,11 +236,7 @@ export default function BingWebmaster() {
 
   async function analyze() {
     const site = selectedSite || findMatchingBingSite(sites, projectUrl, projectDomain);
-    if (!apiKey.trim()) {
-      setError("Enter your Bing Webmaster API key first.");
-      return;
-    }
-    if (!isValidBingApiKey(apiKey)) {
+    if (apiKey.trim() && !isValidBingApiKey(apiKey)) {
       setError("Please enter a valid Bing Webmaster API key.");
       return;
     }
@@ -341,7 +333,7 @@ export default function BingWebmaster() {
               type={showKey ? "text" : "password"}
               value={apiKey}
               onChange={(e) => setApiKey(e.target.value)}
-              placeholder="Enter your Bing Webmaster API key"
+              placeholder="Using the key from Settings > General (optional override)"
               className="flex-1 bg-transparent text-sm text-white placeholder:text-white/25 focus:outline-none"
             />
             <button onClick={() => setShowKey(!showKey)} className="bing-key-toggle" aria-label={showKey ? "Hide API key" : "Show API key"}>
@@ -353,7 +345,7 @@ export default function BingWebmaster() {
 
         <div className="bing-actions">
           <p className="bing-hint">
-            API key path: <span>Bing Webmaster Tools - Settings - API Access</span>
+            Configured in <span>Settings - General - Bing Webmaster</span>. Leave the field blank to use it.
           </p>
           <div className="flex flex-wrap items-center gap-2">
             <button onClick={analyze} disabled={loading} className="ui-button bing-analyze-button">

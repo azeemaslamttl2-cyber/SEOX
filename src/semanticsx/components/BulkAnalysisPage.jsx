@@ -47,9 +47,9 @@ import {
 } from '../lib/gscSession';
 import { getGscAuthUrl } from '../../lib/googleOAuthConfig.js';
 
-// OAuth Configuration (same as GSCChecker)
-const GOOGLE_CLIENT_ID = '678600675636-ep3h78scknmtu4d4fk1idjpsp54oncvh.apps.googleusercontent.com';
-const GSC_SCOPE = 'https://www.googleapis.com/auth/webmasters.readonly';
+// The Google OAuth client id lives in admin_settings and is applied by the
+// server when it builds the authorisation URL (see getGscAuthUrl), so no client
+// id is hardcoded or shipped to the browser here.
 
 // Session storage keys for persisting user preferences
 const LS_KEYS = {

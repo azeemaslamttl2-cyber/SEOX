@@ -30,6 +30,7 @@ export async function callDeepSeekContent({
   responseMimeType,
   temperature = 0.4,
   maxTokens = 4096,
+  apiKey,
 }) {
   const isBrowser = typeof window !== "undefined" && typeof window.location !== "undefined";
 
@@ -55,9 +56,9 @@ export async function callDeepSeekContent({
     return data;
   }
 
-  const apiKey = process?.env?.DEEPSEEK_API_KEY || "";
-  if (!apiKey) {
-    throw new Error("DEEPSEEK_API_KEY is not configured on the server.");
+  const configuredApiKey = typeof apiKey === "string" ? apiKey.trim() : "";
+  if (!configuredApiKey) {
+    throw new Error("DeepSeek API is not configured. Please configure it from DeepSeek Settings.");
   }
 
   const wantsJson = responseMimeType === "application/json";
@@ -75,7 +76,7 @@ export async function callDeepSeekContent({
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      Authorization: `Bearer ${apiKey}`,
+      Authorization: `Bearer ${configuredApiKey}`,
     },
     body: JSON.stringify({
       model: "deepseek-chat",
@@ -260,11 +261,12 @@ Rules:
   return improved.length ? improved : outline;
 }
 
-export async function askDeepSeekContent({ message, content = "", keyword = "", context = "" }) {
+export async function askDeepSeekContent({ message, content = "", keyword = "", context = "", apiKey }) {
   const data = await callDeepSeekContent({
     action: "contentAssistantChat",
     temperature: 0.45,
     maxTokens: 2048,
+    apiKey,
     prompt: `Target keyword: ${keyword || "not provided"}
 
 Current content:
@@ -280,11 +282,12 @@ ${message}`,
   return (data.text || "").trim();
 }
 
-export async function generateTitleIdeasDeepSeek({ keyword = "", content = "" }) {
+export async function generateTitleIdeasDeepSeek({ keyword = "", content = "", apiKey }) {
   const payload = await callDeepSeekJson({
     action: "generateTitleTags",
     temperature: 0.45,
     maxTokens: 2048,
+    apiKey,
     prompt: `Generate SEO title tag ideas.
 
 Target keyword: ${keyword || "not provided"}
@@ -306,11 +309,12 @@ Rules:
   }));
 }
 
-export async function generateMetaDescriptionsDeepSeek({ keyword = "", content = "" }) {
+export async function generateMetaDescriptionsDeepSeek({ keyword = "", content = "", apiKey }) {
   const payload = await callDeepSeekJson({
     action: "generateMetaDescriptions",
     temperature: 0.45,
     maxTokens: 2048,
+    apiKey,
     prompt: `Generate SEO meta descriptions.
 
 Target keyword: ${keyword || "not provided"}

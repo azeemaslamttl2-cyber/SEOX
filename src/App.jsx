@@ -17,6 +17,8 @@ import Register from "./pages/Register.jsx";
 import Dashboard from "./pages/Dashboard.jsx";
 import StripeSettings from "./pages/settings/StripeSettings.jsx";
 import DeepSeekSettings from "./pages/settings/DeepSeekSettings.jsx";
+import GeneralSettings from "./pages/settings/GeneralSettings.jsx";
+import ProjectsList from "./pages/projects/ProjectsList.jsx";
 import AuditorOverview from "./pages/auditor/AuditorOverview.jsx";
 import AuditorIssues from "./pages/auditor/AuditorIssues.jsx";
 import AuditorIssueDetail from "./pages/auditor/AuditorIssueDetail.jsx";
@@ -200,7 +202,9 @@ export default function App() {
               }
             >
               <Route path="/dashboard" element={<Dashboard />} />
-              <Route path="/settings" element={<Navigate to="/settings/deepseek" replace />} />
+              <Route path="/projects" element={<ProjectsList />} />
+              <Route path="/settings" element={<Navigate to="/settings/general" replace />} />
+              <Route path="/settings/general" element={<GeneralSettings />} />
               <Route path="/settings/stripe" element={<StripeSettings />} />
               <Route path="/settings/deepseek" element={<DeepSeekSettings />} />
             </Route>

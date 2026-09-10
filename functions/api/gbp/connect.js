@@ -65,10 +65,10 @@ export async function onRequest({ request, env }) {
 
     useDatabase(env);
 
-    const { clientId, clientSecret } = getOAuthConfig(env);
+    const { clientId, clientSecret, redirectUri: configuredRedirectUri } = await getOAuthConfig(env);
     if (!clientId) {
       return jsonResponse(
-        { error: 'Google OAuth is not configured. Set GOOGLE_CLIENT_ID.' },
+        { error: 'Google OAuth is not configured. Add the Google Client ID in Settings > General.' },
         500,
         headers
       );
@@ -85,13 +85,6 @@ export async function onRequest({ request, env }) {
     if (action === 'auth-url') {
       await requireProject(env, userId, projectId);
       if (!redirectUri) return jsonResponse({ error: 'Missing redirect URI.' }, 400, headers);
-
-      const configuredRedirectUri =
-        env.GOOGLE_REDIRECT_URI ||
-        env.GOOGLE_AUTH_REDIRECT_URI ||
-        env.GOOGLE_OAUTH_REDIRECT_URI ||
-        env.VITE_GOOGLE_REDIRECT_URI ||
-        '';
 
       if (configuredRedirectUri && redirectUri !== configuredRedirectUri) {
         return jsonResponse(
@@ -131,7 +124,11 @@ export async function onRequest({ request, env }) {
 
     if (action === 'exchange') {
       if (!clientSecret) {
-        return jsonResponse({ error: 'GOOGLE_CLIENT_SECRET is not configured.' }, 500, headers);
+        return jsonResponse(
+          { error: 'Google Client Secret is not configured. Add it in Settings > General.' },
+          500,
+          headers
+        );
       }
       if (!code || !redirectUri) {
         return jsonResponse({ error: 'Missing authorization code or redirect URI.' }, 400, headers);

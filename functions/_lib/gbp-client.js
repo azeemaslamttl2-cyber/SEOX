@@ -12,6 +12,7 @@
 
 import { decryptSecret, encryptSecret } from './gbp-crypto.js';
 import { markConnectionStatus, recordApiUsage, updateConnectionTokens } from './gbp-repository.js';
+import { getAdminSettings } from './app-settings.js';
 
 const TOKEN_ENDPOINT = 'https://oauth2.googleapis.com/token';
 const REVOKE_ENDPOINT = 'https://oauth2.googleapis.com/revoke';
@@ -67,15 +68,33 @@ function apiError(message, status, code) {
   return error;
 }
 
-export function getOAuthConfig(env) {
+/**
+ * Business Profile OAuth configuration, read from admin_settings.
+ *
+ * The application deliberately uses a single Google OAuth client across Search
+ * Console, Google sign-in and Business Profile; only the redirect URI differs
+ * per flow. The redirect falls back to the GSC then the sign-in redirect, which
+ * preserves the previous environment-variable precedence exactly.
+ */
+export async function getOAuthConfig(env) {
+  const settings = await getAdminSettings(
+    [
+      'google_client_id',
+      'google_client_secret',
+      'google_gbp_redirect_uri',
+      'google_gsc_redirect_uri',
+      'google_auth_redirect_uri',
+    ],
+    env
+  );
+
   return {
-    clientId: env.GOOGLE_CLIENT_ID || env.VITE_GOOGLE_CLIENT_ID || '',
-    clientSecret: env.GOOGLE_CLIENT_SECRET || '',
+    clientId: settings.google_client_id || '',
+    clientSecret: settings.google_client_secret || '',
     redirectUri:
-      env.GOOGLE_REDIRECT_URI ||
-      env.GOOGLE_AUTH_REDIRECT_URI ||
-      env.GOOGLE_OAUTH_REDIRECT_URI ||
-      env.VITE_GOOGLE_REDIRECT_URI ||
+      settings.google_gbp_redirect_uri ||
+      settings.google_gsc_redirect_uri ||
+      settings.google_auth_redirect_uri ||
       '',
   };
 }
@@ -105,7 +124,7 @@ export function buildAuthUrl({ clientId, redirectUri, state }) {
 }
 
 export async function exchangeAuthorizationCode(env, { code, redirectUri }) {
-  const { clientId, clientSecret } = getOAuthConfig(env);
+  const { clientId, clientSecret } = await getOAuthConfig(env);
   const response = await fetch(TOKEN_ENDPOINT, {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
@@ -178,7 +197,7 @@ export async function resolveAccessToken(env, connection) {
     throw apiError('Business Profile session expired. Reconnect to continue.', 401, 'NEEDS_REAUTH');
   }
 
-  const { clientId, clientSecret } = getOAuthConfig(env);
+  const { clientId, clientSecret } = await getOAuthConfig(env);
   const response = await fetch(TOKEN_ENDPOINT, {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
