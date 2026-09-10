@@ -5,6 +5,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { installAuthenticatedApiFetch } from "./lib/authenticatedApiFetch.js";
 import { AuthProvider } from "./context/AuthContext.jsx";
 import { CrawlProvider } from "./context/CrawlContext.jsx";
+import { ProjectsProvider } from "./context/ProjectsContext.jsx";
 import RootLayout from "./layouts/RootLayout.jsx";
 import AuthLayout from "./layouts/AuthLayout.jsx";
 import AuditorLayout from "./layouts/AuditorLayout.jsx";
@@ -180,10 +181,11 @@ function RouteLoading() {
 export default function App() {
   return (
     <AuthProvider>
-      <CrawlProvider>
-        <BrowserRouter>
-          <Suspense fallback={<RouteLoading />}>
-            <Routes>
+      <ProjectsProvider>
+        <CrawlProvider>
+          <BrowserRouter>
+            <Suspense fallback={<RouteLoading />}>
+              <Routes>
             {/* Public site (with Navbar + Footer) */}
             <Route element={<RootLayout />}>
               <Route path="/" element={<HomePage />} />
@@ -554,10 +556,11 @@ export default function App() {
 
             {/* Catch-all → home */}
             <Route path="*" element={<Navigate to="/" replace />} />
-            </Routes>
-          </Suspense>
-        </BrowserRouter>
-      </CrawlProvider>
+              </Routes>
+            </Suspense>
+          </BrowserRouter>
+        </CrawlProvider>
+      </ProjectsProvider>
     </AuthProvider>
   );
 }

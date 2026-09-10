@@ -37,6 +37,21 @@ async function request(path, { method = 'GET', body, params } = {}) {
 }
 
 export function getGbpRedirectUri() {
+  const configured =
+    (typeof import.meta !== 'undefined' && import.meta.env
+      ? import.meta.env.GOOGLE_REDIRECT_URI ||
+        import.meta.env.GOOGLE_AUTH_REDIRECT_URI ||
+        import.meta.env.GOOGLE_OAUTH_REDIRECT_URI ||
+        import.meta.env.VITE_GOOGLE_REDIRECT_URI
+      : '') ||
+    (typeof process !== 'undefined'
+      ? process.env.GOOGLE_REDIRECT_URI ||
+        process.env.GOOGLE_AUTH_REDIRECT_URI ||
+        process.env.GOOGLE_OAUTH_REDIRECT_URI ||
+        process.env.VITE_GOOGLE_REDIRECT_URI
+      : '');
+
+  if (configured) return configured;
   return `${window.location.origin}/gbp/oauth-callback`;
 }
 

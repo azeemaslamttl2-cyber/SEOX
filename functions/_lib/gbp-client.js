@@ -71,6 +71,12 @@ export function getOAuthConfig(env) {
   return {
     clientId: env.GOOGLE_CLIENT_ID || env.VITE_GOOGLE_CLIENT_ID || '',
     clientSecret: env.GOOGLE_CLIENT_SECRET || '',
+    redirectUri:
+      env.GOOGLE_REDIRECT_URI ||
+      env.GOOGLE_AUTH_REDIRECT_URI ||
+      env.GOOGLE_OAUTH_REDIRECT_URI ||
+      env.VITE_GOOGLE_REDIRECT_URI ||
+      '',
   };
 }
 
@@ -80,6 +86,9 @@ export function encodeState(payload) {
 }
 
 export function buildAuthUrl({ clientId, redirectUri, state }) {
+  if (!clientId) throw new Error('Google OAuth client ID is missing.');
+  if (!redirectUri) throw new Error('Google OAuth redirect URI is missing.');
+
   const params = new URLSearchParams({
     client_id: clientId,
     redirect_uri: redirectUri,

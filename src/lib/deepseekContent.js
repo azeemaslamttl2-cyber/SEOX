@@ -31,25 +31,73 @@ export async function callDeepSeekContent({
   temperature = 0.4,
   maxTokens = 4096,
 }) {
-  const response = await fetch("/api/deepseek", {
+  const isBrowser = typeof window !== "undefined" && typeof window.location !== "undefined";
+
+  if (isBrowser) {
+    const response = await fetch("/api/deepseek", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        action,
+        prompt,
+        systemInstruction,
+        responseMimeType,
+        temperature,
+        maxTokens,
+      }),
+    });
+
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      throw new Error(data.error || `DeepSeek request failed (${response.status})`);
+    }
+
+    return data;
+  }
+
+  const apiKey = process?.env?.DEEPSEEK_API_KEY || "";
+  if (!apiKey) {
+    throw new Error("DEEPSEEK_API_KEY is not configured on the server.");
+  }
+
+  const wantsJson = responseMimeType === "application/json";
+  const systemMessages = [];
+  if (systemInstruction) systemMessages.push(systemInstruction);
+  if (wantsJson) systemMessages.push("Return valid JSON only.");
+
+  const messages = [];
+  if (systemMessages.length > 0) {
+    messages.push({ role: "system", content: systemMessages.join("\n\n") });
+  }
+  messages.push({ role: "user", content: prompt });
+
+  const response = await fetch("https://api.deepseek.com/chat/completions", {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${apiKey}`,
+    },
     body: JSON.stringify({
-      action,
-      prompt,
-      systemInstruction,
-      responseMimeType,
+      model: "deepseek-chat",
+      messages,
       temperature,
-      maxTokens,
+      max_tokens: maxTokens,
+      stream: false,
     }),
+    signal: AbortSignal.timeout(60000),
   });
 
   const data = await response.json().catch(() => ({}));
   if (!response.ok) {
-    throw new Error(data.error || `DeepSeek request failed (${response.status})`);
+    const message = data?.error?.message || `DeepSeek request failed (${response.status})`;
+    throw new Error(message);
   }
 
-  return data;
+  return {
+    text: data.choices?.[0]?.message?.content || "",
+    usage: data.usage,
+    model: data.model,
+  };
 }
 
 export async function callDeepSeekJson(options) {
