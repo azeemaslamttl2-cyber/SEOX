@@ -10,9 +10,10 @@ import { useEagerProjects } from "../hooks/useEagerProjects.js";
 export default function DashboardLayout({ children }) {
   const { user } = useAuth();
   const { projects: contextProjects } = useCrawl();
-  
-  // Load projects with high priority before rendering dashboard content
-  // This ensures the projects dropdown is populated as quickly as possible
+
+  // Projects are shared through the app-wide ProjectsContext cache.
+  // This keeps dashboard loading fast without re-fetching the same project list
+  // on each page or nested provider mount.
   const { projects: eagerProjects, loading: projectsLoading } = useEagerProjects(
     user?.uid || user?.id || null
   );

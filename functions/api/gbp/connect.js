@@ -85,6 +85,25 @@ export async function onRequest({ request, env }) {
     if (action === 'auth-url') {
       await requireProject(env, userId, projectId);
       if (!redirectUri) return jsonResponse({ error: 'Missing redirect URI.' }, 400, headers);
+
+      const configuredRedirectUri =
+        env.GOOGLE_REDIRECT_URI ||
+        env.GOOGLE_AUTH_REDIRECT_URI ||
+        env.GOOGLE_OAUTH_REDIRECT_URI ||
+        env.VITE_GOOGLE_REDIRECT_URI ||
+        '';
+
+      if (configuredRedirectUri && redirectUri !== configuredRedirectUri) {
+        return jsonResponse(
+          {
+            error:
+              `Google OAuth redirect URI mismatch. The request used ${redirectUri}, but the configured redirect is ${configuredRedirectUri}. Update the OAuth client to use the exact same URI.`,
+          },
+          400,
+          headers
+        );
+      }
+
       if (!encryptionKeyConfigured(env)) {
         return jsonResponse(
           {

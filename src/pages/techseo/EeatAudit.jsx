@@ -25,21 +25,9 @@ import {
   Settings2,
 } from "lucide-react";
 import { fetchCrawlTarget } from "../../lib/siteCrawler.js";
+import { normalizeEeatResult, EMPTY_EEAT_RESULT } from "../../lib/eeatAuditUtils.js";
 import { useSelectedProjectDomain } from "../../hooks/useSelectedProjectDomain.js";
 import { useTechSeoToolResult } from "../../hooks/useTechSeoToolResult.js";
-
-const EMPTY_EEAT_RESULT = {
-  url: "",
-  score: 0,
-  rating: "Not run",
-  passedChecks: 0,
-  failedChecks: 0,
-  totalAutomated: 0,
-  manualCompleted: 0,
-  manualTotal: 47,
-  cachedAgo: "Not run",
-  sections: [],
-};
 
 const EEAT_DETAIL_LIBRARY = {
   "SSL Certificate (HTTPS)": {
@@ -694,7 +682,7 @@ export default function EeatAudit() {
     projectUrl,
     emptyResult: EMPTY_EEAT_RESULT,
   });
-  const d = result;
+  const d = normalizeEeatResult(result, projectUrl);
   const [tab, setTab] = useState("automated");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");

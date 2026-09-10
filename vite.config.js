@@ -3,6 +3,20 @@ import react from "@vitejs/plugin-react";
 import fs from "node:fs";
 import { onRequest as autocompleteOnRequest } from "./functions/api/autocomplete.js";
 import { onRequest as gscTokenOnRequest } from "./functions/api/gsc-token.js";
+import { onRequest as gbpConnectOnRequest } from "./functions/api/gbp/connect.js";
+import { onRequest as gbpAccountsOnRequest } from "./functions/api/gbp/accounts.js";
+import { onRequest as gbpLocationsOnRequest } from "./functions/api/gbp/locations.js";
+import { onRequest as gbpOverviewOnRequest } from "./functions/api/gbp/overview.js";
+import { onRequest as gbpProfileOnRequest } from "./functions/api/gbp/profile.js";
+import { onRequest as gbpAuditOnRequest } from "./functions/api/gbp/audit.js";
+import { onRequest as gbpPostsOnRequest } from "./functions/api/gbp/posts.js";
+import { onRequest as gbpAutomationOnRequest } from "./functions/api/gbp/automation.js";
+import { onRequest as gbpJobsOnRequest } from "./functions/api/gbp/jobs.js";
+import { onRequest as gbpReviewsOnRequest } from "./functions/api/gbp/reviews.js";
+import { onRequest as gbpInsightsOnRequest } from "./functions/api/gbp/insights.js";
+import { onRequest as gbpQandaOnRequest } from "./functions/api/gbp/qanda.js";
+import { onRequest as gbpRecommendationsOnRequest } from "./functions/api/gbp/recommendations.js";
+import { onRequest as gbpHistoryOnRequest } from "./functions/api/gbp/history.js";
 import { onRequest as wordpressSecurityOnRequest } from "./functions/api/tech-seo/wordpress-security.js";
 import { onRequest as deepseekSettingsOnRequest } from "./functions/api/deepseek-settings.js";
 import { onRequest as pagespeedOnRequest } from "./functions/api/pagespeed.js";
@@ -21,6 +35,7 @@ import { onRequest as backlinkIndexerOnRequest } from "./functions/api/off-page/
 import { onRequest as keywordResearchOnRequest } from "./functions/api/keywords/research.js";
 import { onRequest as ubersuggestOnRequest } from "./functions/api/keywords/ubersuggest.js";
 import { onRequest as contentOutlineOnRequest } from "./functions/api/content/outline.js";
+import { onRequest as aiHelperOnRequest } from "./functions/api/content/ai-helper.js";
 import { onRequest as textEditorOnRequest } from "./functions/api/seo-tools/text-editor.js";
 import { onRequest as domainSeparatorOnRequest } from "./functions/api/seo-tools/domain-separator.js";
 import { onRequest as wordCounterOnRequest } from "./functions/api/seo-tools/word-counter.js";
@@ -340,6 +355,27 @@ function deepseekSettingsApiPlugin() {
         }
       });
     },
+    configurePreviewServer(server) {
+      server.middlewares.use("/api/deepseek-settings", async (req, res) => {
+        try {
+          const rawBody = await readRawBody(req);
+          const headers = new Headers();
+          Object.entries(req.headers || {}).forEach(([key, value]) => {
+            if (Array.isArray(value)) headers.set(key, value.join(", "));
+            else if (value !== undefined) headers.set(key, String(value));
+          });
+          const request = new Request(mountedUrl(req, "/api/deepseek-settings"), {
+            method: req.method || "GET",
+            headers,
+            body: rawBody || undefined,
+          });
+          const response = await deepseekSettingsOnRequest({ request, env: loadDevApiEnv() });
+          await sendWebResponse(res, response);
+        } catch (error) {
+          sendJson(res, error?.status || 500, { error: error?.message || "DeepSeek settings request failed" });
+        }
+      });
+    },
   };
 }
 
@@ -412,6 +448,54 @@ function autocompleteApiPlugin() {
     },
     configurePreviewServer(server) {
       registerAutocompleteMiddleware(server);
+    },
+  };
+}
+
+// Pages Functions route functions/api/gbp/<name>.js to /api/gbp/<name>; the dev
+// server needs the same mapping registered by hand.
+const GBP_ROUTES = {
+  "/api/gbp/connect": gbpConnectOnRequest,
+  "/api/gbp/accounts": gbpAccountsOnRequest,
+  "/api/gbp/locations": gbpLocationsOnRequest,
+  "/api/gbp/overview": gbpOverviewOnRequest,
+  "/api/gbp/profile": gbpProfileOnRequest,
+  "/api/gbp/audit": gbpAuditOnRequest,
+  "/api/gbp/posts": gbpPostsOnRequest,
+  "/api/gbp/automation": gbpAutomationOnRequest,
+  "/api/gbp/jobs": gbpJobsOnRequest,
+  "/api/gbp/reviews": gbpReviewsOnRequest,
+  "/api/gbp/insights": gbpInsightsOnRequest,
+  "/api/gbp/qanda": gbpQandaOnRequest,
+  "/api/gbp/recommendations": gbpRecommendationsOnRequest,
+  "/api/gbp/history": gbpHistoryOnRequest,
+};
+
+function registerGbpMiddleware(server) {
+  for (const [mountPath, handler] of Object.entries(GBP_ROUTES)) {
+    server.middlewares.use(mountPath, async (req, res) => {
+      try {
+        const request = await createWebRequest(req, mountPath);
+        const response = await handler({ request, env: loadDevApiEnv() });
+        await sendWebResponse(res, response);
+      } catch (error) {
+        sendJson(res, error?.status || 500, {
+          error: "Business Profile request failed",
+          message: error?.message || "Unknown error",
+        });
+      }
+    });
+  }
+}
+
+function gbpApiPlugin() {
+  return {
+    name: "seox-gbp-api",
+    configureServer(server) {
+      registerGbpMiddleware(server);
+    },
+    configurePreviewServer(server) {
+      registerGbpMiddleware(server);
     },
   };
 }
@@ -558,6 +642,18 @@ function contentOutlineApiPlugin() {
     },
     configurePreviewServer(server) {
       registerContentOutlineMiddleware(server);
+    },
+  };
+}
+
+function aiHelperApiPlugin() {
+  return {
+    name: "seox-ai-helper-api",
+    configureServer(server) {
+      registerAiHelperMiddleware(server);
+    },
+    configurePreviewServer(server) {
+      registerAiHelperMiddleware(server);
     },
   };
 }
@@ -1161,6 +1257,22 @@ function registerContentOutlineMiddleware(server) {
       sendJson(res, error?.status || 500, {
         success: false,
         message: error?.message || "Outline generation request failed.",
+      });
+    }
+  });
+}
+
+function registerAiHelperMiddleware(server) {
+  server.middlewares.use("/api/content/ai-helper", async (req, res) => {
+    try {
+      const request = await createWebRequest(req, "/api/content/ai-helper");
+      const response = await aiHelperOnRequest({ request, env: loadDevApiEnv() });
+      await sendWebResponse(res, response);
+    } catch (error) {
+      sendJson(res, error?.status || 500, {
+        success: false,
+        status: "error",
+        message: error?.message || "AI Helper request failed.",
       });
     }
   });
@@ -1840,9 +1952,13 @@ function sendJson(res, status, payload) {
 }
 
 export default defineConfig({
-  plugins: [react(), proxyApiPlugin(), deepseekApiPlugin(), deepseekSettingsApiPlugin(), fetchUrlMetaApiPlugin(), pagespeedApiPlugin(), speedApiPlugin(), wordpressSecurityApiPlugin(), screamingFrogApiPlugin(), webmasterApiPlugin(), autocompleteApiPlugin(), gscTokenApiPlugin(), projectsApiPlugin(), projectDetailsApiPlugin(), backlinksAnalyzeApiPlugin(), w3cValidationApiPlugin(), expiredDomainsCheckApiPlugin(), backlinkCleanerApiPlugin(), backlinkIndexerApiPlugin(), keywordResearchApiPlugin(), ubersuggestApiPlugin(), authApiPlugin(), contentOutlineApiPlugin(), textEditorApiPlugin(), domainSeparatorApiPlugin(), wordCounterApiPlugin(), botViewerApiPlugin(), daPaCheckerApiPlugin(), metaExtractorApiPlugin(), sitemapExtractorApiPlugin(), seoToolsApiPlugin(), promptTrackingApiPlugin(), brandSentimentApiPlugin(), citationFlowApiPlugin(), competitorResearchApiPlugin(), internalLinksApiPlugin(), aiChatApiPlugin(), llmsGeneratorApiPlugin(), aiModelCheckerApiPlugin(), aiCompatibilityApiPlugin(), semanticWriterEditorApiPlugin(), contentWriterApiPlugin(), auditorApiPlugin(), crawlerApiPlugin()],
+  plugins: [react(), proxyApiPlugin(), deepseekApiPlugin(), deepseekSettingsApiPlugin(), fetchUrlMetaApiPlugin(), pagespeedApiPlugin(), speedApiPlugin(), wordpressSecurityApiPlugin(), screamingFrogApiPlugin(), webmasterApiPlugin(), autocompleteApiPlugin(), gscTokenApiPlugin(), gbpApiPlugin(), projectsApiPlugin(), projectDetailsApiPlugin(), backlinksAnalyzeApiPlugin(), w3cValidationApiPlugin(), expiredDomainsCheckApiPlugin(), backlinkCleanerApiPlugin(), backlinkIndexerApiPlugin(), keywordResearchApiPlugin(), ubersuggestApiPlugin(), authApiPlugin(), contentOutlineApiPlugin(), aiHelperApiPlugin(), textEditorApiPlugin(), domainSeparatorApiPlugin(), wordCounterApiPlugin(), botViewerApiPlugin(), daPaCheckerApiPlugin(), metaExtractorApiPlugin(), sitemapExtractorApiPlugin(), seoToolsApiPlugin(), promptTrackingApiPlugin(), brandSentimentApiPlugin(), citationFlowApiPlugin(), competitorResearchApiPlugin(), internalLinksApiPlugin(), aiChatApiPlugin(), llmsGeneratorApiPlugin(), aiModelCheckerApiPlugin(), aiCompatibilityApiPlugin(), semanticWriterEditorApiPlugin(), contentWriterApiPlugin(), auditorApiPlugin(), crawlerApiPlugin()],
   server: {
     port: 3000,
     host: true,
+  },
+  preview: {
+    host: true,
+    port: 4173,
   },
 });

@@ -28,12 +28,12 @@ import {
   normalizeEvidenceUrl,
 } from "../lib/auditIssues.js";
 import {
-  loadProjects,
   saveProjectWithMeta,
-  deleteProject,
+  deleteProject as deleteProjectApi,
   saveProjectMeta,
   saveProjectData,
 } from "../lib/projectsApi.js";
+import { useProjects } from "./ProjectsContext.jsx";
 import {
   loadCrawlStorage,
   saveCrawlProjectStates,
@@ -160,6 +160,20 @@ function mergeProjects(...lists) {
   return Array.from(map.values());
 }
 
+function projectListSignature(list) {
+  return (list || [])
+    .map((item) =>
+      [
+        item?.id,
+        item?.name,
+        item?.domain,
+        item?.fullUrl || item?.full_url || item?.url,
+        item?.updated_at,
+      ].join("~")
+    )
+    .join("|");
+}
+
 function isMockProject(item) {
   const id = projectIdFor(item);
   if (item?.createdAt || String(id).startsWith("proj_")) return false;
@@ -270,6 +284,28 @@ function mergeCrawlRow(stats, row, scheduled, findings = []) {
 export function CrawlProvider({ children }) {
   const { user } = useAuth();
   const authUserId = user?.uid || null;
+  // The project inventory is owned by ProjectsContext. CrawlProvider reads it
+  // from there and mirrors its own writes back, so `GET /api/projects` is never
+  // issued twice for the same signed-in user.
+  const {
+    projects: sharedProjects,
+    selectedProjectId: sharedSelectedProjectId,
+    deletedProjectIds: sharedDeletedProjectIds,
+    ready: sharedProjectsReady,
+    error: sharedProjectsError,
+    refreshProjects: refreshSharedProjects,
+    applyProjectUpsert: shareProjectUpsert,
+    applyProjectRemoval: shareProjectRemoval,
+    applySelectedProjectId: shareSelectedProjectId,
+  } = useProjects();
+  const sharedPayloadRef = useRef(null);
+  sharedPayloadRef.current = {
+    projects: sharedProjects,
+    selectedProjectId: sharedSelectedProjectId,
+    deletedProjectIds: sharedDeletedProjectIds,
+  };
+  const sharedProjectsErrorRef = useRef(null);
+  sharedProjectsErrorRef.current = sharedProjectsError;
   const uidRef = useRef(authUserId);
   uidRef.current = authUserId;
   const initial = useMemo(loadInitial, []);
@@ -295,19 +331,24 @@ export function CrawlProvider({ children }) {
   }, []);
 
   useEffect(() => {
+    // Wait for the shared inventory before hydrating a signed-in session,
+    // otherwise the empty pre-fetch payload would look like "no projects".
+    if (authUserId && !sharedProjectsReady) return undefined;
+
     let cancelled = false;
 
     const hydrate = async () => {
       try {
         let dbData = { projects: [], selectedProjectId: null, deletedProjectIds: [] };
         let databaseLoaded = false;
-        try {
-          if (authUserId) {
-            dbData = await loadProjects(authUserId);
+        if (authUserId) {
+          // Already fetched (once) by ProjectsContext - read, do not request.
+          // A failed shared load keeps `databaseLoaded` false so the seed/local
+          // fallback below still applies, exactly as before.
+          if (!sharedProjectsErrorRef.current) {
+            dbData = sharedPayloadRef.current || dbData;
             databaseLoaded = true;
           }
-        } catch {
-          // Database-backed project load is non-blocking; fall back to the in-memory seed state.
         }
 
         const currentProjects = latestProjectsRef.current || initial.projects;
@@ -347,7 +388,9 @@ export function CrawlProvider({ children }) {
                 })
               )
             );
-            dbData = await loadProjects(authUserId);
+            // Legacy browser projects were just written to MySQL; ask the shared
+            // context for one authoritative re-read so every page sees them.
+            dbData = await refreshSharedProjects(true);
           }
         }
         if (cancelled) return;
@@ -445,7 +488,10 @@ export function CrawlProvider({ children }) {
     return () => {
       cancelled = true;
     };
-  }, [authUserId, initial, persistMetadataFallback]);
+    // `sharedPayloadRef` is read through a ref on purpose: hydration runs once
+    // per signed-in user, and later inventory changes are mirrored by the sync
+    // effect below rather than by re-running the whole hydration pass.
+  }, [authUserId, initial, persistMetadataFallback, refreshSharedProjects, sharedProjectsReady]);
 
   const project = useMemo(() => {
     return (
@@ -477,6 +523,38 @@ export function CrawlProvider({ children }) {
   useEffect(() => {
     latestProjectStatesRef.current = projectStates;
   }, [projectStates]);
+
+  // Mirror later ProjectsContext changes - a project created, edited or deleted
+  // anywhere in the app - into the crawl-side list. No request is made: the
+  // shared context already holds the authoritative inventory.
+  const syncedSharedProjectsRef = useRef(null);
+  useEffect(() => {
+    if (!authUserId || !storageReady || !sharedProjectsReady) return;
+    if (syncedSharedProjectsRef.current === sharedProjects) return;
+    syncedSharedProjectsRef.current = sharedProjects;
+
+    const deleted = new Set(latestDeletedProjectIdsRef.current || []);
+    const nextProjects = mergeProjects(sharedProjects).filter(
+      (item) => !deleted.has(item.id) && !isMockProject(item)
+    );
+    if (projectListSignature(latestProjectsRef.current) === projectListSignature(nextProjects)) return;
+
+    const availableIds = new Set(nextProjects.map((item) => item.id));
+    const nextSelectedId =
+      (latestSelectedProjectIdRef.current && availableIds.has(latestSelectedProjectIdRef.current)
+        ? latestSelectedProjectIdRef.current
+        : null) ||
+      (sharedSelectedProjectId && availableIds.has(sharedSelectedProjectId)
+        ? sharedSelectedProjectId
+        : null) ||
+      nextProjects[0]?.id ||
+      null;
+
+    latestProjectsRef.current = nextProjects;
+    latestSelectedProjectIdRef.current = nextSelectedId;
+    setProjects(nextProjects);
+    setSelectedProjectId(nextSelectedId);
+  }, [authUserId, sharedProjects, sharedProjectsReady, sharedSelectedProjectId, storageReady]);
 
   // Persist projectStates to IndexedDB, localStorage/sessionStorage, and debounced to MySQL
   useEffect(() => {
@@ -738,6 +816,8 @@ export function CrawlProvider({ children }) {
       ? Promise.reject(new Error("Sign in is required to save this project online."))
       : Promise.resolve(false);
 
+    const previousVersion = previousProjects.find((item) => item.id === normalized.id) || null;
+
     const rollback = () => {
       latestProjectsRef.current = previousProjects;
       latestSelectedProjectIdRef.current = previousSelectedProjectId;
@@ -750,13 +830,26 @@ export function CrawlProvider({ children }) {
       setProjects(previousProjects);
       setDeletedProjectIds(previousDeletedProjectIds);
       setSelectedProjectId(previousSelectedProjectId);
+      syncedSharedProjectsRef.current = null;
+      if (previousVersion) {
+        shareProjectUpsert(previousVersion, { selectedProjectId: previousSelectedProjectId });
+      } else {
+        shareProjectRemoval(normalized.id, {
+          selectedProjectId: previousSelectedProjectId,
+          markDeleted: false,
+        });
+      }
     };
 
     setProjects(nextProjects);
     setDeletedProjectIds(nextDeletedProjectIds);
     setSelectedProjectId(normalized.id);
+    // Publish to the shared inventory so every other page shows the new or
+    // edited project without asking /api/projects again.
+    syncedSharedProjectsRef.current = null;
+    shareProjectUpsert(normalized, { selectedProjectId: normalized.id });
     return { project: normalized, onlineWrite, rollback };
-  }, [persistMetadataFallback]);
+  }, [persistMetadataFallback, shareProjectRemoval, shareProjectUpsert]);
 
   const selectProject = useCallback(
     (projectId) => {
@@ -770,6 +863,7 @@ export function CrawlProvider({ children }) {
           latestDeletedProjectIdsRef.current
         );
         setSelectedProjectId(projectId);
+        shareSelectedProjectId(projectId);
 
         // Persist project selection and project info to MySQL
         const uid = uidRef.current;
@@ -781,7 +875,7 @@ export function CrawlProvider({ children }) {
         }
       }
     },
-    [persistMetadataFallback]
+    [persistMetadataFallback, shareSelectedProjectId]
   );
 
   const deleteProject = useCallback(
@@ -806,7 +900,7 @@ export function CrawlProvider({ children }) {
 
       const uid = uidRef.current;
       if (uid) {
-        deleteProject(uid, projectId).catch(() => {});
+        deleteProjectApi(uid, projectId).catch(() => {});
         saveProjectMeta(uid, {
           selectedProjectId: nextSelectedProjectId,
           deletedProjectIds: nextDeletedProjectIds,
@@ -815,6 +909,8 @@ export function CrawlProvider({ children }) {
 
       setProjects(remaining);
       setSelectedProjectId(nextSelectedProjectId);
+      syncedSharedProjectsRef.current = null;
+      shareProjectRemoval(projectId, { selectedProjectId: nextSelectedProjectId });
       delete crawlerSessionsRef.current[projectId];
       dirtyProjectStatesRef.current.delete(projectId);
       deleteCrawlProjectState(projectId).catch(() => {});
@@ -826,7 +922,7 @@ export function CrawlProvider({ children }) {
       setDeletedProjectIds(nextDeletedProjectIds);
       return remaining.length;
     },
-    [persistMetadataFallback]
+    [persistMetadataFallback, shareProjectRemoval]
   );
 
   const startCrawl = useCallback(
@@ -923,7 +1019,9 @@ export function CrawlProvider({ children }) {
   const refreshProjects = useCallback(async () => {
     if (!authUserId) return [];
 
-    const dbData = await loadProjects(authUserId);
+    // Explicit, user-initiated refresh: go through the shared context so the
+    // whole app (not just this provider) sees the new snapshot.
+    const dbData = await refreshSharedProjects(true);
     // This explicit refresh is used by the project dropdown.  Do not combine
     // it with browser state or hide rows based on client-side seed/deletion
     // rules: the API response from user_projects is the source of truth.
@@ -945,8 +1043,9 @@ export function CrawlProvider({ children }) {
     setProjects(nextProjects);
     setSelectedProjectId(nextSelectedId);
     setDeletedProjectIds(dbData.deletedProjectIds || []);
+    syncedSharedProjectsRef.current = null;
     return nextProjects;
-  }, [authUserId]);
+  }, [authUserId, refreshSharedProjects]);
 
   return (
     <CrawlContext.Provider
