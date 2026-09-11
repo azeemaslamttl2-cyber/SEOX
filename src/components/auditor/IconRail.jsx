@@ -98,7 +98,7 @@ export default function IconRail() {
 
       <div className="app-rail-footer mt-auto">
         <Link
-          to="/settings/deepseek"
+          to="/settings/general"
           aria-label="Settings"
           onMouseEnter={(event) => showTip(event, "Settings")}
           onMouseLeave={hideTip}

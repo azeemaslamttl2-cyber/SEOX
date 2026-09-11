@@ -1,8 +1,7 @@
 import { useState, useRef } from "react";
 import { BookOpen, Sparkles, Copy, Check, Download, Tag, ArrowRight } from "lucide-react";
 import { grammarData } from "../../data/contentData.js";
-import { generateGrammarRelations } from "../../lib/contentTools.js";
-import { generateGrammarRelationsDeepSeek } from "../../lib/deepseekContent.js";
+import { generateGrammarRelationships } from "../../lib/grammarService.js";
 
 /* Eight categories, previously eight hues driving a coloured dot, a tinted
    count badge and a blurred glow behind each card. The label already names
@@ -33,9 +32,11 @@ export default function GrammarGenerator() {
     setLoading(true);
     setError("");
     try {
-      setResults(await generateGrammarRelationsDeepSeek(topic));
+      const result = await generateGrammarRelationships({ topic });
+      setResults(result.relations);
+      if (!result.ai.applied) setError(result.ai.reason);
     } catch (err) {
-      setResults(generateGrammarRelations(topic));
+      setResults(null);
       setError(err.message || "DeepSeek could not generate relationships. Showing local fallback results.");
     } finally {
       setLoading(false);

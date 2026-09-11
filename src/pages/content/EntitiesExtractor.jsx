@@ -5,7 +5,7 @@ import {
   TrendingUp, BarChart3, Tag
 } from "lucide-react";
 import { entitiesExtractorData } from "../../data/contentData.js";
-import { extractEntitiesFromText, getSourceText } from "../../lib/contentTools.js";
+import { extractContentEntities } from "../../lib/entitiesExtractorService.js";
 
 export default function EntitiesExtractor() {
   const [mode, setMode] = useState("url");
@@ -20,10 +20,8 @@ export default function EntitiesExtractor() {
   async function handleExtract() {
     setLoading(true);
     try {
-      const source = await getSourceText({ mode, text, urls });
-      const joined = Array.isArray(source) ? source.map((item) => item.text).join(" ") : source;
-      const extracted = extractEntitiesFromText(joined);
-      setResults(extracted || []);
+      const result = await extractContentEntities({ mode, content: text, urls });
+      setResults(result.entities);
     } catch {
       setResults([]);
     } finally {

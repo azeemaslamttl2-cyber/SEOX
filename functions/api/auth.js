@@ -3,7 +3,8 @@ import process from 'node:process';
 import { createPool } from 'mysql2/promise';
 import { SignJWT, jwtVerify } from 'jose';
 import { issueAccessToken } from '../_lib/auth-token.js';
-import { getAdminSetting, getAdminSettings } from '../_lib/app-settings.js';
+import { getAdminSettings } from '../_lib/app-settings.js';
+import { appOrigin, googleRedirectUri } from '../_lib/google-redirects.js';
 
 function normalizeEmail(email) {
   return String(email || '').trim().toLowerCase();
@@ -125,36 +126,12 @@ function loginErrorRedirect(request, message, env) {
   return Response.redirect(target, 302);
 }
 
-function isLoopbackHostname(hostname) {
-  return hostname === 'localhost' || hostname === '127.0.0.1' || hostname === '::1';
-}
-
-function appOrigin(request, env = process.env) {
-  const configured = String(env.APP_URL || '').trim();
-  if (configured) {
-    try {
-      const url = new URL(configured);
-      if (!isLoopbackHostname(url.hostname)) return url.origin;
-    } catch {
-      // Fall back to the request origin when APP_URL is invalid.
-    }
-  }
-
-  const requestUrl = new URL(request.url);
-  return isLoopbackHostname(requestUrl.hostname) ? 'https://aismart.thetowertech.com' : requestUrl.origin;
-}
-
+// Resolution of the sign-in callback moved to `_lib/google-redirects.js`, which
+// applies the same rule to all three Google flows. Behaviour here is unchanged:
+// the `google_auth_redirect_uri` override wins, otherwise the URI is derived
+// from the application origin.
 async function googleCallbackUrl(request, env) {
-  const override = String(await getAdminSetting('google_auth_redirect_uri', env)).trim();
-  if (override) {
-    try {
-      const url = new URL(override);
-      if (!isLoopbackHostname(url.hostname)) return url.toString();
-    } catch {
-      // Fall back to the public application origin when the override is invalid.
-    }
-  }
-  return new URL('/api/auth/google/callback', appOrigin(request, env)).toString();
+  return googleRedirectUri('auth', request, env);
 }
 
 async function findOrCreateGoogleUser(pool, profile, env) {

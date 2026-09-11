@@ -11,8 +11,7 @@ import {
   Check,
   ListTree,
 } from "lucide-react";
-import { extractOutlineFromUrls } from "../../lib/contentTools.js";
-import { improveOutlineWithDeepSeek } from "../../lib/deepseekContent.js";
+import { generateContentOutline } from "../../lib/outlineService.js";
 
 /* ── Hero Gauge component matching EeatAudit HeroGauge style ── */
 function HeroGauge({ count, loading }) {
@@ -105,17 +104,15 @@ export default function OutlineCreator() {
     setError("");
     try {
       const cleanUrls = urls.map((item) => item.trim()).filter(Boolean);
-      const outline = await extractOutlineFromUrls(cleanUrls);
-      if (!outline.length) {
-        setResults([]);
-        setError("No headings were found on the supplied URL(s).");
-        return;
-      }
-      try {
-        setResults(await improveOutlineWithDeepSeek({ urls: cleanUrls, outline }));
-      } catch (err) {
-        setResults(outline);
-        setError(err.message || "DeepSeek could not improve the outline. Showing extracted headings.");
+      const result = await generateContentOutline({ urls: cleanUrls });
+      setResults(result.outline);
+      if (!result.outline.length) {
+        setError(result.message || "No headings were found on the supplied URL(s).");
+      } else if (!result.ai.applied) {
+        setError(
+          result.ai.reason ||
+            "DeepSeek could not improve the outline. Showing extracted headings."
+        );
       }
     } catch (err) {
       setResults([]);

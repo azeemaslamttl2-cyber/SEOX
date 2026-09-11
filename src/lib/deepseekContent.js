@@ -1,3 +1,4 @@
+import { markSafeAiError } from "./contentInput.js";
 import {
   analyzeContentOptimization,
   generateEntitiesForKeywords,
@@ -50,7 +51,7 @@ export async function callDeepSeekContent({
 
     const data = await response.json().catch(() => ({}));
     if (!response.ok) {
-      throw new Error(data.error || `DeepSeek request failed (${response.status})`);
+      throw markSafeAiError(new Error(data.error || `DeepSeek request failed (${response.status})`));
     }
 
     return data;
@@ -58,7 +59,9 @@ export async function callDeepSeekContent({
 
   const configuredApiKey = typeof apiKey === "string" ? apiKey.trim() : "";
   if (!configuredApiKey) {
-    throw new Error("DeepSeek API is not configured. Please configure it from DeepSeek Settings.");
+    throw markSafeAiError(
+      new Error("DeepSeek API is not configured. Please configure it from DeepSeek Settings.")
+    );
   }
 
   const wantsJson = responseMimeType === "application/json";
@@ -91,7 +94,7 @@ export async function callDeepSeekContent({
   const data = await response.json().catch(() => ({}));
   if (!response.ok) {
     const message = data?.error?.message || `DeepSeek request failed (${response.status})`;
-    throw new Error(message);
+    throw markSafeAiError(new Error(message));
   }
 
   return {
@@ -109,7 +112,7 @@ export async function callDeepSeekJson(options) {
   return parseJsonText(data.text);
 }
 
-export async function generateEntityGroupsDeepSeek(input) {
+export async function generateEntityGroupsDeepSeek(input, { apiKey } = {}) {
   const keywords = splitInput(input);
   if (!keywords.length) return [];
 
@@ -118,6 +121,7 @@ export async function generateEntityGroupsDeepSeek(input) {
     action: "generateSeoEntities",
     temperature: 0.35,
     maxTokens: 4096,
+    apiKey,
     prompt: `Generate semantic SEO entities for these keywords:
 ${keywords.map((keyword, index) => `${index + 1}. ${keyword}`).join("\n")}
 
@@ -148,12 +152,13 @@ Rules:
   });
 }
 
-export async function generateGrammarRelationsDeepSeek(topic) {
+export async function generateGrammarRelationsDeepSeek(topic, { apiKey } = {}) {
   const fallback = generateGrammarRelations(topic);
   const payload = await callDeepSeekJson({
     action: "generateGrammarRelations",
     temperature: 0.35,
     maxTokens: 3072,
+    apiKey,
     prompt: `Generate semantic grammar relationships for this SEO topic: "${topic}".
 
 Return JSON only with these exact keys:
@@ -181,12 +186,13 @@ Rules:
   }, {});
 }
 
-export async function generateUniqueNgramsDeepSeek(topic) {
+export async function generateUniqueNgramsDeepSeek(topic, { apiKey } = {}) {
   const fallback = generateUniqueNgrams(topic);
   const payload = await callDeepSeekJson({
     action: "generateUniqueNgrams",
     temperature: 0.55,
     maxTokens: 2048,
+    apiKey,
     prompt: `Generate uncommon, useful SEO n-grams for this topic: "${topic}".
 
 Return JSON only:
@@ -202,12 +208,13 @@ Rules:
   return ngrams.length ? ngrams : fallback;
 }
 
-export async function generateSkipGramWordsDeepSeek(word) {
+export async function generateSkipGramWordsDeepSeek(word, { apiKey } = {}) {
   const fallback = generateSkipGramWords(word);
   const payload = await callDeepSeekJson({
     action: "generateSkipGramWords",
     temperature: 0.4,
     maxTokens: 2048,
+    apiKey,
     prompt: `Generate dominant skip-gram/co-occurring words for disambiguating this term: "${word}".
 
 Return JSON only:
@@ -223,7 +230,7 @@ Rules:
   return words.length ? words : fallback;
 }
 
-export async function improveOutlineWithDeepSeek({ urls = [], outline = [] }) {
+export async function improveOutlineWithDeepSeek({ urls = [], outline = [], apiKey }) {
   const compactOutline = outline
     .slice(0, 120)
     .map((item) => `${String(item.tag || "h2").toUpperCase()}: ${item.text}`)
@@ -233,6 +240,7 @@ export async function improveOutlineWithDeepSeek({ urls = [], outline = [] }) {
     action: "combineArticleOutline",
     temperature: 0.35,
     maxTokens: 4096,
+    apiKey,
     prompt: `Combine and improve this competitor heading data into one search-intent-focused article outline.
 
 Source URLs:
@@ -336,12 +344,13 @@ Rules:
   }));
 }
 
-export async function generateOptimizationAdviceDeepSeek(content) {
+export async function generateOptimizationAdviceDeepSeek(content, { apiKey } = {}) {
   const analysis = analyzeContentOptimization(content);
   const data = await callDeepSeekContent({
     action: "contentOptimizationAdvice",
     temperature: 0.4,
     maxTokens: 2048,
+    apiKey,
     prompt: `Review this draft and give specific SEO/content optimization advice.
 
 Current local analysis:
@@ -425,7 +434,7 @@ function parseJsonText(text = "{}") {
     if (start !== -1 && end !== -1 && end > start) {
       return JSON.parse(cleaned.slice(start, end + 1));
     }
-    throw new Error("DeepSeek returned invalid JSON");
+    throw markSafeAiError(new Error("DeepSeek returned invalid JSON"));
   }
 }
 

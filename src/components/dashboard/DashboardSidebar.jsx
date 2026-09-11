@@ -30,8 +30,6 @@ import {
   MessageSquare,
   Users,
   Network,
-  CreditCard,
-  BrainCircuit,
   SlidersHorizontal,
   FolderKanban,
 } from "lucide-react";
@@ -121,9 +119,9 @@ const nav = [
   {
     section: "Settings",
     items: [
-      { label: "General", to: "/settings/general", icon: SlidersHorizontal },
-      { label: "Stripe", to: "/settings/stripe", icon: CreditCard },
-      { label: "DeepSeek API", to: "/settings/deepseek", icon: BrainCircuit },
+      // One entry point: every category (SEO APIs, Google, Stripe, DeepSeek)
+      // is a tab on this page.
+      { label: "General Settings", to: "/settings/general", icon: SlidersHorizontal },
     ],
   },
 ];

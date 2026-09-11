@@ -1,7 +1,7 @@
-import { Outlet } from "react-router-dom";
 import IconRail from "../components/auditor/IconRail.jsx";
 import ContentSecondaryNav from "../components/content/ContentSecondaryNav.jsx";
 import ContentTopBar from "../components/content/ContentTopBar.jsx";
+import RouteOutlet from "../components/RouteOutlet.jsx";
 
 export default function ContentLayout() {
   return (
@@ -11,7 +11,7 @@ export default function ContentLayout() {
       <div className="flex flex-1 flex-col overflow-hidden">
         <ContentTopBar />
         <main className="app-main flex-1 overflow-y-auto px-4 py-6 lg:px-8">
-          <Outlet />
+          <RouteOutlet />
         </main>
       </div>
     </div>

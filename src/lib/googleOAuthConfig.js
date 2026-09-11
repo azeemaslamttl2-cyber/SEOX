@@ -65,8 +65,40 @@ if (typeof window !== "undefined") {
   loadGooglePublicSettings();
 }
 
+/**
+ * Each Google flow returns to its own route. A configured redirect URI is only
+ * usable for the flow whose route it points at: a Search Console consent sent
+ * to /gbp/oauth-callback lands on the Business Profile page, which knows
+ * nothing about the pending Search Console connection.
+ *
+ * The saved settings had exactly that shape, so an override is accepted only
+ * when it matches its own flow, and otherwise this origin's route is used. The
+ * server applies the identical rule in `_lib/google-redirects.js`, so both
+ * sides always derive the same value - which is what a redirect URI must be.
+ */
+export const GOOGLE_CALLBACK_PATHS = {
+  auth: "/api/auth/google/callback",
+  gsc: "/gsc/oauth-callback",
+  gbp: "/gbp/oauth-callback",
+};
+
+export function resolveConfiguredRedirect(configured, flow) {
+  const path = GOOGLE_CALLBACK_PATHS[flow];
+  const fallback = `${window.location.origin}${path}`;
+  const value = String(configured || "").trim();
+  if (!value) return fallback;
+
+  try {
+    const url = new URL(value);
+    // `endsWith` so a deployment under a base path keeps working.
+    return url.pathname.endsWith(path) ? url.toString() : fallback;
+  } catch {
+    return fallback;
+  }
+}
+
 function runtimeRedirectUri() {
-  return `${window.location.origin}/gsc/oauth-callback`;
+  return resolveConfiguredRedirect("", "gsc");
 }
 
 function isLocalhost() {
@@ -83,7 +115,7 @@ function isLocalhost() {
 export async function resolveGoogleRedirectUri() {
   if (isLocalhost()) return runtimeRedirectUri();
   const settings = await loadGooglePublicSettings();
-  return settings.googleGscRedirectUri || runtimeRedirectUri();
+  return resolveConfiguredRedirect(settings.googleGscRedirectUri, "gsc");
 }
 
 /**
@@ -93,7 +125,7 @@ export async function resolveGoogleRedirectUri() {
  */
 export function getGoogleRedirectUri() {
   if (isLocalhost()) return runtimeRedirectUri();
-  return publicSettingsCache?.googleGscRedirectUri || runtimeRedirectUri();
+  return resolveConfiguredRedirect(publicSettingsCache?.googleGscRedirectUri, "gsc");
 }
 
 function encodeState(payload) {

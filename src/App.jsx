@@ -15,9 +15,8 @@ import HomePage from "./pages/HomePage.jsx";
 import Login from "./pages/Login.jsx";
 import Register from "./pages/Register.jsx";
 import Dashboard from "./pages/Dashboard.jsx";
-import StripeSettings from "./pages/settings/StripeSettings.jsx";
-import DeepSeekSettings from "./pages/settings/DeepSeekSettings.jsx";
-import GeneralSettings from "./pages/settings/GeneralSettings.jsx";
+import SettingsPage from "./pages/settings/SettingsPage.jsx";
+import LegacySettingsRedirect from "./pages/settings/LegacySettingsRedirect.jsx";
 import ProjectsList from "./pages/projects/ProjectsList.jsx";
 import AuditorOverview from "./pages/auditor/AuditorOverview.jsx";
 import AuditorIssues from "./pages/auditor/AuditorIssues.jsx";
@@ -46,6 +45,7 @@ import ExternalPagesReport from "./pages/auditor/reports/ExternalPagesReport.jsx
 import SitemapsReport from "./pages/auditor/reports/SitemapsReport.jsx";
 import OtherReport from "./pages/auditor/reports/OtherReport.jsx";
 import ProtectedRoute from "./components/ProtectedRoute.jsx";
+import PageLoader from "./components/PageLoader.jsx";
 import GscLayout from "./layouts/GscLayout.jsx";
 import GscDashboard from "./pages/gsc/GscDashboard.jsx";
 import GscOverview from "./pages/gsc/GscOverview.jsx";
@@ -172,21 +172,17 @@ const SemanticKeywordAnalyzer = lazy(() => import("./semanticsx/components/Seman
 const CompetitorContentAnalyzer = lazy(() => import("./semanticsx/components/CompetitorContentAnalyzer.jsx"));
 const YoutubeSEOChecker = lazy(() => import("./semanticsx/components/YoutubeSEOChecker.jsx"));
 
-function RouteLoading() {
-  return (
-    <div className="flex min-h-[320px] items-center justify-center text-sm text-white/50">
-      Loading...
-    </div>
-  );
-}
-
 export default function App() {
   return (
     <AuthProvider>
       <ProjectsProvider>
         <CrawlProvider>
           <BrowserRouter>
-            <Suspense fallback={<RouteLoading />}>
+            {/* Safety net only. Each layout carries its own loading and error
+                boundary around <Outlet/> (see RouteOutlet), so the shell stays
+                on screen while a page loads; this catches anything lazy that
+                renders outside a layout. */}
+            <Suspense fallback={<PageLoader fullScreen />}>
               <Routes>
             {/* Public site (with Navbar + Footer) */}
             <Route element={<RootLayout />}>
@@ -203,10 +199,16 @@ export default function App() {
             >
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/projects" element={<ProjectsList />} />
+              {/* One central settings page; every category is a tab on it. The
+                  old per-category URLs redirect to their tab so existing
+                  bookmarks and the Stripe onboarding return link keep working. */}
               <Route path="/settings" element={<Navigate to="/settings/general" replace />} />
-              <Route path="/settings/general" element={<GeneralSettings />} />
-              <Route path="/settings/stripe" element={<StripeSettings />} />
-              <Route path="/settings/deepseek" element={<DeepSeekSettings />} />
+              <Route path="/settings/general" element={<SettingsPage />} />
+              <Route path="/settings/stripe" element={<LegacySettingsRedirect tab="stripe" />} />
+              <Route path="/settings/deepseek" element={<LegacySettingsRedirect tab="deepseek" />} />
+              <Route path="/settings/apis" element={<LegacySettingsRedirect tab="seo-apis" />} />
+              <Route path="/settings/google" element={<LegacySettingsRedirect tab="google" />} />
+              <Route path="/settings/*" element={<Navigate to="/settings/general" replace />} />
             </Route>
 
             {/* Admin Panel */}

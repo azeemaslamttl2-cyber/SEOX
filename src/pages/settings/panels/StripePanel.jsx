@@ -11,7 +11,13 @@ import {
   Building,
   Check,
 } from "lucide-react";
-import { getSessionToken } from '../../lib/authSession.js';
+import { getSessionToken } from '../../../lib/authSession.js';
+
+/**
+ * Stripe Connect panel, shown by the Settings page under the "Stripe & Payments"
+ * tab. It is the original Stripe Settings screen: the same `/api/stripe-connect`
+ * calls, the same `stripe_connections` records and the same onboarding flow.
+ */
 
 const emptyStatus = {
   connected: false,
@@ -74,7 +80,7 @@ function InfoTile({ icon: Icon, label, value, state = "default" }) {
   );
 }
 
-export default function StripeSettings() {
+export default function StripePanel() {
   const [status, setStatus] = useState(emptyStatus);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState("");
@@ -162,17 +168,8 @@ export default function StripeSettings() {
   }
 
   return (
-    <div className="stripe-settings-workspace w-full space-y-6">
-      {/* Header Section */}
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 className="font-display text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">
-            Stripe Settings
-          </h1>
-          <p className="mt-1 text-sm text-slate-500">
-            Connect payouts, manage payment credentials, and check Stripe account status.
-          </p>
-        </div>
+    <div className="stripe-settings-workspace w-full space-y-6 pb-10">
+      <div className="flex justify-end">
         <button
           onClick={loadStatus}
           disabled={loading || Boolean(busy)}

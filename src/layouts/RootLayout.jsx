@@ -1,7 +1,8 @@
-import { Outlet, useLocation } from "react-router-dom";
+import { useLocation } from "react-router-dom";
 import { useEffect } from "react";
 import Navbar from "../components/Navbar.jsx";
 import Footer from "../components/Footer.jsx";
+import RouteOutlet from "../components/RouteOutlet.jsx";
 
 export default function RootLayout({ children }) {
   const { pathname, hash } = useLocation();
@@ -29,7 +30,7 @@ export default function RootLayout({ children }) {
 
       <Navbar />
       <main>
-        {children || <Outlet />}
+        {children || <RouteOutlet />}
       </main>
       <Footer />
     </div>

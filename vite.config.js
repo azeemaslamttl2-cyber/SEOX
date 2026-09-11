@@ -38,6 +38,17 @@ import { onRequest as keywordResearchOnRequest } from "./functions/api/keywords/
 import { onRequest as ubersuggestOnRequest } from "./functions/api/keywords/ubersuggest.js";
 import { onRequest as contentOutlineOnRequest } from "./functions/api/content/outline.js";
 import { onRequest as aiHelperOnRequest } from "./functions/api/content/ai-helper.js";
+import { onRequest as entitiesExtractorOnRequest } from "./functions/api/content/entities-extractor.js";
+import { onRequest as entitiesGeneratorOnRequest } from "./functions/api/content/entities-generator.js";
+import { onRequest as contentNgramsOnRequest } from "./functions/api/content/ngrams.js";
+import { onRequest as contentNlpOnRequest } from "./functions/api/content/nlp.js";
+import { onRequest as contentGrammarOnRequest } from "./functions/api/content/grammar.js";
+import { onRequest as contentUniqueNgramsOnRequest } from "./functions/api/content/unique-ngrams.js";
+import { onRequest as contentSkipGramOnRequest } from "./functions/api/content/skip-gram.js";
+import { onRequest as contentOptimizationOnRequest } from "./functions/api/content/optimization.js";
+import { onRequest as contentWatermarkRemoverOnRequest } from "./functions/api/content/watermark-remover.js";
+import { onRequest as contentSemanticGeneratorOnRequest } from "./functions/api/content/semantic-generator.js";
+import { onRequest as contentAnalyzerOnRequest } from "./functions/api/content/content-analyzer.js";
 import { onRequest as textEditorOnRequest } from "./functions/api/seo-tools/text-editor.js";
 import { onRequest as domainSeparatorOnRequest } from "./functions/api/seo-tools/domain-separator.js";
 import { onRequest as wordCounterOnRequest } from "./functions/api/seo-tools/word-counter.js";
@@ -690,6 +701,138 @@ function contentOutlineApiPlugin() {
   };
 }
 
+function contentNlpApiPlugin() {
+  return {
+    name: "seox-content-nlp-api",
+    configureServer(server) {
+      registerContentNlpMiddleware(server);
+    },
+    configurePreviewServer(server) {
+      registerContentNlpMiddleware(server);
+    },
+  };
+}
+
+function contentGrammarApiPlugin() {
+  return {
+    name: "seox-content-grammar-api",
+    configureServer(server) {
+      registerContentGrammarMiddleware(server);
+    },
+    configurePreviewServer(server) {
+      registerContentGrammarMiddleware(server);
+    },
+  };
+}
+
+function contentUniqueNgramsApiPlugin() {
+  return {
+    name: "seox-content-unique-ngrams-api",
+    configureServer(server) {
+      registerContentUniqueNgramsMiddleware(server);
+    },
+    configurePreviewServer(server) {
+      registerContentUniqueNgramsMiddleware(server);
+    },
+  };
+}
+
+function contentSkipGramApiPlugin() {
+  return {
+    name: "seox-content-skip-gram-api",
+    configureServer(server) {
+      registerContentSkipGramMiddleware(server);
+    },
+    configurePreviewServer(server) {
+      registerContentSkipGramMiddleware(server);
+    },
+  };
+}
+
+function contentOptimizationApiPlugin() {
+  return {
+    name: "seox-content-optimization-api",
+    configureServer(server) {
+      registerContentOptimizationMiddleware(server);
+    },
+    configurePreviewServer(server) {
+      registerContentOptimizationMiddleware(server);
+    },
+  };
+}
+
+function contentWatermarkRemoverApiPlugin() {
+  return {
+    name: "seox-content-watermark-remover-api",
+    configureServer(server) {
+      registerContentWatermarkRemoverMiddleware(server);
+    },
+    configurePreviewServer(server) {
+      registerContentWatermarkRemoverMiddleware(server);
+    },
+  };
+}
+
+function contentSemanticGeneratorApiPlugin() {
+  return {
+    name: "seox-content-semantic-generator-api",
+    configureServer(server) {
+      registerContentSemanticGeneratorMiddleware(server);
+    },
+    configurePreviewServer(server) {
+      registerContentSemanticGeneratorMiddleware(server);
+    },
+  };
+}
+
+function contentAnalyzerApiPlugin() {
+  return {
+    name: "seox-content-content-analyzer-api",
+    configureServer(server) {
+      registerContentAnalyzerMiddleware(server);
+    },
+    configurePreviewServer(server) {
+      registerContentAnalyzerMiddleware(server);
+    },
+  };
+}
+
+function contentNgramsApiPlugin() {
+  return {
+    name: "seox-content-ngrams-api",
+    configureServer(server) {
+      registerContentNgramsMiddleware(server);
+    },
+    configurePreviewServer(server) {
+      registerContentNgramsMiddleware(server);
+    },
+  };
+}
+
+function entitiesGeneratorApiPlugin() {
+  return {
+    name: "seox-entities-generator-api",
+    configureServer(server) {
+      registerEntitiesGeneratorMiddleware(server);
+    },
+    configurePreviewServer(server) {
+      registerEntitiesGeneratorMiddleware(server);
+    },
+  };
+}
+
+function entitiesExtractorApiPlugin() {
+  return {
+    name: "seox-entities-extractor-api",
+    configureServer(server) {
+      registerEntitiesExtractorMiddleware(server);
+    },
+    configurePreviewServer(server) {
+      registerEntitiesExtractorMiddleware(server);
+    },
+  };
+}
+
 function aiHelperApiPlugin() {
   return {
     name: "seox-ai-helper-api",
@@ -1301,6 +1444,182 @@ function registerContentOutlineMiddleware(server) {
       sendJson(res, error?.status || 500, {
         success: false,
         message: error?.message || "Outline generation request failed.",
+      });
+    }
+  });
+}
+
+function registerContentNlpMiddleware(server) {
+  server.middlewares.use("/api/content/nlp", async (req, res) => {
+    try {
+      const request = await createWebRequest(req, "/api/content/nlp");
+      const response = await contentNlpOnRequest({ request, env: loadDevApiEnv() });
+      await sendWebResponse(res, response);
+    } catch (error) {
+      sendJson(res, error?.status || 500, {
+        success: false,
+        status: "error",
+        message: error?.message || "NLP request failed.",
+      });
+    }
+  });
+}
+
+function registerContentGrammarMiddleware(server) {
+  server.middlewares.use("/api/content/grammar", async (req, res) => {
+    try {
+      const request = await createWebRequest(req, "/api/content/grammar");
+      const response = await contentGrammarOnRequest({ request, env: loadDevApiEnv() });
+      await sendWebResponse(res, response);
+    } catch (error) {
+      sendJson(res, error?.status || 500, {
+        success: false,
+        status: "error",
+        message: error?.message || "Grammar request failed.",
+      });
+    }
+  });
+}
+
+function registerContentUniqueNgramsMiddleware(server) {
+  server.middlewares.use("/api/content/unique-ngrams", async (req, res) => {
+    try {
+      const request = await createWebRequest(req, "/api/content/unique-ngrams");
+      const response = await contentUniqueNgramsOnRequest({ request, env: loadDevApiEnv() });
+      await sendWebResponse(res, response);
+    } catch (error) {
+      sendJson(res, error?.status || 500, {
+        success: false,
+        status: "error",
+        message: error?.message || "Unique n-grams request failed.",
+      });
+    }
+  });
+}
+
+function registerContentSkipGramMiddleware(server) {
+  server.middlewares.use("/api/content/skip-gram", async (req, res) => {
+    try {
+      const request = await createWebRequest(req, "/api/content/skip-gram");
+      const response = await contentSkipGramOnRequest({ request, env: loadDevApiEnv() });
+      await sendWebResponse(res, response);
+    } catch (error) {
+      sendJson(res, error?.status || 500, {
+        success: false,
+        status: "error",
+        message: error?.message || "Skip-gram request failed.",
+      });
+    }
+  });
+}
+
+function registerContentOptimizationMiddleware(server) {
+  server.middlewares.use("/api/content/optimization", async (req, res) => {
+    try {
+      const request = await createWebRequest(req, "/api/content/optimization");
+      const response = await contentOptimizationOnRequest({ request, env: loadDevApiEnv() });
+      await sendWebResponse(res, response);
+    } catch (error) {
+      sendJson(res, error?.status || 500, {
+        success: false,
+        status: "error",
+        message: error?.message || "Content optimization request failed.",
+      });
+    }
+  });
+}
+
+function registerContentWatermarkRemoverMiddleware(server) {
+  server.middlewares.use("/api/content/watermark-remover", async (req, res) => {
+    try {
+      const request = await createWebRequest(req, "/api/content/watermark-remover");
+      const response = await contentWatermarkRemoverOnRequest({ request, env: loadDevApiEnv() });
+      await sendWebResponse(res, response);
+    } catch (error) {
+      sendJson(res, error?.status || 500, {
+        success: false,
+        status: "error",
+        message: error?.message || "Watermark remover request failed.",
+      });
+    }
+  });
+}
+
+function registerContentSemanticGeneratorMiddleware(server) {
+  server.middlewares.use("/api/content/semantic-generator", async (req, res) => {
+    try {
+      const request = await createWebRequest(req, "/api/content/semantic-generator");
+      const response = await contentSemanticGeneratorOnRequest({ request, env: loadDevApiEnv() });
+      await sendWebResponse(res, response);
+    } catch (error) {
+      sendJson(res, error?.status || 500, {
+        success: false,
+        status: "error",
+        message: error?.message || "Semantic generator request failed.",
+      });
+    }
+  });
+}
+
+function registerContentAnalyzerMiddleware(server) {
+  server.middlewares.use("/api/content/content-analyzer", async (req, res) => {
+    try {
+      const request = await createWebRequest(req, "/api/content/content-analyzer");
+      const response = await contentAnalyzerOnRequest({ request, env: loadDevApiEnv() });
+      await sendWebResponse(res, response);
+    } catch (error) {
+      sendJson(res, error?.status || 500, {
+        success: false,
+        status: "error",
+        message: error?.message || "Content analyzer request failed.",
+      });
+    }
+  });
+}
+
+function registerContentNgramsMiddleware(server) {
+  server.middlewares.use("/api/content/ngrams", async (req, res) => {
+    try {
+      const request = await createWebRequest(req, "/api/content/ngrams");
+      const response = await contentNgramsOnRequest({ request, env: loadDevApiEnv() });
+      await sendWebResponse(res, response);
+    } catch (error) {
+      sendJson(res, error?.status || 500, {
+        success: false,
+        status: "error",
+        message: error?.message || "N-grams request failed.",
+      });
+    }
+  });
+}
+
+function registerEntitiesGeneratorMiddleware(server) {
+  server.middlewares.use("/api/content/entities-generator", async (req, res) => {
+    try {
+      const request = await createWebRequest(req, "/api/content/entities-generator");
+      const response = await entitiesGeneratorOnRequest({ request, env: loadDevApiEnv() });
+      await sendWebResponse(res, response);
+    } catch (error) {
+      sendJson(res, error?.status || 500, {
+        success: false,
+        status: "error",
+        message: error?.message || "Entities generator request failed.",
+      });
+    }
+  });
+}
+
+function registerEntitiesExtractorMiddleware(server) {
+  server.middlewares.use("/api/content/entities-extractor", async (req, res) => {
+    try {
+      const request = await createWebRequest(req, "/api/content/entities-extractor");
+      const response = await entitiesExtractorOnRequest({ request, env: loadDevApiEnv() });
+      await sendWebResponse(res, response);
+    } catch (error) {
+      sendJson(res, error?.status || 500, {
+        success: false,
+        status: "error",
+        message: error?.message || "Entities extractor request failed.",
       });
     }
   });
@@ -1996,7 +2315,7 @@ function sendJson(res, status, payload) {
 }
 
 export default defineConfig({
-  plugins: [react(), proxyApiPlugin(), deepseekApiPlugin(), deepseekSettingsApiPlugin(), fetchUrlMetaApiPlugin(), pagespeedApiPlugin(), speedApiPlugin(), wordpressSecurityApiPlugin(), screamingFrogApiPlugin(), webmasterApiPlugin(), autocompleteApiPlugin(), gscTokenApiPlugin(), gbpApiPlugin(), projectsApiPlugin(), projectDetailsApiPlugin(), settingsApiPlugin(), backlinksAnalyzeApiPlugin(), w3cValidationApiPlugin(), expiredDomainsCheckApiPlugin(), backlinkCleanerApiPlugin(), backlinkIndexerApiPlugin(), keywordResearchApiPlugin(), ubersuggestApiPlugin(), authApiPlugin(), contentOutlineApiPlugin(), aiHelperApiPlugin(), textEditorApiPlugin(), domainSeparatorApiPlugin(), wordCounterApiPlugin(), botViewerApiPlugin(), daPaCheckerApiPlugin(), metaExtractorApiPlugin(), sitemapExtractorApiPlugin(), seoToolsApiPlugin(), promptTrackingApiPlugin(), brandSentimentApiPlugin(), citationFlowApiPlugin(), competitorResearchApiPlugin(), internalLinksApiPlugin(), aiChatApiPlugin(), llmsGeneratorApiPlugin(), aiModelCheckerApiPlugin(), aiCompatibilityApiPlugin(), semanticWriterEditorApiPlugin(), contentWriterApiPlugin(), auditorApiPlugin(), crawlerApiPlugin()],
+  plugins: [react(), proxyApiPlugin(), deepseekApiPlugin(), deepseekSettingsApiPlugin(), fetchUrlMetaApiPlugin(), pagespeedApiPlugin(), speedApiPlugin(), wordpressSecurityApiPlugin(), screamingFrogApiPlugin(), webmasterApiPlugin(), autocompleteApiPlugin(), gscTokenApiPlugin(), gbpApiPlugin(), projectsApiPlugin(), projectDetailsApiPlugin(), settingsApiPlugin(), backlinksAnalyzeApiPlugin(), w3cValidationApiPlugin(), expiredDomainsCheckApiPlugin(), backlinkCleanerApiPlugin(), backlinkIndexerApiPlugin(), keywordResearchApiPlugin(), ubersuggestApiPlugin(), authApiPlugin(), contentOutlineApiPlugin(), entitiesExtractorApiPlugin(), entitiesGeneratorApiPlugin(), contentNgramsApiPlugin(), contentNlpApiPlugin(), contentGrammarApiPlugin(), contentUniqueNgramsApiPlugin(), contentSkipGramApiPlugin(), contentOptimizationApiPlugin(), contentWatermarkRemoverApiPlugin(), contentSemanticGeneratorApiPlugin(), contentAnalyzerApiPlugin(), aiHelperApiPlugin(), textEditorApiPlugin(), domainSeparatorApiPlugin(), wordCounterApiPlugin(), botViewerApiPlugin(), daPaCheckerApiPlugin(), metaExtractorApiPlugin(), sitemapExtractorApiPlugin(), seoToolsApiPlugin(), promptTrackingApiPlugin(), brandSentimentApiPlugin(), citationFlowApiPlugin(), competitorResearchApiPlugin(), internalLinksApiPlugin(), aiChatApiPlugin(), llmsGeneratorApiPlugin(), aiModelCheckerApiPlugin(), aiCompatibilityApiPlugin(), semanticWriterEditorApiPlugin(), contentWriterApiPlugin(), auditorApiPlugin(), crawlerApiPlugin()],
   server: {
     port: 3000,
     host: true,

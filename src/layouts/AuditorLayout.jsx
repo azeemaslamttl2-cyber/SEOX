@@ -1,9 +1,10 @@
-import { Navigate, Outlet } from "react-router-dom";
+import { Navigate } from "react-router-dom";
 import { Database, Loader2 } from "lucide-react";
 import IconRail from "../components/auditor/IconRail.jsx";
 import SecondaryNav from "../components/auditor/SecondaryNav.jsx";
 import TopBar from "../components/auditor/TopBar.jsx";
 import { useCrawl } from "../context/CrawlContext.jsx";
+import RouteOutlet from "../components/RouteOutlet.jsx";
 
 export default function AuditorLayout() {
   const { projects, storageReady } = useCrawl();
@@ -39,7 +40,7 @@ export default function AuditorLayout() {
         <div className="flex min-w-0 flex-1 flex-col">
           <TopBar />
           <main className="app-main min-w-0 flex-1 px-4 pb-12 pt-4 lg:px-6">
-            <Outlet />
+            <RouteOutlet />
           </main>
         </div>
       </div>

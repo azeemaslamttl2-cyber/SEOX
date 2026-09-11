@@ -1,7 +1,7 @@
-import { Outlet } from "react-router-dom";
 import IconRail from "../components/auditor/IconRail.jsx";
 import OnPageSecondaryNav from "../components/onpage/OnPageSecondaryNav.jsx";
 import OnPageTopBar from "../components/onpage/OnPageTopBar.jsx";
+import RouteOutlet from "../components/RouteOutlet.jsx";
 
 export default function OnPageSeoLayout() {
   return (
@@ -12,7 +12,7 @@ export default function OnPageSeoLayout() {
         <OnPageTopBar />
         <main className="app-main flex-1 overflow-y-auto px-4 py-6 lg:px-8">
           {/* Ambient glow */}
-          <Outlet />
+          <RouteOutlet />
         </main>
       </div>
     </div>

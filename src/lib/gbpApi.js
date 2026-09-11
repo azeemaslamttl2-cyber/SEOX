@@ -1,5 +1,5 @@
 import { getSessionToken } from './authSession.js';
-import { loadGooglePublicSettings } from './googleOAuthConfig.js';
+import { loadGooglePublicSettings, resolveConfiguredRedirect } from './googleOAuthConfig.js';
 
 // Client for /api/gbp/*. Every call carries the SEOX session token; the server
 // resolves the owner from it, so no user id is ever sent from the browser.
@@ -39,16 +39,18 @@ async function request(path, { method = 'GET', body, params } = {}) {
 
 /**
  * Business Profile redirect URI, read from admin_settings through the public
- * settings endpoint. Falls back to the GSC redirect and then the runtime
- * origin, matching the precedence the environment variables used to have.
+ * settings endpoint.
+ *
+ * It used to fall back to the Search Console redirect before the runtime
+ * origin. That URI belongs to a different route (/gsc/oauth-callback), and the
+ * server fell back differently again, so with google_gbp_redirect_uri unset the
+ * two sides derived different values and the connect call failed with
+ * "redirect URI mismatch". Both sides now use the configured value, or this
+ * app's own Business Profile callback - and nothing else.
  */
 export async function getGbpRedirectUri() {
   const settings = await loadGooglePublicSettings();
-  return (
-    settings.googleGbpRedirectUri ||
-    settings.googleGscRedirectUri ||
-    `${window.location.origin}/gbp/oauth-callback`
-  );
+  return resolveConfiguredRedirect(settings.googleGbpRedirectUri, "gbp");
 }
 
 export function parseGbpOAuthState(rawState) {

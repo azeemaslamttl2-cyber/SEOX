@@ -65,7 +65,7 @@ export async function onRequest({ request, env }) {
 
     useDatabase(env);
 
-    const { clientId, clientSecret, redirectUri: configuredRedirectUri } = await getOAuthConfig(env);
+    const { clientId, clientSecret, redirectUri: expectedRedirectUri } = await getOAuthConfig(env, request);
     if (!clientId) {
       return jsonResponse(
         { error: 'Google OAuth is not configured. Add the Google Client ID in Settings > General.' },
@@ -86,11 +86,15 @@ export async function onRequest({ request, env }) {
       await requireProject(env, userId, projectId);
       if (!redirectUri) return jsonResponse({ error: 'Missing redirect URI.' }, 400, headers);
 
-      if (configuredRedirectUri && redirectUri !== configuredRedirectUri) {
+      // Both sides now derive the same value, so a mismatch means the stored
+      // google_gbp_redirect_uri points somewhere other than this app's Business
+      // Profile callback. Say which setting is wrong and what it should be.
+      if (expectedRedirectUri && redirectUri !== expectedRedirectUri) {
         return jsonResponse(
           {
             error:
-              `Google OAuth redirect URI mismatch. The request used ${redirectUri}, but the configured redirect is ${configuredRedirectUri}. Update the OAuth client to use the exact same URI.`,
+              `Google OAuth redirect URI mismatch. This page requested ${redirectUri}, but Settings > General > Google has the Business Profile redirect set to ${expectedRedirectUri}. ` +
+              `Set the Business Profile Redirect URI to ${redirectUri} (or clear it to use that value automatically), and add the same URI under Authorized redirect URIs on the Google OAuth client.`,
           },
           400,
           headers
@@ -132,6 +136,18 @@ export async function onRequest({ request, env }) {
       }
       if (!code || !redirectUri) {
         return jsonResponse({ error: 'Missing authorization code or redirect URI.' }, 400, headers);
+      }
+      // Google requires the redirect URI on the token exchange to match the one
+      // the consent was issued for, so the same check guards this leg.
+      if (expectedRedirectUri && redirectUri !== expectedRedirectUri) {
+        return jsonResponse(
+          {
+            error:
+              `Google OAuth redirect URI mismatch. The sign-in returned to ${redirectUri}, but the configured Business Profile redirect is ${expectedRedirectUri}.`,
+          },
+          400,
+          headers
+        );
       }
       await requireProject(env, userId, projectId);
 

@@ -1,7 +1,7 @@
-import { Outlet } from "react-router-dom";
 import IconRail from "../components/auditor/IconRail.jsx";
 import GeoSecondaryNav from "../components/geo/GeoSecondaryNav.jsx";
 import GeoTopBar from "../components/geo/GeoTopBar.jsx";
+import RouteOutlet from "../components/RouteOutlet.jsx";
 
 export default function GeoLayout() {
   return (
@@ -12,7 +12,7 @@ export default function GeoLayout() {
         <div className="flex min-w-0 flex-1 flex-col">
           <GeoTopBar />
           <main className="app-main min-w-0 flex-1 px-4 pb-12 pt-4 lg:px-6">
-            <Outlet />
+            <RouteOutlet />
           </main>
         </div>
       </div>
