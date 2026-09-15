@@ -1029,15 +1029,15 @@ Return a clean structured JSON list of competitor URLs starting with https://.`;
 
                 <div className="flex-1 overflow-auto p-6">
                     {/* Header */}
-                    <div className="bg-gradient-to-r from-brand-500 via-amber-500 to-amber-600 rounded-2xl p-8 text-white mb-8 shadow-xl">
+                    <div className="ctool-hero mb-8">
                         <div className="flex items-center justify-between">
                             <div className="flex items-center gap-4">
-                                <div className="w-14 h-14 bg-white/10 rounded-xl flex items-center justify-center backdrop-blur-sm">
-                                    <Edit3 className="w-7 h-7" />
+                                <div className="ctool-hero-icon">
+                                    <Edit3 className="w-5 h-5" />
                                 </div>
                                 <div>
-                                    <h1 className="text-3xl font-bold">Content Writer</h1>
-                                    <p className="text-brand-200 mt-1">Create SEO-optimized content with AI assistance</p>
+                                    <h1 className="ctool-title font-display">Content Writer</h1>
+                                    <p className="ctool-subtitle">Create SEO-optimized content with AI assistance</p>
                                 </div>
                             </div>
                             <button
@@ -1999,7 +1999,7 @@ Return a clean structured JSON list of competitor URLs starting with https://.`;
                         <button
                             onClick={extractAllOutlines}
                             disabled={isExtractingAll}
-                            className="mt-4 w-full py-3 bg-gradient-to-r from-emerald-600 to-teal-600 text-white rounded-xl font-semibold hover:shadow-lg transition flex items-center justify-center gap-2"
+                            className="ui-button ui-button-primary mt-4 w-full"
                         >
                             {isExtractingAll ? <Loader2 className="w-5 h-5 animate-spin" /> : <RefreshCw className="w-5 h-5" />}
                             Extract All Outlines
@@ -2354,12 +2354,12 @@ Return a clean structured JSON list of competitor URLs starting with https://.`;
         return (
             <div className="space-y-6">
                 {/* Header */}
-                <div className="bg-gradient-to-r from-orange-500 to-amber-500 rounded-2xl p-6 text-white">
-                    <div className="flex items-center gap-3 mb-2">
-                        <FileText className="w-8 h-8" />
+                <div className="scw-step-head">
+                    <div className="ctool-hero-row">
+                        <span className="ctool-hero-icon"><FileText className="w-5 h-5" /></span>
                         <div>
-                            <h3 className="text-xl font-bold">Competitor Content Analysis</h3>
-                            <p className="text-orange-100 text-sm">Paste competitor content to inspire AI writing style (optional)</p>
+                            <h3 className="ctool-title font-display">Competitor Content Analysis</h3>
+                            <p className="ctool-subtitle">Paste competitor content to inspire AI writing style (optional)</p>
                         </div>
                     </div>
                 </div>
@@ -3031,7 +3031,7 @@ Return JSON: {"ngrams": ["unique phrase 1", "unique phrase 2", ...]}`,
                     <button
                         onClick={fetchUniqueNgrams}
                         disabled={!mainKeyword || isLoadingKeywords.uniqueNgrams}
-                        className="py-3 bg-gradient-to-r from-emerald-600 to-teal-600 text-white rounded-xl font-semibold hover:shadow-lg transition flex items-center justify-center gap-2 disabled:opacity-50 text-sm"
+                        className="ui-button ui-button-primary"
                     >
                         {isLoadingKeywords.uniqueNgrams ? <Loader2 className="w-4 h-4 animate-spin" /> : <Star className="w-4 h-4" />}
                         Unique N-Grams
@@ -3494,8 +3494,8 @@ Return JSON: {"ngrams": ["unique phrase 1", "unique phrase 2", ...]}`,
 
                 {/* AI Features Section */}
                 {allAutoSuggestKeywords.length > 0 && (
-                    <div className="bg-gradient-to-r from-brand-500 to-amber-600 rounded-2xl p-1">
-                        <div className="rounded-xl bg-white/[0.03] p-6">
+                    <div className="scw-accent-frame">
+                        <div className="scw-accent-body">
                             <div className="flex items-center justify-between mb-4">
                                 <h3 className="scw-serp-title flex items-center gap-2">
                                     <Brain className="w-5 h-5" />
@@ -3780,12 +3780,12 @@ Return JSON: {"ngrams": ["unique phrase 1", "unique phrase 2", ...]}`,
 
         return (
             <div className="space-y-6">
-                <div className="bg-gradient-to-r from-emerald-600 to-teal-600 rounded-2xl p-6 text-white">
-                    <div className="flex items-center gap-3 mb-4">
-                        <Type className="w-8 h-8" />
+                <div className="scw-step-head">
+                    <div className="ctool-hero-row mb-4">
+                        <span className="ctool-hero-icon"><Type className="w-5 h-5" /></span>
                         <div>
-                            <h3 className="text-xl font-bold">Grammar Generator</h3>
-                            <p className="text-emerald-200 text-sm">Generate semantic word relationships for "{mainKeyword || 'your keyword'}"</p>
+                            <h3 className="ctool-title font-display">Grammar Generator</h3>
+                            <p className="ctool-subtitle">Generate semantic word relationships for "{mainKeyword || 'your keyword'}"</p>
                         </div>
                     </div>
                     <button

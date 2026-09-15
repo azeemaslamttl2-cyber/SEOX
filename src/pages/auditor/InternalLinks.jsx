@@ -753,7 +753,7 @@ export default function InternalLinks() {
                 filteredRows.slice(0, visibleCount).map((r, i) => (
                   <tr key={i} className="border-b border-white/[0.04] hover:bg-white/[0.025] align-top">
                     <td className="px-3 py-3">
-                      <span className="inline-flex h-7 w-7 items-center justify-center rounded-md bg-gradient-to-br from-amber-500/30 to-amber-500/10 text-xs font-bold text-amber-200 ring-1 ring-inset ring-amber-500/30">
+                      <span className="pr-badge is-mid">
                         {r.pr}
                       </span>
                     </td>
