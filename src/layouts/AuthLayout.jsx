@@ -1,6 +1,7 @@
-import { Link, Outlet, useLocation } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { ArrowLeft, Sparkles, ShieldCheck, Zap, TrendingUp } from "lucide-react";
 import Logo from "../components/Logo.jsx";
+import RouteOutlet from "../components/RouteOutlet.jsx";
 
 export default function AuthLayout() {
   const { pathname } = useLocation();
@@ -43,7 +44,7 @@ export default function AuthLayout() {
         {/* Form column */}
         <div className="flex w-full justify-center lg:justify-end">
           <div className="w-full max-w-md">
-            <Outlet />
+            <RouteOutlet />
           </div>
         </div>
 

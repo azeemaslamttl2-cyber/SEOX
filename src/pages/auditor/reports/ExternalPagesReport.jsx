@@ -1,10 +1,10 @@
 import ReportShell, { StatCard, ChartCard } from "../../../components/auditor/ReportShell.jsx";
 import DonutChart from "../../../components/auditor/DonutChart.jsx";
-import { useCrawl } from "../../../context/CrawlContext.jsx";
+import { useCrawlProgress } from "../../../context/CrawlContext.jsx";
 import { externalLinkStats, safeSegments } from "../../../lib/auditor/reports/liveReportData.js";
 
 export default function ExternalPagesReport() {
-  const { stats } = useCrawl();
+  const { stats } = useCrawlProgress();
   const report = externalLinkStats(stats?.latestUrls || []);
   const maxDomainLinks = Math.max(...report.domains.map((item) => item.links), 1);
 

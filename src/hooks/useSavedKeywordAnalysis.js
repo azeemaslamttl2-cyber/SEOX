@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { useCrawl } from "../context/CrawlContext.jsx";
+import { useProjectSelection } from "../context/CrawlContext.jsx";
 
 const KEY_ALIASES = {
   new: ["new-keywords", "newKeywords"],
@@ -21,7 +21,7 @@ function readProjectData(project, kind) {
 }
 
 export function useSavedKeywordAnalysis(kind) {
-  const { project, storageReady } = useCrawl();
+  const { project, storageReady } = useProjectSelection();
   const saved = useMemo(() => readProjectData(project, kind), [kind, project]);
 
   return useMemo(() => ({

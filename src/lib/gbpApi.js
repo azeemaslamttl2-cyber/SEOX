@@ -1,4 +1,5 @@
 import { getSessionToken } from './authSession.js';
+import { loadGooglePublicSettings, resolveConfiguredRedirect } from './googleOAuthConfig.js';
 
 // Client for /api/gbp/*. Every call carries the SEOX session token; the server
 // resolves the owner from it, so no user id is ever sent from the browser.
@@ -36,23 +37,20 @@ async function request(path, { method = 'GET', body, params } = {}) {
   return data;
 }
 
-export function getGbpRedirectUri() {
-  const configured =
-    (typeof import.meta !== 'undefined' && import.meta.env
-      ? import.meta.env.GOOGLE_REDIRECT_URI ||
-        import.meta.env.GOOGLE_AUTH_REDIRECT_URI ||
-        import.meta.env.GOOGLE_OAUTH_REDIRECT_URI ||
-        import.meta.env.VITE_GOOGLE_REDIRECT_URI
-      : '') ||
-    (typeof process !== 'undefined'
-      ? process.env.GOOGLE_REDIRECT_URI ||
-        process.env.GOOGLE_AUTH_REDIRECT_URI ||
-        process.env.GOOGLE_OAUTH_REDIRECT_URI ||
-        process.env.VITE_GOOGLE_REDIRECT_URI
-      : '');
-
-  if (configured) return configured;
-  return `${window.location.origin}/gbp/oauth-callback`;
+/**
+ * Business Profile redirect URI, read from admin_settings through the public
+ * settings endpoint.
+ *
+ * It used to fall back to the Search Console redirect before the runtime
+ * origin. That URI belongs to a different route (/gsc/oauth-callback), and the
+ * server fell back differently again, so with google_gbp_redirect_uri unset the
+ * two sides derived different values and the connect call failed with
+ * "redirect URI mismatch". Both sides now use the configured value, or this
+ * app's own Business Profile callback - and nothing else.
+ */
+export async function getGbpRedirectUri() {
+  const settings = await loadGooglePublicSettings();
+  return resolveConfiguredRedirect(settings.googleGbpRedirectUri, "gbp");
 }
 
 export function parseGbpOAuthState(rawState) {
@@ -73,15 +71,15 @@ export function getConnectionStatus(projectId) {
 export async function getGbpAuthUrl(projectId, returnTo = '/local-seo/gbp') {
   const data = await request('/connect', {
     method: 'POST',
-    body: { action: 'auth-url', projectId, returnTo, redirectUri: getGbpRedirectUri() },
+    body: { action: 'auth-url', projectId, returnTo, redirectUri: await getGbpRedirectUri() },
   });
   return data.authUrl;
 }
 
-export function exchangeGbpCode({ projectId, code }) {
+export async function exchangeGbpCode({ projectId, code }) {
   return request('/connect', {
     method: 'POST',
-    body: { action: 'exchange', projectId, code, redirectUri: getGbpRedirectUri() },
+    body: { action: 'exchange', projectId, code, redirectUri: await getGbpRedirectUri() },
   });
 }
 

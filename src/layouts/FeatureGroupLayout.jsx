@@ -1,4 +1,4 @@
-import { NavLink, Outlet, useLocation } from "react-router-dom";
+import { NavLink, useLocation } from "react-router-dom";
 import {
   Bot,
   Code,
@@ -27,6 +27,7 @@ import {
 } from "lucide-react";
 import IconRail from "../components/auditor/IconRail.jsx";
 import ProjectSelector from "../components/ProjectSelector.jsx";
+import RouteOutlet from "../components/RouteOutlet.jsx";
 
 const groups = {
   schema: {
@@ -221,7 +222,7 @@ export default function FeatureGroupLayout({ group }) {
         </header>
 
         <main className="app-main min-w-0 flex-1 overflow-y-auto px-4 py-6 lg:px-8">
-          <Outlet />
+          <RouteOutlet />
         </main>
       </div>
     </div>

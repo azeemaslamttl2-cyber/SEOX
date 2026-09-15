@@ -1,4 +1,5 @@
 import { requireAuthenticatedUser } from "../_lib/request-auth.js";
+import { getAdminSetting } from "../_lib/app-settings.js";
 import { parsePublicHttpUrl } from "../_lib/url-security.js";
 
 // Shared Node-style handler used by the Cloudflare Pages Function wrapper.
@@ -25,9 +26,11 @@ export default async function handler(req, res) {
     return res.status(error?.status || 400).json({ error: error?.message || "Invalid URL format" });
   }
 
-  const apiKey = req?.env?.PAGESPEED_API_KEY || process.env.PAGESPEED_API_KEY;
+  const apiKey = await getAdminSetting("pagespeed_api_key", req?.env);
   if (!apiKey) {
-    return res.status(500).json({ error: "PageSpeed API key not configured on server" });
+    return res.status(500).json({
+      error: "PageSpeed API key not configured. Add it in Settings > General.",
+    });
   }
 
   let apiUrl = `https://www.googleapis.com/pagespeedonline/v5/runPagespeed?url=${encodeURIComponent(

@@ -65,6 +65,36 @@ async function verifyAdminToken(token, env) {
   return admin;
 }
 
+async function resolveDeepSeekApiKeyForUser(user, env) {
+  if (!user?.id) {
+    const error = new Error('DeepSeek API is not configured. Please configure it from DeepSeek Settings.');
+    error.status = 400;
+    throw error;
+  }
+
+  try {
+    configureMysqlConnection(env);
+    const row = await queryOne(
+      'SELECT api_key FROM deepseek_api_settings WHERE user_id = ? ORDER BY id DESC LIMIT 1',
+      [user.id]
+    );
+    const apiKey = typeof row?.api_key === 'string' ? row.api_key.trim() : '';
+    if (!apiKey) {
+      const error = new Error('DeepSeek API is not configured. Please configure it from DeepSeek Settings.');
+      error.status = 400;
+      throw error;
+    }
+    return apiKey;
+  } catch (error) {
+    if (error?.code === 'ER_NO_SUCH_TABLE') {
+      const error2 = new Error('DeepSeek API is not configured. Please configure it from DeepSeek Settings.');
+      error2.status = 400;
+      throw error2;
+    }
+    throw error;
+  }
+}
+
 export async function onRequest({ request, env }) {
   const headers = { ...corsHeaders('POST, OPTIONS'), 'Cache-Control': 'no-store' };
 
@@ -76,7 +106,8 @@ export async function onRequest({ request, env }) {
   try {
     const body = await readJson(request);
     const adminToken = normalizeAdminToken(body?.admin_token);
-    await verifyAdminToken(adminToken, env);
+    const adminUser = await verifyAdminToken(adminToken, env);
+    const deepSeekApiKey = await resolveDeepSeekApiKeyForUser(adminUser, env);
 
     const action = String(body?.action || 'chat').trim();
     const keyword = String(body?.keyword || '').trim();
@@ -88,7 +119,7 @@ export async function onRequest({ request, env }) {
       return apiError(Object.assign(new Error('keyword, content, or message is required.'), { status: 400 }), headers);
     }
 
-    const result = await processAiHelperRequest({ action, keyword, content, message, context });
+    const result = await processAiHelperRequest({ action, keyword, content, message, context, apiKey: deepSeekApiKey });
 
     return jsonResponse(
       {

@@ -1,8 +1,7 @@
 import { useState } from "react";
 import { Network, Sparkles, BookOpen, FileText, Search } from "lucide-react";
 import { skipGramData } from "../../data/contentData.js";
-import { generateSkipGramWords } from "../../lib/contentTools.js";
-import { generateSkipGramWordsDeepSeek } from "../../lib/deepseekContent.js";
+import { generateSkipGramDominantWords } from "../../lib/skipGramService.js";
 
 export default function SkipGramWords() {
   const d = skipGramData;
@@ -16,9 +15,11 @@ export default function SkipGramWords() {
     setLoading(true);
     setError("");
     try {
-      setResults({ word, words: await generateSkipGramWordsDeepSeek(word) });
+      const result = await generateSkipGramDominantWords({ word });
+      setResults({ word: result.word, words: result.words });
+      if (!result.ai.applied) setError(result.ai.reason);
     } catch (err) {
-      setResults({ word, words: generateSkipGramWords(word) });
+      setResults(null);
       setError(err.message || "DeepSeek could not generate skip-gram words. Showing local fallback results.");
     } finally {
       setLoading(false);

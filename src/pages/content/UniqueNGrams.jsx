@@ -1,8 +1,7 @@
 import { useState } from "react";
 import { Sparkles, Lightbulb } from "lucide-react";
 import { uniqueNgramsData } from "../../data/contentData.js";
-import { generateUniqueNgrams } from "../../lib/contentTools.js";
-import { generateUniqueNgramsDeepSeek } from "../../lib/deepseekContent.js";
+import { generateUniqueNgramPhrases } from "../../lib/uniqueNgramsService.js";
 
 export default function UniqueNGrams() {
   const d = uniqueNgramsData;
@@ -16,9 +15,11 @@ export default function UniqueNGrams() {
     setLoading(true);
     setError("");
     try {
-      setResults(await generateUniqueNgramsDeepSeek(topic));
+      const result = await generateUniqueNgramPhrases({ topic });
+      setResults(result.ngrams);
+      if (!result.ai.applied) setError(result.ai.reason);
     } catch (err) {
-      setResults(generateUniqueNgrams(topic));
+      setResults(null);
       setError(err.message || "DeepSeek could not generate n-grams. Showing local fallback results.");
     } finally {
       setLoading(false);

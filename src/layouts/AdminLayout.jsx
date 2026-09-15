@@ -1,4 +1,4 @@
-import { Outlet, Link, NavLink } from "react-router-dom";
+import { Link, NavLink } from "react-router-dom";
 import {
   ArrowLeft,
   LayoutDashboard,
@@ -9,6 +9,7 @@ import {
   Shield,
   WalletCards,
 } from "lucide-react";
+import RouteOutlet from "../components/RouteOutlet.jsx";
 
 const sideNavItems = [
   { label: "Dashboard", to: "/admin", icon: LayoutDashboard, end: true },
@@ -80,7 +81,7 @@ export default function AdminLayout() {
 
           {/* Page content */}
           <main className="app-main min-w-0 flex-1 px-5 pb-12 pt-6 lg:px-8">
-            <Outlet />
+            <RouteOutlet />
           </main>
         </div>
       </div>

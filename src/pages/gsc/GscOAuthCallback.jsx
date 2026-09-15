@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { AlertCircle, Loader2 } from "lucide-react";
 import { useAuth } from "../../context/AuthContext.jsx";
-import { getGoogleRedirectUri, parseGscOAuthState } from "../../lib/googleOAuthConfig.js";
+import { parseGscOAuthState, resolveGoogleRedirectUri } from "../../lib/googleOAuthConfig.js";
 import { writeStoredGscSession } from "../../lib/gscSession.js";
 import { getSessionToken } from "../../lib/authSession.js";
 import { fetchProjectGscPerformance } from "../../lib/gscPerformance.js";
@@ -50,6 +50,10 @@ export default function GscOAuthCallback() {
       try {
         const sessionToken = getSessionToken();
         if (!sessionToken) throw new Error("Your login session is missing. Please sign in again.");
+        // Google requires the exchange to use the exact redirect URI that
+        // started the flow, so resolve it from the settings API rather than
+        // from a possibly-cold cache.
+        const redirectUri = await resolveGoogleRedirectUri();
         const response = await fetch("/api/gsc-token", {
           method: "POST",
           headers: {
@@ -61,7 +65,7 @@ export default function GscOAuthCallback() {
             code,
             userId,
             projectId: state.projectId || null,
-            redirectUri: getGoogleRedirectUri(),
+            redirectUri,
           }),
         });
         const data = await response.json().catch(() => ({}));

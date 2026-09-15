@@ -8,6 +8,9 @@ import {
 const STORAGE_PREFIX = "seox.techSeoToolResult.";
 const STORAGE_VERSION = 1;
 const MAX_STORED_STRING_LENGTH = 120000;
+// How long a session-cached tool result is trusted without re-reading MySQL.
+// Results only change when this tab runs the tool, and that path writes through.
+const RESULT_STALE_MS = 10 * 60 * 1000;
 
 function projectIdFor(project, projectUrl) {
   if (project?.id) return project.id;
@@ -53,7 +56,14 @@ function readLocalResult(toolKey, projectId, projectUrl) {
     const parsed = JSON.parse(raw);
     if (parsed?.version !== STORAGE_VERSION) return null;
     if (parsed.projectUrl && parsed.projectUrl !== projectUrl) return null;
-    return parsed.result || null;
+    if (!parsed.result) return null;
+    // `updatedAt` has always been written here but never read back, so every
+    // page mount issued a database query even when this copy was seconds old.
+    const updatedAt = Date.parse(parsed.updatedAt || "");
+    return {
+      result: parsed.result,
+      fresh: Number.isFinite(updatedAt) && Date.now() - updatedAt < RESULT_STALE_MS,
+    };
   } catch {
     return null;
   }
@@ -90,15 +100,23 @@ export function useTechSeoToolResult({ toolKey, project, projectUrl, emptyResult
   );
   const [persistenceError, setPersistenceError] = useState("");
 
+  // `emptyResult` is deliberately not a dependency. Every current caller passes
+  // a module-level constant so it is stable today, but an inline object at any
+  // future call site would turn this into a refetch on every render.
+  const emptyResultRef = useRef(emptyResult);
+  emptyResultRef.current = emptyResult;
+
   useEffect(() => {
     const loadId = loadIdRef.current + 1;
     loadIdRef.current = loadId;
     setPersistenceError("");
 
-    const localResult = readLocalResult(toolKey, projectId, projectUrl);
-    setResultState(localResult || defaultResult(emptyResult, projectUrl));
+    const cached = readLocalResult(toolKey, projectId, projectUrl);
+    setResultState(cached?.result || defaultResult(emptyResultRef.current, projectUrl));
 
     if (!userId || !projectId) return;
+    // A fresh session copy is authoritative - skip the database round-trip.
+    if (cached?.fresh) return;
 
     loadToolResult(userId, { projectId, toolKey })
       .then((storedResult) => {
@@ -112,7 +130,7 @@ export function useTechSeoToolResult({ toolKey, project, projectUrl, emptyResult
         if (loadIdRef.current !== loadId) return;
         setPersistenceError(error?.message || "Could not load saved tool result.");
       });
-  }, [emptyResult, projectId, projectUrl, toolKey, userId]);
+  }, [projectId, projectUrl, toolKey, userId]);
 
   const saveResult = useCallback(
     async (nextResult) => {

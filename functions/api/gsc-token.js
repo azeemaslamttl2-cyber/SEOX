@@ -11,6 +11,7 @@ import {
   jsonResponse,
   readJson,
 } from "../_lib/http.js";
+import { getAdminSettings } from "../_lib/app-settings.js";
 
 const TOKEN_ENDPOINT = "https://oauth2.googleapis.com/token";
 const USERINFO_ENDPOINT = "https://www.googleapis.com/oauth2/v2/userinfo";
@@ -29,10 +30,11 @@ function cleanFields(fields) {
   );
 }
 
-function getOAuthConfig(env) {
+async function getOAuthConfig(env) {
+  const settings = await getAdminSettings(['google_client_id', 'google_client_secret'], env);
   return {
-    clientId: env.GOOGLE_CLIENT_ID || env.VITE_GOOGLE_CLIENT_ID,
-    clientSecret: env.GOOGLE_CLIENT_SECRET,
+    clientId: settings.google_client_id,
+    clientSecret: settings.google_client_secret,
   };
 }
 
@@ -81,7 +83,7 @@ async function refreshStoredTokens(env, userId, storedTokens, projectId) {
     );
   }
 
-  const { clientId, clientSecret } = getOAuthConfig(env);
+  const { clientId, clientSecret } = await getOAuthConfig(env);
   const refreshResponse = await fetch(TOKEN_ENDPOINT, {
     method: "POST",
     headers: { "Content-Type": "application/x-www-form-urlencoded" },
@@ -147,7 +149,7 @@ export async function onRequest({ request, env }) {
     const body = await readJson(request);
     const { action, code, userId, projectId, projectDomain, projectUrl, redirectUri, returnTo, source } = body;
     const scopedUserId = decoded.uid;
-    const { clientId, clientSecret } = getOAuthConfig(env);
+    const { clientId, clientSecret } = await getOAuthConfig(env);
 
     if (!clientId || (action !== "auth-url" && !clientSecret)) {
       return jsonResponse(

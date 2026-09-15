@@ -1,12 +1,12 @@
 import ReportShell, { StatCard, ChartCard } from "../../../components/auditor/ReportShell.jsx";
 import DonutChart from "../../../components/auditor/DonutChart.jsx";
 import { useAuditData } from "../../../hooks/useAuditData.js";
-import { useCrawl } from "../../../context/CrawlContext.jsx";
+import { useCrawlProgress } from "../../../context/CrawlContext.jsx";
 import { htmlRows, safeSegments } from "../../../lib/auditor/reports/liveReportData.js";
 
 export default function SitemapsReport() {
   const { issueCategories } = useAuditData();
-  const { stats } = useCrawl();
+  const { stats } = useCrawlProgress();
   const latestUrls = stats?.latestUrls || [];
   const auditIssues = stats?.auditIssues || {};
   const sitemapCategory = issueCategories.find((category) => category.title === "Sitemaps");

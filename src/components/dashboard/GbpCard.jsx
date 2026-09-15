@@ -11,7 +11,8 @@ import {
   RefreshCw,
   Star,
 } from 'lucide-react';
-import { getConnectionStatus, getGbpOverview, refreshGbpOverview } from '../../lib/gbpApi.js';
+import { getGbpOverview, refreshGbpOverview } from '../../lib/gbpApi.js';
+import { readGbpConnectionStatus } from '../../lib/gbpCache.js';
 
 function relativeTime(value) {
   if (!value) return null;
@@ -53,7 +54,7 @@ export default function GbpCard({ projectId, projectLabel }) {
     }
     setError('');
     try {
-      const connection = await getConnectionStatus(projectId);
+      const connection = await readGbpConnectionStatus(projectId);
       setStatus(connection);
 
       if (connection.connected && connection.locationCount > 0) {

@@ -12,6 +12,8 @@
 
 import { decryptSecret, encryptSecret } from './gbp-crypto.js';
 import { markConnectionStatus, recordApiUsage, updateConnectionTokens } from './gbp-repository.js';
+import { getAdminSettings } from './app-settings.js';
+import { googleRedirectUri } from './google-redirects.js';
 
 const TOKEN_ENDPOINT = 'https://oauth2.googleapis.com/token';
 const REVOKE_ENDPOINT = 'https://oauth2.googleapis.com/revoke';
@@ -67,16 +69,31 @@ function apiError(message, status, code) {
   return error;
 }
 
-export function getOAuthConfig(env) {
+/**
+ * Business Profile OAuth configuration, read from admin_settings.
+ *
+ * The application deliberately uses a single Google OAuth client across Search
+ * Console, Google sign-in and Business Profile; only the redirect URI differs
+ * per flow.
+ *
+ * The redirect used to fall back to the GSC and then the sign-in redirect. That
+ * is never correct: those URIs point at *other routes* (/gsc/oauth-callback and
+ * /api/auth/google/callback), so a Business Profile consent would return to a
+ * page that knows nothing about the pending connection. Worse, the browser fell
+ * back to `<origin>/gbp/oauth-callback` instead, so with google_gbp_redirect_uri
+ * unset the two sides disagreed and every connect attempt failed with
+ * "redirect URI mismatch".
+ *
+ * `request` lets the URI be derived from the application origin when no value
+ * is configured, exactly as the sign-in flow does.
+ */
+export async function getOAuthConfig(env, request = null) {
+  const settings = await getAdminSettings(['google_client_id', 'google_client_secret'], env);
+
   return {
-    clientId: env.GOOGLE_CLIENT_ID || env.VITE_GOOGLE_CLIENT_ID || '',
-    clientSecret: env.GOOGLE_CLIENT_SECRET || '',
-    redirectUri:
-      env.GOOGLE_REDIRECT_URI ||
-      env.GOOGLE_AUTH_REDIRECT_URI ||
-      env.GOOGLE_OAUTH_REDIRECT_URI ||
-      env.VITE_GOOGLE_REDIRECT_URI ||
-      '',
+    clientId: settings.google_client_id || '',
+    clientSecret: settings.google_client_secret || '',
+    redirectUri: request ? await googleRedirectUri('gbp', request, env) : '',
   };
 }
 
@@ -105,7 +122,7 @@ export function buildAuthUrl({ clientId, redirectUri, state }) {
 }
 
 export async function exchangeAuthorizationCode(env, { code, redirectUri }) {
-  const { clientId, clientSecret } = getOAuthConfig(env);
+  const { clientId, clientSecret } = await getOAuthConfig(env);
   const response = await fetch(TOKEN_ENDPOINT, {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
@@ -178,7 +195,7 @@ export async function resolveAccessToken(env, connection) {
     throw apiError('Business Profile session expired. Reconnect to continue.', 401, 'NEEDS_REAUTH');
   }
 
-  const { clientId, clientSecret } = getOAuthConfig(env);
+  const { clientId, clientSecret } = await getOAuthConfig(env);
   const response = await fetch(TOKEN_ENDPOINT, {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
@@ -284,8 +301,14 @@ export async function gbpFetch(env, connection, { api, path, query: search, meth
     throw apiError(detail, 403, googleError?.status || 'PERMISSION_DENIED');
   }
   if (response.status === 429) {
+    // A 429 on the very first call is usually not throttling at all: a Cloud
+    // project that has not been granted Business Profile API access has a
+    // per-minute quota of zero, and every request comes back 429 forever. The
+    // generic 'try later' wording sent people off to wait for a window that
+    // never opens, so Google's own detail is kept - it names the quota metric
+    // and the limit, which is what distinguishes the two cases.
     throw apiError(
-      'Google Business Profile API quota exhausted. Requests are throttled until the quota window resets.',
+      `Google Business Profile API quota exhausted. Requests are throttled until the quota window resets. Google returned: ${detail}`,
       429,
       'QUOTA_EXCEEDED'
     );

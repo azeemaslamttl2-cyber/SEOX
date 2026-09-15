@@ -81,6 +81,12 @@ export async function fetchServerGscSession(userId, projectId = "") {
 export async function restoreGscSession({ userId, projectId = "", preferServer = true } = {}) {
   const localSession = readStoredGscSession();
 
+  // A stored token that is still valid (with the 2-minute skew already applied
+  // by readStoredGscSession) is as good as one fetched from the server, so
+  // entering the GSC section no longer costs a /api/gsc-token round-trip.
+  // `ensureValidGscSession` below has always worked this way.
+  if (localSession) return localSession;
+
   if (!preferServer && localSession) return localSession;
 
   if (userId) {

@@ -191,7 +191,7 @@ const WebsiteCard = ({ site, onClick, isLoading, activeMetrics }) => {
             className="group relative bg-white rounded-2xl border-2 border-gray-100 hover:border-orange-200 hover:shadow-lg transition-all duration-300 cursor-pointer overflow-hidden">
             <div className="p-4 pb-2">
                 <div className="flex items-start gap-3">
-                    <img src={getFaviconUrl(site.siteUrl)} alt=""
+                    <img loading="lazy" decoding="async" src={getFaviconUrl(site.siteUrl)} alt=""
                         className="w-10 h-10 rounded-lg bg-gray-100 object-contain"
                         onError={(e) => { e.target.src = 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%23f97316"><circle cx="12" cy="12" r="10"/></svg>'; }} />
                     <div className="flex-1 min-w-0">
@@ -361,7 +361,7 @@ const SiteDetailView = ({ site, apiKey, onBack }) => {
                         <button onClick={onBack} className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
                             <ArrowLeft className="w-5 h-5 text-gray-600" />
                         </button>
-                        <img src={getFaviconUrl(site.siteUrl)} alt="" className="w-10 h-10 rounded-lg bg-gray-100" />
+                        <img loading="lazy" decoding="async" src={getFaviconUrl(site.siteUrl)} alt="" className="w-10 h-10 rounded-lg bg-gray-100" />
                         <div>
                             <h1 className="text-2xl font-bold text-gray-900">{getSiteDisplayName(site.siteUrl)}</h1>
                             <p className="text-gray-500">{site.siteUrl?.replace(/^https?:\/\//, '')}</p>

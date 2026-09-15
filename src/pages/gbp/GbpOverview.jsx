@@ -24,11 +24,10 @@ import {
   RefreshCw,
   Star,
 } from 'lucide-react';
-import { useCrawl } from '../../context/CrawlContext.jsx';
+import { useProjectSelection } from '../../context/CrawlContext.jsx';
+import { readGbpAttachedLocations, readGbpConnectionStatus } from '../../lib/gbpCache.js';
 import {
-  getConnectionStatus,
   getGbpOverview,
-  listAttachedLocations,
   refreshGbpOverview,
 } from '../../lib/gbpApi.js';
 
@@ -177,7 +176,7 @@ class OverviewErrorBoundary extends React.Component {
 }
 
 export default function GbpOverview() {
-  const { project } = useCrawl();
+  const { project } = useProjectSelection();
   const [params, setParams] = useSearchParams();
   const projectId = project?.id || '';
 
@@ -205,7 +204,7 @@ export default function GbpOverview() {
     setLoading(true);
 
     try {
-      const status = await getConnectionStatus(projectId).catch(() => ({ connected: false }));
+      const status = await readGbpConnectionStatus(projectId).catch(() => ({ connected: false }));
       setConnectionStatus(status || { connected: false });
 
       if (!status?.connected) {
@@ -216,7 +215,7 @@ export default function GbpOverview() {
       }
 
       const [locationData, overview] = await Promise.all([
-        listAttachedLocations(projectId).catch(() => ({ locations: [] })),
+        readGbpAttachedLocations(projectId).catch(() => ({ locations: [] })),
         getGbpOverview({ projectId, locationRowId, days }).catch((err) => {
           throw new Error(err?.message || 'Unable to load Google Business Profile data.');
         }),

@@ -2,7 +2,7 @@ import { useMemo } from "react";
 import ReportShell, { ChartCard } from "../../../components/auditor/ReportShell.jsx";
 import DonutChart from "../../../components/auditor/DonutChart.jsx";
 import { useAuditData } from "../../../hooks/useAuditData.js";
-import { useCrawl } from "../../../context/CrawlContext.jsx";
+import { useCrawlProgress } from "../../../context/CrawlContext.jsx";
 import { TrackedIssuesPanel } from "../../../lib/auditor/reports/ReportInsights.jsx";
 
 function isHtmlContentType(contentType, url) {
@@ -31,7 +31,7 @@ function bucketCount(items, ranges) {
 
 export default function ContentReport() {
   const { issueCategories } = useAuditData();
-  const { stats } = useCrawl();
+  const { stats } = useCrawlProgress();
   const latestUrls = stats?.latestUrls || [];
   const contentGroups =
     issueCategories

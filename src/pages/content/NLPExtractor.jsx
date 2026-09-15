@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Brain, Globe, Type, Zap } from "lucide-react";
 import { nlpData } from "../../data/contentData.js";
-import { extractNlpKeywords, getSourceText } from "../../lib/contentTools.js";
+import { extractContentNlpKeywords } from "../../lib/nlpService.js";
 
 export default function NLPExtractor() {
   const d = nlpData;
@@ -14,8 +14,8 @@ export default function NLPExtractor() {
   async function handleExtract() {
     setLoading(true);
     try {
-      const source = await getSourceText({ mode, text, url });
-      setResults(extractNlpKeywords(source));
+      const result = await extractContentNlpKeywords({ mode, text, url });
+      setResults(result.keywords);
     } catch {
       setResults([]);
     } finally {

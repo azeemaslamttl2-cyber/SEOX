@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Download, Eye, FileDown, Search } from "lucide-react";
 import { useAuditData } from "../../hooks/useAuditData.js";
-import { useCrawl } from "../../context/CrawlContext.jsx";
+import { useCrawlProgress } from "../../context/CrawlContext.jsx";
 import { downloadTextFile, rowsToCsv, slugForFilename } from "../../lib/auditorExport.js";
 import {
   classifyContentType,
@@ -73,7 +73,7 @@ export default function BulkExport() {
   const navigate = useNavigate();
   const { issuesDistribution } = useAuditData();
   const auditData = useAuditData();
-  const { stats } = useCrawl();
+  const { stats } = useCrawlProgress();
 
   const sections = useMemo(() => {
     const latestUrls = stats?.latestUrls || [];

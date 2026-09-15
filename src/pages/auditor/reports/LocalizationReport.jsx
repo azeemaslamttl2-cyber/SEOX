@@ -1,13 +1,13 @@
 import ReportShell, { StatCard, ChartCard } from "../../../components/auditor/ReportShell.jsx";
 import DonutChart from "../../../components/auditor/DonutChart.jsx";
 import { useAuditData } from "../../../hooks/useAuditData.js";
-import { useCrawl } from "../../../context/CrawlContext.jsx";
+import { useCrawlProgress } from "../../../context/CrawlContext.jsx";
 import { issueGroupsForCategory, issueRowsForGroups, TrackedIssuesPanel } from "../../../lib/auditor/reports/ReportInsights.jsx";
 import { htmlRows } from "../../../lib/auditor/reports/liveReportData.js";
 
 export default function LocalizationReport() {
   const { issueCategories } = useAuditData();
-  const { stats } = useCrawl();
+  const { stats } = useCrawlProgress();
   const pages = htmlRows(stats?.latestUrls || []);
   const hasHreflangSignal = pages.some((row) => Array.isArray(row.hreflangs) || Array.isArray(row.audit?.hreflangs));
   const hasHtmlLangSignal = pages.some((row) => "htmlLang" in row || "htmlLang" in (row.audit || {}));

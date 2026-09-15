@@ -12,6 +12,7 @@ export async function processAiHelperRequest({
   content = '',
   message = '',
   context = '',
+  apiKey,
 } = {}) {
   const normalizedAction = String(action || '').trim();
 
@@ -40,6 +41,7 @@ export async function processAiHelperRequest({
       content,
       context: context || 'AI content helper API request.',
       message: cleanMessage,
+      apiKey,
     });
 
     return {
@@ -52,7 +54,7 @@ export async function processAiHelperRequest({
   }
 
   if (normalizedAction === 'title-ideas') {
-    const result = await generateTitleIdeasDeepSeek({ keyword, content });
+    const result = await generateTitleIdeasDeepSeek({ keyword, content, apiKey });
     return {
       action: normalizedAction,
       keyword,
@@ -61,7 +63,7 @@ export async function processAiHelperRequest({
     };
   }
 
-  const result = await generateMetaDescriptionsDeepSeek({ keyword, content });
+  const result = await generateMetaDescriptionsDeepSeek({ keyword, content, apiKey });
   return {
     action: normalizedAction,
     keyword,

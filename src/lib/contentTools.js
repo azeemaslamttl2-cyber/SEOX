@@ -7,13 +7,14 @@ const STOP_WORDS = new Set([
   "them", "these", "those", "there", "here", "how", "why", "who", "use", "using", "used",
 ]);
 
-export async function getSourceText({ mode = "text", text = "", url = "", urls = [] }) {
+export async function getSourceText({ mode = "text", text = "", url = "", urls = [], fetchHtml }) {
   if (mode === "text") return cleanText(text);
+  const fetcher = typeof fetchHtml === "function" ? fetchHtml : fetchUrlContent;
   const targets = (urls.length ? urls : [url]).map((item) => item.trim()).filter(Boolean);
   const fetched = await Promise.all(
     targets.map(async (target) => {
       const normalized = normalizeUrl(target);
-      const html = await fetchUrlContent(normalized);
+      const html = await fetcher(normalized);
       return {
         url: normalized,
         title: getPageTitle(html),
@@ -97,10 +98,11 @@ export function extractOutlineFromHtml(html, fallbackTitle = "") {
   return headings;
 }
 
-export async function extractOutlineFromUrls(urls) {
+export async function extractOutlineFromUrls(urls, { fetchHtml } = {}) {
+  const fetcher = typeof fetchHtml === "function" ? fetchHtml : fetchUrlContent;
   const pages = await Promise.all(
     urls.filter(Boolean).map(async (url) => {
-      const html = await fetchUrlContent(normalizeUrl(url));
+      const html = await fetcher(normalizeUrl(url));
       return extractOutlineFromHtml(html, getPageTitle(html));
     })
   );

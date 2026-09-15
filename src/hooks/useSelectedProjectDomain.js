@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { useCrawl } from "../context/CrawlContext.jsx";
+import { useProjectSelection } from "../context/CrawlContext.jsx";
 
 function normalizeProjectUrl(project) {
   const raw = String(project?.fullUrl || project?.url || project?.domain || "").trim();
@@ -21,7 +21,7 @@ function hostnameFromUrl(url) {
 }
 
 export function useSelectedProjectDomain() {
-  const { project } = useCrawl();
+  const { project } = useProjectSelection();
 
   return useMemo(() => {
     const projectUrl = normalizeProjectUrl(project);

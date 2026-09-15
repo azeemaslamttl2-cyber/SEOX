@@ -15,14 +15,17 @@ import {
   Trash2,
   Unplug,
 } from 'lucide-react';
-import { useCrawl } from '../../context/CrawlContext.jsx';
+import { useProjectSelection } from '../../context/CrawlContext.jsx';
+import {
+  invalidateGbpConnection,
+  readGbpAttachedLocations,
+  readGbpConnectionStatus,
+} from '../../lib/gbpCache.js';
 import {
   attachLocations,
   detachLocation,
   disconnectGbp,
-  getConnectionStatus,
   getGbpAuthUrl,
-  listAttachedLocations,
   listGbpAccounts,
   listGoogleLocations,
   resyncLocations,
@@ -62,13 +65,14 @@ function Notice({ tone = 'info', title, children }) {
 }
 
 export default function GbpConnect() {
-  const { project } = useCrawl();
+  const { project, storageReady } = useProjectSelection();
   const navigate = useNavigate();
   const [params, setParams] = useSearchParams();
   const projectId = project?.id || '';
 
   const [status, setStatus] = useState(null);
   const [accounts, setAccounts] = useState([]);
+  const [accountsError, setAccountsError] = useState('');
   const [attached, setAttached] = useState([]);
   const [available, setAvailable] = useState(null);
   const [selection, setSelection] = useState(() => new Set());
@@ -79,24 +83,30 @@ export default function GbpConnect() {
 
   const noAccounts = params.get('noAccounts') === '1';
 
-  const loadStatus = useCallback(async () => {
+  // `force` is used after a mutation, where the cached copy is known stale.
+  const loadStatus = useCallback(async ({ force = false } = {}) => {
     if (!projectId) {
       setLoading(false);
       return;
     }
     setError('');
     try {
-      const next = await getConnectionStatus(projectId);
+      const next = await readGbpConnectionStatus(projectId, { force });
       setStatus(next);
       if (next.connected) {
         const [accountData, attachedData] = await Promise.all([
           listGbpAccounts(projectId).catch((err) => ({ accounts: [], error: err.message })),
-          listAttachedLocations(projectId).catch(() => ({ locations: [] })),
+          readGbpAttachedLocations(projectId, { force }).catch(() => ({ locations: [] })),
         ]);
         setAccounts(accountData.accounts || []);
+        // listGbpAccounts failing is not the same as Google reporting zero
+        // profiles, but both arrive here as an empty array. Keeping the message
+        // lets the UI tell the two apart instead of blaming the user's access.
+        setAccountsError(accountData.error || '');
         setAttached(attachedData.locations || []);
       } else {
         setAccounts([]);
+        setAccountsError('');
         setAttached([]);
       }
     } catch (err) {
@@ -138,14 +148,16 @@ export default function GbpConnect() {
       await disconnectGbp(projectId);
       setParams({});
       setAvailable(null);
-      await loadStatus();
+      invalidateGbpConnection(projectId);
+      await loadStatus({ force: true });
     });
 
   const handleSelectAccount = (account) =>
     run(`account:${account.accountId}`, async () => {
       await selectGbpAccount(projectId, account);
       setAvailable(null);
-      await loadStatus();
+      invalidateGbpConnection(projectId);
+      await loadStatus({ force: true });
     });
 
   const handleLoadLocations = () =>
@@ -160,7 +172,8 @@ export default function GbpConnect() {
       const result = await attachLocations(projectId, [...selection]);
       setSelection(new Set());
       setAvailable(null);
-      await loadStatus();
+      invalidateGbpConnection(projectId);
+      await loadStatus({ force: true });
       if (result.missing?.length) {
         setError(`Google no longer lists: ${result.missing.join(', ')}`);
       }
@@ -169,7 +182,8 @@ export default function GbpConnect() {
   const handleResync = () =>
     run('resync', async () => {
       const result = await resyncLocations(projectId);
-      await loadStatus();
+      invalidateGbpConnection(projectId);
+      await loadStatus({ force: true });
       if (result.lost?.length) {
         setError(
           `These locations are attached in SEOX but no longer visible in the Google account: ${result.lost.join(', ')}`
@@ -191,6 +205,22 @@ export default function GbpConnect() {
     [accounts, status]
   );
 
+  // The project arrives from CrawlContext asynchronously, so on a fresh page load
+  // (a reload, or the return from Google with ?connected=1) projectId is empty for
+  // a moment while hydration runs. Checking it before storageReady flashed the
+  // "Select a project first" notice at someone who had a project selected all
+  // along - and it reads as a dead end, not as "still loading".
+  if (!storageReady || loading) {
+    return (
+      <div className={card}>
+        <div className="flex items-center gap-2 text-sm text-white/60">
+          <Loader2 className="h-4 w-4 animate-spin" />
+          {storageReady ? 'Loading Business Profile connection…' : 'Loading project…'}
+        </div>
+      </div>
+    );
+  }
+
   if (!projectId) {
     return (
       <div className={card}>
@@ -198,15 +228,6 @@ export default function GbpConnect() {
           Business Profile connections are stored per project. Pick a project from the selector above,
           then connect the listing that belongs to it.
         </Notice>
-      </div>
-    );
-  }
-
-  if (loading) {
-    return (
-      <div className="flex items-center gap-2 text-sm text-white/50">
-        <Loader2 className="h-4 w-4 animate-spin" />
-        Loading Business Profile connection…
       </div>
     );
   }
@@ -279,7 +300,17 @@ export default function GbpConnect() {
             <span className="text-xs text-white/40">Signed in as {status.googleEmail || 'unknown'}</span>
           </div>
 
-          {noAccounts || accounts.length === 0 ? (
+          {accountsError ? (
+            <div className="mt-4">
+              <Notice tone="error" title="Could not read the Business Profile accounts">
+                Google rejected the request, so this says nothing about what{' '}
+                <span className="text-white/80">{status.googleEmail}</span> manages. Google returned:
+                <span className="mt-2 block rounded-lg border border-white/10 bg-black/20 p-2 font-mono text-xs text-white/75">
+                  {accountsError}
+                </span>
+              </Notice>
+            </div>
+          ) : noAccounts || accounts.length === 0 ? (
             <div className="mt-4">
               <Notice tone="warn" title="This Google account manages no Business Profiles">
                 Ask the client to add <span className="text-white/80">{status.googleEmail}</span> as a
@@ -415,7 +446,8 @@ export default function GbpConnect() {
                         onClick={() =>
                           run(`primary:${location.id}`, async () => {
                             await setPrimaryLocation(projectId, location.id);
-                            await loadStatus();
+                            invalidateGbpConnection(projectId);
+      await loadStatus({ force: true });
                           })
                         }
                         className="rounded-lg p-1.5 text-white/40 transition hover:bg-white/[0.06] hover:text-brand-300"
@@ -428,7 +460,8 @@ export default function GbpConnect() {
                       onClick={() =>
                         run(`detach:${location.id}`, async () => {
                           await detachLocation(projectId, location.id);
-                          await loadStatus();
+                          invalidateGbpConnection(projectId);
+      await loadStatus({ force: true });
                         })
                       }
                       className="rounded-lg p-1.5 text-white/40 transition hover:bg-rose-500/10 hover:text-rose-300"

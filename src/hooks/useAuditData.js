@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { useCrawl } from "../context/CrawlContext.jsx";
+import { useCrawl, useProjectSelection } from "../context/CrawlContext.jsx";
 import {
   getAuditDataForProject,
   localizeAuditValue,
@@ -14,6 +14,6 @@ export function useAuditData() {
 }
 
 export function useProjectScopedValue(value) {
-  const { project } = useCrawl();
+  const { project } = useProjectSelection();
   return useMemo(() => localizeAuditValue(value, project), [value, project]);
 }

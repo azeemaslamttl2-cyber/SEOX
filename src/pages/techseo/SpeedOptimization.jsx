@@ -178,7 +178,7 @@ export default function SpeedOptimization() {
       await saveResult(next);
       setOpenSections(Object.fromEntries(next.sections.map((s) => [s.id, true])));
       if (!mobileData || !desktopData) {
-        setError(pageSpeedError || "Live crawl completed. PageSpeed metrics need PAGESPEED_API_KEY to be configured.");
+        setError(pageSpeedError || "Live crawl completed. PageSpeed metrics need the PageSpeed API key to be configured in Settings > General.");
       }
     } catch (err) {
       setError(err?.message || "Could not test this URL");

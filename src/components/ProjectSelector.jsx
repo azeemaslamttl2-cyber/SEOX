@@ -1,14 +1,14 @@
 import { useState, useRef, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Globe, ChevronDown, Check, Plus } from "lucide-react";
-import { useCrawl } from "../context/CrawlContext.jsx";
+import { useProjectSelection } from "../context/CrawlContext.jsx";
 
 /**
  * Reusable website/project selector dropdown.
  * Reads from CrawlContext to show the list of audited websites.
  */
 export default function ProjectSelector() {
-  const { project, projects, selectProject } = useCrawl();
+  const { project, projects, selectProject } = useProjectSelection();
   const [open, setOpen] = useState(false);
   const ref = useRef(null);
 

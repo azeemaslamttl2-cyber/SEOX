@@ -2,14 +2,14 @@ import { useMemo, useState } from "react";
 import ReportShell, { ChartCard } from "../../../components/auditor/ReportShell.jsx";
 import { Columns3 } from "lucide-react";
 import { useAuditData } from "../../../hooks/useAuditData.js";
-import { useCrawl } from "../../../context/CrawlContext.jsx";
+import { useCrawlProgress } from "../../../context/CrawlContext.jsx";
 import { issueGroupsForCategory, issueRowsForGroups, TrackedIssuesPanel } from "../../../lib/auditor/reports/ReportInsights.jsx";
 import { duplicateClusters, duplicateSummary } from "../../../lib/auditor/reports/liveReportData.js";
 
 export default function DuplicatesReport() {
   const [tab, setTab] = useState("near");
   const { issueCategories } = useAuditData();
-  const { stats } = useCrawl();
+  const { stats } = useCrawlProgress();
   const latestUrls = stats?.latestUrls || [];
   const issueGroups = issueGroupsForCategory(issueCategories.find((category) => category.title === "Duplicates"));
   const issueRows = issueRowsForGroups(issueGroups);

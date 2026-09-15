@@ -2,6 +2,7 @@ import { configureMysqlConnection, query, queryOne } from "../_lib/mysql.js";
 import { requireUser } from "../_lib/auth-token.js";
 import { corsHeaders, emptyResponse, errorResponse, jsonResponse } from "../_lib/http.js";
 import { fetchPublicHttpUrl, parsePublicHttpUrl } from "../_lib/url-security.js";
+import { getAdminSetting } from "../_lib/app-settings.js";
 
 const MAX_HTML_BYTES = 5_000_000;
 const PAGESPEED_API_URL = "https://www.googleapis.com/pagespeedonline/v5/runPagespeed";
@@ -113,12 +114,12 @@ async function fetchUrlMetaInfo(targetUrl) {
   }
 }
 
-async function fetchPageSpeedInfo(targetUrl, strategy = DEFAULT_PAGESPEED_STRATEGY) {
-  const apiKey = process.env.PAGESPEED_API_KEY;
+async function fetchPageSpeedInfo(targetUrl, strategy = DEFAULT_PAGESPEED_STRATEGY, env) {
+  const apiKey = await getAdminSetting("pagespeed_api_key", env);
   if (!apiKey) {
     return {
       success: false,
-      error: "PageSpeed API key not configured on server",
+      error: "PageSpeed API key not configured. Add it in Settings > General.",
     };
   }
 
@@ -252,7 +253,7 @@ export async function onRequest({ request, env }) {
 
     const [urlMeta, pageSpeed] = await Promise.all([
       fetchUrlMetaInfo(targetUrl),
-      fetchPageSpeedInfo(targetUrl, strategy),
+      fetchPageSpeedInfo(targetUrl, strategy, env),
     ]);
 
     const toolResults = projectId

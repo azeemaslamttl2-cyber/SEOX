@@ -101,10 +101,13 @@ async function handleConnect(request, env, stripe, decoded) {
     });
   }
 
+  // Stripe returns the admin to the Stripe tab of the central settings page.
+  // The old /settings/stripe URL still redirects there with its query intact,
+  // so links created before this change keep working.
   const accountLink = await stripe.accountLinks.create({
     account: account.id,
-    refresh_url: `${getBaseUrl(request, env)}/settings/stripe?stripe=refresh`,
-    return_url: `${getBaseUrl(request, env)}/settings/stripe?stripe=return`,
+    refresh_url: `${getBaseUrl(request, env)}/settings/general?tab=stripe&stripe=refresh`,
+    return_url: `${getBaseUrl(request, env)}/settings/general?tab=stripe&stripe=return`,
     type: "account_onboarding",
   });
 

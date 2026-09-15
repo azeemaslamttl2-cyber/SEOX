@@ -2,7 +2,7 @@ import { useMemo } from "react";
 import DonutChart from "../../../components/auditor/DonutChart.jsx";
 import ReportShell, { ChartCard, DepthBars, StatCard } from "../../../components/auditor/ReportShell.jsx";
 import { useAuditData } from "../../../hooks/useAuditData.js";
-import { useCrawl } from "../../../context/CrawlContext.jsx";
+import { useCrawlProgress } from "../../../context/CrawlContext.jsx";
 import {
   issueGroupsForCategory,
   issueRowsForGroups,
@@ -13,7 +13,7 @@ import { pageExplorerHref } from "../../../lib/auditor/reports/reportLinks.js";
 
 export default function RedirectsReport() {
   const { project, issueCategories } = useAuditData();
-  const { stats } = useCrawl();
+  const { stats } = useCrawlProgress();
   const latestUrls = stats?.latestUrls || [];
   const issueGroups = issueGroupsForCategory(issueCategories.find((category) => category.title === "Redirects"));
   const issueRows = issueRowsForGroups(issueGroups);

@@ -15564,3 +15564,263 @@ input[type="week"]:focus-visible {
   z-index: 60;
 }
 .group:hover > .bulk-tip { opacity: 1; }
+
+/* ==================================================================
+   SETTINGS PAGE TABS  (/settings/general?tab=...)
+   Follows the same segmented-pill pattern as `.semantic-tab`: the
+   selected category is a solid brand-blue pill with white text, which
+   is the one treatment in this product that reads unambiguously.
+
+   Two things force this to be hand-written CSS rather than utilities:
+
+   1. The legacy dark-utility compatibility layer collapses `text-white`
+      and `text-white/50` onto --text-primary/--text-secondary (two near
+      identical navies), and `[class*="border-white"]` repaints every
+      tab's border with !important - hover prefix included - so an
+      unselected tab kept the same outline as the selected one.
+
+   2. A button carrying no bg-* utility falls into bucket 1 of the
+      application-wide button colour hierarchy and is painted solid
+      brand red, border included, so both have to be stated explicitly.
+
+   Every rule is scoped under `.settings-tabs` on purpose. That bucket's
+   hover rule is `button:where(...):hover:not(:disabled)`, which scores
+   (0,2,1) - higher than a bare `.settings-tab:hover` at (0,2,0), so an
+   unscoped rule would lose and the tab would turn red on hover. The
+   parent class lifts these to (0,3,0)/(0,4,0) and settles it.
+   ================================================================== */
+.settings-tabs {
+  background: #ffffff !important;
+  border-color: var(--border) !important;
+  box-shadow: 0 4px 14px rgba(45, 43, 111, 0.06);
+  gap: 4px;
+}
+.settings-tabs .settings-tab {
+  background: transparent !important;
+  border: 1px solid transparent !important;
+  color: var(--text-secondary) !important;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  min-height: 38px;
+}
+.settings-tabs .settings-tab svg {
+  color: var(--text-secondary) !important;
+  opacity: 0.9;
+}
+.settings-tabs .settings-tab:hover:not(:disabled) {
+  background: var(--surface-sunken) !important;
+  border-color: #c8d5f2 !important;
+  color: var(--brand-blue) !important;
+}
+.settings-tabs .settings-tab:hover:not(:disabled) svg {
+  color: var(--brand-blue) !important;
+}
+.settings-tabs .settings-tab[aria-selected="true"],
+.settings-tabs .settings-tab[aria-selected="true"]:hover:not(:disabled) {
+  background: var(--brand-blue) !important;
+  border-color: var(--brand-blue) !important;
+  box-shadow: 0 4px 10px rgba(44, 43, 111, 0.2);
+  color: #ffffff !important;
+}
+.settings-tabs .settings-tab[aria-selected="true"] svg,
+.settings-tabs .settings-tab[aria-selected="true"]:hover:not(:disabled) svg {
+  color: #ffffff !important;
+  opacity: 1;
+}
+.settings-tabs .settings-tab:focus-visible {
+  outline: 3px solid #ffc600;
+  outline-offset: 2px;
+}
+
+/* --- Settings form fields ----------------------------------------
+   The inputs use the product-wide `bg-white/*` recipe so they inherit
+   the FORM CONTROL SURFACES treatment. These rules add the parts that
+   recipe does not cover: placeholder contrast, the disabled state used
+   while a value is being cleared, and the small supporting text.
+   ------------------------------------------------------------------ */
+.settings-input::placeholder {
+  color: var(--text-disabled);
+  opacity: 1;
+}
+.settings-input:disabled {
+  background: var(--surface-muted) !important;
+  border-color: var(--border) !important;
+  color: var(--text-disabled) !important;
+}
+.settings-hint {
+  color: var(--text-muted);
+  font-size: 11px;
+  line-height: 1.5;
+}
+.settings-meta {
+  color: var(--text-disabled);
+  font-size: 11px;
+}
+.settings-error {
+  color: var(--error);
+  font-size: 11px;
+  font-weight: 600;
+}
+
+/* Where a value currently lives: saved, still in .env, or not set. */
+.settings-badge {
+  align-items: center;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  display: inline-flex;
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  padding: 3px 9px;
+  white-space: nowrap;
+}
+.settings-badge-saved {
+  background: #ecfdf3;
+  border-color: #abefc6;
+  color: #067647;
+}
+.settings-badge-pending {
+  background: #fffaeb;
+  border-color: #fedf89;
+  color: #b54708;
+}
+.settings-badge-unset {
+  background: var(--surface-muted);
+  border-color: var(--border);
+  color: var(--text-muted);
+}
+
+/* ==================================================================
+   GLOBAL PAGE LOADING + PAGE ERROR
+   One centred loader and one error card for every routed page. Both
+   are plain CSS on purpose: the legacy dark-utility compatibility
+   layer rewrites `border-white*` with `border-color: ... !important`,
+   which repaints all four sides and would flatten a `border-t-*`
+   spinner accent into a static grey ring with no visible rotation.
+   ================================================================== */
+.page-loader {
+  align-items: center;
+  display: flex;
+  flex: 1 1 auto;
+  justify-content: center;
+  min-height: 50vh;
+  padding: 48px 16px;
+  width: 100%;
+}
+.page-loader-full {
+  background: var(--surface-sunken);
+  min-height: 100vh;
+}
+.page-loader-inner {
+  align-items: center;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.page-loader-spinner {
+  border: 2px solid var(--border);
+  border-radius: 999px;
+  border-top-color: var(--brand-red);
+  height: 40px;
+  width: 40px;
+}
+.page-loader-label {
+  color: var(--text-secondary);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  margin: 0;
+}
+/* A spinner that cannot spin reads as a broken page, so keep a cue. */
+@media (prefers-reduced-motion: reduce) {
+  .page-loader-spinner {
+    animation: none !important;
+    border-top-color: var(--brand-red);
+    opacity: 0.7;
+  }
+}
+
+.page-error {
+  align-items: center;
+  display: flex;
+  flex: 1 1 auto;
+  justify-content: center;
+  min-height: 50vh;
+  padding: 48px 16px;
+  width: 100%;
+}
+.page-error-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg, 12px);
+  box-shadow: 0 4px 20px rgba(45, 43, 111, 0.06);
+  max-width: 420px;
+  padding: 28px;
+  text-align: center;
+  width: 100%;
+}
+.page-error-icon {
+  align-items: center;
+  background: var(--error-bg);
+  border: 1px solid var(--error-border);
+  border-radius: 12px;
+  color: var(--error-text);
+  display: inline-flex;
+  height: 40px;
+  justify-content: center;
+  width: 40px;
+}
+.page-error-title {
+  color: var(--text-primary);
+  font-size: 16px;
+  font-weight: 700;
+  margin: 14px 0 0;
+}
+.page-error-message {
+  color: var(--text-secondary);
+  font-size: 13px;
+  line-height: 1.6;
+  margin: 8px 0 0;
+  overflow-wrap: anywhere;
+}
+.page-error-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: center;
+  margin-top: 20px;
+}
+/* Stated explicitly: a button with no bg-* utility falls into bucket 1
+   of the application-wide button colour hierarchy, and the secondary
+   action would come out as loud as the primary one. */
+.page-error-actions .page-error-primary,
+.page-error-actions .page-error-secondary {
+  align-items: center;
+  border-radius: var(--radius-md);
+  display: inline-flex;
+  font-size: 13px;
+  font-weight: 700;
+  gap: 8px;
+  min-height: 38px;
+  padding: 0 16px;
+}
+.page-error-actions .page-error-primary {
+  background: var(--brand-red) !important;
+  border: 1px solid var(--brand-red) !important;
+  color: #ffffff !important;
+}
+.page-error-actions .page-error-primary:hover:not(:disabled) {
+  background: var(--brand-red-hover) !important;
+  border-color: var(--brand-red-hover) !important;
+}
+.page-error-actions .page-error-secondary {
+  background: var(--surface) !important;
+  border: 1px solid var(--border) !important;
+  color: var(--text-secondary) !important;
+}
+.page-error-actions .page-error-secondary:hover:not(:disabled) {
+  background: var(--surface-sunken) !important;
+  border-color: var(--border-strong) !important;
+  color: var(--text-primary) !important;
+}

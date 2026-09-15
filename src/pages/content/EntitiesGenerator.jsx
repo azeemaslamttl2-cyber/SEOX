@@ -1,8 +1,7 @@
 import { useState } from "react";
 import { Sparkles, Upload, Trash2 } from "lucide-react";
 import { entitiesGeneratorData } from "../../data/contentData.js";
-import { generateEntitiesForKeywords } from "../../lib/contentTools.js";
-import { generateEntityGroupsDeepSeek } from "../../lib/deepseekContent.js";
+import { generateEntityGroups } from "../../lib/entitiesGeneratorService.js";
 
 export default function EntitiesGenerator() {
   const d = entitiesGeneratorData;
@@ -16,9 +15,11 @@ export default function EntitiesGenerator() {
     setLoading(true);
     setError("");
     try {
-      setResults(await generateEntityGroupsDeepSeek(keywords));
+      const result = await generateEntityGroups({ keywords });
+      setResults(result.groups);
+      if (!result.ai.applied) setError(result.ai.reason);
     } catch (err) {
-      setResults(generateEntitiesForKeywords(keywords));
+      setResults([]);
       setError(err.message || "DeepSeek could not generate entities. Showing local fallback results.");
     } finally {
       setLoading(false);

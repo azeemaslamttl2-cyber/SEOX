@@ -3,6 +3,7 @@ import {
   getStoredDocument,
   upsertStoredDocument,
 } from "../_lib/mysql-storage.js";
+import { getAdminSetting } from "../_lib/app-settings.js";
 
 const BING_API_BASE = "https://ssl.bing.com/webmaster/api.svc/json";
 const YANDEX_API_BASE = "https://api.webmaster.yandex.net/v4";
@@ -13,14 +14,15 @@ function runtimeEnv(req) {
   return req?.env || (typeof process !== "undefined" ? process.env : {}) || {};
 }
 
-function getBingApiKey(req) {
+async function getBingApiKey(req) {
   const env = runtimeEnv(req);
+  // A per-request override still wins (used by the admin connection test);
+  // otherwise the key comes from admin_settings via the settings service.
   return (
     req?.query?.apikey ||
     req?.body?.apikey ||
-    env.BING_WEBMASTER_API_KEY ||
+    (await getAdminSetting("bing_webmaster_api_key", env)) ||
     env.BING_API_KEY ||
-    env.VITE_BING_WEBMASTER_API_KEY ||
     ""
   );
 }
@@ -189,9 +191,11 @@ export default async function handler(req, res) {
 
 async function handleBing(req, res, action) {
   const { siteUrl } = req.query || {};
-  const apiKey = getBingApiKey(req);
+  const apiKey = await getBingApiKey(req);
   if (!apiKey) {
-    return res.status(400).json({ error: "Bing Webmaster API key is required" });
+    return res.status(400).json({
+      error: "Bing Webmaster API key is not configured. Add it in Settings > General.",
+    });
   }
 
   let endpoint = "";

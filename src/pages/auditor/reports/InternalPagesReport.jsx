@@ -3,13 +3,13 @@ import ReportShell, { StatCard, ChartCard, DepthBars } from "../../../components
 import DonutChart from "../../../components/auditor/DonutChart.jsx";
 import IssueTable from "../../../components/auditor/IssueTable.jsx";
 import { useAuditData } from "../../../hooks/useAuditData.js";
-import { useCrawl } from "../../../context/CrawlContext.jsx";
+import { useCrawlProgress } from "../../../context/CrawlContext.jsx";
 import { DiscoverySourceInsights } from "../../../lib/auditor/reports/ReportInsights.jsx";
 import { pageExplorerHref } from "../../../lib/auditor/reports/reportLinks.js";
 
 export default function InternalPagesReport() {
   const { project, issueCategories } = useAuditData();
-  const { stats } = useCrawl();
+  const { stats } = useCrawlProgress();
   const latestUrls = stats?.latestUrls || [];
 
   // ── Derive stats from real crawl data when available ──

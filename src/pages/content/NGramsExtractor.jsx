@@ -1,8 +1,9 @@
 import { useState } from "react";
 import { Hash, Globe, Type, Layers, Sparkles } from "lucide-react";
 import { ngramsData } from "../../data/contentData.js";
-import { extractNgramsFromText, generateUniqueNgrams, getSourceText } from "../../lib/contentTools.js";
+import { generateUniqueNgrams } from "../../lib/contentTools.js";
 import { generateUniqueNgramsDeepSeek } from "../../lib/deepseekContent.js";
+import { buildUniqueSeed, extractContentNgrams } from "../../lib/ngramsService.js";
 
 export default function NGramsExtractor() {
   const d = ngramsData;
@@ -19,8 +20,8 @@ export default function NGramsExtractor() {
   async function handleExtract() {
     setLoading(true);
     try {
-      const source = await getSourceText({ mode, text, url });
-      setResults(extractNgramsFromText(source));
+      const result = await extractContentNgrams({ mode, text, url });
+      setResults(result.ngrams);
     } catch {
       setResults({ unigrams: [], bigrams: [], trigrams: [] });
     } finally {
@@ -29,10 +30,7 @@ export default function NGramsExtractor() {
   }
 
   async function handleGenerateUnique() {
-    const extractedSeed = results
-      ? ["unigrams", "bigrams", "trigrams"].flatMap((key) => results[key].slice(0, 8).map((item) => item.ngram)).join(", ")
-      : "";
-    const seed = text.trim() || url.trim() || extractedSeed;
+    const seed = buildUniqueSeed({ text, url, ngrams: results });
     if (!seed.trim()) return;
 
     setUniqueLoading(true);

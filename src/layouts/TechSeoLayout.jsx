@@ -1,7 +1,8 @@
-import { Outlet, useLocation } from "react-router-dom";
+import { useLocation } from "react-router-dom";
 import IconRail from "../components/auditor/IconRail.jsx";
 import TechSeoSecondaryNav from "../components/techseo/TechSeoSecondaryNav.jsx";
 import TechSeoTopBar from "../components/techseo/TechSeoTopBar.jsx";
+import RouteOutlet from "../components/RouteOutlet.jsx";
 
 export default function TechSeoLayout() {
   const { pathname } = useLocation();
@@ -14,7 +15,7 @@ export default function TechSeoLayout() {
         <div className="flex min-w-0 flex-1 flex-col">
           <TechSeoTopBar />
           <main className="app-main min-w-0 flex-1 px-4 pb-12 pt-4 lg:px-6">
-            <Outlet key={pathname} />
+            <RouteOutlet outletKey={pathname} />
           </main>
         </div>
       </div>

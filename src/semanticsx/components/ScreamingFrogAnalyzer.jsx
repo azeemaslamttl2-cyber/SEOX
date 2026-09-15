@@ -27,7 +27,7 @@ import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { useAuth } from '../contexts/AuthContext';
 import { downloadScreamingFrogPdf } from '../lib/toolPdfReports';
-import { useCrawl } from '../../context/CrawlContext.jsx';
+import { useProjectSelection } from '../../context/CrawlContext.jsx';
 import { getSessionToken } from '../../lib/authSession.js';
 
 // CSV Parser utility
@@ -801,7 +801,7 @@ const DetailedIssueTable = ({ details, type, itemId, tablePage, setTablePage }) 
 
 const ScreamingFrogAnalyzer = () => {
     const { user } = useAuth();
-    const { project: selectedProject } = useCrawl();
+    const { project: selectedProject } = useProjectSelection();
     const [uploadedFiles, setUploadedFiles] = useState({});
     const uploadedFilesRef = useRef({});
     const [parsedData, setParsedData] = useState({});

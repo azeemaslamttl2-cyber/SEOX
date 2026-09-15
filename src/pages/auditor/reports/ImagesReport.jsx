@@ -1,13 +1,13 @@
 import DonutChart from "../../../components/auditor/DonutChart.jsx";
 import ReportShell, { ChartCard, StatCard } from "../../../components/auditor/ReportShell.jsx";
 import { useAuditData } from "../../../hooks/useAuditData.js";
-import { useCrawl } from "../../../context/CrawlContext.jsx";
+import { useCrawlProgress } from "../../../context/CrawlContext.jsx";
 import { issueGroupsForCategory, issueRowsForGroups, TrackedIssuesPanel } from "../../../lib/auditor/reports/ReportInsights.jsx";
 import { imageStats, safeSegments } from "../../../lib/auditor/reports/liveReportData.js";
 
 export default function ImagesReport() {
   const { issueCategories } = useAuditData();
-  const { stats } = useCrawl();
+  const { stats } = useCrawlProgress();
   const report = imageStats(stats?.latestUrls || [], stats?.auditIssues || {});
   const issueGroups = issueGroupsForCategory(issueCategories.find((category) => category.title === "Images"));
   const issueRows = issueRowsForGroups(issueGroups);

@@ -451,6 +451,44 @@ function buildSiteSummary(site, dailyRows, previousDailyRows = []) {
   };
 }
 
+/**
+ * Session cache for the site list and the per-site summaries.
+ *
+ * GscInsightsProvider is mounted by GscLayout, so leaving the /gsc section
+ * unmounts it and every piece of state goes with it - returning meant
+ * refetching the site list and all summaries from Google. These belong to the
+ * signed-in Google account rather than to a project, so they live here rather
+ * than in projectDataStore, and are cleared whenever the connection is.
+ *
+ * Navigating between /gsc sub-pages was never affected: the layout stays
+ * mounted, so this only helps re-entry into the section.
+ */
+const GSC_SESSION_TTL_MS = 15 * 60 * 1000;
+const gscSessionCache = { key: '', sites: null, summaries: null, at: 0 };
+
+function readGscCache(key) {
+  if (!key || gscSessionCache.key !== key) return null;
+  if (Date.now() - gscSessionCache.at >= GSC_SESSION_TTL_MS) return null;
+  return gscSessionCache;
+}
+
+function writeGscCache(key, patch) {
+  if (!key) return;
+  if (gscSessionCache.key !== key) {
+    gscSessionCache.key = key;
+    gscSessionCache.sites = null;
+    gscSessionCache.summaries = null;
+  }
+  Object.assign(gscSessionCache, patch, { at: Date.now() });
+}
+
+function clearGscCache() {
+  gscSessionCache.key = '';
+  gscSessionCache.sites = null;
+  gscSessionCache.summaries = null;
+  gscSessionCache.at = 0;
+}
+
 export function GscInsightsProvider({ children }) {
   const { user, loading: authLoading } = useAuth();
   const userId = getUserId(user);
@@ -458,9 +496,12 @@ export function GscInsightsProvider({ children }) {
   const [isCheckingConnection, setIsCheckingConnection] = useState(true);
   const [accessToken, setAccessToken] = useState(null);
   const [gscEmail, setGscEmail] = useState(null);
-  const [sites, setSites] = useState([]);
+  // Seeded from the session cache so re-entering /gsc renders what it had.
+  const [sites, setSites] = useState(() => readGscCache(getUserId(user))?.sites || []);
   const [selectedSite, setSelectedSite] = useState("");
-  const [siteSummaries, setSiteSummaries] = useState([]);
+  const [siteSummaries, setSiteSummaries] = useState(
+    () => readGscCache(getUserId(user))?.summaries || []
+  );
   const [selectedData, setSelectedData] = useState(EMPTY_SELECTED_DATA);
   const [datePreset, setDatePreset] = useState("90");
   const [searchType, setSearchType] = useState("Web");
@@ -517,6 +558,8 @@ export function GscInsightsProvider({ children }) {
 
   const clearGscState = useCallback(() => {
     clearStoredGscSession();
+    // Disconnecting must not leave a readable copy behind.
+    clearGscCache();
     setAccessToken(null);
     setIsSignedIn(false);
     setGscEmail(null);
@@ -643,6 +686,7 @@ export function GscInsightsProvider({ children }) {
 
       if (sitesRequestRef.current !== requestId) return;
       const entries = data.siteEntry || [];
+      writeGscCache(userId, { sites: entries });
       setSites(entries);
       setSelectedSite((current) => {
         const hasCurrent = entries.some((entry) => entry.siteUrl === current);
@@ -657,7 +701,7 @@ export function GscInsightsProvider({ children }) {
     } finally {
       if (sitesRequestRef.current === requestId) setIsLoadingSites(false);
     }
-  }, [accessToken, clearGscState, getValidAccessToken]);
+  }, [accessToken, clearGscState, getValidAccessToken, userId]);
 
   const fetchSiteSummaries = useCallback(async () => {
     if (!accessToken || normalizedSites.length === 0) {
@@ -715,6 +759,7 @@ export function GscInsightsProvider({ children }) {
           ? result.value
           : buildSiteSummary(sitesToFetch[index], [], [])
       );
+      writeGscCache(userId, { summaries });
       setSiteSummaries(summaries);
 
       const rejected = results.find((result) => result.status === "rejected");
@@ -744,6 +789,7 @@ export function GscInsightsProvider({ children }) {
     previousEnd,
     previousStart,
     searchType,
+    userId,
   ]);
 
   const fetchSelectedData = useCallback(async () => {
@@ -937,7 +983,9 @@ export function GscInsightsProvider({ children }) {
     fetchSelectedData();
   }, [fetchSelectedData]);
 
-  const value = {
+  // Memoised: this object has 40 keys and was rebuilt on every provider render,
+  // re-rendering all eight GSC consumers each time.
+  const value = useMemo(() => ({
     accessToken,
     currentEnd,
     currentStart,
@@ -977,7 +1025,15 @@ export function GscInsightsProvider({ children }) {
     setSearchType,
     setSelectedSite,
     siteSummaries,
-  };
+  }), [
+    accessToken, currentEnd, currentStart, datePreset, device, error,
+    fetchSelectedData, fetchSiteSummaries, fetchSites, gscEmail, handleSignIn,
+    handleSignOut, isCheckingConnection, isLoadingSelected, isLoadingSites,
+    isLoadingSummaries, isStartingConnection, isSignedIn, normalizedSites,
+    previousEnd, previousStart, searchType, selectedData, selectedSite,
+    selectedSiteId, selectedSiteInfo, setDatePreset, setDevice, setError,
+    setSearchType, setSelectedSite, siteSummaries,
+  ]);
 
   return (
     <GscInsightsContext.Provider value={value}>

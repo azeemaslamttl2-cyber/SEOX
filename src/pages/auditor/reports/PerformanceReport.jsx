@@ -2,13 +2,13 @@ import { Info, Settings2 } from "lucide-react";
 import DonutChart from "../../../components/auditor/DonutChart.jsx";
 import ReportShell, { ChartCard } from "../../../components/auditor/ReportShell.jsx";
 import { useAuditData } from "../../../hooks/useAuditData.js";
-import { useCrawl } from "../../../context/CrawlContext.jsx";
+import { useCrawlProgress } from "../../../context/CrawlContext.jsx";
 import { issueGroupsForCategory, issueRowsForGroups, TrackedIssuesPanel } from "../../../lib/auditor/reports/ReportInsights.jsx";
 import { fileSizeSegments, loadTimeSegments, safeSegments } from "../../../lib/auditor/reports/liveReportData.js";
 
 export default function PerformanceReport() {
   const { issueCategories } = useAuditData();
-  const { stats } = useCrawl();
+  const { stats } = useCrawlProgress();
   const latestUrls = stats?.latestUrls || [];
   const encodingCounts = latestUrls.reduce((acc, row) => {
     const encoding = row.contentEncoding || row.audit?.contentEncoding || "Unknown";

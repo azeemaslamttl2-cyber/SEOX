@@ -1,7 +1,8 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { AlertCircle, AlertTriangle, Info, Lightbulb, Loader2, MinusCircle } from 'lucide-react';
-import { useCrawl } from '../../context/CrawlContext.jsx';
+import { useProjectSelection } from '../../context/CrawlContext.jsx';
 import { listAttachedLocations } from '../../lib/gbpApi.js';
+import { useProjectData } from '../../hooks/useProjectData.js';
 
 export const card = 'rounded-2xl border border-white/10 bg-white/[0.02] p-5';
 
@@ -67,40 +68,41 @@ export const inputClass =
  * locations, and the location the page is currently showing.
  */
 export function useGbpLocation() {
-  const { project } = useCrawl();
+  const { project } = useProjectSelection();
   const projectId = project?.id || '';
-  const [locations, setLocations] = useState([]);
   const [locationRowId, setLocationRowId] = useState('');
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
 
-  const reload = useCallback(async () => {
-    if (!projectId) {
-      setLoading(false);
-      setLocations([]);
-      return;
-    }
-    try {
-      const data = await listAttachedLocations(projectId);
-      const rows = data.locations || [];
-      setLocations(rows);
-      setLocationRowId((current) => {
-        if (current && rows.some((row) => String(row.id) === String(current))) return current;
-        const primary = rows.find((row) => row.isPrimary) || rows[0];
-        return primary ? String(primary.id) : '';
-      });
-      setError('');
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
-    }
-  }, [projectId]);
+  // Attached locations are the same for every GBP page and change rarely, so
+  // they are cached per project for an hour. Previously each of the ten GBP
+  // pages refetched them on mount, which made a five-page walk five identical
+  // requests.
+  const {
+    data,
+    status,
+    error,
+    isLoading,
+    refresh,
+  } = useProjectData('gbp:locations', (id) => listAttachedLocations(id), {
+    staleTime: 60 * 60 * 1000,
+  });
 
+  const locations = useMemo(() => data?.locations || [], [data]);
+
+  // Keep the current selection if it still exists, otherwise fall back to the
+  // primary location - unchanged behaviour, just driven by the cached list.
   useEffect(() => {
-    setLoading(true);
-    reload();
-  }, [reload]);
+    if (!locations.length) return;
+    setLocationRowId((current) => {
+      if (current && locations.some((row) => String(row.id) === String(current))) return current;
+      const primary = locations.find((row) => row.isPrimary) || locations[0];
+      return primary ? String(primary.id) : '';
+    });
+  }, [locations]);
+
+  // A project with no locations must not sit on a stale selection.
+  useEffect(() => {
+    if (!projectId) setLocationRowId('');
+  }, [projectId]);
 
   return {
     project,
@@ -108,9 +110,11 @@ export function useGbpLocation() {
     locations,
     locationRowId,
     setLocationRowId,
-    loadingLocations: loading,
-    locationError: error,
-    reloadLocations: reload,
+    // `isLoading` is only true when there is nothing to show; a background
+    // revalidation no longer flashes a loader over data already on screen.
+    loadingLocations: projectId ? isLoading : false,
+    locationError: status === 'error' ? error?.message || 'Could not load locations.' : '',
+    reloadLocations: refresh,
   };
 }
 

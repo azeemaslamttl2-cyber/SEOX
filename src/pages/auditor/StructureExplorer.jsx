@@ -1,7 +1,7 @@
 import { useState, useMemo } from "react";
 import { ChevronDown, ChevronRight, FileText, Filter, Folder, FolderTree, HelpCircle } from "lucide-react";
 import { useAuditData } from "../../hooks/useAuditData.js";
-import { useCrawl } from "../../context/CrawlContext.jsx";
+import { useCrawlProgress } from "../../context/CrawlContext.jsx";
 
 /* ─── Tab definitions ─── */
 const TABS = [
@@ -208,7 +208,7 @@ export default function StructureExplorer() {
   const [activeTab, setActiveTab] = useState("http");
   const [view, setView] = useState("percentage");
   const { project } = useAuditData();
-  const { stats } = useCrawl();
+  const { stats } = useCrawlProgress();
 
   const domain = project.domain || "example.com";
   const latestUrls = stats?.latestUrls || [];

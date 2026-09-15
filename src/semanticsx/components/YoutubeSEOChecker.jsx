@@ -543,7 +543,7 @@ const YoutubeSEOChecker = () => {
                     <div className="bg-white rounded-3xl p-6 mb-8 border border-gray-100 shadow-xl shadow-gray-200/50">
                         <div className="flex flex-col md:flex-row gap-6">
                             <div className="flex-shrink-0 relative group">
-                                <img
+                                <img loading="lazy" decoding="async"
                                     src={videoData.thumbnail}
                                     alt={videoData.title}
                                     className="w-full md:w-64 h-36 object-cover rounded-2xl shadow-lg"
