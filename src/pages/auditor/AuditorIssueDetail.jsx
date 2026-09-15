@@ -203,7 +203,7 @@ export default function AuditorIssueDetail() {
                   </td>
                   <td className="px-3 py-3">
                     <div className="flex items-start gap-2">
-                      <span className="mt-0.5 flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-md bg-gradient-to-br from-emerald-500/20 to-emerald-500/5 text-[10px] font-bold text-emerald-300">
+                      <span className="type-badge is-html mt-0.5">
                         HTML
                       </span>
                       <div className="min-w-0">
@@ -299,7 +299,7 @@ function MissingAltResults({ data }) {
                 </td>
                 <td className="px-3 py-3">
                   <div className="flex items-start gap-2">
-                    <span className="mt-0.5 flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-md bg-gradient-to-br from-emerald-500/20 to-emerald-500/5 text-[10px] font-bold text-emerald-300">
+                    <span className="type-badge is-html mt-0.5">
                       HTML
                     </span>
                     <div className="min-w-0">
@@ -397,7 +397,7 @@ function TitleIssueResults({ data }) {
                 </td>
                 <td className="px-3 py-3">
                   <div className="flex items-start gap-2">
-                    <span className="mt-0.5 flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-md bg-gradient-to-br from-emerald-500/20 to-emerald-500/5 text-[10px] font-bold text-emerald-300">
+                    <span className="type-badge is-html mt-0.5">
                       HTML
                     </span>
                     <div className="min-w-0">
@@ -613,20 +613,9 @@ function pageLabelForRow(row) {
 }
 
 function PRBadge({ value }) {
-  // Color the badge by PR value, like Ahrefs DR
-  const color =
-    value >= 40
-      ? "from-emerald-500/30 to-emerald-500/10 text-emerald-200 ring-emerald-500/30"
-      : value >= 20
-      ? "from-amber-500/30 to-amber-500/10 text-amber-200 ring-amber-500/30"
-      : "from-white/[0.06] to-transparent text-white/40 ring-white/10";
-  return (
-    <span
-      className={`inline-flex h-7 w-7 items-center justify-center rounded-md bg-gradient-to-br text-xs font-bold ring-1 ring-inset ${color}`}
-    >
-      {value}
-    </span>
-  );
+  // Tone by PR value, like Ahrefs DR
+  const tone = value >= 40 ? "is-high" : value >= 20 ? "is-mid" : "is-low";
+  return <span className={`pr-badge ${tone}`}>{value}</span>;
 }
 
 function PatchInput({ placeholder }) {

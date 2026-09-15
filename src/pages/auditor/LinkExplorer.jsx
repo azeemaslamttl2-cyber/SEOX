@@ -686,15 +686,15 @@ function filterLinks(links, activeFilter, searchQuery, searchScope, advancedOpen
 
 function FilterMenuDropdown({ items, activeFilter, onSelect }) {
   return (
-    <div className="absolute left-0 top-[calc(100%+4px)] z-[100] max-h-[72vh] min-w-64 overflow-y-auto rounded-md border border-white/10 bg-[#303034] py-1 text-sm shadow-2xl">
+    <div className="pe-menu pe-menu-wide">
       {items.map((item, index) => {
         if (item.section) {
           return item.label ? (
-            <div key={`${item.label}-${index}`} className="border-t border-white/10 px-3 pb-1 pt-3 text-sm font-bold text-white first:border-t-0 first:pt-2">
+            <div key={`${item.label}-${index}`} className="pe-menu-section">
               {item.label}
             </div>
           ) : (
-            <div key={`divider-${index}`} className="my-1 border-t border-white/10" />
+            <div key={`divider-${index}`} className="pe-menu-divider" />
           );
         }
         const active = item.filter === activeFilter;
@@ -702,12 +702,10 @@ function FilterMenuDropdown({ items, activeFilter, onSelect }) {
           <button
             key={`${item.label}-${item.filter}-${index}`}
             onClick={() => onSelect(item)}
-            className={`flex w-full items-center justify-between gap-4 px-3 py-1.5 text-left transition ${
-              active ? "bg-brand-500/25 text-white" : "text-white hover:bg-white/[0.06]"
-            }`}
+            className={`pe-menu-item ${active ? "active" : ""}`}
           >
             <span className="min-w-0 whitespace-nowrap">{item.label}</span>
-            <span className="flex-shrink-0 tabular-nums text-white/55">{Number(item.count || 0).toLocaleString()}</span>
+            <span className="pe-menu-count">{Number(item.count || 0).toLocaleString()}</span>
           </button>
         );
       })}
@@ -718,26 +716,27 @@ function FilterMenuDropdown({ items, activeFilter, onSelect }) {
 function AdvancedFilterPanel({ rule, setRule, resultCount, operator, onReset }) {
   const needsValue = Boolean(operator?.needsValue);
   return (
-    <div className="rounded-2xl border border-white/10 bg-ink-800/70 backdrop-blur">
-      <div className="border-b border-white/10 p-3">
-        <div className="flex flex-wrap items-center gap-2">
-          <div className="flex overflow-hidden rounded-md border border-white/10">
-            <button className="bg-brand-500/25 px-3 py-1.5 text-xs font-semibold text-brand-100">AND</button>
-            <button className="px-3 py-1.5 text-xs font-semibold text-white/70 hover:bg-white/[0.06]">OR</button>
+    <div className="advf">
+      <div className="advf-body">
+        <div className="advf-row">
+          <span className="advf-label">Match</span>
+          <div className="ctool-seg advf-seg">
+            <button className="ui-button ctool-seg-btn active">AND</button>
+            <button className="ui-button ctool-seg-btn">OR</button>
           </div>
         </div>
-        <div className="mt-2 flex flex-wrap items-center gap-2">
-          <div className="flex overflow-hidden rounded-md border border-white/10">
-            <button className="px-3 py-1.5 text-xs font-semibold text-white/70 hover:bg-white/[0.06]">Previous</button>
-            <button className="bg-brand-500/25 px-3 py-1.5 text-xs font-semibold text-brand-100">Current</button>
+        <div className="advf-row advf-rule">
+          <div className="ctool-seg advf-seg">
+            <button className="ui-button ctool-seg-btn">Previous</button>
+            <button className="ui-button ctool-seg-btn active">Current</button>
           </div>
           <select
             value={rule.field}
             onChange={(event) => setRule((current) => ({ ...current, field: event.target.value }))}
-            className="h-8 min-w-[240px] rounded-md border border-white/10 bg-white/[0.04] px-3 text-xs text-white outline-none"
+            className="schema-input advf-field advf-field-lg"
           >
             {ADVANCED_FIELDS.map((field) => (
-              <option key={field.key} value={field.key} className="bg-[#303034] text-white">{field.label}</option>
+              <option key={field.key} value={field.key}>{field.label}</option>
             ))}
           </select>
           <select
@@ -751,10 +750,10 @@ function AdvancedFilterPanel({ rule, setRule, resultCount, operator, onReset }) 
                 value: nextMeta?.needsValue ? current.value : "",
               }));
             }}
-            className="h-8 min-w-[190px] rounded-md border border-white/10 bg-white/[0.04] px-3 text-xs text-white outline-none"
+            className="schema-input advf-field"
           >
             {ADVANCED_OPERATORS.map((item) => (
-              <option key={item.key} value={item.key} className="bg-[#303034] text-white">{item.label}</option>
+              <option key={item.key} value={item.key}>{item.label}</option>
             ))}
           </select>
           {needsValue && (
@@ -762,35 +761,35 @@ function AdvancedFilterPanel({ rule, setRule, resultCount, operator, onReset }) 
               value={rule.value}
               onChange={(event) => setRule((current) => ({ ...current, value: event.target.value }))}
               placeholder="Value"
-              className="h-8 min-w-[220px] rounded-md border border-white/10 bg-white/[0.04] px-3 text-xs text-white placeholder:text-white/30 outline-none"
+              className="schema-input advf-field"
             />
           )}
           <button
             onClick={onReset}
-            className="flex h-8 w-9 items-center justify-center rounded-md border border-white/10 bg-white/[0.04] text-white/70 hover:bg-white/[0.08] hover:text-white"
+            className="ui-button schema-remove advf-remove"
             aria-label="Reset advanced rule"
           >
             <X className="h-4 w-4" />
           </button>
         </div>
-        <div className="mt-2 flex flex-wrap items-center gap-2">
-          <button className="flex h-8 items-center gap-1.5 rounded-md border border-white/10 bg-white/[0.04] px-3 text-xs font-semibold text-white/80 hover:bg-white/[0.08]">
+        <div className="advf-row advf-addrow">
+          <button className="ui-button ctool-tool-btn advf-add">
             <Plus className="h-3.5 w-3.5" /> Rule
           </button>
-          <button className="flex h-8 items-center gap-1.5 rounded-md border border-white/10 bg-white/[0.04] px-3 text-xs font-semibold text-white/80 hover:bg-white/[0.08]">
+          <button className="ui-button ctool-tool-btn advf-add">
             <Plus className="h-3.5 w-3.5" /> Group
           </button>
         </div>
       </div>
-      <div className="flex flex-wrap items-center gap-4 px-3 py-3 text-xs">
+      <div className="advf-foot">
         <button
           disabled={needsValue && !String(rule.value || "").trim()}
-          className="h-8 rounded-md border border-white/10 bg-white/[0.04] px-4 font-semibold text-white/45 disabled:cursor-not-allowed disabled:opacity-50 enabled:text-white/80 enabled:hover:bg-white/[0.08]"
+          className="ui-button ui-button-primary advf-apply"
         >
           Apply
         </button>
-        <span className="font-semibold text-white/55">{Number(resultCount || 0).toLocaleString()} results matching</span>
-        <button onClick={onReset} className="font-semibold text-brand-300 hover:underline">Reset</button>
+        <span className="advf-count">{Number(resultCount || 0).toLocaleString()} results matching</span>
+        <button onClick={onReset} className="schema-addlink">Reset</button>
       </div>
     </div>
   );
@@ -900,12 +899,12 @@ export default function LinkExplorer() {
           <div className="relative hidden sm:block">
             <button
               onClick={() => setOpenMenu((current) => (current === "searchScope" ? null : "searchScope"))}
-              className="flex h-8 items-center gap-1 rounded-md border border-white/10 bg-white/[0.04] px-2.5 text-xs font-semibold text-white/80 hover:bg-white/[0.08]"
+              className="ui-button ctool-tool-btn pe-scope-btn"
             >
               {currentSearchScope.label} <ChevronDown className={`h-3 w-3 transition ${openMenu === "searchScope" ? "rotate-180" : ""}`} />
             </button>
             {openMenu === "searchScope" && (
-              <div className="absolute right-0 top-[calc(100%+4px)] z-[100] w-40 rounded-md border border-white/10 bg-[#303034] py-1 text-sm shadow-2xl">
+              <div className="pe-menu pe-menu-right">
                 {SEARCH_SCOPES.map((scope) => (
                   <button
                     key={scope.key}
@@ -914,7 +913,7 @@ export default function LinkExplorer() {
                       setOpenMenu(null);
                       setVisibleCount(PAGE_SIZE);
                     }}
-                    className={`block w-full px-3 py-1.5 text-left ${searchScope === scope.key ? "bg-brand-500/25 text-white" : "text-white hover:bg-white/[0.06]"}`}
+                    className={`pe-menu-item ${searchScope === scope.key ? "active" : ""}`}
                   >
                     {scope.label}
                   </button>
@@ -958,27 +957,27 @@ export default function LinkExplorer() {
           <span className="flex items-center gap-1 text-sm font-semibold">
             Crawl history <HelpCircle className="h-3.5 w-3.5 text-white/30" />
           </span>
-          <button onClick={() => setChartVisible(!chartVisible)} className="text-xs text-white/50 hover:text-white/80">
+          <button onClick={() => setChartVisible(!chartVisible)} className="ui-button chart-toggle">
             {chartVisible ? "Hide chart ▲" : "Show chart ▼"}
           </button>
         </div>
         {chartVisible && (
           <>
             <CrawlHistoryBars data={crawlData} />
-            <div className="mt-2 flex items-center justify-between text-xs text-white/55">
-              <label className="flex items-center gap-1.5">
+            <div className="mt-3 flex flex-wrap items-center gap-x-5 gap-y-2 text-xs text-white/55">
+              <label className="flex items-center gap-2">
                 <input type="checkbox" className="accent-brand-500" /> Highlight new
               </label>
-              <label className="flex items-center gap-1.5">
+              <label className="flex items-center gap-2">
                 <input type="checkbox" className="accent-brand-500" /> Show lost
               </label>
-              <label className="flex items-center gap-1.5">
+              <label className="flex items-center gap-2">
                 <input type="checkbox" defaultChecked className="accent-brand-500" /> All filter results
               </label>
-              <label className="flex items-center gap-1.5">
+              <label className="flex items-center gap-2">
                 <input type="checkbox" className="accent-brand-500" /> Incomplete crawl
               </label>
-              <button className="ml-auto rounded-md border border-white/10 bg-white/[0.04] px-2.5 py-1 hover:bg-white/[0.08]">
+              <button className="ui-button ctool-tool-btn ml-auto">
                 All {crawlData.length} crawls <ChevronDown className="ml-1 inline h-3 w-3" />
               </button>
             </div>

@@ -12,14 +12,14 @@ const metricTabs = ["Mentions", "Citations", "Impressions", "AI Share of Voice"]
 
 function TabPills({ tabs, active, onChange }) {
   return (
-    <div className="admin-tabs radar-tabs">
+    <div className="radar-tabs">
       {tabs.map((tab) => (
         <button
           key={tab}
           type="button"
           onClick={() => onChange(tab)}
           aria-pressed={active === tab}
-          className={`admin-tab ${active === tab ? "active" : ""}`}
+          className={`radar-tab ${active === tab ? "active" : ""}`}
         >
           {tab}
         </button>

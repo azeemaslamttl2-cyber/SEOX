@@ -119,42 +119,42 @@ const ContentWriterDashboard = () => {
     const renderArticleCard = (article) => (
         <div
             key={article.id}
-            className="group px-5 py-4 transition hover:bg-white/[0.02] border-b border-white/[0.03] last:border-b-0"
+            className="cwd-row group"
         >
             <div className="flex items-center justify-between gap-4">
                 <button
                     onClick={() => handleOpenArticle(article.id)}
-                    className="flex-1 flex items-start gap-4 text-left min-w-0"
+                    className="cwd-row-main"
                 >
-                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${article.mode === 'quick' ? 'bg-amber-500/15 ring-1 ring-amber-500/30' : 'bg-brand-500/15 ring-1 ring-brand-500/30'}`}>
+                    <div className={`cwd-tile ${article.mode === 'quick' ? 'is-quick' : 'is-express'}`}>
                         {article.mode === 'quick'
-                            ? <Zap className="w-5 h-5 text-amber-400" />
-                            : <Layers className="w-5 h-5 text-brand-400" />
+                            ? <Zap className="w-5 h-5" />
+                            : <Layers className="w-5 h-5" />
                         }
                     </div>
                     <div className="min-w-0 flex-1">
-                        <h4 className="font-display text-sm font-bold text-white/90 truncate group-hover:text-brand-300 transition">
+                        <h4 className="cwd-title font-display truncate">
                             {article.title || "Untitled Article"}
                         </h4>
                         <div className="flex items-center gap-2.5 mt-1.5 flex-wrap">
-                            <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-lg ${article.mode === 'quick' ? 'bg-amber-500/10 text-amber-300 ring-1 ring-amber-500/20' : 'bg-brand-500/10 text-brand-300 ring-1 ring-brand-500/20'}`}>
-                                {article.mode === 'quick' ? '⚡ Quick Mode' : '🔬 Express Mode'}
+                            <span className={`app-badge ${article.mode === 'quick' ? 'app-badge-warning' : 'app-badge-brand'}`}>
+                                {article.mode === 'quick' ? 'Quick Mode' : 'Express Mode'}
                             </span>
-                            <span className="text-[11px] text-white/35 flex items-center gap-1">
-                                <Clock className="w-3 h-3 text-white/20" />
+                            <span className="cwd-meta flex items-center gap-1">
+                                <Clock className="w-3 h-3" />
                                 {new Date(article.updatedAt).toLocaleDateString()}
                             </span>
                             {article.keyword && (
-                                <span className="text-[11px] text-white/35">
-                                    Keyword: <span className="font-semibold text-white/65">{article.keyword}</span>
+                                <span className="cwd-meta">
+                                    Keyword: <span className="cwd-meta-strong">{article.keyword}</span>
                                 </span>
                             )}
                             {article.currentStep < 13 ? (
-                                <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-lg bg-amber-500/10 text-amber-300 ring-1 ring-amber-500/20">
+                                <span className="app-badge app-badge-warning">
                                     Step {article.currentStep}/13
                                 </span>
                             ) : (
-                                <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-lg bg-emerald-500/10 text-emerald-300 ring-1 ring-emerald-500/20 flex items-center gap-1">
+                                <span className="app-badge app-badge-success">
                                     <CheckCircle className="w-3 h-3" /> Complete
                                 </span>
                             )}
@@ -165,14 +165,14 @@ const ContentWriterDashboard = () => {
                 <div className="flex items-center gap-2 shrink-0">
                     <button
                         onClick={() => handleOpenArticle(article.id)}
-                        className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-500/80 text-white transition hover:bg-brand-400 opacity-0 group-hover:opacity-100"
+                        className="ui-button ui-button-primary cwd-action"
                         title="Open Article"
                     >
                         <ArrowRight className="h-4 w-4" />
                     </button>
                     <button
                         onClick={(e) => { e.stopPropagation(); deleteArticle(article.id); }}
-                        className="p-2 text-white/30 hover:text-rose-400 hover:bg-rose-500/10 rounded-xl transition opacity-0 group-hover:opacity-100"
+                        className="ui-button schema-remove cwd-action"
                         title="Delete Article"
                     >
                         <Trash2 className="w-4 h-4" />
