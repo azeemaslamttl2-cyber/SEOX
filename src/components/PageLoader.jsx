@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useGlobalLoadingHold } from "../hooks/useGlobalLoadingHold.js";
 
 /**
  * The one page-level loading indicator for the application.
@@ -24,6 +25,24 @@ export default function PageLoader({
   className = "",
 }) {
   const [visible, setVisible] = useState(delay === 0);
+
+  // Only the full-screen uses hold the initial-load loader up, and the
+  // distinction is the whole point.
+  //
+  // `fullScreen` means nothing usable is on screen yet - a lazy *layout* chunk
+  // in `RoutedContent`, or the auth gate. Lifting the boot loader there would
+  // expose a blank page, so it waits.
+  //
+  // The inline use is the opposite case: it is `RouteOutlet`'s fallback, which
+  // renders *inside* an app shell that is already painted, with the sidebar and
+  // top bar sitting there. Holding for that hid a ready shell behind a blank
+  // spinner - measured at ~370ms of dead time on every route, which is what
+  // made the whole app feel slower to reload. The content area has its own
+  // spinner for that phase, which is what it is for.
+  //
+  // A no-op outside an initial load, so a client-side visit pays nothing, and
+  // it is capped independently in `holdGlobalLoader`.
+  useGlobalLoadingHold(fullScreen);
 
   useEffect(() => {
     if (delay === 0) return undefined;

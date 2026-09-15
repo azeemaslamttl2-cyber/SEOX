@@ -15,9 +15,92 @@
       name="description"
       content="60+ advanced SEO tools engineered into a single architectural framework. Outpace the competition with deep NLP and entity extraction."
     />
+    <!--
+      Boot loader styles.
+
+      Inline, and ahead of the bundled stylesheet, because this loader has to
+      paint on the browser's first frame - before the entry chunk exists, let
+      alone React. Anything that lives in index.css or in a component cannot do
+      that, which is why a reload used to show an empty page until the bundle
+      had downloaded and mounted.
+
+      The values mirror `.page-loader-full` / `.page-loader-spinner` in
+      src/index.css so the boot loader and the in-app loader are the same
+      object visually. The tokens are referenced with literal fallbacks for the
+      frame before :root has been parsed.
+    -->
+    <style>
+      #app-boot {
+        align-items: center;
+        background: var(--surface-sunken, #f7f8fb);
+        display: flex;
+        inset: 0;
+        justify-content: center;
+        position: fixed;
+        /* Above every in-app layer, including the route overlay's 9999. */
+        z-index: 2147483000;
+      }
+      #app-boot-inner {
+        align-items: center;
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+      }
+      #app-boot-spinner {
+        animation: app-boot-spin 0.7s linear infinite;
+        border: 2px solid var(--border, #e2e5ee);
+        border-radius: 999px;
+        border-top-color: var(--brand-red, #df3c27);
+        height: 40px;
+        width: 40px;
+      }
+      #app-boot-label {
+        color: var(--text-secondary, #4d5573);
+        font-family: Inter, system-ui, -apple-system, "Segoe UI", sans-serif;
+        font-size: 13px;
+        font-weight: 600;
+        letter-spacing: 0.01em;
+        margin: 0;
+      }
+      @keyframes app-boot-spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+      /* A spinner that cannot spin reads as a broken page, so keep a cue. */
+      @media (prefers-reduced-motion: reduce) {
+        #app-boot-spinner {
+          animation: none;
+          opacity: 0.7;
+        }
+      }
+    </style>
   </head>
   <body class="bg-ink-900 text-white antialiased">
     <div id="root"></div>
+    <!--
+      Markup, not script: it is in the document the browser already has, so it
+      is on screen at first paint on every reload, hard refresh, direct URL and
+      new tab. src/lib/routeTransition.js owns taking it down - once the routed
+      page has actually committed and any data it declared as required has
+      settled, not merely when React mounted.
+    -->
+    <div id="app-boot" role="status" aria-live="polite" aria-busy="true">
+      <div id="app-boot-inner">
+        <div id="app-boot-spinner"></div>
+        <p id="app-boot-label">Loading...</p>
+      </div>
+    </div>
+    <script>
+      // Last-resort release. Everything else that can hide this node lives in
+      // the bundle, so a chunk that 404s after a deploy or a blocked script
+      // would otherwise leave a spinner on screen for ever. routeTransition.js
+      // clears this timer when it takes ownership.
+      window.__appBootTimeout = window.setTimeout(function () {
+        var node = document.getElementById('app-boot');
+        if (node) node.remove();
+      }, 20000);
+    </script>
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>

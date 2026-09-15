@@ -17,15 +17,20 @@ import {
  * `page-loader-full` supplies the surface colour; the fixed positioning and
  * stacking are inline, so this needs no new CSS and cannot be affected by the
  * light-theme compatibility layer that rewrites border utility classes.
+ *
+ * During the initial load (`boot`) this renders nothing: the identical loader
+ * from index.html is already on screen and stays there, unbroken, until
+ * routeTransition.js removes it. Rendering both would stack two spinners and
+ * cost a swap between two DOM nodes that look the same.
  */
 export function RouteTransitionOverlay() {
-  const { visible } = useSyncExternalStore(
+  const { visible, boot } = useSyncExternalStore(
     subscribeRouteTransition,
     getRouteTransitionState,
     getRouteTransitionState
   );
 
-  if (!visible) return null;
+  if (!visible || boot) return null;
 
   return (
     <div

@@ -19,7 +19,7 @@ import {
   RouteReadySignal,
   RouteTransitionOverlay,
 } from "./components/RouteTransitionOverlay.jsx";
-import { installRouteTransitionWatcher } from "./lib/routeTransition.js";
+import { beginInitialLoad, installRouteTransitionWatcher } from "./lib/routeTransition.js";
 
 /* ------------------------------------------------------------------ *
  * Route-level code splitting.
@@ -217,6 +217,12 @@ installAuthenticatedApiFetch();
 // Watches history so the navigation loader can appear the moment a route
 // changes, before the router transition commits. Idempotent.
 installRouteTransitionWatcher();
+// Takes ownership of the boot loader painted by index.html. A reload fires no
+// history event, so without this the initial load is invisible to the watcher
+// above and nothing would ever take that node down. Module scope on purpose:
+// it has to be pending before the router mounts, or the first route could
+// signal ready against a store that is not yet loading.
+beginInitialLoad();
 
 const SchemaGenerator = lazy(() => import("./semanticsx/components/SchemaGenerator.jsx"));
 const CompetitorSchemaChecker = lazy(() => import("./semanticsx/components/CompetitorSchemaChecker.jsx"));
