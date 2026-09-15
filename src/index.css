@@ -16201,3 +16201,70 @@ input[type="week"]:focus-visible {
 .type-badge.is-css  { background: var(--info-bg);    border-color: var(--info-border);    color: var(--info-text); }
 .type-badge.is-js   { background: var(--warning-bg); border-color: var(--warning-border); color: var(--warning-text); }
 .type-badge.is-img  { background: var(--tile-bg);    border-color: var(--brand-red-border); color: var(--brand-red-hover); }
+
+/* ===========================================================================
+   CONTENT WRITER — article rows
+   The row's main area is a <button> carrying only layout utilities, so the
+   app's default primary owned it: hovering a row filled it brand red and the
+   title, badges and meta were left in colours meant for a white ground.
+   =========================================================================== */
+.cwd-row {
+  border-bottom: 1px solid var(--border-subtle);
+  padding: 14px 18px;
+  transition: background-color var(--motion-fast);
+}
+.cwd-row:last-child { border-bottom: 0; }
+.cwd-row:hover { background: var(--surface-sunken); }
+.cwd-row-main {
+  align-items: flex-start;
+  background: transparent !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  color: inherit !important;
+  --btn-fg: var(--text-primary);
+  display: flex;
+  flex: 1 1 auto;
+  gap: 14px;
+  min-width: 0;
+  padding: 0 !important;
+  text-align: left;
+}
+.cwd-row-main:hover:not(:disabled) { background: transparent !important; }
+.cwd-tile {
+  align-items: center;
+  border-radius: var(--radius-lg);
+  display: flex;
+  flex-shrink: 0;
+  height: 38px;
+  justify-content: center;
+  width: 38px;
+}
+.cwd-tile.is-quick {
+  background: var(--warning-bg);
+  border: 1px solid var(--warning-border);
+  color: var(--warning-text) !important;
+}
+.cwd-tile.is-express {
+  background: var(--tile-bg);
+  border: 1px solid var(--brand-red-border);
+  color: var(--brand-red) !important;
+}
+.cwd-title {
+  color: var(--text-primary) !important;
+  font-size: 0.875rem;
+  font-weight: 700;
+}
+.cwd-row:hover .cwd-title { color: var(--brand-red-hover) !important; }
+.cwd-meta { color: var(--text-muted) !important; font-size: 11px; }
+.cwd-meta svg { color: var(--text-disabled) !important; }
+.cwd-meta-strong { color: var(--text-secondary) !important; font-weight: 600; }
+/* Row actions stay hidden until the row is hovered or focused. */
+.cwd-action {
+  height: 30px;
+  opacity: 0;
+  padding: 0 !important;
+  transition: opacity var(--motion-fast);
+  width: 30px;
+}
+.cwd-row:hover .cwd-action,
+.cwd-action:focus-visible { opacity: 1; }
