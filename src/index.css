@@ -16268,3 +16268,34 @@ input[type="week"]:focus-visible {
 }
 .cwd-row:hover .cwd-action,
 .cwd-action:focus-visible { opacity: 1; }
+
+/* ---------------------------------------------------------------------------
+   Semantic Writer — step headers
+   Each step opened with its own coloured slab (orange→amber here, emerald→teal
+   on the grammar step) carrying a 20px glyph and pale tinted copy. They are
+   section headers, so they use the same banner shell as every other screen.
+   --------------------------------------------------------------------------- */
+.scw-step-head {
+  background-color: var(--surface);
+  background-image:
+    radial-gradient(120% 110% at 100% 0%, rgba(223, 60, 39, 0.055) 0%, transparent 55%),
+    radial-gradient(90% 110% at 100% 100%, rgba(45, 43, 111, 0.04) 0%, transparent 60%);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-xs);
+  padding: 20px 22px;
+}
+.scw-step-head .ctool-title { font-size: 1rem; line-height: 1.5rem; }
+
+/* The AI keyword panel used a 4px gradient ring as its frame. */
+.scw-accent-frame {
+  background: var(--tile-bg);
+  border: 1px solid var(--brand-red-border);
+  border-radius: var(--radius-xl);
+  padding: 4px;
+}
+.scw-accent-body {
+  background: var(--surface);
+  border-radius: var(--radius-lg);
+  padding: 20px;
+}
