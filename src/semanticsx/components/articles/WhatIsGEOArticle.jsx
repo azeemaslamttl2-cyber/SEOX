@@ -435,7 +435,7 @@ const SearchEvolutionDemo = () => {
                                         </div>
 
                                         <div className="flex items-center gap-2 text-xs text-slate-500 mt-2">
-                                            <img src="https://www.gstatic.com/images/branding/googlelogo/2x/googlelogo_color_92x30dp.png" alt="Google" className="h-4 opacity-50" />
+                                            <img loading="lazy" decoding="async" src="https://www.gstatic.com/images/branding/googlelogo/2x/googlelogo_color_92x30dp.png" alt="Google" className="h-4 opacity-50" />
                                             <span>Double-check response</span>
                                         </div>
                                     </div>

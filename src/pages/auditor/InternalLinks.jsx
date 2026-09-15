@@ -1,6 +1,6 @@
 import { useState, useMemo } from "react";
 import { ArrowRight, Check, ChevronDown, Copy, Download, HelpCircle, Link2, Network, Plus, Search, Target, Zap } from "lucide-react";
-import { useCrawl } from "../../context/CrawlContext.jsx";
+import { useCrawlProgress } from "../../context/CrawlContext.jsx";
 
 /* ─── Seed-based deterministic random ─── */
 function seededRng(seed) {
@@ -611,7 +611,7 @@ function buildOpportunities(pages) {
 }
 
 export default function InternalLinks() {
-  const { stats } = useCrawl();
+  const { stats } = useCrawlProgress();
 
   const latestUrls = stats?.latestUrls || [];
 

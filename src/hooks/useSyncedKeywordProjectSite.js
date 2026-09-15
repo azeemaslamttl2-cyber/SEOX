@@ -1,6 +1,6 @@
 import { useEffect, useMemo } from "react";
 import { useSelectedProjectDomain } from "./useSelectedProjectDomain.js";
-import { useCrawl } from "../context/CrawlContext.jsx";
+import { useProjectSelection } from "../context/CrawlContext.jsx";
 
 function domainForSite(value) {
   const raw = String(value || "").trim();
@@ -26,7 +26,7 @@ function matchingSite(sites, projectUrl, projectDomain) {
 // mirror its matching Search Console property and never retain another site.
 export function useSyncedKeywordProjectSite(gsc) {
   const selectedProject = useSelectedProjectDomain();
-  const { projects, selectProject } = useCrawl();
+  const { projects, selectProject } = useProjectSelection();
   const site = useMemo(
     () => matchingSite(gsc.sites || [], selectedProject.projectUrl, selectedProject.projectDomain),
     [gsc.sites, selectedProject.projectDomain, selectedProject.projectUrl]

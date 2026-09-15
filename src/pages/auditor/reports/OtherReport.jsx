@@ -1,11 +1,11 @@
 import { useMemo } from "react";
 import ReportShell, { StatCard, ChartCard } from "../../../components/auditor/ReportShell.jsx";
 import DonutChart from "../../../components/auditor/DonutChart.jsx";
-import { useCrawl } from "../../../context/CrawlContext.jsx";
+import { useCrawlProgress } from "../../../context/CrawlContext.jsx";
 import { safeSegments } from "../../../lib/auditor/reports/liveReportData.js";
 
 export default function OtherReport() {
-  const { stats } = useCrawl();
+  const { stats } = useCrawlProgress();
   const latestUrls = stats?.latestUrls || [];
   const auditIssues = stats?.auditIssues || {};
   const data = useMemo(() => {

@@ -8,7 +8,7 @@ import HorizontalBars from "../../components/auditor/HorizontalBars.jsx";
 import MiniBars from "../../components/auditor/MiniBars.jsx";
 import IssueTable from "../../components/auditor/IssueTable.jsx";
 import { useAuditData } from "../../hooks/useAuditData.js";
-import { useCrawl, formatDuration } from "../../context/CrawlContext.jsx";
+import { formatDuration, useCrawlProgress } from "../../context/CrawlContext.jsx";
 import { downloadTextFile, rowsToCsv, slugForFilename } from "../../lib/auditorExport.js";
 
 /* Stacked bar chart for HTTP status by depth */
@@ -55,7 +55,7 @@ function DepthChart({ data }) {
 export default function AuditorOverview() {
   const [tab, setTab] = useState("whatsnew");
   const navigate = useNavigate();
-  const { stats, status, startCrawl, stopCrawl } = useCrawl();
+  const { stats, status, startCrawl, stopCrawl } = useCrawlProgress();
   const {
     crawledUrls,
     crawlStatus,

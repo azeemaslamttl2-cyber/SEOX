@@ -2324,4 +2324,37 @@ export default defineConfig({
     host: true,
     port: 4173,
   },
+  build: {
+    // The eager payload is the entry chunk plus the small shared chunks it
+    // statically imports. Anything much over this means something that should
+    // be lazy became eager again.
+    chunkSizeWarningLimit: 600,
+    rollupOptions: {
+      output: {
+        // Only the framework and the heavy third-party libraries are grouped
+        // by hand. Application code is left to Rolldown, which already splits
+        // one chunk per lazy() route and lifts genuinely shared modules into
+        // their own chunks.
+        //
+        // Grouping application code by feature section was tried and reverted:
+        // the groups absorbed shared modules out of the common chunks, which
+        // put nine feature chunks back into the entry graph and pushed the
+        // eager payload to 1.8 MB. Measured, not assumed - see
+        // PERFORMANCE_UPGRADE_PLAN.md section 9.
+        codeSplitting: {
+          groups: [
+            {
+              name: 'vendor-react',
+              test: /[\/]node_modules[\/](react|react-dom|scheduler|react-router|react-router-dom)[\/]/,
+              priority: 100,
+            },
+            { name: 'vendor-charts', test: /[\/]node_modules[\/](recharts|d3-[a-z]+|victory-vendor)[\/]/, priority: 90 },
+            { name: 'vendor-maps', test: /[\/]node_modules[\/](leaflet|react-leaflet|@react-leaflet)[\/]/, priority: 90 },
+            { name: 'vendor-pdf', test: /[\/]node_modules[\/](jspdf|jspdf-autotable|html2canvas)[\/]/, priority: 90 },
+            { name: 'vendor-motion', test: /[\/]node_modules[\/]framer-motion[\/]/, priority: 90 },
+          ],
+        },
+      },
+    },
+  },
 });

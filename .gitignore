@@ -38,3 +38,6 @@ scripts/seed-login-user.mjs
 src/app/api/save-project.js
 .next/
 /.next/
+
+# Vite writes these while loading the config; they are build artifacts.
+vite.config.js.timestamp-*.mjs

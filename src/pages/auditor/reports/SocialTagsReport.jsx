@@ -2,7 +2,7 @@ import { useMemo } from "react";
 import DonutChart from "../../../components/auditor/DonutChart.jsx";
 import ReportShell, { ChartCard, StatCard } from "../../../components/auditor/ReportShell.jsx";
 import { useAuditData } from "../../../hooks/useAuditData.js";
-import { useCrawl } from "../../../context/CrawlContext.jsx";
+import { useCrawlProgress } from "../../../context/CrawlContext.jsx";
 import { issueGroupsForCategory, issueRowsForGroups, TrackedIssuesPanel } from "../../../lib/auditor/reports/ReportInsights.jsx";
 import { htmlRows } from "../../../lib/auditor/reports/liveReportData.js";
 
@@ -30,7 +30,7 @@ function tagRows(pages, keys, requiredKeys, sourceKey) {
 
 export default function SocialTagsReport() {
   const { issueCategories } = useAuditData();
-  const { stats } = useCrawl();
+  const { stats } = useCrawlProgress();
   const latestUrls = stats?.latestUrls || [];
   const socialStats = useMemo(() => {
     const pages = htmlRows(latestUrls).filter((row) => row.status >= 200 && row.status < 300 && !/\bnoindex\b/i.test(`${row.robotsMeta || ""} ${row.audit?.robotsMeta || ""}`));

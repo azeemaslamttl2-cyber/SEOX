@@ -3,11 +3,11 @@ import { Database, Loader2 } from "lucide-react";
 import IconRail from "../components/auditor/IconRail.jsx";
 import SecondaryNav from "../components/auditor/SecondaryNav.jsx";
 import TopBar from "../components/auditor/TopBar.jsx";
-import { useCrawl } from "../context/CrawlContext.jsx";
+import { useProjectSelection } from "../context/CrawlContext.jsx";
 import RouteOutlet from "../components/RouteOutlet.jsx";
 
 export default function AuditorLayout() {
-  const { projects, storageReady } = useCrawl();
+  const { projects, storageReady } = useProjectSelection();
 
   if (!storageReady) {
     return (

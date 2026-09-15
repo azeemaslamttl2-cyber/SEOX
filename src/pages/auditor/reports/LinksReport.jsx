@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 import ReportShell, { ChartCard, DepthBars, HBars, StatCard } from "../../../components/auditor/ReportShell.jsx";
 import { useAuditData } from "../../../hooks/useAuditData.js";
-import { useCrawl } from "../../../context/CrawlContext.jsx";
+import { useCrawlProgress } from "../../../context/CrawlContext.jsx";
 import {
   issueGroupsForCategory,
   issueRowsForGroups,
@@ -14,7 +14,7 @@ import { linkStats } from "../../../lib/auditor/reports/liveReportData.js";
 
 export default function LinksReport() {
   const { project, issueCategories } = useAuditData();
-  const { stats } = useCrawl();
+  const { stats } = useCrawlProgress();
   const latestUrls = stats?.latestUrls || [];
 
   const liveStats = useMemo(() => {

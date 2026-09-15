@@ -2,7 +2,7 @@ import { useMemo } from "react";
 import ReportShell, { StatCard, ChartCard, DepthBars } from "../../../components/auditor/ReportShell.jsx";
 import DonutChart from "../../../components/auditor/DonutChart.jsx";
 import { useAuditData } from "../../../hooks/useAuditData.js";
-import { useCrawl } from "../../../context/CrawlContext.jsx";
+import { useCrawlProgress } from "../../../context/CrawlContext.jsx";
 import { IndexabilityDonutInsights, TrackedIssuesPanel } from "../../../lib/auditor/reports/ReportInsights.jsx";
 import { pageExplorerHref } from "../../../lib/auditor/reports/reportLinks.js";
 
@@ -21,7 +21,7 @@ function isHtmlContentType(contentType, url) {
 
 export default function IndexabilityReport() {
   const { crawledUrls, errorDistribution, issueCategories, issueDetail } = useAuditData();
-  const { stats } = useCrawl();
+  const { stats } = useCrawlProgress();
   const latestUrls = stats?.latestUrls || [];
   const auditIssues = stats?.auditIssues || {};
 

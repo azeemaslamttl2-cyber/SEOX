@@ -17,7 +17,7 @@ import {
   X,
 } from "lucide-react";
 import { useProjects } from "../../context/ProjectsContext.jsx";
-import { useCrawl } from "../../context/CrawlContext.jsx";
+import { useCrawlProgress } from "../../context/CrawlContext.jsx";
 import { useClientPagination } from "../../hooks/useClientPagination.js";
 import {
   PROTOCOLS,
@@ -354,7 +354,7 @@ export default function ProjectsList() {
   const { projects, loading, ready, error, selectedProjectId, updateProject, removeProject, refreshProjects } =
     useProjects();
   // Crawl runtime state is a separate, page-specific concern.
-  const { projectStates } = useCrawl();
+  const { projectStates } = useCrawlProgress();
 
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");

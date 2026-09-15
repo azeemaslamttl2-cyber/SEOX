@@ -1,7 +1,7 @@
 import { useEffect, useState, useMemo } from "react";
 import { useSearchParams } from "react-router-dom";
 import { ChevronDown, Code2, Columns3, Download, HelpCircle, Link2, Plus, Search, X } from "lucide-react";
-import { useCrawl } from "../../context/CrawlContext.jsx";
+import { useCrawlProgress } from "../../context/CrawlContext.jsx";
 
 const FILTER_TABS = [
   { id: "all", label: "All links", filter: "all" },
@@ -799,7 +799,7 @@ function AdvancedFilterPanel({ rule, setRule, resultCount, operator, onReset }) 
 export default function LinkExplorer() {
   const [searchParams] = useSearchParams();
   const urlFilter = searchParams.get("filter") || "all";
-  const { stats } = useCrawl();
+  const { stats } = useCrawlProgress();
 
   const latestUrls = stats?.latestUrls || [];
 

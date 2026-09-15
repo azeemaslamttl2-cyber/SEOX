@@ -15,14 +15,17 @@ import {
   Trash2,
   Unplug,
 } from 'lucide-react';
-import { useCrawl } from '../../context/CrawlContext.jsx';
+import { useProjectSelection } from '../../context/CrawlContext.jsx';
+import {
+  invalidateGbpConnection,
+  readGbpAttachedLocations,
+  readGbpConnectionStatus,
+} from '../../lib/gbpCache.js';
 import {
   attachLocations,
   detachLocation,
   disconnectGbp,
-  getConnectionStatus,
   getGbpAuthUrl,
-  listAttachedLocations,
   listGbpAccounts,
   listGoogleLocations,
   resyncLocations,
@@ -62,7 +65,7 @@ function Notice({ tone = 'info', title, children }) {
 }
 
 export default function GbpConnect() {
-  const { project, storageReady } = useCrawl();
+  const { project, storageReady } = useProjectSelection();
   const navigate = useNavigate();
   const [params, setParams] = useSearchParams();
   const projectId = project?.id || '';
@@ -80,19 +83,20 @@ export default function GbpConnect() {
 
   const noAccounts = params.get('noAccounts') === '1';
 
-  const loadStatus = useCallback(async () => {
+  // `force` is used after a mutation, where the cached copy is known stale.
+  const loadStatus = useCallback(async ({ force = false } = {}) => {
     if (!projectId) {
       setLoading(false);
       return;
     }
     setError('');
     try {
-      const next = await getConnectionStatus(projectId);
+      const next = await readGbpConnectionStatus(projectId, { force });
       setStatus(next);
       if (next.connected) {
         const [accountData, attachedData] = await Promise.all([
           listGbpAccounts(projectId).catch((err) => ({ accounts: [], error: err.message })),
-          listAttachedLocations(projectId).catch(() => ({ locations: [] })),
+          readGbpAttachedLocations(projectId, { force }).catch(() => ({ locations: [] })),
         ]);
         setAccounts(accountData.accounts || []);
         // listGbpAccounts failing is not the same as Google reporting zero
@@ -144,14 +148,16 @@ export default function GbpConnect() {
       await disconnectGbp(projectId);
       setParams({});
       setAvailable(null);
-      await loadStatus();
+      invalidateGbpConnection(projectId);
+      await loadStatus({ force: true });
     });
 
   const handleSelectAccount = (account) =>
     run(`account:${account.accountId}`, async () => {
       await selectGbpAccount(projectId, account);
       setAvailable(null);
-      await loadStatus();
+      invalidateGbpConnection(projectId);
+      await loadStatus({ force: true });
     });
 
   const handleLoadLocations = () =>
@@ -166,7 +172,8 @@ export default function GbpConnect() {
       const result = await attachLocations(projectId, [...selection]);
       setSelection(new Set());
       setAvailable(null);
-      await loadStatus();
+      invalidateGbpConnection(projectId);
+      await loadStatus({ force: true });
       if (result.missing?.length) {
         setError(`Google no longer lists: ${result.missing.join(', ')}`);
       }
@@ -175,7 +182,8 @@ export default function GbpConnect() {
   const handleResync = () =>
     run('resync', async () => {
       const result = await resyncLocations(projectId);
-      await loadStatus();
+      invalidateGbpConnection(projectId);
+      await loadStatus({ force: true });
       if (result.lost?.length) {
         setError(
           `These locations are attached in SEOX but no longer visible in the Google account: ${result.lost.join(', ')}`
@@ -438,7 +446,8 @@ export default function GbpConnect() {
                         onClick={() =>
                           run(`primary:${location.id}`, async () => {
                             await setPrimaryLocation(projectId, location.id);
-                            await loadStatus();
+                            invalidateGbpConnection(projectId);
+      await loadStatus({ force: true });
                           })
                         }
                         className="rounded-lg p-1.5 text-white/40 transition hover:bg-white/[0.06] hover:text-brand-300"
@@ -451,7 +460,8 @@ export default function GbpConnect() {
                       onClick={() =>
                         run(`detach:${location.id}`, async () => {
                           await detachLocation(projectId, location.id);
-                          await loadStatus();
+                          invalidateGbpConnection(projectId);
+      await loadStatus({ force: true });
                         })
                       }
                       className="rounded-lg p-1.5 text-white/40 transition hover:bg-rose-500/10 hover:text-rose-300"

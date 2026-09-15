@@ -1,5 +1,6 @@
 import { Component } from "react";
 import { AlertTriangle, RefreshCw, RotateCcw } from "lucide-react";
+import { endRouteTransition } from "../lib/routeTransition.js";
 
 /**
  * Catches anything a routed page throws while rendering, so a failure ends in a
@@ -36,6 +37,9 @@ export default class RouteErrorBoundary extends Component {
   }
 
   componentDidCatch(error, info) {
+    // A failed navigation must release the loader, or it would sit over the
+    // error card forever.
+    endRouteTransition(null, { immediate: true });
     // Never log request bodies or credentials - only where it broke.
     console.error("Page failed to render:", error?.message || error, info?.componentStack);
   }

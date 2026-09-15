@@ -403,14 +403,32 @@ export async function runProjectToolChecks(project, { userId, onUpdate } = {}) {
     return snapshot;
   };
 
-  await runTool("robots", () => runRobots(projectUrl));
-  await runTool("eeat", async () => runEeat(await getSnapshot()));
-  await runTool("semantic", async () => runSemantic(await getSnapshot()));
-  await runTool("crawlOptimization", async () => runCrawlOptimization(await getSnapshot()));
-  await runTool("speed", async () => runSpeed(projectUrl, await getSnapshot()));
-  await runTool("duplicate", () => runDuplicate(projectUrl));
-  await runTool("gsc", () => runGsc(projectUrl, userId));
-  await runTool("bing", () => runBing(projectUrl));
+  // These eight ran strictly one after another, so the total wait was the sum
+  // of eight external calls. They split into two independent tracks:
+  //
+  //   snapshot track - eeat, semantic, crawlOptimization and speed all consume
+  //                    the same homepage snapshot. getSnapshot() memoises it, so
+  //                    these stay sequential to keep fetching it exactly once
+  //                    and to preserve their existing completion order.
+  //   independent    - robots, duplicate, gsc and bing share nothing, so they
+  //                    run concurrently with the track above.
+  //
+  // Every tool still publishes through the same setTool/publish path, so the
+  // progressive UI updates are unchanged.
+  const snapshotTrack = (async () => {
+    await runTool("eeat", async () => runEeat(await getSnapshot()));
+    await runTool("semantic", async () => runSemantic(await getSnapshot()));
+    await runTool("crawlOptimization", async () => runCrawlOptimization(await getSnapshot()));
+    await runTool("speed", async () => runSpeed(projectUrl, await getSnapshot()));
+  })();
+
+  await Promise.allSettled([
+    snapshotTrack,
+    runTool("robots", () => runRobots(projectUrl)),
+    runTool("duplicate", () => runDuplicate(projectUrl)),
+    runTool("gsc", () => runGsc(projectUrl, userId)),
+    runTool("bing", () => runBing(projectUrl)),
+  ]);
 
   setTool("backlinks", skippedTool("backlinks", "Upload backlink export", "Backlinks Audit needs an Ahrefs, Semrush, CSV, or TSV export."));
   setTool("plagiarism", skippedTool("plagiarism", "Credentials required", "Plagiarism Checker needs DataForSEO credentials or server configuration."));

@@ -2,7 +2,7 @@ import { useDeferredValue, useEffect, useState, useMemo } from "react";
 import { useSearchParams } from "react-router-dom";
 import { CheckCircle2, ChevronDown, Code2, Columns3, Download, ExternalLink, FileSearch, Folder, HelpCircle, Plus, RotateCcw, Search, X } from "lucide-react";
 import { useAuditData } from "../../hooks/useAuditData.js";
-import { useCrawl } from "../../context/CrawlContext.jsx";
+import { useCrawlProgress } from "../../context/CrawlContext.jsx";
 
 const FILTER_TABS = [
   { key: "all", label: "All URLs", filter: "all" },
@@ -1056,7 +1056,7 @@ export default function PageExplorer() {
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
   const [titleOverrides, setTitleOverrides] = useState({});
   const { project } = useAuditData();
-  const { stats } = useCrawl();
+  const { stats } = useCrawlProgress();
 
   const latestUrls = stats?.latestUrls || [];
   const auditIssues = stats?.auditIssues || {};

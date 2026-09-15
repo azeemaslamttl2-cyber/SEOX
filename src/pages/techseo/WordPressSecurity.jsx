@@ -10,7 +10,7 @@ import {
   ShieldCheck,
   ShieldQuestion,
 } from 'lucide-react';
-import { useCrawl } from '../../context/CrawlContext.jsx';
+import { useProjectSelection } from '../../context/CrawlContext.jsx';
 import { getSessionToken } from '../../lib/authSession.js';
 
 const card = 'rounded-2xl border border-white/10 bg-white/[0.02] p-5';
@@ -51,7 +51,7 @@ async function api(path, { method = 'GET', body, params } = {}) {
 }
 
 export default function WordPressSecurity() {
-  const { project } = useCrawl();
+  const { project } = useProjectSelection();
   const projectId = project?.id || '';
 
   const [data, setData] = useState(null);

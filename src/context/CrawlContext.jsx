@@ -41,7 +41,27 @@ import {
 } from "../lib/crawlStorage.js";
 import { useAuth } from "./AuthContext.jsx";
 
-const CrawlContext = createContext(null);
+/**
+ * CrawlContext is split in two, by how often each half changes.
+ *
+ * ProjectSelectionContext holds the selected project and the inventory. It
+ * changes when the user picks or edits a project - rarely.
+ *
+ * CrawlProgressContext holds live crawl state. While a crawl runs, the ticker
+ * below updates it once per second.
+ *
+ * They were one context whose value was an inline object literal, so every
+ * one-second tick produced a new value identity and re-rendered all 39
+ * useCrawl() consumers - including the ~10 that only read `project`, a value
+ * the tick never touches. Both values are memoised now, and a component can
+ * subscribe to just the half it needs.
+ *
+ * useCrawl() still returns the combined shape, so no existing consumer breaks.
+ * A consumer that only needs one half should use useProjectSelection() or
+ * useCrawlProgress() instead - that is what actually stops the re-render.
+ */
+const ProjectSelectionContext = createContext(null);
+const CrawlProgressContext = createContext(null);
 
 const MAX_LATEST = Infinity; // Store all crawled URLs for Page Explorer etc.
 const TARGET_MAX = 1619; // mimics the reference: stops auto around this count
@@ -163,38 +183,6 @@ function mergeProjects(...lists) {
 // Covers every field the project editor can change, so an edit that only
 // touches the audit settings still propagates from ProjectsContext into the
 // crawl-side list.
-const SIGNATURE_FIELDS = [
-  "id",
-  "name",
-  "domain",
-  "protocol",
-  "scope",
-  "folder",
-  "schedule",
-  "userAgent",
-  "user_agent",
-  "urlLimit",
-  "url_limit",
-  "renderJs",
-  "render_js",
-  "respectRobots",
-  "respect_robots",
-  "notifyEmail",
-  "notify_email",
-  "updated_at",
-  "updatedAt",
-];
-
-function projectListSignature(list) {
-  return (list || [])
-    .map((item) =>
-      [
-        ...SIGNATURE_FIELDS.map((field) => item?.[field]),
-        item?.fullUrl || item?.full_url || item?.url,
-      ].join("~")
-    )
-    .join("|");
-}
 
 function isMockProject(item) {
   const id = projectIdFor(item);
@@ -319,6 +307,7 @@ export function CrawlProvider({ children }) {
     applyProjectUpsert: shareProjectUpsert,
     applyProjectRemoval: shareProjectRemoval,
     applySelectedProjectId: shareSelectedProjectId,
+    setProjectsPayload: shareProjectsPayload,
   } = useProjects();
   const sharedPayloadRef = useRef(null);
   sharedPayloadRef.current = {
@@ -331,10 +320,40 @@ export function CrawlProvider({ children }) {
   const uidRef = useRef(authUserId);
   uidRef.current = authUserId;
   const initial = useMemo(loadInitial, []);
-  const [projects, setProjects] = useState(initial.projects);
-  const [selectedProjectId, setSelectedProjectId] = useState(initial.selectedProjectId);
   const [projectStates, setProjectStates] = useState(initial.projectStates);
-  const [deletedProjectIds, setDeletedProjectIds] = useState(initial.deletedProjectIds);
+
+  /**
+   * The project inventory is derived from ProjectsContext rather than mirrored
+   * into local state.
+   *
+   * It used to be three useState values kept in step with the shared context by
+   * a reconciliation effect, which made two sources of truth for the same rows.
+   * Every mutation below already published to ProjectsContext, so the local
+   * copy was redundant - it is now computed instead.
+   *
+   * Two behaviours live here and nowhere else, so they are preserved exactly:
+   * seeded demo rows are hidden (isMockProject) and tombstoned rows are
+   * filtered out. ProjectsContext deliberately keeps the raw list, which is
+   * what /projects has always shown.
+   */
+  const inventory = useMemo(() => {
+    const deleted = new Set((sharedDeletedProjectIds || []).map((id) => String(id)));
+    const list = mergeProjects(sharedProjects || []).filter(
+      (item) => !deleted.has(String(item.id)) && !isMockProject(item)
+    );
+    const availableIds = new Set(list.map((item) => item.id));
+    const selectedId =
+      (sharedSelectedProjectId && availableIds.has(sharedSelectedProjectId)
+        ? sharedSelectedProjectId
+        : null) ||
+      list[0]?.id ||
+      null;
+    return { projects: list, selectedProjectId: selectedId, deletedProjectIds: [...deleted] };
+  }, [sharedDeletedProjectIds, sharedProjects, sharedSelectedProjectId]);
+
+  const projects = inventory.projects;
+  const selectedProjectId = inventory.selectedProjectId;
+  const deletedProjectIds = inventory.deletedProjectIds;
   const [storageReady, setStorageReady] = useState(false);
   const [storageError, setStorageError] = useState(null);
   const crawlerSessionsRef = useRef({});
@@ -495,9 +514,23 @@ export function CrawlProvider({ children }) {
           restoredSelectedProjectId,
           restoredDeletedProjectIds
         );
-        setProjects(restoredProjects);
-        setSelectedProjectId(restoredSelectedProjectId);
-        setDeletedProjectIds(restoredDeletedProjectIds);
+        // Hydration can add rows the shared inventory has not seen - migrated
+        // legacy browser projects - and can resolve the selection. Publish once
+        // so ProjectsContext stays the single owner; the derived inventory then
+        // follows.
+        //
+        // Only when this pass actually read the database. On the first render
+        // `user` is still null, so this effect also runs pre-auth with an empty
+        // list; publishing that would write an empty payload into projectsCache,
+        // and the ProjectsContext fetch would then resolve from that cache and
+        // never issue GET /api/projects at all.
+        if (authUserId && databaseLoaded) {
+          shareProjectsPayload({
+            projects: restoredProjects,
+            selectedProjectId: restoredSelectedProjectId,
+            deletedProjectIds: restoredDeletedProjectIds,
+          });
+        }
         setProjectStates(mergedProjectStates);
       } catch (error) {
         if (!cancelled) setStorageError(error);
@@ -530,6 +563,8 @@ export function CrawlProvider({ children }) {
   const status = selectedState.status;
   const stats = selectedState.stats;
 
+  // The refs are the synchronous mirror callbacks read before React re-renders.
+  // They are written directly by each mutation and reconciled here afterwards.
   useEffect(() => {
     latestProjectsRef.current = projects;
   }, [projects]);
@@ -572,36 +607,9 @@ export function CrawlProvider({ children }) {
       });
     });
 
-    // Tombstones are unioned rather than replaced so a local deletion that has
-    // not reached the shared context yet is never resurrected. Applied before
-    // the early return below, which only guards the project list itself.
-    const nextDeletedProjectIds = Array.from(
-      new Set([...(latestDeletedProjectIdsRef.current || []), ...(sharedDeletedProjectIds || [])])
-    );
-    latestDeletedProjectIdsRef.current = nextDeletedProjectIds;
-    setDeletedProjectIds(nextDeletedProjectIds);
-
-    const deleted = new Set(nextDeletedProjectIds);
-    const nextProjects = mergeProjects(sharedProjects).filter(
-      (item) => !deleted.has(item.id) && !isMockProject(item)
-    );
-    if (projectListSignature(latestProjectsRef.current) === projectListSignature(nextProjects)) return;
-
-    const availableIds = new Set(nextProjects.map((item) => item.id));
-    const nextSelectedId =
-      (latestSelectedProjectIdRef.current && availableIds.has(latestSelectedProjectIdRef.current)
-        ? latestSelectedProjectIdRef.current
-        : null) ||
-      (sharedSelectedProjectId && availableIds.has(sharedSelectedProjectId)
-        ? sharedSelectedProjectId
-        : null) ||
-      nextProjects[0]?.id ||
-      null;
-
-    latestProjectsRef.current = nextProjects;
-    latestSelectedProjectIdRef.current = nextSelectedId;
-    setProjects(nextProjects);
-    setSelectedProjectId(nextSelectedId);
+    // The list itself is no longer reconciled here - it is derived from the
+    // shared inventory, so there is nothing left to copy. This effect now only
+    // releases crawl artefacts for projects that disappeared.
   }, [
     authUserId,
     sharedDeletedProjectIds,
@@ -882,23 +890,13 @@ export function CrawlProvider({ children }) {
         previousSelectedProjectId,
         previousDeletedProjectIds
       );
-      setProjects(previousProjects);
-      setDeletedProjectIds(previousDeletedProjectIds);
-      setSelectedProjectId(previousSelectedProjectId);
       syncedSharedProjectsRef.current = null;
-      if (previousVersion) {
-        shareProjectUpsert(previousVersion, { selectedProjectId: previousSelectedProjectId });
-      } else {
-        shareProjectRemoval(normalized.id, {
-          selectedProjectId: previousSelectedProjectId,
-          markDeleted: false,
-        });
-      }
+      // One atomic restore of list, selection and tombstones. The previous code
+      // put the list back locally and only patched the single row in the shared
+      // context, so a rolled-back insert could leave the two disagreeing.
+      shareProjectsPayload(previousMetadata);
     };
 
-    setProjects(nextProjects);
-    setDeletedProjectIds(nextDeletedProjectIds);
-    setSelectedProjectId(normalized.id);
     // Publish to the shared inventory so every other page shows the new or
     // edited project without asking /api/projects again.
     syncedSharedProjectsRef.current = null;
@@ -917,7 +915,6 @@ export function CrawlProvider({ children }) {
           projectId,
           latestDeletedProjectIdsRef.current
         );
-        setSelectedProjectId(projectId);
         shareSelectedProjectId(projectId);
 
         // Persist project selection and project info to MySQL
@@ -962,8 +959,6 @@ export function CrawlProvider({ children }) {
         }).catch(() => {});
       }
 
-      setProjects(remaining);
-      setSelectedProjectId(nextSelectedProjectId);
       syncedSharedProjectsRef.current = null;
       shareProjectRemoval(projectId, { selectedProjectId: nextSelectedProjectId });
       delete crawlerSessionsRef.current[projectId];
@@ -974,7 +969,6 @@ export function CrawlProvider({ children }) {
         latestProjectStatesRef.current = rest;
         return rest;
       });
-      setDeletedProjectIds(nextDeletedProjectIds);
       return remaining.length;
     },
     [persistMetadataFallback, shareProjectRemoval]
@@ -1095,43 +1089,89 @@ export function CrawlProvider({ children }) {
     latestProjectsRef.current = nextProjects;
     latestSelectedProjectIdRef.current = nextSelectedId;
     latestDeletedProjectIdsRef.current = dbData.deletedProjectIds || [];
-    setProjects(nextProjects);
-    setSelectedProjectId(nextSelectedId);
-    setDeletedProjectIds(dbData.deletedProjectIds || []);
+    // refreshSharedProjects already refreshed ProjectsContext, so the derived
+    // inventory is up to date. Only the resolved selection needs publishing.
+    if (nextSelectedId && nextSelectedId !== dbData.selectedProjectId) {
+      shareSelectedProjectId(nextSelectedId);
+    }
     syncedSharedProjectsRef.current = null;
     return nextProjects;
   }, [authUserId, refreshSharedProjects]);
 
+  const selectionValue = useMemo(
+    () => ({
+      project,
+      projects,
+      selectedProjectId: project?.id || null,
+      storageReady,
+      storageError,
+      selectProject,
+      deleteProject,
+      setProject,
+      refreshProjects,
+    }),
+    [
+      deleteProject,
+      project,
+      projects,
+      refreshProjects,
+      selectProject,
+      setProject,
+      storageError,
+      storageReady,
+    ]
+  );
+
+  const progressValue = useMemo(
+    () => ({
+      projectStates,
+      status,
+      stats,
+      startCrawl,
+      stopCrawl,
+      resumeCrawl,
+      resetCrawl,
+    }),
+    [projectStates, resetCrawl, resumeCrawl, startCrawl, stats, status, stopCrawl]
+  );
+
   return (
-    <CrawlContext.Provider
-      value={{
-        project,
-        projects,
-        selectedProjectId: project?.id || null,
-        projectStates,
-        storageReady,
-        storageError,
-        status,
-        stats,
-        selectProject,
-        deleteProject,
-        startCrawl,
-        stopCrawl,
-        resumeCrawl,
-        resetCrawl,
-        setProject,
-        refreshProjects,
-      }}
-    >
-      {children}
-    </CrawlContext.Provider>
+    <ProjectSelectionContext.Provider value={selectionValue}>
+      <CrawlProgressContext.Provider value={progressValue}>
+        {children}
+      </CrawlProgressContext.Provider>
+    </ProjectSelectionContext.Provider>
   );
 }
 
-export function useCrawl() {
-  const ctx = useContext(CrawlContext);
-  if (!ctx) throw new Error("useCrawl must be used inside CrawlProvider");
+/** Selected project and inventory. Does not re-render on crawl progress. */
+export function useProjectSelection() {
+  const ctx = useContext(ProjectSelectionContext);
+  if (!ctx) throw new Error("useProjectSelection must be used inside CrawlProvider");
   return ctx;
+}
+
+/** Live crawl status and stats. Updates once per second during a crawl. */
+export function useCrawlProgress() {
+  const ctx = useContext(CrawlProgressContext);
+  if (!ctx) throw new Error("useCrawlProgress must be used inside CrawlProvider");
+  return ctx;
+}
+
+/**
+ * The original combined API, unchanged in shape.
+ *
+ * It reads both contexts, so a component using it still re-renders on every
+ * crawl tick. Components that only need one half should call
+ * useProjectSelection() or useCrawlProgress() directly.
+ */
+export function useCrawl() {
+  const selection = useContext(ProjectSelectionContext);
+  const progress = useContext(CrawlProgressContext);
+  // Memoised before the guard, so the hook order never depends on the guard.
+  const value = useMemo(() => ({ ...selection, ...progress }), [selection, progress]);
+  if (!selection || !progress) throw new Error("useCrawl must be used inside CrawlProvider");
+  return value;
 }
 
 // Format helpers

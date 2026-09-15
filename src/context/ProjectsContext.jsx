@@ -6,6 +6,7 @@ import {
   getCachedProjects,
   setProjectsCache,
 } from '../lib/projectsCache.js';
+import { evictProject } from '../lib/projectDataStore.js';
 import { useAuth } from './AuthContext.jsx';
 
 const ProjectsContext = createContext(null);
@@ -286,6 +287,9 @@ export function ProjectsProvider({ children }) {
       const currentUid = uidRef.current;
       if (!currentUid || !projectId) return false;
       await deleteProjectApi(currentUid, projectId);
+      // Drop everything cached against this project - a later project reusing
+      // the id must never inherit the deleted one's data.
+      evictProject(String(projectId));
       const next = applyProjectRemoval(projectId);
       await saveProjectMeta(currentUid, {
         selectedProjectId: next?.selectedProjectId || null,

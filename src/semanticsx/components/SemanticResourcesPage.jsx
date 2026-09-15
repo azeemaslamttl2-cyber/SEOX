@@ -332,7 +332,7 @@ const SemanticResourcesPage = () => {
                                     className="sres-site group"
                                 >
                                     <div className="sres-favicon">
-                                        <img
+                                        <img loading="lazy" decoding="async"
                                             src={getFaviconUrl(site.url, 64)}
                                             alt={`${site.name} logo`}
                                             className="w-6 h-6 object-contain"

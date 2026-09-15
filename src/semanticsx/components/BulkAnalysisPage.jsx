@@ -358,7 +358,7 @@ const WebsiteCard = ({ site, onClick, isLoading, activeMetrics = ['clicks', 'imp
             {/* Header */}
             <div className="p-4 pb-2">
                 <div className="flex items-start gap-3">
-                    <img
+                    <img loading="lazy" decoding="async"
                         src={getFaviconUrl(site.siteUrl)}
                         alt=""
                         className="w-10 h-10 rounded-lg bg-white/[0.06] object-contain"
@@ -849,7 +849,7 @@ const SiteDetailView = ({ site, getValidAccessToken, onBack }) => {
                     <ArrowLeft className="w-5 h-5 text-stone-400" />
                 </button>
                 <div className="flex items-center gap-3">
-                    <img src={getFaviconUrl(site.siteUrl)} alt="" className="w-12 h-12 rounded-xl bg-white/[0.06]" />
+                    <img loading="lazy" decoding="async" src={getFaviconUrl(site.siteUrl)} alt="" className="w-12 h-12 rounded-xl bg-white/[0.06]" />
                     <div>
                         <h1 className="text-2xl font-bold text-white">{getSiteDisplayName(site.siteUrl)}</h1>
                         <p className="text-stone-400">{site.siteUrl?.replace(/^sc-domain:/, '')}</p>
@@ -1306,7 +1306,7 @@ const SiteDetailView = ({ site, getValidAccessToken, onBack }) => {
                                         {(detailData?.countries || []).slice(0, 10).map((c, i) => (
                                             <div key={i} className="flex items-center justify-between py-1.5 px-2 hover:bg-white/[0.06] rounded-lg">
                                                 <div className="flex items-center gap-2 flex-1">
-                                                    <img
+                                                    <img loading="lazy" decoding="async"
                                                         src={getCountryFlagUrl(c.keys[0])}
                                                         alt={getCountryName(c.keys[0])}
                                                         className="w-5 h-5 rounded-full object-cover"
@@ -1436,7 +1436,7 @@ const SiteDetailView = ({ site, getValidAccessToken, onBack }) => {
                                         <tr key={i} className="hover:bg-white/[0.04]">
                                             <td className="px-6 py-4">
                                                 <div className="flex items-center gap-3">
-                                                    <img
+                                                    <img loading="lazy" decoding="async"
                                                         src={getCountryFlagUrl(c.keys[0])}
                                                         alt={getCountryName(c.keys[0])}
                                                         className="w-6 h-6 rounded-full object-cover"
@@ -2485,7 +2485,7 @@ const BulkAnalysisPage = () => {
                                     >
                                         <td className="px-6 py-4">
                                             <div className="flex items-center gap-3">
-                                                <img src={getFaviconUrl(site.siteUrl)} alt="" className="w-8 h-8 rounded-lg bg-white/[0.06]" />
+                                                <img loading="lazy" decoding="async" src={getFaviconUrl(site.siteUrl)} alt="" className="w-8 h-8 rounded-lg bg-white/[0.06]" />
                                                 <div>
                                                     <p className="font-medium text-white">{getSiteDisplayName(site.siteUrl)}</p>
                                                     <p className="text-sm text-stone-500">{site.siteUrl?.replace(/^sc-domain:/, '')}</p>

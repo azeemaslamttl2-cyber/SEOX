@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   AlertCircle,
   BarChart3,
@@ -16,11 +16,17 @@ import {
   formatNumber,
 } from "../../lib/keywordTools.js";
 
+const KEYWORD_PAGE_SIZE = 50;
+
 export default function KeywordResearch() {
   const [mode, setMode] = useState("seed");
   const [query, setQuery] = useState("");
   const [countryCode, setCountryCode] = useState("2840");
   const [results, setResults] = useState([]);
+  // DataForSEO can return thousands of keywords and the table rendered every
+  // one. Rows are revealed in pages of 50, the same incremental pattern
+  // PageExplorer, LinkExplorer and InternalLinks already use.
+  const [visibleCount, setVisibleCount] = useState(KEYWORD_PAGE_SIZE);
   const [searched, setSearched] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
@@ -41,6 +47,17 @@ export default function KeywordResearch() {
       return (Number(a[sortField] || 0) - Number(b[sortField] || 0)) * direction;
     });
   }, [results, sortDirection, sortField]);
+
+  const visibleResults = useMemo(
+    () => sortedResults.slice(0, visibleCount),
+    [sortedResults, visibleCount]
+  );
+
+  // A new search, or a re-sort, starts again from the first page.
+  useEffect(() => {
+    setVisibleCount(KEYWORD_PAGE_SIZE);
+  }, [results, sortDirection, sortField]);
+
   const maxVolume = Math.max(...results.map((item) => Number(item.search_volume || 0)), 0);
   const maxCpc = Math.max(...results.map((item) => Number(item.cpc || 0)), 0);
 
@@ -251,11 +268,11 @@ export default function KeywordResearch() {
                   <Loader2 className="kw-spinner h-6 w-6 animate-spin" />
                 </div>
               ) : sortedResults.length ? (
-                sortedResults.map((item, index) => (
+                visibleResults.map((item, index) => (
                   <div
                     key={`${item.keyword}-${index}`}
                     className={`grid grid-cols-[2fr_0.8fr_0.8fr_0.9fr_0.7fr] gap-3 px-4 py-3 transition hover:bg-white/[0.02] ${
-                      index < sortedResults.length - 1 ? "border-b border-white/[0.03]" : ""
+                      index < visibleResults.length - 1 ? "border-b border-white/[0.03]" : ""
                     }`}
                   >
                     <span className="kw-keyword">{item.keyword}</span>
@@ -270,6 +287,20 @@ export default function KeywordResearch() {
               ) : (
                 <div className="py-16 text-center text-sm text-white/25">No keyword data returned for this search.</div>
               )}
+              {visibleResults.length < sortedResults.length ? (
+                <div className="flex items-center justify-center gap-3 border-t border-white/[0.03] py-4">
+                  <span className="text-xs text-white/40">
+                    Showing {visibleResults.length} of {sortedResults.length}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setVisibleCount((count) => count + KEYWORD_PAGE_SIZE)}
+                    className="rounded-lg border border-white/10 px-3 py-1.5 text-xs font-semibold text-white/70 transition hover:bg-white/[0.04]"
+                  >
+                    Show more
+                  </button>
+                </div>
+              ) : null}
             </div>
           </div>
         )}

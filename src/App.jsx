@@ -1,153 +1,222 @@
 "use client";
 
 import { lazy, Suspense } from "react";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { installAuthenticatedApiFetch } from "./lib/authenticatedApiFetch.js";
 import { AuthProvider } from "./context/AuthContext.jsx";
 import { CrawlProvider } from "./context/CrawlContext.jsx";
 import { ProjectsProvider } from "./context/ProjectsContext.jsx";
 import RootLayout from "./layouts/RootLayout.jsx";
 import AuthLayout from "./layouts/AuthLayout.jsx";
-import AuditorLayout from "./layouts/AuditorLayout.jsx";
 import DashboardLayout from "./layouts/DashboardLayout.jsx";
-import FeatureGroupLayout from "./layouts/FeatureGroupLayout.jsx";
-import HomePage from "./pages/HomePage.jsx";
 import Login from "./pages/Login.jsx";
 import Register from "./pages/Register.jsx";
 import Dashboard from "./pages/Dashboard.jsx";
-import SettingsPage from "./pages/settings/SettingsPage.jsx";
-import LegacySettingsRedirect from "./pages/settings/LegacySettingsRedirect.jsx";
-import ProjectsList from "./pages/projects/ProjectsList.jsx";
-import AuditorOverview from "./pages/auditor/AuditorOverview.jsx";
-import AuditorIssues from "./pages/auditor/AuditorIssues.jsx";
-import AuditorIssueDetail from "./pages/auditor/AuditorIssueDetail.jsx";
-import NewProject from "./pages/auditor/NewProject.jsx";
-import CrawlLog from "./pages/auditor/CrawlLog.jsx";
-import ProjectHistory from "./pages/auditor/ProjectHistory.jsx";
-import BulkExport from "./pages/auditor/BulkExport.jsx";
-import PageExplorer from "./pages/auditor/PageExplorer.jsx";
-import LinkExplorer from "./pages/auditor/LinkExplorer.jsx";
-import InternalLinks from "./pages/auditor/InternalLinks.jsx";
-import StructureExplorer from "./pages/auditor/StructureExplorer.jsx";
-import InternalPagesReport from "./pages/auditor/reports/InternalPagesReport.jsx";
-import IndexabilityReport from "./pages/auditor/reports/IndexabilityReport.jsx";
-import LinksReport from "./pages/auditor/reports/LinksReport.jsx";
-import RedirectsReport from "./pages/auditor/reports/RedirectsReport.jsx";
-import ContentReport from "./pages/auditor/reports/ContentReport.jsx";
-import SocialTagsReport from "./pages/auditor/reports/SocialTagsReport.jsx";
-import DuplicatesReport from "./pages/auditor/reports/DuplicatesReport.jsx";
-import LocalizationReport from "./pages/auditor/reports/LocalizationReport.jsx";
-import PerformanceReport from "./pages/auditor/reports/PerformanceReport.jsx";
-import ImagesReport from "./pages/auditor/reports/ImagesReport.jsx";
-import JavaScriptReport from "./pages/auditor/reports/JavaScriptReport.jsx";
-import CssReport from "./pages/auditor/reports/CssReport.jsx";
-import ExternalPagesReport from "./pages/auditor/reports/ExternalPagesReport.jsx";
-import SitemapsReport from "./pages/auditor/reports/SitemapsReport.jsx";
-import OtherReport from "./pages/auditor/reports/OtherReport.jsx";
 import ProtectedRoute from "./components/ProtectedRoute.jsx";
 import PageLoader from "./components/PageLoader.jsx";
-import GscLayout from "./layouts/GscLayout.jsx";
-import GscDashboard from "./pages/gsc/GscDashboard.jsx";
-import GscOverview from "./pages/gsc/GscOverview.jsx";
-import GscKeywords from "./pages/gsc/GscKeywords.jsx";
-import GscPages from "./pages/gsc/GscPages.jsx";
-import GscAnonymousQueries from "./pages/gsc/GscAnonymousQueries.jsx";
-import GscOAuthCallback from "./pages/gsc/GscOAuthCallback.jsx";
-import TechSeoLayout from "./layouts/TechSeoLayout.jsx";
-import EeatAudit from "./pages/techseo/EeatAudit.jsx";
-import RobotsAnalyzer from "./pages/techseo/RobotsAnalyzer.jsx";
-import CrawlOptimization from "./pages/techseo/CrawlOptimization.jsx";
-import SpeedOptimization from "./pages/techseo/SpeedOptimization.jsx";
-import W3CValidator from "./pages/techseo/W3CValidator.jsx";
-import GscAudit from "./pages/techseo/GscAudit.jsx";
-import BingWebmaster from "./pages/techseo/BingWebmaster.jsx";
-import BacklinksAudit from "./pages/techseo/BacklinksAudit.jsx";
-import DuplicateChecker from "./pages/techseo/DuplicateChecker.jsx";
-import PlagiarismChecker from "./pages/techseo/PlagiarismChecker.jsx";
-import SemanticAudit from "./pages/techseo/SemanticAudit.jsx";
-import WordPressSecurity from "./pages/techseo/WordPressSecurity.jsx";
-import OnPageSeoLayout from "./layouts/OnPageSeoLayout.jsx";
-import OnPageAnalyzer from "./pages/onpage/OnPageAnalyzer.jsx";
-import OffPageSeoLayout from "./layouts/OffPageSeoLayout.jsx";
-import ExpiredDomainFinder from "./pages/offpage/ExpiredDomainFinder.jsx";
-import BacklinkCleaner from "./pages/offpage/BacklinkCleaner.jsx";
-import BacklinkIndexer from "./pages/offpage/BacklinkIndexer.jsx";
-import BacklinkDirectory from "./pages/offpage/BacklinkDirectory.jsx";
-import KeywordResearchLayout from "./layouts/KeywordResearchLayout.jsx";
-import KeywordResearch from "./pages/keywords/KeywordResearch.jsx";
-import SuggestKeywords from "./pages/keywords/SuggestKeywords.jsx";
-import Ubersuggest from "./pages/keywords/Ubersuggest.jsx";
-import NewKeywords from "./pages/keywords/NewKeywords.jsx";
-import LowHangingKeywords from "./pages/keywords/LowHangingKeywords.jsx";
-import LostKeywords from "./pages/keywords/LostKeywords.jsx";
-import BrandedKeywords from "./pages/keywords/BrandedKeywords.jsx";
-import KeywordCannibalization from "./pages/keywords/KeywordCannibalization.jsx";
-import ContentLayout from "./layouts/ContentLayout.jsx";
-import OutlineCreator from "./pages/content/OutlineCreator.jsx";
-import EntitiesExtractor from "./pages/content/EntitiesExtractor.jsx";
-import EntitiesGenerator from "./pages/content/EntitiesGenerator.jsx";
-import NGramsExtractor from "./pages/content/NGramsExtractor.jsx";
-import NLPExtractor from "./pages/content/NLPExtractor.jsx";
-import GrammarGenerator from "./pages/content/GrammarGenerator.jsx";
-import UniqueNGrams from "./pages/content/UniqueNGrams.jsx";
-import SkipGramWords from "./pages/content/SkipGramWords.jsx";
-import ContentOptimization from "./pages/content/ContentOptimization.jsx";
-import ChatGPTWatermarkRemover from "./pages/content/ChatGPTWatermarkRemover.jsx";
-import AIContentHelper from "./pages/content/AIContentHelper.jsx";
-import SemanticContentWriter from "./pages/content/SemanticContentWriter.jsx";
-import ContentWriterDashboard from "./pages/content/ContentWriterDashboard.jsx";
-import GeoLayout from "./layouts/GeoLayout.jsx";
-import PromptTracking from "./pages/geo/PromptTracking.jsx";
-import BrandSentiment from "./pages/geo/BrandSentiment.jsx";
-import AiCitationFlow from "./pages/geo/AiCitationFlow.jsx";
-import CompetitorResearch from "./pages/geo/CompetitorResearch.jsx";
-import InternalLinksCrawl from "./pages/geo/InternalLinksCrawl.jsx";
-import AiChatConsole from "./pages/geo/AiChatConsole.jsx";
-import SeoToolsLayout from "./layouts/SeoToolsLayout.jsx";
-import SeoToolsHub from "./pages/seotools/SeoToolsHub.jsx";
-import UltimateUrlEditor from "./pages/seotools/UltimateUrlEditor.jsx";
-import UniversalTextEditor from "./pages/seotools/UniversalTextEditor.jsx";
-import DomainSeparator from "./pages/seotools/DomainSeparator.jsx";
-import WordCounter from "./pages/seotools/WordCounter.jsx";
-import BotViewer from "./pages/seotools/BotViewer.jsx";
-import BulkDaPaChecker from "./pages/seotools/BulkDaPaChecker.jsx";
-import SitemapGenerator from "./pages/seotools/SitemapGenerator.jsx";
-import RobotsGenerator from "./pages/seotools/RobotsGenerator.jsx";
-import XmlSitemapExtractor from "./pages/seotools/XmlSitemapExtractor.jsx";
-import BulkMetaExtractor from "./pages/seotools/BulkMetaExtractor.jsx";
-import BrandRadarLayout from "./layouts/BrandRadarLayout.jsx";
-import BrandRadar from "./pages/brandradar/BrandRadar.jsx";
-import BrandRadarOverview from "./pages/brandradar/BrandRadarOverview.jsx";
-import BrandRadarAIResponses from "./pages/brandradar/BrandRadarAIResponses.jsx";
-import BrandRadarTopics from "./pages/brandradar/BrandRadarTopics.jsx";
-import BrandRadarCitedPages from "./pages/brandradar/BrandRadarCitedPages.jsx";
-import BrandRadarAIVisibility from "./pages/brandradar/BrandRadarAIVisibility.jsx";
-import AdminLayout from "./layouts/AdminLayout.jsx";
-import AdminDashboard from "./pages/admin/AdminDashboard.jsx";
-import AdminUsers from "./pages/admin/AdminUsers.jsx";
-import AdminAnalytics from "./pages/admin/AdminAnalytics.jsx";
-import AdminPayments from "./pages/admin/AdminPayments.jsx";
-import AdminNiches from "./pages/admin/AdminNiches.jsx";
-import AdminAffiliates from "./pages/admin/AdminAffiliates.jsx";
-import AdminStripe from "./pages/admin/AdminStripe.jsx";
-import AdminApis from "./pages/admin/AdminApis.jsx";
-import GbpConnect from "./pages/gbp/GbpConnect.jsx";
-import GbpOverview from "./pages/gbp/GbpOverview.jsx";
-import GbpOAuthCallback from "./pages/gbp/GbpOAuthCallback.jsx";
-import GbpProfile from "./pages/gbp/GbpProfile.jsx";
-import GbpAudit from "./pages/gbp/GbpAudit.jsx";
-import GbpPosts from "./pages/gbp/GbpPosts.jsx";
-import GbpAutomation from "./pages/gbp/GbpAutomation.jsx";
-import GbpReviews from "./pages/gbp/GbpReviews.jsx";
-import GbpInsights from "./pages/gbp/GbpInsights.jsx";
-import GbpQanda from "./pages/gbp/GbpQanda.jsx";
-import GbpRecommendations from "./pages/gbp/GbpRecommendations.jsx";
-import GbpHistory from "./pages/gbp/GbpHistory.jsx";
-import GbpOperations from "./pages/gbp/GbpOperations.jsx";
+import RouteErrorBoundary from "./components/RouteErrorBoundary.jsx";
+import {
+  RouteReadySignal,
+  RouteTransitionOverlay,
+} from "./components/RouteTransitionOverlay.jsx";
+import { installRouteTransitionWatcher } from "./lib/routeTransition.js";
+
+/* ------------------------------------------------------------------ *
+ * Route-level code splitting.
+ *
+ * Everything above this comment is on the first-paint path: the router
+ * shell, the three entry layouts, and the pages a cold visit can land on
+ * (public home, sign-in, sign-up, dashboard). Everything below is loaded
+ * on demand.
+ *
+ * Chunks are grouped per feature section rather than per page - see
+ * `manualChunks` in vite.config.js. Entering a section downloads it once,
+ * after which navigating inside it needs no further request.
+ *
+ * Each feature layout is lazy along with its pages on purpose: the layout
+ * files are small, but they pull in their nav components and, for the GSC
+ * layout, the whole GscInsightsContext. Keeping them static would leave
+ * that weight in the entry chunk and defeat the split.
+ *
+ * No <Suspense> is added here. Every layout renders <RouteOutlet/>, which
+ * already provides a Suspense fallback and an error boundary inside the
+ * content area.
+ * ------------------------------------------------------------------ */
+
+/* ---- Public marketing home ----
+ * Lazy despite being an entry point. Its 10 marketing components are the only
+ * thing in the app that imports framer-motion (115 KB), so keeping it static
+ * put ~172 KB into every signed-in user's eager payload for a page they never
+ * open. RootLayout stays static, so the navbar and footer still paint
+ * immediately and only the hero content suspends.
+ */
+const HomePage = lazy(() => import("./pages/HomePage.jsx"));
+
+/* ---- Projects & settings ---- */
+const ProjectsList = lazy(() => import("./pages/projects/ProjectsList.jsx"));
+const SettingsPage = lazy(() => import("./pages/settings/SettingsPage.jsx"));
+const LegacySettingsRedirect = lazy(() => import("./pages/settings/LegacySettingsRedirect.jsx"));
+
+/* ---- Site Auditor ---- */
+const AuditorLayout = lazy(() => import("./layouts/AuditorLayout.jsx"));
+const AuditorOverview = lazy(() => import("./pages/auditor/AuditorOverview.jsx"));
+const AuditorIssues = lazy(() => import("./pages/auditor/AuditorIssues.jsx"));
+const AuditorIssueDetail = lazy(() => import("./pages/auditor/AuditorIssueDetail.jsx"));
+const NewProject = lazy(() => import("./pages/auditor/NewProject.jsx"));
+const CrawlLog = lazy(() => import("./pages/auditor/CrawlLog.jsx"));
+const ProjectHistory = lazy(() => import("./pages/auditor/ProjectHistory.jsx"));
+const BulkExport = lazy(() => import("./pages/auditor/BulkExport.jsx"));
+const PageExplorer = lazy(() => import("./pages/auditor/PageExplorer.jsx"));
+const LinkExplorer = lazy(() => import("./pages/auditor/LinkExplorer.jsx"));
+const InternalLinks = lazy(() => import("./pages/auditor/InternalLinks.jsx"));
+const StructureExplorer = lazy(() => import("./pages/auditor/StructureExplorer.jsx"));
+const InternalPagesReport = lazy(() => import("./pages/auditor/reports/InternalPagesReport.jsx"));
+const IndexabilityReport = lazy(() => import("./pages/auditor/reports/IndexabilityReport.jsx"));
+const LinksReport = lazy(() => import("./pages/auditor/reports/LinksReport.jsx"));
+const RedirectsReport = lazy(() => import("./pages/auditor/reports/RedirectsReport.jsx"));
+const ContentReport = lazy(() => import("./pages/auditor/reports/ContentReport.jsx"));
+const SocialTagsReport = lazy(() => import("./pages/auditor/reports/SocialTagsReport.jsx"));
+const DuplicatesReport = lazy(() => import("./pages/auditor/reports/DuplicatesReport.jsx"));
+const LocalizationReport = lazy(() => import("./pages/auditor/reports/LocalizationReport.jsx"));
+const PerformanceReport = lazy(() => import("./pages/auditor/reports/PerformanceReport.jsx"));
+const ImagesReport = lazy(() => import("./pages/auditor/reports/ImagesReport.jsx"));
+const JavaScriptReport = lazy(() => import("./pages/auditor/reports/JavaScriptReport.jsx"));
+const CssReport = lazy(() => import("./pages/auditor/reports/CssReport.jsx"));
+const ExternalPagesReport = lazy(() => import("./pages/auditor/reports/ExternalPagesReport.jsx"));
+const SitemapsReport = lazy(() => import("./pages/auditor/reports/SitemapsReport.jsx"));
+const OtherReport = lazy(() => import("./pages/auditor/reports/OtherReport.jsx"));
+
+/* ---- Google Search Console ---- */
+const GscLayout = lazy(() => import("./layouts/GscLayout.jsx"));
+const GscDashboard = lazy(() => import("./pages/gsc/GscDashboard.jsx"));
+const GscOverview = lazy(() => import("./pages/gsc/GscOverview.jsx"));
+const GscKeywords = lazy(() => import("./pages/gsc/GscKeywords.jsx"));
+const GscPages = lazy(() => import("./pages/gsc/GscPages.jsx"));
+const GscAnonymousQueries = lazy(() => import("./pages/gsc/GscAnonymousQueries.jsx"));
+const GscOAuthCallback = lazy(() => import("./pages/gsc/GscOAuthCallback.jsx"));
+
+/* ---- Technical SEO ---- */
+const TechSeoLayout = lazy(() => import("./layouts/TechSeoLayout.jsx"));
+const EeatAudit = lazy(() => import("./pages/techseo/EeatAudit.jsx"));
+const RobotsAnalyzer = lazy(() => import("./pages/techseo/RobotsAnalyzer.jsx"));
+const CrawlOptimization = lazy(() => import("./pages/techseo/CrawlOptimization.jsx"));
+const SpeedOptimization = lazy(() => import("./pages/techseo/SpeedOptimization.jsx"));
+const W3CValidator = lazy(() => import("./pages/techseo/W3CValidator.jsx"));
+const GscAudit = lazy(() => import("./pages/techseo/GscAudit.jsx"));
+const BingWebmaster = lazy(() => import("./pages/techseo/BingWebmaster.jsx"));
+const BacklinksAudit = lazy(() => import("./pages/techseo/BacklinksAudit.jsx"));
+const DuplicateChecker = lazy(() => import("./pages/techseo/DuplicateChecker.jsx"));
+const PlagiarismChecker = lazy(() => import("./pages/techseo/PlagiarismChecker.jsx"));
+const SemanticAudit = lazy(() => import("./pages/techseo/SemanticAudit.jsx"));
+const WordPressSecurity = lazy(() => import("./pages/techseo/WordPressSecurity.jsx"));
+
+/* ---- On-Page SEO ---- */
+const OnPageSeoLayout = lazy(() => import("./layouts/OnPageSeoLayout.jsx"));
+const OnPageAnalyzer = lazy(() => import("./pages/onpage/OnPageAnalyzer.jsx"));
+
+/* ---- Off-Page SEO ---- */
+const OffPageSeoLayout = lazy(() => import("./layouts/OffPageSeoLayout.jsx"));
+const ExpiredDomainFinder = lazy(() => import("./pages/offpage/ExpiredDomainFinder.jsx"));
+const BacklinkCleaner = lazy(() => import("./pages/offpage/BacklinkCleaner.jsx"));
+const BacklinkIndexer = lazy(() => import("./pages/offpage/BacklinkIndexer.jsx"));
+const BacklinkDirectory = lazy(() => import("./pages/offpage/BacklinkDirectory.jsx"));
+
+/* ---- Keyword Research ---- */
+const KeywordResearchLayout = lazy(() => import("./layouts/KeywordResearchLayout.jsx"));
+const KeywordResearch = lazy(() => import("./pages/keywords/KeywordResearch.jsx"));
+const SuggestKeywords = lazy(() => import("./pages/keywords/SuggestKeywords.jsx"));
+const Ubersuggest = lazy(() => import("./pages/keywords/Ubersuggest.jsx"));
+const NewKeywords = lazy(() => import("./pages/keywords/NewKeywords.jsx"));
+const LowHangingKeywords = lazy(() => import("./pages/keywords/LowHangingKeywords.jsx"));
+const LostKeywords = lazy(() => import("./pages/keywords/LostKeywords.jsx"));
+const BrandedKeywords = lazy(() => import("./pages/keywords/BrandedKeywords.jsx"));
+const KeywordCannibalization = lazy(() => import("./pages/keywords/KeywordCannibalization.jsx"));
+
+/* ---- Content Writing ---- */
+const ContentLayout = lazy(() => import("./layouts/ContentLayout.jsx"));
+const OutlineCreator = lazy(() => import("./pages/content/OutlineCreator.jsx"));
+const EntitiesExtractor = lazy(() => import("./pages/content/EntitiesExtractor.jsx"));
+const EntitiesGenerator = lazy(() => import("./pages/content/EntitiesGenerator.jsx"));
+const NGramsExtractor = lazy(() => import("./pages/content/NGramsExtractor.jsx"));
+const NLPExtractor = lazy(() => import("./pages/content/NLPExtractor.jsx"));
+const GrammarGenerator = lazy(() => import("./pages/content/GrammarGenerator.jsx"));
+const UniqueNGrams = lazy(() => import("./pages/content/UniqueNGrams.jsx"));
+const SkipGramWords = lazy(() => import("./pages/content/SkipGramWords.jsx"));
+const ContentOptimization = lazy(() => import("./pages/content/ContentOptimization.jsx"));
+const ChatGPTWatermarkRemover = lazy(() => import("./pages/content/ChatGPTWatermarkRemover.jsx"));
+const AIContentHelper = lazy(() => import("./pages/content/AIContentHelper.jsx"));
+const ContentWriterDashboard = lazy(() => import("./pages/content/ContentWriterDashboard.jsx"));
+// 316 KB on its own - given a dedicated chunk so the rest of the content
+// section does not have to carry it.
+const SemanticContentWriter = lazy(() => import("./pages/content/SemanticContentWriter.jsx"));
+
+/* ---- GEO / AI visibility ---- */
+const GeoLayout = lazy(() => import("./layouts/GeoLayout.jsx"));
+const PromptTracking = lazy(() => import("./pages/geo/PromptTracking.jsx"));
+const BrandSentiment = lazy(() => import("./pages/geo/BrandSentiment.jsx"));
+const AiCitationFlow = lazy(() => import("./pages/geo/AiCitationFlow.jsx"));
+const CompetitorResearch = lazy(() => import("./pages/geo/CompetitorResearch.jsx"));
+const InternalLinksCrawl = lazy(() => import("./pages/geo/InternalLinksCrawl.jsx"));
+const AiChatConsole = lazy(() => import("./pages/geo/AiChatConsole.jsx"));
+
+/* ---- SEO Tools ---- */
+const SeoToolsLayout = lazy(() => import("./layouts/SeoToolsLayout.jsx"));
+const SeoToolsHub = lazy(() => import("./pages/seotools/SeoToolsHub.jsx"));
+const UltimateUrlEditor = lazy(() => import("./pages/seotools/UltimateUrlEditor.jsx"));
+const UniversalTextEditor = lazy(() => import("./pages/seotools/UniversalTextEditor.jsx"));
+const DomainSeparator = lazy(() => import("./pages/seotools/DomainSeparator.jsx"));
+const WordCounter = lazy(() => import("./pages/seotools/WordCounter.jsx"));
+const BotViewer = lazy(() => import("./pages/seotools/BotViewer.jsx"));
+const BulkDaPaChecker = lazy(() => import("./pages/seotools/BulkDaPaChecker.jsx"));
+const SitemapGenerator = lazy(() => import("./pages/seotools/SitemapGenerator.jsx"));
+const RobotsGenerator = lazy(() => import("./pages/seotools/RobotsGenerator.jsx"));
+const XmlSitemapExtractor = lazy(() => import("./pages/seotools/XmlSitemapExtractor.jsx"));
+const BulkMetaExtractor = lazy(() => import("./pages/seotools/BulkMetaExtractor.jsx"));
+
+/* ---- Brand Radar ---- */
+const BrandRadarLayout = lazy(() => import("./layouts/BrandRadarLayout.jsx"));
+const BrandRadar = lazy(() => import("./pages/brandradar/BrandRadar.jsx"));
+const BrandRadarOverview = lazy(() => import("./pages/brandradar/BrandRadarOverview.jsx"));
+const BrandRadarAIResponses = lazy(() => import("./pages/brandradar/BrandRadarAIResponses.jsx"));
+const BrandRadarTopics = lazy(() => import("./pages/brandradar/BrandRadarTopics.jsx"));
+const BrandRadarCitedPages = lazy(() => import("./pages/brandradar/BrandRadarCitedPages.jsx"));
+const BrandRadarAIVisibility = lazy(() => import("./pages/brandradar/BrandRadarAIVisibility.jsx"));
+
+/* ---- Admin ---- */
+const AdminLayout = lazy(() => import("./layouts/AdminLayout.jsx"));
+const AdminDashboard = lazy(() => import("./pages/admin/AdminDashboard.jsx"));
+const AdminUsers = lazy(() => import("./pages/admin/AdminUsers.jsx"));
+const AdminAnalytics = lazy(() => import("./pages/admin/AdminAnalytics.jsx"));
+const AdminPayments = lazy(() => import("./pages/admin/AdminPayments.jsx"));
+const AdminNiches = lazy(() => import("./pages/admin/AdminNiches.jsx"));
+const AdminAffiliates = lazy(() => import("./pages/admin/AdminAffiliates.jsx"));
+const AdminStripe = lazy(() => import("./pages/admin/AdminStripe.jsx"));
+const AdminApis = lazy(() => import("./pages/admin/AdminApis.jsx"));
+
+/* ---- Google Business Profile ---- */
+const GbpConnect = lazy(() => import("./pages/gbp/GbpConnect.jsx"));
+const GbpOverview = lazy(() => import("./pages/gbp/GbpOverview.jsx"));
+const GbpOAuthCallback = lazy(() => import("./pages/gbp/GbpOAuthCallback.jsx"));
+const GbpProfile = lazy(() => import("./pages/gbp/GbpProfile.jsx"));
+const GbpAudit = lazy(() => import("./pages/gbp/GbpAudit.jsx"));
+const GbpPosts = lazy(() => import("./pages/gbp/GbpPosts.jsx"));
+const GbpAutomation = lazy(() => import("./pages/gbp/GbpAutomation.jsx"));
+const GbpReviews = lazy(() => import("./pages/gbp/GbpReviews.jsx"));
+const GbpInsights = lazy(() => import("./pages/gbp/GbpInsights.jsx"));
+const GbpQanda = lazy(() => import("./pages/gbp/GbpQanda.jsx"));
+const GbpRecommendations = lazy(() => import("./pages/gbp/GbpRecommendations.jsx"));
+const GbpHistory = lazy(() => import("./pages/gbp/GbpHistory.jsx"));
+const GbpOperations = lazy(() => import("./pages/gbp/GbpOperations.jsx"));
+
+/* ---- Semantic tools group (FeatureGroupLayout) ---- */
+const FeatureGroupLayout = lazy(() => import("./layouts/FeatureGroupLayout.jsx"));
 
 // Next renders App.jsx directly (without src/main.jsx), so install the API
 // authorization wrapper here as well as in the Vite entry point.
 installAuthenticatedApiFetch();
+// Watches history so the navigation loader can appear the moment a route
+// changes, before the router transition commits. Idempotent.
+installRouteTransitionWatcher();
 
 const SchemaGenerator = lazy(() => import("./semanticsx/components/SchemaGenerator.jsx"));
 const CompetitorSchemaChecker = lazy(() => import("./semanticsx/components/CompetitorSchemaChecker.jsx"));
@@ -172,17 +241,45 @@ const SemanticKeywordAnalyzer = lazy(() => import("./semanticsx/components/Seman
 const CompetitorContentAnalyzer = lazy(() => import("./semanticsx/components/CompetitorContentAnalyzer.jsx"));
 const YoutubeSEOChecker = lazy(() => import("./semanticsx/components/YoutubeSEOChecker.jsx"));
 
+/**
+ * Error boundary for everything the router renders.
+ *
+ * RouteErrorBoundary already sits inside every layout, via RouteOutlet - but
+ * that only covers the page inside the layout. The layouts are themselves lazy,
+ * so a layout chunk that fails to download throws *above* every one of those
+ * boundaries. With only a Suspense here, that produced a blank page: the
+ * clearest way to hit it is a browser holding an index.html from a previous
+ * deploy, whose chunk filenames no longer exist.
+ *
+ * Keyed on the pathname, so navigating elsewhere clears a caught error.
+ */
+function RoutedContent({ children }) {
+  const { pathname } = useLocation();
+  return (
+    <RouteErrorBoundary resetKey={pathname}>
+      <Suspense fallback={<PageLoader fullScreen />}>
+        {/* Inside the boundary on purpose: while a lazy chunk is downloading
+            React holds this subtree uncommitted, so the ready signal fires when
+            the page is actually on screen rather than when the URL changed. */}
+        <RouteReadySignal>{children}</RouteReadySignal>
+      </Suspense>
+    </RouteErrorBoundary>
+  );
+}
+
 export default function App() {
   return (
     <AuthProvider>
       <ProjectsProvider>
         <CrawlProvider>
           <BrowserRouter>
-            {/* Safety net only. Each layout carries its own loading and error
+            <RouteTransitionOverlay />
+            {/* Safety net. Each layout carries its own loading and error
                 boundary around <Outlet/> (see RouteOutlet), so the shell stays
-                on screen while a page loads; this catches anything lazy that
-                renders outside a layout. */}
-            <Suspense fallback={<PageLoader fullScreen />}>
+                on screen while a page loads. This one catches anything lazy
+                that fails outside a layout - including a layout chunk itself,
+                which no inner boundary can see. */}
+            <RoutedContent>
               <Routes>
             {/* Public site (with Navbar + Footer) */}
             <Route element={<RootLayout />}>
@@ -563,7 +660,7 @@ export default function App() {
             {/* Catch-all → home */}
             <Route path="*" element={<Navigate to="/" replace />} />
               </Routes>
-            </Suspense>
+            </RoutedContent>
           </BrowserRouter>
         </CrawlProvider>
       </ProjectsProvider>
