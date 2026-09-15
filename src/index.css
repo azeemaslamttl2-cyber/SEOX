@@ -15980,3 +15980,224 @@ input[type="week"]:focus-visible {
   color: var(--brand-red-hover) !important;
   --btn-fg: var(--brand-red-hover);
 }
+
+/* ===========================================================================
+   PAGE EXPLORER — filter dropdown
+   The panel was `bg-[#303034]` (a dark grey plate) with `text-white` rows and
+   `border-white/10` dividers — the original dark theme. On the light app the
+   section headers stayed dark bars while the rows composited to white, which
+   is why the menu looked striped and broken.
+   =========================================================================== */
+.pe-menu {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-overlay);
+  left: 0;
+  max-height: 72vh;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 6px;
+  position: absolute;
+  top: calc(100% + 6px);
+  width: 288px;
+  z-index: 100;
+}
+.pe-menu-section {
+  color: var(--text-muted);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  margin-top: 6px;
+  padding: 8px 10px 4px;
+  text-transform: uppercase;
+}
+.pe-menu-section:first-child { margin-top: 0; }
+.pe-menu-divider {
+  background: var(--border-subtle);
+  height: 1px;
+  margin: 6px 0;
+}
+.pe-menu-item {
+  align-items: center;
+  background: transparent !important;
+  border: 0 !important;
+  border-radius: var(--radius-sm) !important;
+  color: var(--text-secondary) !important;
+  --btn-fg: var(--text-secondary);
+  display: flex;
+  font-size: 13px;
+  gap: 16px;
+  justify-content: space-between;
+  padding: 7px 10px !important;
+  text-align: left;
+  width: 100%;
+}
+.pe-menu-item:hover:not(:disabled) {
+  background: var(--surface-sunken) !important;
+  color: var(--text-primary) !important;
+  --btn-fg: var(--text-primary);
+}
+.pe-menu-item.active,
+.pe-menu-item.active:hover {
+  background: var(--tile-bg) !important;
+  color: var(--brand-red-hover) !important;
+  --btn-fg: var(--brand-red-hover);
+  font-weight: 600;
+}
+.pe-menu-count {
+  color: var(--text-muted);
+  flex-shrink: 0;
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+.pe-menu-item.active .pe-menu-count { color: var(--brand-red-hover); }
+
+/* The scope menu opens from the right-hand edge of its trigger. */
+.pe-menu-right { left: auto; right: 0; width: 176px; }
+.pe-scope-btn { min-height: 32px; padding: 0 10px !important; white-space: nowrap; }
+
+/* ===========================================================================
+   PAGE EXPLORER — advanced filter panel
+   Built for the dark theme: an ink-800 shell, `bg-white/[0.04]` fields that
+   render as nothing on white, and two segmented switches whose selected half
+   used `bg-brand-500/25` while the unselected half declared no background at
+   all — so AND and Current came out solid brand red and the rest invisible.
+   Restated as a form: a labelled match row, a rule row, and an action bar.
+   =========================================================================== */
+.advf {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-xs);
+  overflow: hidden;
+}
+.advf-body { padding: 16px 18px; }
+.advf-row {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.advf-row + .advf-row { margin-top: 12px; }
+.advf-rule {
+  border-top: 1px solid var(--border-subtle);
+  padding-top: 12px;
+}
+.advf-addrow {
+  border-top: 1px solid var(--border-subtle);
+  padding-top: 12px;
+}
+.advf-label {
+  color: var(--text-muted);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.advf-seg { flex-shrink: 0; }
+.advf-seg .ctool-seg-btn { min-height: 28px; padding: 0 12px !important; }
+
+.advf-field {
+  font-size: 12px;
+  min-height: 32px !important;
+  min-width: 200px;
+  padding: 0 10px !important;
+  width: auto;
+}
+.advf-field-lg { min-width: 240px; }
+.advf-remove { height: 32px; width: 32px; }
+.advf-add { min-height: 32px; padding: 0 12px !important; }
+
+.advf-foot {
+  align-items: center;
+  background: var(--surface-sunken);
+  border-top: 1px solid var(--border);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  padding: 12px 18px;
+}
+.advf-apply { min-height: 32px; padding: 0 18px !important; }
+.advf-count { color: var(--text-secondary); font-size: 12px; font-weight: 600; }
+
+/* The links filter menu carries longer labels than the pages one. */
+.pe-menu-wide { min-width: 268px; width: auto; }
+
+/* The chart toggle is a bare <button> with only a text colour, so the app's
+   default primary owned its background and the hover filled it brand red. */
+.chart-toggle {
+  background: transparent !important;
+  border: 1px solid transparent !important;
+  border-radius: var(--radius-sm) !important;
+  color: var(--text-muted) !important;
+  --btn-fg: var(--text-muted);
+  font-size: 12px;
+  font-weight: 600;
+  min-height: 26px;
+  padding: 0 8px !important;
+}
+.chart-toggle:hover:not(:disabled) {
+  background: var(--surface-sunken) !important;
+  border-color: var(--border) !important;
+  color: var(--brand-red-hover) !important;
+  --btn-fg: var(--brand-red-hover);
+}
+
+/* ===========================================================================
+   AUDITOR TABLE PLATES
+   PR scores and file-type markers used dark-theme gradients — a pale tint
+   (`from-*-500/30 to-*-500/10`) under pale text (`text-*-200`) — which washes
+   out to near-invisible on the light table. Solid semantic plates instead.
+   =========================================================================== */
+.pr-badge {
+  align-items: center;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface-muted);
+  color: var(--text-muted);
+  display: inline-flex;
+  flex-shrink: 0;
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+  height: 28px;
+  justify-content: center;
+  min-width: 28px;
+  padding: 0 4px;
+}
+.pr-badge.is-high {
+  background: var(--success-bg);
+  border-color: var(--success-border);
+  color: var(--success-text);
+}
+.pr-badge.is-mid {
+  background: var(--warning-bg);
+  border-color: var(--warning-border);
+  color: var(--warning-text);
+}
+.pr-badge.is-low {
+  background: var(--surface-muted);
+  border-color: var(--border);
+  color: var(--text-muted);
+}
+
+.type-badge {
+  align-items: center;
+  background: var(--surface-muted);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text-muted);
+  display: inline-flex;
+  flex-shrink: 0;
+  font-size: 9px;
+  font-weight: 700;
+  height: 28px;
+  justify-content: center;
+  letter-spacing: 0.02em;
+  width: 28px;
+}
+.type-badge.is-html { background: var(--success-bg); border-color: var(--success-border); color: var(--success-text); }
+.type-badge.is-css  { background: var(--info-bg);    border-color: var(--info-border);    color: var(--info-text); }
+.type-badge.is-js   { background: var(--warning-bg); border-color: var(--warning-border); color: var(--warning-text); }
+.type-badge.is-img  { background: var(--tile-bg);    border-color: var(--brand-red-border); color: var(--brand-red-hover); }
