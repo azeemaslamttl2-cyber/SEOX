@@ -558,6 +558,11 @@ input[type="radio"]:disabled {
   border-radius: var(--radius-lg);
   padding: 3px;
 }
+/* These declarations carry !important because the fallback rule for bare
+   <button> elements does, and `admin-tab` matches none of its guards — so
+   without it a tab group that has no page-scoped override (the auditor's
+   did not) fell through to the default primary and lost its active state
+   entirely. Page variants still win on specificity. */
 .admin-tab {
   padding: 6px 14px;
   border-radius: var(--radius-sm);
@@ -566,18 +571,23 @@ input[type="radio"]:disabled {
   cursor: pointer;
   transition: background-color var(--dur) ease, color var(--dur) ease,
     box-shadow var(--dur) ease;
-  color: var(--text-secondary);
-  border: none;
-  background: transparent;
+  color: var(--text-secondary) !important;
+  --btn-fg: var(--text-secondary);
+  border: 1px solid transparent !important;
+  background: transparent !important;
 }
 .admin-tab:hover:not(.active) {
-  color: var(--text-primary);
-  background: rgba(255, 255, 255, 0.7);
+  color: var(--text-primary) !important;
+  --btn-fg: var(--text-primary);
+  background: var(--surface) !important;
 }
-.admin-tab.active {
-  background: var(--surface);
-  color: var(--brand-blue);
-  box-shadow: var(--shadow-xs);
+.admin-tab.active,
+.admin-tab.active:hover {
+  background: var(--surface) !important;
+  border-color: var(--border) !important;
+  color: var(--brand-blue) !important;
+  --btn-fg: var(--brand-blue);
+  box-shadow: var(--shadow-xs) !important;
 }
 
 /* ==================================================================
@@ -4341,10 +4351,26 @@ button[class*="text-slate"]:not([class*="bg-["]):not([class~="bg-white"]) svg,
 button[class*="text-gray"]:not([class*="bg-["]):not([class~="bg-white"]) svg,
 button[class*="text-zinc"]:not([class*="bg-["]):not([class~="bg-white"]) svg,
 button[class*="text-neutral"]:not([class*="bg-["]):not([class~="bg-white"]) svg,
-button[class*="text-stone"]:not([class*="bg-["]):not([class~="bg-white"]) svg,
-a[class*="text-"][class*="bg-brand-5"],
-a[class*="text-"][class*="bg-brand-6"] {
+button[class*="text-stone"]:not([class*="bg-["]):not([class~="bg-white"]) svg {
   color: var(--btn-fg, inherit) !important;
+}
+
+/* Links painted a solid brand fill are buttons in everything but tag name,
+   and they carry no --btn-fg because they are not .ui-button-primary. The
+   shared declaration above falls back to `inherit`, which handed them the
+   page's dark ink on a red block. A brand-500/600 fill always takes white. */
+/* Whole-token matching only. `[class*="bg-brand-5"]` also caught the
+   translucent `bg-brand-500/10` tints, which are nearly white — those must
+   keep their dark ink, not take the solid-fill white. */
+a[class~="bg-brand-500"],
+a[class~="bg-brand-600"],
+a[class~="bg-brand-700"] {
+  color: var(--btn-fg, #ffffff) !important;
+}
+a[class~="bg-brand-500"] svg,
+a[class~="bg-brand-600"] svg,
+a[class~="bg-brand-700"] svg {
+  color: var(--btn-fg, #ffffff) !important;
 }
 
 /* ==================================================================
@@ -6828,7 +6854,7 @@ aside.w3c-card {
    Overview page uses a plain <div>. Setting `padding: 0` with a
    min-height and no centring left that one's text sitting against the
    top edge, so the chip has to centre its own content. */
-.radar-page-hero > div > div:last-child:not(.radar-page-title) {
+.radar-page-hero > div > div:last-child:not(.radar-page-title):not(.radar-tabs) {
   align-items: center;
   background: var(--surface-sunken) !important;
   border: 1px solid var(--border) !important;
@@ -6848,13 +6874,7 @@ aside.w3c-card {
   color: var(--text-muted) !important;
 }
 
-/* Metric tab pills on AI Visibility become a segmented control. */
-.radar-page-hero [class*="rounded-full"][class*="bg-brand"],
-.radar-page-hero [class*="rounded-lg"][class*="bg-brand"] {
-  background: var(--brand-red) !important;
-  color: #ffffff !important;
-  --btn-fg: #ffffff;
-}
+
 
 @media (max-width: 640px) {
   .radar-page-hero { padding: 20px; }
@@ -6875,30 +6895,6 @@ aside.w3c-card {
   display: inline-flex;
   flex-shrink: 0;
   width: auto;
-}
-.radar-tabs .admin-tab {
-  font-size: 12px;
-  font-weight: 600;
-  min-height: 28px;
-  padding: 0 12px !important;
-  white-space: nowrap;
-}
-.radar-tabs .admin-tab.active {
-  background: var(--surface) !important;
-  color: var(--brand-blue) !important;
-  --btn-fg: var(--brand-blue);
-  box-shadow: var(--shadow-xs) !important;
-}
-.radar-tabs .admin-tab:not(.active) {
-  background: transparent !important;
-  border-color: transparent !important;
-  color: var(--text-secondary) !important;
-  --btn-fg: var(--text-secondary);
-}
-.radar-tabs .admin-tab:not(.active):hover {
-  background: rgba(255, 255, 255, 0.7) !important;
-  color: var(--text-primary) !important;
-  --btn-fg: var(--text-primary);
 }
 
 /* ==================================================================
@@ -15823,4 +15819,164 @@ input[type="week"]:focus-visible {
   background: var(--surface-sunken) !important;
   border-color: var(--border-strong) !important;
   color: var(--text-primary) !important;
+}
+
+/* ===========================================================================
+   PROJECT DIALOGS — /projects
+   The form fields used `bg-black/30` with `text-white`: a translucent black
+   that composites to a solid mid-grey slab over the light modal, which is why
+   every field read as a filled bar rather than an input.
+   =========================================================================== */
+.proj-overlay {
+  background: rgba(23, 27, 43, 0.45);
+  backdrop-filter: blur(3px);
+  display: flex;
+  inset: 0;
+  justify-content: center;
+  padding: 16px;
+  position: fixed;
+  z-index: 50;
+}
+.proj-modal {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-overlay);
+  overflow: hidden;
+}
+.proj-modal-head {
+  align-items: flex-start;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  gap: 16px;
+  justify-content: space-between;
+  padding: 18px 20px;
+}
+.proj-modal-title {
+  color: var(--brand-blue);
+  font-size: 1rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+.proj-modal-text { color: var(--text-secondary); font-size: 13px; line-height: 1.55; }
+.proj-modal-strong { color: var(--text-primary); font-weight: 600; }
+.proj-modal-foot {
+  align-items: center;
+  background: var(--surface-sunken);
+  border-top: 1px solid var(--border);
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+  padding: 14px 20px;
+}
+.proj-foot-btn { min-height: var(--control-h-lg); padding: 0 18px !important; }
+.proj-close { height: 32px; padding: 0 !important; width: 32px; }
+.proj-field-error { color: var(--error-text); font-size: 11px; margin-top: 4px; }
+
+.proj-check-card {
+  background: var(--surface-sunken);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px 16px;
+}
+.proj-check {
+  align-items: center;
+  color: var(--text-secondary);
+  cursor: pointer;
+  display: flex;
+  font-size: 13px;
+  gap: 10px;
+}
+.proj-check input[type="checkbox"] {
+  accent-color: var(--brand-red);
+  border-radius: var(--radius-xs);
+  height: 15px;
+  width: 15px;
+}
+
+.proj-danger-tile {
+  align-items: center;
+  background: var(--error-bg);
+  border: 1px solid var(--error-border);
+  border-radius: var(--radius-lg);
+  color: var(--error) !important;
+  display: flex;
+  flex-shrink: 0;
+  height: 40px;
+  justify-content: center;
+  width: 40px;
+}
+.proj-danger-btn {
+  background: var(--error) !important;
+  border: 1px solid var(--error) !important;
+  color: #ffffff !important;
+  --btn-fg: #ffffff;
+  font-weight: 600;
+}
+.proj-danger-btn:hover:not(:disabled) {
+  background: var(--error-text) !important;
+  border-color: var(--error-text) !important;
+}
+
+/* ---------------------------------------------------------------------------
+   Brand Radar metric tabs
+   These inherited .admin-tabs, which is a segmented pill group: a muted track
+   with a border and 3px of padding all round. That inset the first tab from
+   the left, so the row never lined up with the content beneath it. As a plain
+   tab row the labels start on the page's own left edge.
+   --------------------------------------------------------------------------- */
+.radar-tabs {
+  background: transparent !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  display: inline-flex;
+  gap: 4px;
+  padding: 0 !important;
+}
+
+/* ---------------------------------------------------------------------------
+   Brand Radar metric tabs
+   The row sits beside the page title inside the hero, so it must size to its
+   own content — a full-width underlined rail stretched across the banner and
+   swallowed the header. It is a compact, flush-left tab group: no track, no
+   container rule, just the labels with the selected one marked.
+   --------------------------------------------------------------------------- */
+.radar-tabs {
+  align-items: center;
+  background: none !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  display: inline-flex;
+  flex-shrink: 0;
+  gap: 18px;
+  padding: 0 !important;
+  width: auto;
+}
+.radar-tab {
+  background: transparent !important;
+  border: 0 !important;
+  border-bottom: 2px solid transparent !important;
+  border-radius: 0 !important;
+  color: var(--text-muted) !important;
+  --btn-fg: var(--text-muted);
+  font-size: 13px;
+  font-weight: 600;
+  min-height: 30px;
+  padding: 0 0 6px !important;
+  white-space: nowrap;
+}
+.radar-tab:hover:not(:disabled) {
+  background: transparent !important;
+  color: var(--text-primary) !important;
+  --btn-fg: var(--text-primary);
+}
+.radar-tab.active,
+.radar-tab.active:hover {
+  background: transparent !important;
+  border-bottom-color: var(--brand-red) !important;
+  color: var(--brand-red-hover) !important;
+  --btn-fg: var(--brand-red-hover);
 }

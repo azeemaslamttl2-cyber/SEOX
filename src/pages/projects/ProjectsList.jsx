@@ -94,19 +94,20 @@ function EditProjectDialog({ project, projects, saving, error, fieldErrors, onCa
     onSave(values);
   }
 
-  const inputClass =
-    "w-full rounded-xl border border-white/10 bg-black/30 px-3 py-2.5 text-sm text-white outline-none transition placeholder:text-white/25 focus:border-brand-400/60 disabled:opacity-50";
+  // bg-black/30 is a translucent black: over the light modal it composited to
+  // a solid mid-grey slab with white text on top.
+  const inputClass = "schema-input schema-input-lg";
 
   return (
-    <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/70 p-4 backdrop-blur-sm">
+    <div className="proj-overlay items-start overflow-y-auto">
       <form
         onSubmit={submit}
-        className="my-8 w-full max-w-2xl overflow-hidden rounded-2xl border border-white/10 bg-ink-900 shadow-2xl"
+        className="proj-modal my-8 w-full max-w-2xl"
       >
-        <div className="flex items-start justify-between gap-4 border-b border-white/10 px-5 py-4">
+        <div className="proj-modal-head">
           <div>
-            <h2 className="font-display text-lg font-bold text-white">Edit project</h2>
-            <p className="text-xs text-white/40">
+            <h2 className="proj-modal-title font-display">Edit project</h2>
+            <p className="ctool-help-text">
               Changes are saved to the database first, then applied everywhere in the app.
             </p>
           </div>
@@ -114,7 +115,7 @@ function EditProjectDialog({ project, projects, saving, error, fieldErrors, onCa
             type="button"
             onClick={onCancel}
             disabled={saving}
-            className="rounded-lg p-1.5 text-white/40 transition hover:bg-white/[0.06] hover:text-white disabled:opacity-40"
+            className="ui-button ctool-tool-btn proj-close"
             aria-label="Close"
           >
             <X className="h-4 w-4" />
@@ -123,7 +124,7 @@ function EditProjectDialog({ project, projects, saving, error, fieldErrors, onCa
 
         <div className="max-h-[65vh] space-y-5 overflow-y-auto p-5">
           {error && (
-            <div className="flex items-start gap-2 rounded-xl border border-red-400/20 bg-red-500/10 px-4 py-3 text-sm text-red-200">
+            <div className="app-alert app-alert-error">
               <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
               {error}
             </div>
@@ -131,7 +132,7 @@ function EditProjectDialog({ project, projects, saving, error, fieldErrors, onCa
 
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="sm:col-span-2">
-              <label className="mb-1.5 block text-sm font-semibold text-white/75" htmlFor="project-name">
+              <label className="schema-label" htmlFor="project-name">
                 Project name
               </label>
               <input
@@ -145,7 +146,7 @@ function EditProjectDialog({ project, projects, saving, error, fieldErrors, onCa
             </div>
 
             <div className="sm:col-span-2">
-              <label className="mb-1.5 block text-sm font-semibold text-white/75" htmlFor="project-domain">
+              <label className="schema-label" htmlFor="project-domain">
                 Website
               </label>
               <input
@@ -157,17 +158,17 @@ function EditProjectDialog({ project, projects, saving, error, fieldErrors, onCa
                 className={inputClass}
               />
               {fieldErrors.domain && (
-                <p className="mt-1 text-[11px] text-red-300">{fieldErrors.domain}</p>
+                <p className="proj-field-error">{fieldErrors.domain}</p>
               )}
             </div>
 
             <div>
-              <label className="mb-1.5 block text-sm font-semibold text-white/75" htmlFor="project-protocol">
+              <label className="schema-label" htmlFor="project-protocol">
                 Protocol
               </label>
               <select id="project-protocol" value={values.protocol} onChange={set("protocol")} disabled={saving} className={inputClass}>
                 {PROTOCOLS.map((option) => (
-                  <option key={option.value} value={option.value} className="bg-ink-900">
+                  <option key={option.value} value={option.value}>
                     {option.label}
                   </option>
                 ))}
@@ -175,12 +176,12 @@ function EditProjectDialog({ project, projects, saving, error, fieldErrors, onCa
             </div>
 
             <div>
-              <label className="mb-1.5 block text-sm font-semibold text-white/75" htmlFor="project-scope">
+              <label className="schema-label" htmlFor="project-scope">
                 Scope
               </label>
               <select id="project-scope" value={values.scope} onChange={set("scope")} disabled={saving} className={inputClass}>
                 {SCOPES.map((option) => (
-                  <option key={option.value} value={option.value} className="bg-ink-900">
+                  <option key={option.value} value={option.value}>
                     {option.label}
                   </option>
                 ))}
@@ -188,12 +189,12 @@ function EditProjectDialog({ project, projects, saving, error, fieldErrors, onCa
             </div>
 
             <div>
-              <label className="mb-1.5 block text-sm font-semibold text-white/75" htmlFor="project-schedule">
+              <label className="schema-label" htmlFor="project-schedule">
                 Schedule
               </label>
               <select id="project-schedule" value={values.schedule} onChange={set("schedule")} disabled={saving} className={inputClass}>
                 {SCHEDULES.map((option) => (
-                  <option key={option.value} value={option.value} className="bg-ink-900">
+                  <option key={option.value} value={option.value}>
                     {option.label}
                   </option>
                 ))}
@@ -201,12 +202,12 @@ function EditProjectDialog({ project, projects, saving, error, fieldErrors, onCa
             </div>
 
             <div>
-              <label className="mb-1.5 block text-sm font-semibold text-white/75" htmlFor="project-user-agent">
+              <label className="schema-label" htmlFor="project-user-agent">
                 User agent
               </label>
               <select id="project-user-agent" value={values.userAgent} onChange={set("userAgent")} disabled={saving} className={inputClass}>
                 {USER_AGENTS.map((option) => (
-                  <option key={option.value} value={option.value} className="bg-ink-900">
+                  <option key={option.value} value={option.value}>
                     {option.label}
                   </option>
                 ))}
@@ -214,7 +215,7 @@ function EditProjectDialog({ project, projects, saving, error, fieldErrors, onCa
             </div>
 
             <div>
-              <label className="mb-1.5 block text-sm font-semibold text-white/75" htmlFor="project-url-limit">
+              <label className="schema-label" htmlFor="project-url-limit">
                 URL limit
               </label>
               <input
@@ -227,12 +228,12 @@ function EditProjectDialog({ project, projects, saving, error, fieldErrors, onCa
                 className={inputClass}
               />
               {fieldErrors.urlLimit && (
-                <p className="mt-1 text-[11px] text-red-300">{fieldErrors.urlLimit}</p>
+                <p className="proj-field-error">{fieldErrors.urlLimit}</p>
               )}
             </div>
 
             <div>
-              <label className="mb-1.5 block text-sm font-semibold text-white/75" htmlFor="project-folder">
+              <label className="schema-label" htmlFor="project-folder">
                 Folder
               </label>
               <input
@@ -246,41 +247,41 @@ function EditProjectDialog({ project, projects, saving, error, fieldErrors, onCa
             </div>
           </div>
 
-          <div className="space-y-2 rounded-xl border border-white/10 bg-white/[0.02] p-4">
-            <label className="flex items-center gap-2.5 text-sm text-white/70">
+          <div className="proj-check-card">
+            <label className="proj-check">
               <input type="checkbox" checked={values.renderJs} onChange={set("renderJs")} disabled={saving} />
               Render JavaScript while crawling
             </label>
-            <label className="flex items-center gap-2.5 text-sm text-white/70">
+            <label className="proj-check">
               <input type="checkbox" checked={values.respectRobots} onChange={set("respectRobots")} disabled={saving} />
               Respect robots.txt
             </label>
-            <label className="flex items-center gap-2.5 text-sm text-white/70">
+            <label className="proj-check">
               <input type="checkbox" checked={values.notifyEmail} onChange={set("notifyEmail")} disabled={saving} />
               Email me when an audit finishes
             </label>
           </div>
 
-          <p className="text-[11px] text-white/30">
+          <p className="ctool-help-text">
             {projects.length > 1
               ? "Each project must use a different website."
               : "Changing the website affects future audits for this project."}
           </p>
         </div>
 
-        <div className="flex items-center justify-end gap-3 border-t border-white/10 px-5 py-4">
+        <div className="proj-modal-foot">
           <button
             type="button"
             onClick={onCancel}
             disabled={saving}
-            className="rounded-xl border border-white/10 px-4 py-2.5 text-sm font-semibold text-white/60 transition hover:text-white disabled:opacity-50"
+            className="ui-button ctool-tool-btn proj-foot-btn"
           >
             Cancel
           </button>
           <button
             type="submit"
             disabled={saving}
-            className="inline-flex items-center gap-2 rounded-xl bg-brand-500 px-4 py-2.5 text-sm font-bold text-white transition hover:bg-brand-400 disabled:cursor-not-allowed disabled:opacity-50"
+            className="ui-button ui-button-primary proj-foot-btn"
           >
             {saving && <Loader2 className="h-4 w-4 animate-spin" />}
             {saving ? "Saving..." : "Save changes"}
@@ -296,37 +297,37 @@ function EditProjectDialog({ project, projects, saving, error, fieldErrors, onCa
    ================================================================ */
 function DeleteProjectDialog({ project, deleting, error, onCancel, onConfirm }) {
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm">
-      <div className="w-full max-w-md overflow-hidden rounded-2xl border border-white/10 bg-ink-900 shadow-2xl">
+    <div className="proj-overlay items-center">
+      <div className="proj-modal w-full max-w-md">
         <div className="flex items-start gap-3 border-b border-white/10 px-5 py-4">
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-red-500/15 text-red-300">
+          <div className="proj-danger-tile">
             <AlertTriangle className="h-5 w-5" />
           </div>
           <div>
-            <h2 className="font-display text-lg font-bold text-white">Delete project</h2>
-            <p className="text-xs text-white/40">This cannot be undone.</p>
+            <h2 className="proj-modal-title font-display">Delete project</h2>
+            <p className="ctool-help-text">This cannot be undone.</p>
           </div>
         </div>
 
         <div className="space-y-3 p-5">
-          <p className="text-sm text-white/65">
-            Delete <span className="font-semibold text-white">{project?.name || project?.domain}</span> and
+          <p className="proj-modal-text">
+            Delete <span className="proj-modal-strong">{project?.name || project?.domain}</span> and
             its saved audit data? Other pages will stop showing this project immediately.
           </p>
           {error && (
-            <div className="flex items-start gap-2 rounded-xl border border-red-400/20 bg-red-500/10 px-4 py-3 text-sm text-red-200">
+            <div className="app-alert app-alert-error">
               <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
               {error}
             </div>
           )}
         </div>
 
-        <div className="flex items-center justify-end gap-3 border-t border-white/10 px-5 py-4">
+        <div className="proj-modal-foot">
           <button
             type="button"
             onClick={onCancel}
             disabled={deleting}
-            className="rounded-xl border border-white/10 px-4 py-2.5 text-sm font-semibold text-white/60 transition hover:text-white disabled:opacity-50"
+            className="ui-button ctool-tool-btn proj-foot-btn"
           >
             Cancel
           </button>
@@ -334,7 +335,7 @@ function DeleteProjectDialog({ project, deleting, error, onCancel, onConfirm }) 
             type="button"
             onClick={onConfirm}
             disabled={deleting}
-            className="inline-flex items-center gap-2 rounded-xl bg-red-500 px-4 py-2.5 text-sm font-bold text-white transition hover:bg-red-400 disabled:cursor-not-allowed disabled:opacity-50"
+            className="ui-button proj-danger-btn proj-foot-btn"
           >
             {deleting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
             {deleting ? "Deleting..." : "Delete project"}
@@ -522,7 +523,7 @@ export default function ProjectsList() {
           className="rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2.5 text-sm text-white/70 outline-none transition focus:border-brand-500/40"
         >
           {STATUS_FILTERS.map((option) => (
-            <option key={option.value} value={option.value} className="bg-ink-900">
+            <option key={option.value} value={option.value}>
               {option.label}
             </option>
           ))}
