@@ -44,7 +44,7 @@ export default function Footer() {
           {/* Brand */}
           <div>
             <a href="#" className="flex items-center gap-2.5">
-              <Logo className="h-9 w-9" />
+              <Logo className="h-9 w-auto" />
               <span className="font-display text-xl font-bold tracking-tight">PGC</span>
             </a>
             <p className="mt-4 max-w-xs text-sm text-white/55">
