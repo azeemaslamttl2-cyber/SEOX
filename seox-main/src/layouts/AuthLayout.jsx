@@ -26,9 +26,6 @@ export default function AuthLayout() {
       <header className="container-px flex h-16 items-center justify-between">
         <Link to="/" className="flex items-center gap-2.5">
           <Logo className="h-8 w-8" />
-          <span className="font-display text-lg font-bold tracking-tight">
-            PGC
-          </span>
         </Link>
         <Link
           to="/"
