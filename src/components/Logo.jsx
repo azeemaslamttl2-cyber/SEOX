@@ -2,16 +2,18 @@
 // dark navy navigation surfaces. Everywhere else (navbar, footer, auth shell)
 // sits on a light background and needs the default mark.
 const SOURCES = {
-  default: "https://pgc.edu/wp-content/themes/pgc-new/img/PGCLogo.svg",
+  default: "/images/logo1.svg",
   white: "/white-logo.svg",
 };
 
-export default function Logo({ className = "h-8 w-8", variant = "default" }) {
+// The mark is 132x80, so callers size it by height and let the width follow.
+// object-contain keeps it from stretching if a caller passes a square box.
+export default function Logo({ className = "h-8 w-auto", variant = "default" }) {
   return (
     <img
       src={SOURCES[variant] || SOURCES.default}
       alt="PGC"
-      className={className}
+      className={`object-contain ${className}`}
     />
   );
 }
