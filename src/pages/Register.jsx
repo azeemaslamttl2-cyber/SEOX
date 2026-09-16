@@ -26,13 +26,6 @@ function scorePassword(pwd) {
 }
 
 const strengthLabel = ["Too short", "Weak", "Fair", "Strong", "Excellent"];
-const strengthColor = [
-  "bg-rose-500",
-  "bg-rose-400",
-  "bg-amber-400",
-  "bg-brand-400",
-  "bg-emerald-400",
-];
 
 export default function Register() {
   const navigate = useNavigate();
@@ -93,11 +86,11 @@ export default function Register() {
   };
 
   return (
-    <div>
-      <h1 className="font-display text-3xl font-bold tracking-tight">Create your account</h1>
-      <p className="mt-2 text-sm text-white/55">
+    <div className="register-form auth-card">
+      <h1 className="auth-title">Create your account</h1>
+      <p className="auth-subtitle">
         Already a member?{" "}
-        <Link to="/login" className="font-semibold text-brand-300 hover:underline">
+        <Link to="/login" className="auth-link">
           Sign in
         </Link>
       </p>
@@ -106,7 +99,7 @@ export default function Register() {
         type="button"
         onClick={handleGoogle}
         disabled={googleLoading || loading}
-        className="mt-7 flex w-full items-center justify-center gap-3 rounded-xl border border-white/10 bg-white/[0.04] py-3 text-sm font-semibold text-white transition hover:border-white/20 hover:bg-white/[0.08] disabled:opacity-50"
+        className="auth-social-button"
       >
         {googleLoading ? (
           <Loader2 className="h-4 w-4 animate-spin" />
@@ -116,13 +109,13 @@ export default function Register() {
         Sign up with Google
       </button>
 
-      <div className="my-5 flex items-center gap-3 text-xs text-white/30">
-        <span className="h-px flex-1 bg-white/10" />
-        OR USE EMAIL
-        <span className="h-px flex-1 bg-white/10" />
+      <div className="auth-divider">
+        <span className="auth-divider-rule" />
+        Or use email
+        <span className="auth-divider-rule" />
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-4">
+      <form onSubmit={handleSubmit} className="auth-form">
         <Field
           label="Full name"
           icon={User}
@@ -159,27 +152,23 @@ export default function Register() {
               <button
                 type="button"
                 onClick={() => setShowPwd((v) => !v)}
-                className="text-white/40 transition hover:text-white/80"
+                className="auth-reveal"
+                aria-label={showPwd ? "Hide password" : "Show password"}
+                aria-pressed={showPwd}
               >
                 {showPwd ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
               </button>
             }
           />
           {password && (
-            <div className="mt-2">
-              <div className="flex gap-1">
+            <div className="auth-strength" data-score={score}>
+              <div className="auth-strength-bars">
                 {Array.from({ length: 4 }).map((_, i) => (
-                  <span
-                    key={i}
-                    className={`h-1 flex-1 rounded-full transition-colors ${
-                      i < score ? strengthColor[score] : "bg-white/10"
-                    }`}
-                  />
+                  <span key={i} className="auth-strength-bar" data-on={i < score ? "1" : "0"} />
                 ))}
               </div>
-              <p className="mt-1 text-[11px] text-white/50">
-                Strength:{" "}
-                <span className="font-semibold text-white/80">{strengthLabel[score]}</span>
+              <p className="auth-strength-caption" aria-live="polite">
+                Strength: <span className="auth-strength-value">{strengthLabel[score]}</span>
               </p>
             </div>
           )}
@@ -196,20 +185,20 @@ export default function Register() {
           placeholder="Re-enter password"
         />
 
-        <label className="flex cursor-pointer items-start gap-2.5 text-xs text-white/60">
+        <label className="auth-consent">
           <input
             type="checkbox"
             checked={terms}
             onChange={(e) => setTerms(e.target.checked)}
-            className="mt-0.5 h-4 w-4 cursor-pointer accent-brand-500"
+            className="auth-checkbox"
           />
           <span>
             I agree to the{" "}
-            <a href="#" className="text-brand-300 hover:underline">
+            <a href="#" className="auth-link">
               Terms of Service
             </a>{" "}
             and{" "}
-            <a href="#" className="text-brand-300 hover:underline">
+            <a href="#" className="auth-link">
               Privacy Policy
             </a>
             .
@@ -217,17 +206,13 @@ export default function Register() {
         </label>
 
         {error && (
-          <div className="flex items-start gap-2 rounded-xl border border-rose-500/30 bg-rose-500/10 px-3 py-2.5 text-sm text-rose-300">
-            <AlertCircle className="mt-0.5 h-4 w-4 flex-shrink-0" />
+          <div className="auth-alert auth-alert-error" role="alert">
+            <AlertCircle className="h-4 w-4 flex-shrink-0" />
             <span>{error}</span>
           </div>
         )}
 
-        <button
-          type="submit"
-          disabled={loading || googleLoading}
-          className="group flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-brand-500 to-brand-600 py-3 text-sm font-semibold text-white shadow-brand-glow transition hover:scale-[1.01] disabled:cursor-not-allowed disabled:opacity-60"
-        >
+        <button type="submit" disabled={loading || googleLoading} className="auth-submit group">
           {loading ? (
             <>
               <Loader2 className="h-4 w-4 animate-spin" /> Creating account…
@@ -235,7 +220,7 @@ export default function Register() {
           ) : (
             <>
               Create account
-              <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+              <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
             </>
           )}
         </button>
@@ -246,17 +231,12 @@ export default function Register() {
 
 function Field({ label, icon: Icon, rightSlot, ...rest }) {
   return (
-    <label className="block">
-      <span className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-white/50">
-        {label}
-      </span>
-      <div className="relative flex items-center rounded-xl border border-white/10 bg-white/[0.03] transition focus-within:border-brand-500/60 focus-within:bg-white/[0.05]">
-        <Icon className="ml-3.5 h-4 w-4 flex-shrink-0 text-white/40" />
-        <input
-          {...rest}
-          className="w-full bg-transparent px-3 py-3 text-sm text-white placeholder:text-white/30 focus:outline-none"
-        />
-        {rightSlot && <div className="mr-3 flex items-center">{rightSlot}</div>}
+    <label className="auth-field">
+      <span className="auth-field-label">{label}</span>
+      <div className="auth-control">
+        <Icon className="auth-control-icon h-4 w-4 flex-shrink-0" />
+        <input {...rest} className="auth-input" />
+        {rightSlot && <div className="auth-control-slot">{rightSlot}</div>}
       </div>
     </label>
   );

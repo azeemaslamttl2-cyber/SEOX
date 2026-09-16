@@ -3,10 +3,10 @@ import { useEffect, useRef } from "react";
 import { TrendingUp, Users, Globe, Award } from "lucide-react";
 
 const stats = [
-  { icon: Users, label: "Active Marketers", value: 18500, suffix: "+", color: "text-brand-300" },
-  { icon: Globe, label: "Sites Audited", value: 4200000, suffix: "+", color: "text-amber-300" },
-  { icon: TrendingUp, label: "Avg Traffic Lift", value: 312, suffix: "%", color: "text-orange-300" },
-  { icon: Award, label: "Industry Awards", value: 27, suffix: "", color: "text-yellow-300" },
+  { icon: Users, label: "Active Marketers", value: 18500, suffix: "+" },
+  { icon: Globe, label: "Sites Audited", value: 4200000, suffix: "+" },
+  { icon: TrendingUp, label: "Avg Traffic Lift", value: 312, suffix: "%" },
+  { icon: Award, label: "Industry Awards", value: 27, suffix: "" },
 ];
 
 function formatNumber(n) {
@@ -37,19 +37,19 @@ function Counter({ to }) {
 
 export default function Stats() {
   return (
-    <section className="py-16 sm:py-20">
+    <section className="landing-section is-stats py-16 sm:py-20">
       <div className="container-px">
         <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
           {stats.map((s) => {
             const Icon = s.icon;
             return (
-              <div key={s.label} className="feature-card text-center">
-                <Icon className={`mx-auto mb-3 h-7 w-7 ${s.color}`} />
-                <div className="font-display text-3xl font-bold sm:text-4xl">
+              <div key={s.label} className="landing-card landing-stat text-center">
+                <Icon className="landing-stat-icon mx-auto mb-3 h-7 w-7" />
+                <div className="landing-stat-value">
                   <Counter to={s.value} />
                   {s.suffix}
                 </div>
-                <div className="mt-1 text-sm text-white/50">{s.label}</div>
+                <div className="landing-stat-label mt-1">{s.label}</div>
               </div>
             );
           })}

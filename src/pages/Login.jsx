@@ -115,11 +115,11 @@ export default function Login() {
   };
 
   return (
-    <div className="login-form">
-      <h1 className="font-display text-3xl font-bold tracking-tight">Welcome back</h1>
-      <p className="mt-2 text-sm text-white/55">
+    <div className="login-form auth-card">
+      <h1 className="auth-title">Welcome back</h1>
+      <p className="auth-subtitle">
         New to PGC?{" "}
-        <Link to="/register" className="font-semibold text-brand-300 hover:underline">
+        <Link to="/register" className="auth-link">
           Create an account
         </Link>
       </p>
@@ -129,7 +129,7 @@ export default function Login() {
         type="button"
         onClick={handleGoogle}
         disabled={googleLoading || loading}
-        className="mt-7 flex w-full items-center justify-center gap-3 rounded-xl border border-white/10 bg-white/[0.04] py-3 text-sm font-semibold text-white transition hover:border-white/20 hover:bg-white/[0.08] disabled:opacity-50"
+        className="auth-social-button"
       >
         {googleLoading ? (
           <Loader2 className="h-4 w-4 animate-spin" />
@@ -139,13 +139,13 @@ export default function Login() {
         Continue with Google
       </button>
 
-      <div className="my-5 flex items-center gap-3 text-xs text-white/30">
-        <span className="h-px flex-1 bg-white/10" />
-        OR CONTINUE WITH EMAIL
-        <span className="h-px flex-1 bg-white/10" />
+      <div className="auth-divider">
+        <span className="auth-divider-rule" />
+        Or continue with email
+        <span className="auth-divider-rule" />
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-4">
+      <form onSubmit={handleSubmit} className="auth-form">
         <Field
           label="Email"
           icon={Mail}
@@ -170,51 +170,45 @@ export default function Login() {
             <button
               type="button"
               onClick={() => setShowPwd((v) => !v)}
-              className="text-white/40 transition hover:text-white/80"
+              className="auth-reveal"
+              aria-label={showPwd ? "Hide password" : "Show password"}
+              aria-pressed={showPwd}
             >
               {showPwd ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
             </button>
           }
         />
 
-        <div className="flex items-center justify-between text-xs">
-          <label className="flex cursor-pointer items-center gap-2 text-white/60">
+        <div className="auth-meta-row">
+          <label className="auth-remember">
             <input
               type="checkbox"
               checked={remember}
               onChange={(e) => setRemember(e.target.checked)}
-              className="h-4 w-4 cursor-pointer accent-brand-500"
+              className="auth-checkbox"
             />
             Remember me
           </label>
-          <button
-            type="button"
-            onClick={handleReset}
-            className="font-semibold text-brand-300 hover:underline"
-          >
+          <button type="button" onClick={handleReset} className="auth-link">
             Forgot password?
           </button>
         </div>
 
         {error && (
-          <div className="flex items-start gap-2 rounded-xl border border-rose-500/30 bg-rose-500/10 px-3 py-2.5 text-sm text-rose-300">
-            <AlertCircle className="mt-0.5 h-4 w-4 flex-shrink-0" />
+          <div className="auth-alert auth-alert-error" role="alert">
+            <AlertCircle className="h-4 w-4 flex-shrink-0" />
             <span>{error}</span>
           </div>
         )}
 
         {resetSent && (
-          <div className="flex items-start gap-2 rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-3 py-2.5 text-sm text-emerald-300">
-            <CheckCircle2 className="mt-0.5 h-4 w-4 flex-shrink-0" />
+          <div className="auth-alert auth-alert-success" role="status">
+            <CheckCircle2 className="h-4 w-4 flex-shrink-0" />
             <span>Password reset email sent. Check your inbox.</span>
           </div>
         )}
 
-        <button
-          type="submit"
-          disabled={loading || googleLoading}
-          className="group flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-brand-500 to-brand-600 py-3 text-sm font-semibold text-white shadow-brand-glow transition hover:scale-[1.01] disabled:cursor-not-allowed disabled:opacity-60"
-        >
+        <button type="submit" disabled={loading || googleLoading} className="auth-submit group">
           {loading ? (
             <>
               <Loader2 className="h-4 w-4 animate-spin" /> Signing in…
@@ -222,19 +216,19 @@ export default function Login() {
           ) : (
             <>
               Sign in
-              <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+              <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
             </>
           )}
         </button>
       </form>
 
-      <p className="mt-6 text-center text-xs text-white/40">
+      <p className="auth-legal">
         By signing in you agree to our{" "}
-        <a href="#" className="hover:text-white/70">
+        <a href="#" className="auth-legal-link">
           Terms
         </a>{" "}
         &amp;{" "}
-        <a href="#" className="hover:text-white/70">
+        <a href="#" className="auth-legal-link">
           Privacy Policy
         </a>
         .
@@ -245,17 +239,12 @@ export default function Login() {
 
 function Field({ label, icon: Icon, rightSlot, ...rest }) {
   return (
-    <label className="block">
-      <span className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-white/50">
-        {label}
-      </span>
-      <div className="relative flex items-center rounded-xl border border-white/10 bg-white/[0.03] transition focus-within:border-brand-500/60 focus-within:bg-white/[0.05]">
-        <Icon className="ml-3.5 h-4 w-4 flex-shrink-0 text-white/40" />
-        <input
-          {...rest}
-          className="w-full bg-transparent px-3 py-3 text-sm text-white placeholder:text-white/30 focus:outline-none"
-        />
-        {rightSlot && <div className="mr-3 flex items-center">{rightSlot}</div>}
+    <label className="auth-field">
+      <span className="auth-field-label">{label}</span>
+      <div className="auth-control">
+        <Icon className="auth-control-icon h-4 w-4 flex-shrink-0" />
+        <input {...rest} className="auth-input" />
+        {rightSlot && <div className="auth-control-slot">{rightSlot}</div>}
       </div>
     </label>
   );
