@@ -51,7 +51,7 @@ export default function Pricing() {
   const list = plans(yearly);
 
   return (
-    <section id="pricing" className="py-20 sm:py-28">
+    <section id="pricing" className="landing-section is-pricing py-20 sm:py-28">
       <div className="container-px">
         {/* Header */}
         <div className="text-center">
@@ -60,17 +60,17 @@ export default function Pricing() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.6 }}
-            className="font-display text-4xl font-bold tracking-tight sm:text-5xl"
+            className="landing-section-title"
           >
             Scale Your{" "}
-            <span className="gradient-text">Intelligence</span>
+            <span className="landing-accent">Intelligence</span>
           </motion.h2>
           <motion.p
             initial={{ opacity: 0, y: 16 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.6, delay: 0.1 }}
-            className="mx-auto mt-4 max-w-xl text-white/50"
+            className="landing-section-sub mx-auto mt-4 max-w-xl"
           >
             Choose the framework that fits your organizational goals.
           </motion.p>
@@ -81,18 +81,14 @@ export default function Pricing() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.6, delay: 0.15 }}
-            className="mt-7 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 p-1"
+            className="landing-toggle mt-7"
           >
             <button
               onClick={() => {
                 setYearly(false);
                 track("pricing_toggle", { billing: "monthly" });
               }}
-              className={`rounded-full px-4 py-1.5 text-sm font-semibold transition-all ${
-                !yearly
-                  ? "bg-brand-500 text-white shadow-brand-glow"
-                  : "text-white/60"
-              }`}
+              className={`landing-toggle-option ${!yearly ? "is-active" : ""}`}
             >
               Monthly
             </button>
@@ -101,16 +97,10 @@ export default function Pricing() {
                 setYearly(true);
                 track("pricing_toggle", { billing: "yearly" });
               }}
-              className={`flex items-center gap-1.5 rounded-full px-4 py-1.5 text-sm font-semibold transition-all ${
-                yearly
-                  ? "bg-brand-500 text-white shadow-brand-glow"
-                  : "text-white/60"
-              }`}
+              className={`landing-toggle-option ${yearly ? "is-active" : ""}`}
             >
               Yearly
-              <span className="rounded-full bg-emerald-500/20 px-1.5 py-0.5 text-[10px] font-bold text-emerald-400">
-                -20%
-              </span>
+              <span className="landing-save-badge">-20%</span>
             </button>
           </motion.div>
         </div>
@@ -127,76 +117,46 @@ export default function Pricing() {
               className="relative"
             >
               {/* Glow border for highlighted card */}
-              {p.highlight && (
-                <div
-                  className="pointer-events-none absolute -inset-[1px] rounded-2xl"
-                  style={{
-                    background:
-                      "linear-gradient(135deg, rgba(249,115,22,0.7), rgba(251,191,36,0.4), rgba(249,115,22,0.7))",
-                    padding: "1.5px",
-                    WebkitMask:
-                      "linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0)",
-                    WebkitMaskComposite: "xor",
-                    maskComposite: "exclude",
-                    borderRadius: "1rem",
-                  }}
-                />
-              )}
+              {p.highlight && <div className="landing-plan-ring pointer-events-none" />}
 
               {/* Badge */}
               {p.badge && (
                 <div className="absolute -top-3.5 left-1/2 z-10 -translate-x-1/2">
-                  <span className="whitespace-nowrap rounded-full bg-gradient-to-r from-brand-500 to-amber-400 px-4 py-1 text-[11px] font-bold uppercase tracking-widest text-ink-900 shadow-brand-glow">
-                    {p.badge}
-                  </span>
+                  <span className="landing-plan-badge">{p.badge}</span>
                 </div>
               )}
 
               <div
-                className={`relative flex flex-col rounded-2xl border p-7 sm:p-8 ${
-                  p.highlight
-                    ? "border-brand-500/30 bg-gradient-to-b from-brand-500/[0.06] to-ink-800/80"
-                    : "border-white/[0.08] bg-white/[0.02]"
-                }`}
+                className={`landing-plan relative flex flex-col p-7 sm:p-8 ${p.highlight ? "is-featured" : ""}`}
               >
                 {/* Plan name & tagline */}
                 <div>
-                  <h3
-                    className={`font-display text-xl font-bold ${
-                      p.highlight ? "text-brand-300" : "text-white"
-                    }`}
-                  >
-                    {p.name}
-                  </h3>
-                  <p className="mt-1 text-sm text-white/45">{p.tagline}</p>
+                  <h3 className="landing-plan-name">{p.name}</h3>
+                  <p className="landing-plan-tagline mt-1">{p.tagline}</p>
                 </div>
 
                 {/* Price */}
                 <div className="mt-6 mb-6">
                   {p.price.monthly === 0 ? (
                     <div className="flex items-baseline gap-1">
-                      <span className="font-display text-5xl font-bold tracking-tight">
-                        Free
-                      </span>
-                      <span className="text-sm text-white/40">/month</span>
+                      <span className="landing-plan-price">Free</span>
+                      <span className="landing-plan-period">/month</span>
                     </div>
                   ) : (
                     <>
                       <div className="flex items-baseline gap-1">
-                        <span className="text-lg font-medium text-white/60">
-                          Rs
-                        </span>
-                        <span className="font-display text-5xl font-bold tracking-tight">
+                        <span className="landing-plan-currency">Rs</span>
+                        <span className="landing-plan-price">
                           {yearly
                             ? Math.round(
                                 (p.price.yearly / 12) * 0.8
                               ).toLocaleString()
                             : p.price.monthly.toLocaleString()}
                         </span>
-                        <span className="text-sm text-white/40">/month</span>
+                        <span className="landing-plan-period">/month</span>
                       </div>
                       {yearly && (
-                        <p className="mt-1.5 text-xs text-emerald-400">
+                        <p className="landing-plan-note mt-1.5">
                           Billed annually · Save Rs{" "}
                           {(p.price.monthly * 12 * 0.2).toLocaleString()}
                         </p>
@@ -206,7 +166,7 @@ export default function Pricing() {
                 </div>
 
                 {/* Divider */}
-                <div className="mb-6 h-px bg-white/[0.06]" />
+                <div className="landing-plan-rule mb-6" />
 
                 {/* Features */}
                 <ul className="flex-1 space-y-3.5">
@@ -217,22 +177,18 @@ export default function Pricing() {
                     >
                       {f.included ? (
                         <span
-                          className={`mt-0.5 flex h-4 w-4 flex-shrink-0 items-center justify-center rounded-full ${
-                            p.highlight
-                              ? "bg-brand-500/20 text-brand-300"
-                              : "bg-white/10 text-brand-400"
-                          }`}
+                          className="landing-check mt-0.5"
                         >
                           <Check className="h-2.5 w-2.5" strokeWidth={3} />
                         </span>
                       ) : (
-                        <span className="mt-0.5 flex h-4 w-4 flex-shrink-0 items-center justify-center rounded-full bg-white/5 text-white/25">
+                        <span className="landing-check is-off mt-0.5">
                           <X className="h-2.5 w-2.5" strokeWidth={3} />
                         </span>
                       )}
                       <span
                         className={
-                          f.included ? "text-white/75" : "text-white/35"
+                          f.included ? "landing-plan-feature" : "landing-plan-feature is-off"
                         }
                       >
                         {f.label}
@@ -250,10 +206,8 @@ export default function Pricing() {
                       price_monthly: p.price.monthly,
                     })
                   }
-                  className={`mt-8 w-full rounded-full py-3 text-sm font-semibold transition-all duration-300 ${
-                    p.highlight
-                      ? "bg-gradient-to-r from-brand-500 to-brand-400 text-white shadow-brand-glow hover:scale-[1.02] hover:shadow-[0_14px_50px_-8px_rgba(249,115,22,0.7)]"
-                      : "border border-white/[0.12] bg-white/[0.03] text-white/80 hover:border-white/20 hover:bg-white/[0.06] hover:text-white"
+                  className={`ui-button landing-plan-cta mt-8 w-full ${
+                    p.highlight ? "ui-button-primary" : "ui-button-secondary"
                   }`}
                 >
                   {p.cta}
@@ -268,7 +222,7 @@ export default function Pricing() {
           whileInView={{ opacity: 1 }}
           viewport={{ once: true }}
           transition={{ duration: 0.5, delay: 0.4 }}
-          className="mt-10 text-center text-xs text-white/35"
+          className="landing-plan-footnote mt-10 text-center"
         >
           All plans include 14-day free trial · No credit card required ·
           Cancel anytime

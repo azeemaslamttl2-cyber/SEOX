@@ -2,11 +2,11 @@ import { motion } from "framer-motion";
 import { XCircle, CheckCircle2, ArrowRight } from "lucide-react";
 
 const issues = [
-  { label: "E-E-A-T compliance gaps", value: "Detected", tone: "text-rose-400" },
-  { label: "Core Web Vitals issues", value: "Found", tone: "text-rose-400" },
-  { label: "Crawl optimization needed", value: "12 Issues", tone: "text-amber-300" },
-  { label: "Content quality scoring", value: "Low", tone: "text-rose-400" },
-  { label: "Schema markup missing", value: "None", tone: "text-rose-400" },
+  { label: "E-E-A-T compliance gaps", value: "Detected", tone: "landing-issue-value" },
+  { label: "Core Web Vitals issues", value: "Found", tone: "landing-issue-value" },
+  { label: "Crawl optimization needed", value: "12 Issues", tone: "landing-issue-value" },
+  { label: "Content quality scoring", value: "Low", tone: "landing-issue-value" },
+  { label: "Schema markup missing", value: "None", tone: "landing-issue-value" },
 ];
 
 const solutions = [
@@ -19,7 +19,7 @@ const solutions = [
 
 export default function Comparison() {
   return (
-    <section className="py-20 sm:py-28">
+    <section className="landing-section is-compare py-20 sm:py-28">
       <div className="container-px">
         <div className="grid items-center gap-6 lg:grid-cols-[1fr_auto_1fr]">
           {/* Issues */}
@@ -28,16 +28,15 @@ export default function Comparison() {
             whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.6 }}
-            className="relative overflow-hidden rounded-2xl border border-rose-500/20 bg-gradient-to-b from-rose-500/[0.07] to-transparent p-6 sm:p-7"
+            className="landing-card landing-panel is-problem relative overflow-hidden p-6 sm:p-7"
           >
-            <div className="absolute -right-10 -top-10 h-40 w-40 rounded-full bg-rose-500/10 blur-3xl" />
             <div className="flex items-center gap-3">
-              <div className="rounded-xl bg-rose-500/15 p-2.5">
-                <XCircle className="h-5 w-5 text-rose-400" />
+              <div className="landing-panel-icon is-problem">
+                <XCircle className="h-5 w-5" />
               </div>
               <div>
-                <h3 className="font-display text-xl font-bold">Issues We Detect</h3>
-                <p className="text-xs text-white/50">60+ diagnostic audit checks</p>
+                <h3 className="landing-panel-title">Issues We Detect</h3>
+                <p className="landing-panel-sub">60+ diagnostic audit checks</p>
               </div>
             </div>
 
@@ -49,20 +48,20 @@ export default function Comparison() {
                   whileInView={{ opacity: 1, x: 0 }}
                   viewport={{ once: true }}
                   transition={{ delay: i * 0.07 }}
-                  className="flex items-center justify-between rounded-xl border border-white/5 bg-white/[0.02] px-4 py-3"
+                  className="landing-row"
                 >
-                  <span className="flex items-center gap-2 text-sm text-white/80">
-                    <span className="h-1.5 w-1.5 rounded-full bg-rose-400" />
+                  <span className="landing-row-label">
+                    <span className="landing-row-dot is-problem" />
                     {it.label}
                   </span>
-                  <span className={`text-xs font-bold ${it.tone}`}>{it.value}</span>
+                  <span className={it.tone}>{it.value}</span>
                 </motion.li>
               ))}
             </ul>
 
-            <div className="mt-5 rounded-xl border border-rose-500/30 bg-rose-500/5 p-4 text-center">
-              <p className="text-[11px] uppercase tracking-wider text-white/50">Audit Checks</p>
-              <p className="mt-1 font-display text-3xl font-bold text-rose-400">60+</p>
+            <div className="landing-panel-total is-problem mt-5">
+              <p className="landing-panel-total-label">Audit Checks</p>
+              <p className="landing-panel-total-value">60+</p>
             </div>
           </motion.div>
 
@@ -75,14 +74,11 @@ export default function Comparison() {
             className="flex flex-col items-center gap-3"
           >
             <div className="relative">
-              <div className="absolute inset-0 animate-ping rounded-full bg-brand-500/30" />
-              <div className="relative flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-brand-500 to-brand-600 shadow-brand-glow">
-                <ArrowRight className="h-6 w-6 text-white" />
+              <div className="landing-arrow">
+                <ArrowRight className="h-6 w-6" />
               </div>
             </div>
-            <span className="rounded-full border border-brand-500/30 bg-brand-500/10 px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-brand-300">
-              Auto-Fix
-            </span>
+            <span className="landing-eyebrow is-compact">Auto-Fix</span>
           </motion.div>
 
           {/* Solutions */}
@@ -91,18 +87,15 @@ export default function Comparison() {
             whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.6 }}
-            className="relative overflow-hidden rounded-2xl border border-brand-500/30 bg-gradient-to-b from-brand-500/[0.10] to-transparent p-6 shadow-brand-glow sm:p-7"
+            className="landing-card landing-panel is-solution relative overflow-hidden p-6 sm:p-7"
           >
-            <div className="absolute -right-10 -top-10 h-40 w-40 rounded-full bg-brand-500/15 blur-3xl" />
             <div className="flex items-center gap-3">
-              <div className="rounded-xl bg-brand-500/20 p-2.5">
-                <CheckCircle2 className="h-5 w-5 text-brand-300" />
+              <div className="landing-panel-icon is-solution">
+                <CheckCircle2 className="h-5 w-5" />
               </div>
               <div>
-                <h3 className="font-display text-xl font-bold text-brand-300">
-                  PGC Solution
-                </h3>
-                <p className="text-xs text-white/50">50+ optimization tools</p>
+                <h3 className="landing-panel-title">PGC Solution</h3>
+                <p className="landing-panel-sub">50+ optimization tools</p>
               </div>
             </div>
 
@@ -114,20 +107,20 @@ export default function Comparison() {
                   whileInView={{ opacity: 1, x: 0 }}
                   viewport={{ once: true }}
                   transition={{ delay: i * 0.07 }}
-                  className="flex items-center justify-between rounded-xl border border-white/5 bg-white/[0.02] px-4 py-3"
+                  className="landing-row"
                 >
-                  <span className="flex items-center gap-2 text-sm text-white/80">
-                    <span className="h-1.5 w-1.5 rounded-full bg-brand-400" />
+                  <span className="landing-row-label">
+                    <span className="landing-row-dot is-solution" />
                     {it.label}
                   </span>
-                  <span className="text-xs font-bold text-brand-300">{it.value}</span>
+                  <span className="landing-solution-value">{it.value}</span>
                 </motion.li>
               ))}
             </ul>
 
-            <div className="mt-5 rounded-xl border border-brand-500/40 bg-brand-500/10 p-4 text-center">
-              <p className="text-[11px] uppercase tracking-wider text-white/50">SEO Tools</p>
-              <p className="mt-1 font-display text-3xl font-bold text-brand-300">50+</p>
+            <div className="landing-panel-total is-solution mt-5">
+              <p className="landing-panel-total-label">SEO Tools</p>
+              <p className="landing-panel-total-value">50+</p>
             </div>
           </motion.div>
         </div>

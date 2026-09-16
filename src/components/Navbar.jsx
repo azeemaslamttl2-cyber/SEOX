@@ -66,14 +66,12 @@ export default function Navbar() {
   return (
     <header
       className={`sticky top-0 z-50 transition-all duration-300 ${
-        scrolled
-          ? "border-b border-white/10 bg-ink-900/85 backdrop-blur-xl"
-          : "border-b border-transparent"
+        scrolled ? "landing-nav is-scrolled" : "landing-nav"
       }`}
     >
       <div className="container-px flex h-16 items-center justify-between">
-        <Link to="/" className="flex items-center gap-2.5">
-          <Logo className="w-28 h-auto block" />
+        <Link to="/" className="flex items-center gap-2.5 py-1">
+          <Logo className="w-24 h-auto block" />
         </Link>
 
         <nav className="hidden items-center gap-8 lg:flex">
@@ -81,7 +79,7 @@ export default function Navbar() {
             <Link
               key={l.label}
               to={l.to}
-              className="text-sm font-medium text-white/70 transition-colors hover:text-white"
+              className="landing-nav-link"
             >
               {l.label}
             </Link>
@@ -90,7 +88,7 @@ export default function Navbar() {
 
         <div className="hidden items-center gap-3 lg:flex">
           {loading ? (
-            <div className="h-8 w-24 animate-pulse rounded-full bg-white/5" />
+            <div className="landing-nav-skeleton h-8 w-24 animate-pulse" />
           ) : user ? (
             <div className="relative" ref={menuRef}>
               <button
@@ -163,14 +161,14 @@ export default function Navbar() {
             <>
               <Link
                 to="/login"
-                className="text-sm font-medium text-white/70 hover:text-white"
+                className="landing-nav-link"
               >
                 Sign in
               </Link>
               <Link
                 to="/register"
                 onClick={() => track("signup_click", { location: "navbar" })}
-                className="group inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r from-brand-500 to-brand-600 px-4 py-2 text-sm font-semibold text-white shadow-brand-glow transition-transform hover:scale-[1.03]"
+                className="ui-button ui-button-primary landing-nav-cta group"
               >
                 <Sparkles className="h-4 w-4" />
                 Get Started
@@ -181,47 +179,46 @@ export default function Navbar() {
 
         <button
           onClick={() => setOpen((v) => !v)}
-          className="rounded-lg p-2 text-white/80 hover:bg-white/10 lg:hidden"
+          className="landing-nav-toggle lg:hidden"
+          aria-label={open ? "Close menu" : "Open menu"}
+          aria-expanded={open}
         >
           {open ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
         </button>
       </div>
 
       {open && (
-        <div className="border-t border-white/10 bg-ink-900/95 backdrop-blur-xl lg:hidden">
+        <div className="landing-nav-sheet lg:hidden">
           <div className="container-px flex flex-col gap-1 py-4">
             {links.map((l) => (
               <Link
                 key={l.label}
                 to={l.to}
-                className="rounded-lg px-3 py-2.5 text-sm font-medium text-white/80 hover:bg-white/5 hover:text-white"
+                className="landing-nav-sheet-link"
               >
                 {l.label}
               </Link>
             ))}
 
-            <div className="my-2 h-px bg-white/10" />
+            <div className="landing-nav-sheet-rule my-2" />
 
             {user ? (
               <>
                 <div className="flex items-center gap-3 rounded-lg px-3 py-2">
                   <Avatar user={user} size={36} />
                   <div className="min-w-0">
-                    <p className="truncate text-sm font-semibold">
+                    <p className="landing-nav-sheet-name truncate">
                       {user.displayName || "User"}
                     </p>
-                    <p className="truncate text-xs text-white/50">{user.email}</p>
+                    <p className="landing-nav-sheet-email truncate">{user.email}</p>
                   </div>
                 </div>
-                <Link
-                  to="/dashboard"
-                  className="rounded-lg px-3 py-2.5 text-sm font-medium text-white/80 hover:bg-white/5"
-                >
+                <Link to="/dashboard" className="landing-nav-sheet-link">
                   Dashboard
                 </Link>
                 <button
                   onClick={handleLogout}
-                  className="flex items-center gap-2 rounded-lg px-3 py-2.5 text-left text-sm font-medium text-rose-300 hover:bg-rose-500/10"
+                  className="landing-nav-sheet-link is-danger"
                 >
                   <LogOut className="h-4 w-4" />
                   Sign out
@@ -229,15 +226,12 @@ export default function Navbar() {
               </>
             ) : (
               <>
-                <Link
-                  to="/login"
-                  className="rounded-lg px-3 py-2.5 text-sm font-medium text-white/80 hover:bg-white/5"
-                >
+                <Link to="/login" className="landing-nav-sheet-link">
                   Sign in
                 </Link>
                 <Link
                   to="/register"
-                  className="mt-1 inline-flex items-center justify-center gap-2 rounded-full bg-gradient-to-r from-brand-500 to-brand-600 px-4 py-2.5 text-sm font-semibold"
+                  className="ui-button ui-button-primary landing-nav-cta mt-1"
                 >
                   <Sparkles className="h-4 w-4" />
                   Get Started

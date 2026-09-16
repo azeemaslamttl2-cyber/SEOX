@@ -91,17 +91,17 @@ const features = [
 
 export default function Features() {
   return (
-    <section id="features" className="py-20 sm:py-28">
+    <section id="features" className="landing-section is-features py-20 sm:py-28">
       <div className="container-px">
         <div className="text-center">
           <span className="chip">
             <Sparkles className="h-3.5 w-3.5" /> SEO Optimization Suite
           </span>
-          <h2 className="mt-5 font-display text-4xl font-bold tracking-tight sm:text-5xl">
+          <h2 className="landing-section-title mt-5">
             Complete SEO Optimizations by{" "}
-            <span className="gradient-text">PGC</span>
+            <span className="landing-accent">PGC</span>
           </h2>
-          <p className="mx-auto mt-4 max-w-2xl text-white/60">
+          <p className="landing-section-sub mx-auto mt-4 max-w-2xl">
             50+ professional tools covering every aspect of SEO — from technical audits to AI-powered
             content creation and link building.
           </p>
@@ -117,22 +117,17 @@ export default function Features() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, margin: "-50px" }}
                 transition={{ duration: 0.5, delay: (i % 6) * 0.05 }}
-                className="feature-card group"
+                className="landing-card landing-feature group"
               >
-                <div className="absolute -right-6 -top-6 h-24 w-24 rounded-full bg-brand-500/10 blur-2xl transition-all group-hover:bg-brand-500/25" />
-                <div className="relative flex items-start justify-between">
-                  <div className="rounded-xl border border-brand-500/20 bg-gradient-to-br from-brand-500/20 to-brand-500/5 p-2.5">
-                    <Icon className="h-5 w-5 text-brand-300" />
+                <div className="flex items-start justify-between">
+                  <div className="landing-icon-tile">
+                    <Icon className="h-5 w-5" />
                   </div>
-                  <span className="rounded-full border border-white/10 bg-white/5 px-2.5 py-1 text-[10px] font-semibold text-white/70">
-                    {f.tag}
-                  </span>
+                  <span className="landing-tag">{f.tag}</span>
                 </div>
-                <h3 className="mt-5 font-display text-lg font-bold">{f.title}</h3>
-                <p className="mt-2 text-sm leading-relaxed text-white/55">{f.desc}</p>
-                <div className="mt-5 flex items-center gap-1 text-xs font-semibold text-brand-300 opacity-0 transition-opacity group-hover:opacity-100">
-                  Explore tool →
-                </div>
+                <h3 className="landing-feature-title mt-5">{f.title}</h3>
+                <p className="landing-feature-desc mt-2">{f.desc}</p>
+                <div className="landing-feature-link mt-5">Explore tool →</div>
               </motion.div>
             );
           })}
