@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Link } from "react-router-dom";
 import { Twitter, Github, Linkedin, Youtube, Mail, Check } from "lucide-react";
 import Logo from "./Logo.jsx";
 import { track } from "../lib/analytics.js";
@@ -21,6 +22,12 @@ const cols = [
     links: ["Privacy", "Terms", "Cookies", "Security", "DPA", "Status"],
   },
 ];
+
+/* Footer labels that resolve to a real route. Everything else is still a
+   placeholder link until its page exists. */
+const routes = {
+  Privacy: "/privacy",
+};
 
 export default function Footer() {
   const [email, setEmail] = useState("");
@@ -102,12 +109,21 @@ export default function Footer() {
               <ul className="mt-4 space-y-2.5">
                 {c.links.map((l) => (
                   <li key={l}>
-                    <a
-                      href="#"
-                      className="text-sm text-white/55 transition-colors hover:text-brand-300"
-                    >
-                      {l}
-                    </a>
+                    {routes[l] ? (
+                      <Link
+                        to={routes[l]}
+                        className="text-sm text-white/55 transition-colors hover:text-brand-300"
+                      >
+                        {l}
+                      </Link>
+                    ) : (
+                      <a
+                        href="#"
+                        className="text-sm text-white/55 transition-colors hover:text-brand-300"
+                      >
+                        {l}
+                      </a>
+                    )}
                   </li>
                 ))}
               </ul>

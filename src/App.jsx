@@ -52,6 +52,12 @@ import { beginInitialLoad, installRouteTransitionWatcher } from "./lib/routeTran
  */
 const HomePage = lazy(() => import("./pages/HomePage.jsx"));
 
+/* ---- Legal ----
+ * Static content, no data fetching. Lazy so it stays out of the entry
+ * chunk that every signed-in user downloads.
+ */
+const PrivacyPolicy = lazy(() => import("./pages/PrivacyPolicy.jsx"));
+
 /* ---- Projects & settings ---- */
 const ProjectsList = lazy(() => import("./pages/projects/ProjectsList.jsx"));
 const SettingsPage = lazy(() => import("./pages/settings/SettingsPage.jsx"));
@@ -290,6 +296,7 @@ export default function App() {
             {/* Public site (with Navbar + Footer) */}
             <Route element={<RootLayout />}>
               <Route path="/" element={<HomePage />} />
+              <Route path="/privacy" element={<PrivacyPolicy />} />
             </Route>
 
             {/* Dashboard (app-shell with sidebar + topbar) */}
