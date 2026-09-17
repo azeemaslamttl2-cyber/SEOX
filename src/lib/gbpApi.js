@@ -29,8 +29,11 @@ async function request(path, { method = 'GET', body, params } = {}) {
 
   const data = await response.json().catch(() => ({}));
   if (!response.ok) {
-    const error = new Error(data?.error || `Request failed (${response.status}).`);
+    // `error` is the flat shape most endpoints use; `message` comes from the
+    // structured diagnostics payload, which also carries the failed stage.
+    const error = new Error(data?.error || data?.message || `Request failed (${response.status}).`);
     error.status = response.status;
+    error.code = data?.error_type || null;
     error.payload = data;
     throw error;
   }
@@ -53,10 +56,33 @@ export async function getGbpRedirectUri() {
   return resolveConfiguredRedirect(settings.googleGbpRedirectUri, "gbp");
 }
 
+/**
+ * Reads the state Google echoed back, for display only.
+ *
+ * The state is now a signed JWT, whose payload is still plain base64url JSON -
+ * so the page can read the projectId it needs without being able to forge one.
+ * The server verifies the signature and takes the projectId from there; nothing
+ * this function returns is trusted for that. The bare-base64 branch is the
+ * previous unsigned format, kept so a consent already in flight still lands.
+ */
 export function parseGbpOAuthState(rawState) {
   if (!rawState) return {};
+
+  const decode = (segment) => {
+    const padded = segment.replace(/-/g, '+').replace(/_/g, '/');
+    return JSON.parse(atob(padded + '='.repeat((4 - (padded.length % 4)) % 4)));
+  };
+
+  const segments = String(rawState).split('.');
+  if (segments.length === 3) {
+    try {
+      return decode(segments[1]);
+    } catch {
+      return {};
+    }
+  }
   try {
-    return JSON.parse(atob(rawState));
+    return decode(rawState);
   } catch {
     return {};
   }
@@ -76,10 +102,12 @@ export async function getGbpAuthUrl(projectId, returnTo = '/local-seo/gbp') {
   return data.authUrl;
 }
 
-export async function exchangeGbpCode({ projectId, code }) {
+export async function exchangeGbpCode({ projectId, code, state }) {
   return request('/connect', {
     method: 'POST',
-    body: { action: 'exchange', projectId, code, redirectUri: await getGbpRedirectUri() },
+    // `state` is the signed value Google echoed back; the server verifies it and
+    // uses the projectId it carries in preference to the one sent here.
+    body: { action: 'exchange', projectId, code, state, redirectUri: await getGbpRedirectUri() },
   });
 }
 
@@ -89,7 +117,14 @@ export function disconnectGbp(projectId) {
 
 // --- Accounts --------------------------------------------------------------
 
-export function listGbpAccounts(projectId) {
+/**
+ * The accounts for this project.
+ *
+ * Served from `gbp_accounts` unless `refresh` is set, so opening the page costs
+ * no Google quota. Pass `refresh` only for a deliberate user action.
+ */
+export function listGbpAccounts(projectId, { refresh = false } = {}) {
+  if (refresh) return request('/accounts', { params: { projectId, refresh: '1' } });
   return request('/accounts', { params: { projectId } });
 }
 

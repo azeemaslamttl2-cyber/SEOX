@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import {
   AlertCircle,
@@ -34,6 +34,19 @@ import {
 } from '../../lib/gbpApi.js';
 
 const card = 'rounded-2xl border border-white/10 bg-white/[0.02] p-5';
+
+/** e.g. "16 Sep 2026 16:45" — the format the connection card reads best in. */
+function formatSyncedAt(value) {
+  const date = value instanceof Date ? value : new Date(value);
+  if (Number.isNaN(date.getTime())) return '';
+  return date.toLocaleString(undefined, {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+}
 
 function VerificationBadge({ status }) {
   const map = {
@@ -73,6 +86,13 @@ export default function GbpConnect() {
   const [status, setStatus] = useState(null);
   const [accounts, setAccounts] = useState([]);
   const [accountsError, setAccountsError] = useState('');
+  const [accountsStale, setAccountsStale] = useState(false);
+  // 'database' or 'google' — shown so it is clear the page is not re-querying
+  // Google on every visit.
+  const [dataSource, setDataSource] = useState('database');
+  const [quotaBlocked, setQuotaBlocked] = useState(false);
+  const [neverSynced, setNeverSynced] = useState(false);
+  const [syncedAt, setSyncedAt] = useState(null);
   const [attached, setAttached] = useState([]);
   const [available, setAvailable] = useState(null);
   const [selection, setSelection] = useState(() => new Set());
@@ -80,11 +100,20 @@ export default function GbpConnect() {
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState('');
   const [error, setError] = useState('');
+  // Which account the picker was already opened for, so the effect below stays
+  // a one-shot per account rather than a quota-burning loop.
+  const autoBrowsedRef = useRef('');
 
   const noAccounts = params.get('noAccounts') === '1';
+  // Set by the OAuth callback only, so a live fetch happens on the return from
+  // Google and never on a plain page load.
+  const justConnected = params.get('next') || '';
 
   // `force` is used after a mutation, where the cached copy is known stale.
-  const loadStatus = useCallback(async ({ force = false } = {}) => {
+  // `refreshAccounts` is the only thing here that can reach Google. Everything
+  // else - the connection, the attached profiles - is read from the database,
+  // so an ordinary page load spends no Business Profile quota at all.
+  const loadStatus = useCallback(async ({ force = false, refreshAccounts = false } = {}) => {
     if (!projectId) {
       setLoading(false);
       return;
@@ -95,18 +124,32 @@ export default function GbpConnect() {
       setStatus(next);
       if (next.connected) {
         const [accountData, attachedData] = await Promise.all([
-          listGbpAccounts(projectId).catch((err) => ({ accounts: [], error: err.message })),
+          listGbpAccounts(projectId, { refresh: refreshAccounts }).catch((err) => ({
+            accounts: [],
+            error: err.message,
+          })),
           readGbpAttachedLocations(projectId, { force }).catch(() => ({ locations: [] })),
         ]);
         setAccounts(accountData.accounts || []);
         // listGbpAccounts failing is not the same as Google reporting zero
         // profiles, but both arrive here as an empty array. Keeping the message
         // lets the UI tell the two apart instead of blaming the user's access.
-        setAccountsError(accountData.error || '');
+        // `quotaError` is the same distinction made server-side: the list is the
+        // stored copy and Google is currently refusing to confirm it.
+        setAccountsError(accountData.error || accountData.quotaError || '');
+        setAccountsStale(Boolean(accountData.quotaError));
+        setQuotaBlocked(Boolean(accountData.quotaBlocked));
+        setNeverSynced(Boolean(accountData.neverSynced));
+        setSyncedAt(accountData.syncedAt || null);
+        setDataSource(accountData.dataSource || 'database');
         setAttached(attachedData.locations || []);
       } else {
         setAccounts([]);
         setAccountsError('');
+        setAccountsStale(false);
+        setQuotaBlocked(false);
+        setNeverSynced(false);
+        setSyncedAt(null);
         setAttached([]);
       }
     } catch (err) {
@@ -119,7 +162,12 @@ export default function GbpConnect() {
   useEffect(() => {
     setLoading(true);
     setAvailable(null);
-    loadStatus();
+    autoBrowsedRef.current = '';
+    // The callback navigates here in-app, so the cached status is the one from
+    // before the connection. Returning from Google always re-reads - from our
+    // own database, which is where the exchange just saved everything.
+    loadStatus({ force: Boolean(justConnected) });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [loadStatus]);
 
   const run = useCallback(
@@ -148,6 +196,11 @@ export default function GbpConnect() {
       await disconnectGbp(projectId);
       setParams({});
       setAvailable(null);
+      // The server drops the connection, its locations and its cached accounts;
+      // this clears the browser's copies so a reconnect starts from nothing and
+      // reads the next Google account fresh.
+      autoBrowsedRef.current = '';
+      setDataSource('database');
       invalidateGbpConnection(projectId);
       await loadStatus({ force: true });
     });
@@ -160,12 +213,38 @@ export default function GbpConnect() {
       await loadStatus({ force: true });
     });
 
-  const handleLoadLocations = () =>
-    run('locations', async () => {
-      const data = await listGoogleLocations(projectId);
-      setAvailable(data.locations || []);
-      setSelection(new Set());
-    });
+  const handleLoadLocations = useCallback(
+    () =>
+      run('locations', async () => {
+        const data = await listGoogleLocations(projectId);
+        setAvailable(data.locations || []);
+        setSelection(new Set());
+      }),
+    [projectId, run]
+  );
+
+  // Land on the profile picker instead of an empty panel - but only on the way
+  // back from Google.
+  //
+  // `next=select-location` is the server saying this consent found several
+  // profiles and needs a choice, so fetching the list is what the user is
+  // waiting for. On an ordinary visit nothing is fetched: the page renders from
+  // the database, and a live list costs a request against a Business Profile
+  // quota that is measured per minute. The ref keys on the account so even that
+  // one case is a single call per mount.
+  useEffect(() => {
+    if (justConnected !== 'select-location') return;
+    if (!status?.connected || !status.accountId) return;
+    if (attached.length > 0 || available || busy) return;
+    if (autoBrowsedRef.current === status.accountId) return;
+
+    autoBrowsedRef.current = status.accountId;
+    handleLoadLocations();
+    // Consume the marker, so reloading this URL does not spend another live
+    // request. Re-runs the effect once with an empty `justConnected`, which the
+    // guard above returns on immediately.
+    setParams({}, { replace: true });
+  }, [justConnected, status, attached, available, busy, handleLoadLocations, setParams]);
 
   const handleAttach = () =>
     run('attach', async () => {
@@ -297,20 +376,83 @@ export default function GbpConnect() {
               <Building2 className="h-4 w-4 text-teal-400" />
               Business Profile account
             </h2>
-            <span className="text-xs text-white/40">Signed in as {status.googleEmail || 'unknown'}</span>
+            <div className="flex flex-wrap items-center gap-3">
+              <span className="text-xs text-white/40">
+                Signed in as {status.googleEmail || 'unknown'}
+                {accounts.length > 0 && dataSource === 'database'
+                  ? ` · Showing last synchronized data${
+                      syncedAt ? ` · Last synchronized: ${formatSyncedAt(syncedAt)}` : ''
+                    }`
+                  : dataSource === 'google'
+                    ? ' · just synchronized from Google'
+                    : ''}
+              </span>
+              <button
+                onClick={() =>
+                  run('refresh-accounts', async () => {
+                    invalidateGbpConnection(projectId);
+                    await loadStatus({ force: true, refreshAccounts: true });
+                  })
+                }
+                disabled={busy === 'refresh-accounts'}
+                title="Re-read the account list from Google"
+                className="inline-flex items-center gap-1.5 rounded-lg border border-white/10 px-2.5 py-1 text-xs font-semibold text-white/60 transition hover:bg-white/[0.06] disabled:opacity-50"
+              >
+                {busy === 'refresh-accounts' ? (
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                ) : (
+                  <RefreshCw className="h-3.5 w-3.5" />
+                )}
+                Refresh from Google
+              </button>
+            </div>
           </div>
 
           {accountsError ? (
             <div className="mt-4">
-              <Notice tone="error" title="Could not read the Business Profile accounts">
-                Google rejected the request, so this says nothing about what{' '}
-                <span className="text-white/80">{status.googleEmail}</span> manages. Google returned:
-                <span className="mt-2 block rounded-lg border border-white/10 bg-black/20 p-2 font-mono text-xs text-white/75">
-                  {accountsError}
-                </span>
+              <Notice
+                // A quota refusal with data to show is a warning, not an error:
+                // the page still works, it just cannot refresh.
+                tone={quotaBlocked && accounts.length > 0 ? 'warn' : 'error'}
+                title={
+                  quotaBlocked
+                    ? accounts.length > 0
+                      ? 'Showing last synchronized data'
+                      : 'Google Business Profile is temporarily unavailable'
+                    : 'Could not read the Business Profile accounts'
+                }
+              >
+                {quotaBlocked ? null : (
+                  <>
+                    Google rejected the request, so this says nothing about what{' '}
+                    <span className="text-white/80">{status.googleEmail}</span> manages.{' '}
+                  </>
+                )}
+                {accountsError}
+                {quotaBlocked && syncedAt ? (
+                  <span className="mt-2 block text-xs text-white/45">
+                    Last synchronized: {formatSyncedAt(syncedAt)}
+                  </span>
+                ) : null}
               </Notice>
             </div>
-          ) : noAccounts || accounts.length === 0 ? (
+          ) : null}
+
+          {/* Connected, but Google has never successfully answered for this
+              project — so there is nothing stored to show. Offering the sync
+              as a button keeps the call user-initiated instead of firing one
+              on every page load. */}
+          {!accountsError && neverSynced ? (
+            <div className="mt-4">
+              <Notice tone="info" title="No Business Profile data synchronized yet">
+                SEOX has not yet read the Business Profile accounts for this project. Use{' '}
+                <span className="text-white/80">Refresh from Google</span> above to synchronize —
+                the page does not call Google on its own, to protect the shared API quota.
+              </Notice>
+            </div>
+          ) : null}
+
+          {!accountsError && !neverSynced && (noAccounts || accounts.length === 0) ? (
             <div className="mt-4">
               <Notice tone="warn" title="This Google account manages no Business Profiles">
                 Ask the client to add <span className="text-white/80">{status.googleEmail}</span> as a
@@ -325,7 +467,7 @@ export default function GbpConnect() {
                 </a>
               </Notice>
             </div>
-          ) : (
+          ) : accounts.length > 0 ? (
             <ul className="mt-4 space-y-2">
               {accounts.map((account) => {
                 const isSelected = account.accountId === status.accountId;
@@ -358,7 +500,7 @@ export default function GbpConnect() {
                 );
               })}
             </ul>
-          )}
+          ) : null}
         </div>
       ) : null}
 
@@ -398,7 +540,10 @@ export default function GbpConnect() {
                 ) : (
                   <Building2 className="h-3.5 w-3.5" />
                 )}
-                Browse Google locations
+                {/* Same call either way; the label names what the click is for
+                    at this point in the flow, so switching profile later does
+                    not look like it needs a fresh project. */}
+                {attached.length > 0 ? 'Change Business Profile' : 'Browse Google locations'}
               </button>
             </div>
           </div>
@@ -478,8 +623,11 @@ export default function GbpConnect() {
             <div className="mt-5 rounded-xl border border-white/10 bg-white/[0.02] p-4">
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <p className="text-sm font-semibold">
-                  {available.length} location{available.length === 1 ? '' : 's'} in{' '}
-                  {selectedAccount?.accountName || 'this account'}
+                  {available.length === 0
+                    ? `No Business Profiles in ${selectedAccount?.accountName || 'this account'}`
+                    : `Select a Business Profile — ${available.length} in ${
+                        selectedAccount?.accountName || 'this account'
+                      }`}
                 </p>
                 <button
                   onClick={handleAttach}
@@ -490,6 +638,16 @@ export default function GbpConnect() {
                   Attach {selection.size || ''} selected
                 </button>
               </div>
+
+              {available.length === 0 ? (
+                <p className="mt-3 text-sm leading-relaxed text-white/45">
+                  No accessible Google Business Profile was found for this Google account. The account
+                  is signed in and the permission was granted, but it does not manage any listing in{' '}
+                  {selectedAccount?.accountName || 'this account'} — ask the owner to add{' '}
+                  <span className="text-white/70">{status.googleEmail}</span> as a manager, then use
+                  Change Business Profile to look again.
+                </p>
+              ) : null}
 
               <ul className="mt-3 max-h-80 space-y-1.5 overflow-y-auto no-scrollbar">
                 {available.map((location) => (

@@ -1169,6 +1169,32 @@ export async function upsertAccounts(userId, projectId, connectionId, accounts) 
   return Number(result?.affectedRows || 0);
 }
 
+/**
+ * The accounts last read from Google for this project.
+ *
+ * Read when the live call is refused - a 429 against a Business Profile API
+ * whose quota has not been granted yet returns nothing useful, and repeating it
+ * on every page load spends quota to learn the same thing. The stored copy lets
+ * the user carry on choosing a profile while the API access request is pending.
+ */
+export async function listCachedAccounts(userId, projectId) {
+  const rows = await query(
+    `SELECT account_id, account_name, account_type, role, verification_state, synced_at
+       FROM gbp_accounts
+      WHERE user_id = ? AND project_id = ?
+      ORDER BY account_name`,
+    [userId, projectId]
+  );
+  return rows.map((row) => ({
+    accountId: row.account_id,
+    accountName: row.account_name || row.account_id,
+    accountType: row.account_type || null,
+    verificationState: row.verification_state || null,
+    role: row.role || null,
+    syncedAt: row.synced_at || null,
+  }));
+}
+
 
 // --- Normalised profile children ------------------------------------------
 //

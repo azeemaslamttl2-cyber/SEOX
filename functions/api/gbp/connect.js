@@ -20,10 +20,19 @@ import {
   exchangeAuthorizationCode,
   fetchGoogleUserInfo,
   getOAuthConfig,
-  listAccounts,
   revokeToken,
 } from '../../_lib/gbp-client.js';
+import { getAccounts, getLocations } from '../../_lib/gbp-service.js';
+import { signGbpState, verifyGbpState } from '../../_lib/gbp-state.js';
 import {
+  STAGES,
+  createDiagnostics,
+  failurePayload,
+  markStage,
+  successPayload,
+} from '../../_lib/gbp-diagnostics.js';
+import {
+  attachLocation,
   countLocations,
   deleteConnection,
   getConnection,
@@ -34,11 +43,131 @@ import {
   useDatabase,
 } from '../../_lib/gbp-repository.js';
 
+/**
+ * How far the connection can be carried automatically after consent.
+ *
+ * Returns, never throws: consent has already been spent by the time this runs,
+ * so a Google-side refusal must still leave the connection stored and the page
+ * able to explain itself. `next` is the single fact the browser acts on:
+ *
+ *   'ready'           a profile is attached and its data can be shown
+ *   'select-account'  several accounts; the user picks one
+ *   'select-location' account pinned, several locations; the user picks one
+ *   'no-accounts'     the Google account manages no Business Profile
+ *   'no-locations'    the account exists but holds no listing
+ *   'error'           Google refused; `accountsError` says how
+ */
+async function resolveProfiles(env, { userId, projectId, connection, diagnostics }) {
+  const result = {
+    accounts: [],
+    locations: [],
+    selectedAccountId: null,
+    attachedLocationId: null,
+    failure: null,
+    next: 'select-account',
+  };
+
+  markStage(diagnostics, STAGES.BUSINESS_PROFILE_API);
+
+  try {
+    // `refresh` because this is a brand-new authorisation: the cache may hold
+    // the previous Google identity's accounts, and the whole point of
+    // connecting (or reconnecting) is to read what Google says right now.
+    const { accounts, selectedAccountId, quotaError, likelyUnapprovedQuota, retryAfterSeconds } =
+      await getAccounts(env, { userId, projectId, refresh: true, userInitiated: true });
+    result.accounts = accounts;
+    result.selectedAccountId = selectedAccountId;
+
+    if (quotaError) {
+      const error = new Error(quotaError);
+      error.status = 429;
+      error.code = likelyUnapprovedQuota ? 'QUOTA_NOT_APPROVED' : 'QUOTA_EXCEEDED';
+      error.retryAfterSeconds = retryAfterSeconds || null;
+      result.failure = failurePayload(diagnostics, error);
+      // A cached list still lets the user choose; only an empty one is a wall.
+      result.next = accounts.length ? 'select-account' : 'error';
+      return result;
+    }
+
+    markStage(diagnostics, STAGES.BUSINESS_PROFILE_API, { accounts_fetched: true });
+
+    if (accounts.length === 0) {
+      result.next = 'no-accounts';
+      return result;
+    }
+    if (accounts.length > 1) {
+      result.next = 'select-account';
+      return result;
+    }
+
+    // Exactly one account: pin it and carry on to its locations.
+    await setConnectionAccount(userId, connection.id, accounts[0]);
+    result.selectedAccountId = accounts[0].accountId;
+
+    markStage(diagnostics, STAGES.LOCATIONS);
+    const locations = await getLocations(env, { userId, projectId });
+    result.locations = locations.map(publicLocation);
+    markStage(diagnostics, STAGES.LOCATIONS, { locations_fetched: true });
+
+    if (locations.length === 0) {
+      result.next = 'no-locations';
+      return result;
+    }
+    if (locations.length > 1) {
+      result.next = 'select-location';
+      return result;
+    }
+
+    // Exactly one location: attach it as the primary profile for the project.
+    // This is the write that makes later page loads free - everything the page
+    // renders now lives in gbp_locations.
+    markStage(diagnostics, STAGES.SAVE);
+    const row = await attachLocation(userId, projectId, connection.id, locations[0], {
+      isPrimary: true,
+    });
+    result.attachedLocationId = row?.id || null;
+    markStage(diagnostics, STAGES.SAVE, { profile_saved: true });
+    result.next = 'ready';
+    return result;
+  } catch (error) {
+    // Consent is already spent and the tokens are stored, so this reports how
+    // far the flow got rather than discarding a usable connection.
+    result.failure = failurePayload(diagnostics, error);
+    result.next = result.accounts.length ? 'select-account' : 'error';
+    return result;
+  }
+}
+
+/** Location fields the browser may see. Never the raw Google payload. */
+function publicLocation(location) {
+  return {
+    locationId: location.locationId,
+    placeId: location.placeId,
+    businessName: location.businessName,
+    storeCode: location.storeCode,
+    primaryCategory: location.primaryCategory,
+    address: location.formattedAddress,
+    phone: location.phone,
+    websiteUrl: location.websiteUrl,
+    verificationStatus: location.verificationStatus,
+    openStatus: location.openStatus,
+  };
+}
+
 function connectionSummary(connection, locationCount, sync) {
-  if (!connection) return { connected: false };
+  // Always answered from the database - no Google call is made to render the
+  // page. `dataSource` says so explicitly so the UI can label it.
+  if (!connection) return { connected: false, connectionStatus: 'disconnected', dataSource: 'database' };
   return {
     connected: connection.status === 'connected',
     status: connection.status,
+    // The state machine the UI switches on: connected | needs_reauth |
+    // disconnected. 'connecting' and 'failed' are transient and owned by the
+    // browser during the OAuth round trip, so they never persist here.
+    connectionStatus: connection.status === 'connected' ? 'connected' : connection.status,
+    dataSource: 'database',
+    // Whether the page can render without asking Google for anything.
+    hasSavedProfile: locationCount > 0,
     statusDetail: connection.status_detail || null,
     googleEmail: connection.google_email || null,
     accountId: connection.account_id || null,
@@ -61,7 +190,8 @@ export async function onRequest({ request, env }) {
     const decoded = await verifyAccessToken(request, env);
     const userId = decoded.uid;
     const body = await readJson(request);
-    const { action, projectId, code, redirectUri, returnTo } = body;
+    const { action, code, redirectUri, returnTo, state } = body;
+    let { projectId } = body;
 
     useDatabase(env);
 
@@ -118,7 +248,9 @@ export async function onRequest({ request, env }) {
           authUrl: buildAuthUrl({
             clientId,
             redirectUri,
-            state: { projectId, returnTo: returnTo || '/local-seo/gbp' },
+            // Signed, so the projectId Google echoes back cannot be swapped for
+            // another project's on the return leg.
+            state: await signGbpState({ projectId, returnTo, userId }, env),
           }),
         },
         200,
@@ -127,31 +259,79 @@ export async function onRequest({ request, env }) {
     }
 
     if (action === 'exchange') {
+      // Every early exit below carries the same diagnostics shape as a late
+      // one, so the callback page has one payload to render rather than two.
+      const diagnostics = createDiagnostics();
+
       if (!clientSecret) {
         return jsonResponse(
-          { error: 'Google Client Secret is not configured. Add it in Settings > General.' },
+          failurePayload(diagnostics, {
+            message: 'Google Client Secret is not configured. Add it in Settings > General.',
+            status: 500,
+            code: 'OAUTH_NOT_CONFIGURED',
+          }),
           500,
           headers
         );
       }
       if (!code || !redirectUri) {
-        return jsonResponse({ error: 'Missing authorization code or redirect URI.' }, 400, headers);
+        return jsonResponse(
+          failurePayload(diagnostics, {
+            message: 'Google did not return an authorization code.',
+            status: 400,
+            code: 'NO_AUTH_CODE',
+          }),
+          400,
+          headers
+        );
       }
+      // The signed state is the authority on which project this consent was
+      // for. Taking it from the request body instead would let a crafted
+      // callback URL bind a Google account to a project of the attacker's
+      // choosing - which is the exact attack `state` exists to stop.
+      if (state) {
+        try {
+          const verified = await verifyGbpState(state, env, { userId });
+          if (verified.projectId) projectId = verified.projectId;
+        } catch (error) {
+          return jsonResponse(failurePayload(diagnostics, error), error?.status || 400, headers);
+        }
+      }
+
       // Google requires the redirect URI on the token exchange to match the one
       // the consent was issued for, so the same check guards this leg.
       if (expectedRedirectUri && redirectUri !== expectedRedirectUri) {
         return jsonResponse(
-          {
-            error:
+          failurePayload(diagnostics, {
+            message:
               `Google OAuth redirect URI mismatch. The sign-in returned to ${redirectUri}, but the configured Business Profile redirect is ${expectedRedirectUri}.`,
-          },
+            status: 400,
+            code: 'REDIRECT_URI_MISMATCH',
+          }),
           400,
           headers
         );
       }
       await requireProject(env, userId, projectId);
 
-      const tokens = await exchangeAuthorizationCode(env, { code, redirectUri });
+      // Consent came back with a code, so authentication itself succeeded.
+      markStage(diagnostics, STAGES.TOKEN_EXCHANGE, { authentication: true });
+
+      let tokens;
+      try {
+        tokens = await exchangeAuthorizationCode(env, { code, redirectUri });
+      } catch (error) {
+        // A missing scope is caught inside the exchange, so attribute it to the
+        // permission stage rather than to the token swap.
+        if (error?.code === 'SCOPE_NOT_GRANTED') markStage(diagnostics, STAGES.SCOPE_CHECK);
+        return jsonResponse(failurePayload(diagnostics, error), error?.status || 502, headers);
+      }
+
+      markStage(diagnostics, STAGES.SCOPE_CHECK, {
+        permission_granted: true,
+        token_received: true,
+      });
+
       const userInfo = await fetchGoogleUserInfo(tokens.access_token);
 
       const existing = await getConnection(userId, projectId);
@@ -159,10 +339,12 @@ export async function onRequest({ request, env }) {
         // Without a refresh token the connection dies in an hour and every
         // background sync fails. Better to fail loudly here.
         return jsonResponse(
-          {
-            error:
+          failurePayload(diagnostics, {
+            message:
               'Google did not return a refresh token. Remove SEOX from your Google account permissions (myaccount.google.com/permissions) and connect again.',
-          },
+            status: 400,
+            code: 'NO_REFRESH_TOKEN',
+          }),
           400,
           headers
         );
@@ -183,35 +365,53 @@ export async function onRequest({ request, env }) {
         authorizedByEmail: userInfo.email || null,
       });
 
-      let accounts = [];
-      let accountsError = null;
-      try {
-        accounts = await listAccounts(env, connection);
-        if (accounts.length === 1) {
-          await setConnectionAccount(userId, connection.id, accounts[0]);
-        }
-      } catch (error) {
-        accountsError = error?.message || 'Could not read Business Profile accounts.';
-      }
+      // Read what this identity manages, then take the flow as far as it can go
+      // without guessing:
+      //
+      //   one account   -> pin it, and look at its locations
+      //   one location  -> attach it as the project's primary profile
+      //   several       -> stop, and let the page present the choice
+      //   none          -> say so plainly; it is a permissions fact, not a fault
+      //
+      // Each step is one Google call and only runs when the previous one left
+      // exactly one candidate, so a connect never fans out across the quota.
+      const outcome = await resolveProfiles(env, { userId, projectId, connection, diagnostics });
 
       await logSync({
         userId,
         projectId,
         syncType: 'connect',
-        status: accountsError ? 'partial' : 'success',
-        message: accountsError,
-        itemsSynced: accounts.length,
+        status: outcome.failure ? 'partial' : 'success',
+        message: outcome.failure?.message || null,
+        itemsSynced: outcome.accounts.length,
       });
+
+      // The connection is stored and the tokens are valid either way, so this
+      // is always a 200: `success` says whether the profiles came back, and the
+      // diagnostics say which stage stopped if they did not.
+      const base = outcome.failure
+        ? { ...outcome.failure, connected: true }
+        : successPayload(diagnostics, {
+            connected: true,
+            profiles_found: outcome.accounts.length > 0,
+          });
 
       return jsonResponse(
         {
-          success: true,
-          connected: true,
+          ...base,
           googleEmail: userInfo.email || null,
-          accounts,
-          accountsError,
+          accounts: outcome.accounts,
+          // Kept for the existing callers that read these two names.
+          accountsError: outcome.failure?.message || null,
+          errorCode: outcome.failure?.error_type || null,
+          selectedAccountId: outcome.selectedAccountId,
+          locations: outcome.locations,
+          attachedLocationId: outcome.attachedLocationId,
+          // What the browser should do next, so the callback page does not have
+          // to re-derive it from array lengths.
+          next: outcome.next,
           // Zero accounts is a permissions problem on the Google side, not ours.
-          needsAccountAccess: !accountsError && accounts.length === 0,
+          needsAccountAccess: !outcome.failure && outcome.accounts.length === 0,
         },
         200,
         headers

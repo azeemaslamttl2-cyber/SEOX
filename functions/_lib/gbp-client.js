@@ -14,6 +14,7 @@ import { decryptSecret, encryptSecret } from './gbp-crypto.js';
 import { markConnectionStatus, recordApiUsage, updateConnectionTokens } from './gbp-repository.js';
 import { getAdminSettings } from './app-settings.js';
 import { googleRedirectUri } from './google-redirects.js';
+import { causeCode, googleFetch } from './google-fetch.js';
 
 const TOKEN_ENDPOINT = 'https://oauth2.googleapis.com/token';
 const REVOKE_ENDPOINT = 'https://oauth2.googleapis.com/revoke';
@@ -97,7 +98,14 @@ export async function getOAuthConfig(env, request = null) {
   };
 }
 
+/**
+ * A state string is passed straight through - callers sign it (see
+ * `_lib/gbp-state.js`) so the value Google echoes back can be trusted. The
+ * object form is the unsigned legacy encoding, kept only so direct callers and
+ * tests that build a URL without a signer keep working.
+ */
 export function encodeState(payload) {
+  if (typeof payload === 'string') return payload;
   const json = JSON.stringify(payload || {});
   return typeof btoa === 'function' ? btoa(json) : Buffer.from(json, 'utf8').toString('base64');
 }
@@ -123,17 +131,23 @@ export function buildAuthUrl({ clientId, redirectUri, state }) {
 
 export async function exchangeAuthorizationCode(env, { code, redirectUri }) {
   const { clientId, clientSecret } = await getOAuthConfig(env);
-  const response = await fetch(TOKEN_ENDPOINT, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: new URLSearchParams({
-      code,
-      client_id: clientId,
-      client_secret: clientSecret,
-      redirect_uri: redirectUri,
-      grant_type: 'authorization_code',
-    }),
-  });
+  // Retried on a connect failure: the code is single use, so a dropped packet
+  // here costs the user the entire consent round trip. See google-fetch.js.
+  const response = await googleFetch(
+    TOKEN_ENDPOINT,
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({
+        code,
+        client_id: clientId,
+        client_secret: clientSecret,
+        redirect_uri: redirectUri,
+        grant_type: 'authorization_code',
+      }),
+    },
+    { label: 'Google token exchange' }
+  );
 
   const data = await response.json().catch(() => ({}));
   if (!response.ok || !data.access_token) {
@@ -153,22 +167,40 @@ export async function exchangeAuthorizationCode(env, { code, redirectUri }) {
   return data;
 }
 
+/**
+ * The Google identity behind the token, for display only.
+ *
+ * Never throws. The email is a label on the connection card, not something the
+ * connection depends on, and it used to be able to fail the whole exchange -
+ * after the single-use authorization code had already been spent.
+ */
 export async function fetchGoogleUserInfo(accessToken) {
-  const response = await fetch(USERINFO_ENDPOINT, {
-    headers: { Authorization: `Bearer ${accessToken}` },
-  });
-  if (!response.ok) return {};
-  return response.json().catch(() => ({}));
+  try {
+    const response = await googleFetch(
+      USERINFO_ENDPOINT,
+      { headers: { Authorization: `Bearer ${accessToken}` } },
+      { label: 'Google userinfo', retries: 1 }
+    );
+    if (!response.ok) return {};
+    return await response.json().catch(() => ({}));
+  } catch (error) {
+    console.warn('Google userinfo unavailable; connecting without the account email.', causeCode(error));
+    return {};
+  }
 }
 
 export async function revokeToken(token) {
   if (!token) return;
   try {
-    await fetch(REVOKE_ENDPOINT, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: new URLSearchParams({ token }),
-    });
+    await googleFetch(
+      REVOKE_ENDPOINT,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: new URLSearchParams({ token }),
+      },
+      { label: 'Google token revoke', retries: 1 }
+    );
   } catch {
     // Local disconnect must still succeed when Google is unreachable.
   }
@@ -196,16 +228,24 @@ export async function resolveAccessToken(env, connection) {
   }
 
   const { clientId, clientSecret } = await getOAuthConfig(env);
-  const response = await fetch(TOKEN_ENDPOINT, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: new URLSearchParams({
-      refresh_token: refreshToken,
-      client_id: clientId,
-      client_secret: clientSecret,
-      grant_type: 'refresh_token',
-    }),
-  });
+  // A refresh that fails on the network is not a revoked grant, so it must not
+  // reach the markConnectionStatus('needs_reauth') branch below - that would
+  // push a perfectly valid connection into a reconnect loop over a dropped
+  // packet. googleFetch retries, then throws a NETWORK error that propagates.
+  const response = await googleFetch(
+    TOKEN_ENDPOINT,
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({
+        refresh_token: refreshToken,
+        client_id: clientId,
+        client_secret: clientSecret,
+        grant_type: 'refresh_token',
+      }),
+    },
+    { label: 'Google token refresh' }
+  );
 
   const data = await response.json().catch(() => ({}));
   if (!response.ok || !data.access_token) {
@@ -252,14 +292,18 @@ export async function gbpFetch(env, connection, { api, path, query: search, meth
   const startedAt = Date.now();
   let response;
   try {
-    response = await fetch(url.toString(), {
-      method,
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-        ...(body ? { 'Content-Type': 'application/json' } : {}),
+    response = await googleFetch(
+      url.toString(),
+      {
+        method,
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          ...(body ? { 'Content-Type': 'application/json' } : {}),
+        },
+        ...(body ? { body: JSON.stringify(body) } : {}),
       },
-      ...(body ? { body: JSON.stringify(body) } : {}),
-    });
+      { label: `GBP ${api}${path}` }
+    );
   } catch (cause) {
     await recordApiUsage({
       userId: connection.user_id,
@@ -270,7 +314,7 @@ export async function gbpFetch(env, connection, { api, path, query: search, meth
       errorCode: 'NETWORK',
       durationMs: Date.now() - startedAt,
     });
-    throw apiError(`Could not reach Google (${cause?.message || 'network error'}).`, 502, 'NETWORK');
+    throw apiError(cause?.message || 'Could not reach Google.', 502, 'NETWORK');
   }
 
   const durationMs = Date.now() - startedAt;
@@ -296,8 +340,16 @@ export async function gbpFetch(env, connection, { api, path, query: search, meth
     throw apiError('Business Profile authorisation is no longer valid. Reconnect to continue.', 401, 'NEEDS_REAUTH');
   }
   if (response.status === 403) {
-    // Either the Google account is not a manager of this listing, or the API is
-    // not enabled / has zero quota on the Cloud project.
+    // Two very different causes arrive as 403, and the operator response
+    // differs: enabling an API is a console click, being added as a manager of
+    // a listing is a request to the client.
+    if (/has not been used in project|is disabled/i.test(detail)) {
+      throw apiError(
+        `The ${api} Google API is not enabled on the Cloud project. ${detail}`,
+        403,
+        'SERVICE_DISABLED'
+      );
+    }
     throw apiError(detail, 403, googleError?.status || 'PERMISSION_DENIED');
   }
   if (response.status === 429) {
@@ -307,11 +359,18 @@ export async function gbpFetch(env, connection, { api, path, query: search, meth
     // generic 'try later' wording sent people off to wait for a window that
     // never opens, so Google's own detail is kept - it names the quota metric
     // and the limit, which is what distinguishes the two cases.
-    throw apiError(
+    const error = apiError(
       `Google Business Profile API quota exhausted. Requests are throttled until the quota window resets. Google returned: ${detail}`,
       429,
       'QUOTA_EXCEEDED'
     );
+    const retryAfter = Number(response.headers.get('retry-after'));
+    error.retryAfterSeconds = Number.isFinite(retryAfter) && retryAfter > 0 ? retryAfter : 60;
+    // A per-minute limit that is exhausted on the *first* call of the day is a
+    // quota of zero, which is what Google applies until the Business Profile
+    // API access request is approved. Waiting does not clear that one.
+    error.likelyUnapprovedQuota = /per minute|Requests per minute/i.test(detail);
+    throw error;
   }
   throw apiError(detail, response.status >= 500 ? 502 : response.status, googleError?.status || 'GBP_ERROR');
 }
