@@ -27,6 +27,7 @@ const cols = [
    placeholder link until its page exists. */
 const routes = {
   Privacy: "/privacy",
+  Terms: "/terms",
 };
 
 export default function Footer() {
@@ -43,18 +44,16 @@ export default function Footer() {
   };
 
   return (
-    <footer className="relative mt-12 border-t border-white/10 bg-ink-800/40">
-      <div className="absolute inset-x-0 -top-px h-px bg-gradient-to-r from-transparent via-brand-500/40 to-transparent" />
+    <footer className="landing-footer relative mt-12">
 
       <div className="container-px py-16">
         <div className="grid gap-10 lg:grid-cols-[1.4fr_1fr_1fr_1fr_1fr]">
           {/* Brand */}
           <div>
             <a href="#" className="flex items-center gap-2.5">
-              <Logo className="h-9 w-auto" />
-              <span className="font-display text-xl font-bold tracking-tight">PGC</span>
+              <Logo className="w-28 h-auto block" />
             </a>
-            <p className="mt-4 max-w-xs text-sm text-white/55">
+            <p className="landing-footer-blurb mt-4 max-w-xs">
               The 2026 Intelligence Framework. 60+ semantic SEO tools engineered to make your team
               outpace the algorithm.
             </p>
@@ -62,7 +61,7 @@ export default function Footer() {
             {/* Newsletter */}
             <form
               onSubmit={handleSubscribe}
-              className="mt-6 flex w-full max-w-sm overflow-hidden rounded-full border border-white/10 bg-white/5 p-1 focus-within:border-brand-500/50"
+              className="landing-newsletter mt-6"
             >
               <div className="flex flex-1 items-center gap-2 px-4">
                 <Mail className="h-4 w-4 text-white/40" />
@@ -72,12 +71,12 @@ export default function Footer() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder={subscribed ? "Subscribed!" : "Get weekly SEO insights"}
-                  className="w-full bg-transparent text-sm text-white placeholder:text-white/40 focus:outline-none"
+                  className="landing-newsletter-input"
                 />
               </div>
               <button
                 type="submit"
-                className="flex items-center gap-1.5 rounded-full bg-gradient-to-r from-brand-500 to-brand-600 px-4 py-2 text-xs font-semibold text-white shadow-brand-glow transition hover:scale-[1.02]"
+                className="ui-button ui-button-primary landing-newsletter-submit"
               >
                 {subscribed ? (
                   <>
@@ -95,7 +94,7 @@ export default function Footer() {
                   key={i}
                   href="#"
                   aria-label="social"
-                  className="flex h-9 w-9 items-center justify-center rounded-full border border-white/10 bg-white/5 text-white/60 transition hover:border-brand-500/40 hover:bg-brand-500/10 hover:text-brand-300"
+                  className="landing-social"
                 >
                   <Icon className="h-4 w-4" />
                 </a>
@@ -105,21 +104,21 @@ export default function Footer() {
 
           {cols.map((c) => (
             <div key={c.title}>
-              <h4 className="text-sm font-semibold text-white">{c.title}</h4>
+              <h4 className="landing-footer-heading">{c.title}</h4>
               <ul className="mt-4 space-y-2.5">
                 {c.links.map((l) => (
                   <li key={l}>
                     {routes[l] ? (
                       <Link
                         to={routes[l]}
-                        className="text-sm text-white/55 transition-colors hover:text-brand-300"
+                        className="landing-footer-link"
                       >
                         {l}
                       </Link>
                     ) : (
                       <a
                         href="#"
-                        className="text-sm text-white/55 transition-colors hover:text-brand-300"
+                        className="landing-footer-link"
                       >
                         {l}
                       </a>
@@ -131,11 +130,11 @@ export default function Footer() {
           ))}
         </div>
 
-        <div className="mt-12 flex flex-col items-center justify-between gap-4 border-t border-white/10 pt-6 sm:flex-row">
-          <p className="text-xs text-white/40">
+        <div className="landing-footer-bottom mt-12 flex flex-col items-center justify-between gap-4 pt-6 sm:flex-row">
+          <p className="landing-footer-copy">
             © {new Date().getFullYear()} PGC. Engineered for AI-era search.
           </p>
-          <div className="flex items-center gap-2 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3 py-1 text-[11px] font-semibold text-emerald-400">
+          <div className="landing-status">
             <span className="relative flex h-2 w-2">
               <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
               <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-400" />

@@ -14,12 +14,10 @@ import { track } from "../lib/analytics.js";
 
 export default function Hero() {
   return (
-    <section className="relative overflow-hidden pt-14 pb-20 sm:pt-20">
+    <section className="landing-section is-hero relative overflow-hidden pt-14 pb-20 sm:pt-20">
       {/* Animated orbs */}
       <div className="pointer-events-none absolute inset-0 -z-10">
-        <div className="grid-bg absolute inset-0 opacity-50" />
-        <div className="absolute left-[10%] top-20 h-72 w-72 animate-float rounded-full bg-brand-500/20 blur-3xl" />
-        <div className="absolute right-[10%] top-40 h-72 w-72 animate-float-slow rounded-full bg-amber-400/15 blur-3xl" />
+        <div className="grid-bg absolute inset-0 opacity-60" />
       </div>
 
       <div className="container-px text-center">
@@ -27,12 +25,9 @@ export default function Hero() {
           initial={{ opacity: 0, y: 18 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
-          className="mx-auto mb-8 inline-flex items-center gap-2 rounded-full border border-brand-500/30 bg-brand-500/10 px-4 py-1.5 text-xs font-semibold tracking-wider uppercase text-brand-300 shadow-brand-glow"
+          className="landing-eyebrow mx-auto mb-8"
         >
-          <span className="relative flex h-2 w-2">
-            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-brand-400 opacity-75" />
-            <span className="relative inline-flex h-2 w-2 rounded-full bg-brand-400" />
-          </span>
+          <span className="landing-eyebrow-dot" />
           The 2026 Intelligence Framework Is Live
         </motion.div>
 
@@ -40,18 +35,18 @@ export default function Hero() {
           initial={{ opacity: 0, y: 22 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.7, delay: 0.05 }}
-          className="font-display text-5xl font-bold leading-[1.05] tracking-tight sm:text-6xl md:text-7xl lg:text-[88px]"
+          className="landing-hero-title"
         >
           Master the AI Search
           <br />
-          with <span className="gradient-text">Semantic Intelligence</span>
+          with <span className="landing-accent">Semantic Intelligence</span>
         </motion.h1>
 
         <motion.p
           initial={{ opacity: 0, y: 22 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.7, delay: 0.15 }}
-          className="mx-auto mt-7 max-w-2xl text-base text-white/65 sm:text-lg"
+          className="landing-hero-sub mx-auto mt-7 max-w-2xl"
         >
           60+ advanced SEO tools engineered into a single architectural framework.
           Leverage deep NLP models and entity extraction to outpace the competition.
@@ -66,7 +61,7 @@ export default function Hero() {
           <Link
             to="/tech-seo/eeat"
             onClick={() => track("cta_click", { location: "hero", action: "start_free_audit" })}
-            className="btn-primary group"
+            className="ui-button ui-button-primary landing-cta group"
           >
             <Sparkles className="h-4 w-4" />
             Start Your Free Audit
@@ -75,7 +70,7 @@ export default function Hero() {
           <a
             href="#features"
             onClick={() => track("cta_click", { location: "hero", action: "watch_demo" })}
-            className="btn-ghost"
+            className="ui-button ui-button-secondary landing-cta"
           >
             <PlayCircle className="h-4 w-4" />
             Watch Demo
@@ -86,16 +81,16 @@ export default function Hero() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.7, delay: 0.4 }}
-          className="mt-7 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-xs text-white/50"
+          className="landing-trust mt-7 flex flex-wrap items-center justify-center gap-x-6 gap-y-2"
         >
           <span className="flex items-center gap-1.5">
-            <ShieldCheck className="h-4 w-4 text-brand-400" /> No credit card required
+            <ShieldCheck className="h-4 w-4" /> No credit card required
           </span>
           <span className="flex items-center gap-1.5">
-            <Zap className="h-4 w-4 text-brand-400" /> 14-day free trial
+            <Zap className="h-4 w-4" /> 14-day free trial
           </span>
           <span className="flex items-center gap-1.5">
-            <ShieldCheck className="h-4 w-4 text-brand-400" /> Cancel anytime
+            <ShieldCheck className="h-4 w-4" /> Cancel anytime
           </span>
         </motion.div>
 
@@ -106,71 +101,65 @@ export default function Hero() {
           transition={{ duration: 0.9, delay: 0.4 }}
           className="relative mx-auto mt-16 max-w-5xl"
         >
-          <div className="absolute -inset-4 rounded-[28px] bg-gradient-to-r from-brand-500/40 via-amber-500/20 to-brand-600/40 opacity-60 blur-3xl" />
-          <div className="relative overflow-hidden rounded-2xl border border-white/10 bg-ink-800/80 backdrop-blur-2xl">
+          <div className="landing-preview relative overflow-hidden">
             {/* Window chrome */}
-            <div className="flex items-center justify-between border-b border-white/10 bg-ink-700/60 px-4 py-3">
+            <div className="landing-preview-bar flex items-center justify-between px-4 py-3">
               <div className="flex items-center gap-2">
-                <span className="h-3 w-3 rounded-full bg-red-500/80" />
-                <span className="h-3 w-3 rounded-full bg-yellow-500/80" />
-                <span className="h-3 w-3 rounded-full bg-green-500/80" />
+                <span className="landing-dot landing-dot-red" />
+                <span className="landing-dot landing-dot-amber" />
+                <span className="landing-dot landing-dot-green" />
               </div>
-              <div className="hidden items-center gap-2 rounded-full bg-ink-900/60 px-4 py-1.5 text-xs text-white/50 sm:flex">
+              <div className="landing-preview-url hidden items-center gap-2 sm:flex">
                 <Search className="h-3.5 w-3.5" /> app.pgc.edu/dashboard
               </div>
-              <span className="flex items-center gap-1.5 rounded-full bg-emerald-500/10 px-2.5 py-1 text-[10px] font-semibold text-emerald-400">
-                <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" /> LIVE
+              <span className="landing-live">
+                <span className="landing-live-dot" /> LIVE
               </span>
             </div>
             {/* Body */}
             <div className="grid grid-cols-1 gap-4 p-5 sm:grid-cols-3 sm:p-6">
-              <div className="rounded-xl border border-white/10 bg-white/[0.02] p-4">
-                <div className="flex items-center justify-between text-xs text-white/50">
+              <div className="landing-tile p-4">
+                <div className="landing-tile-head flex items-center justify-between">
                   <span>Organic Traffic</span>
-                  <TrendingUp className="h-3.5 w-3.5 text-brand-400" />
+                  <TrendingUp className="h-3.5 w-3.5" />
                 </div>
-                <div className="mt-2 text-2xl font-bold">
-                  248K <span className="text-xs font-medium text-emerald-400">+34%</span>
+                <div className="landing-tile-value mt-2">
+                  248K <span className="landing-delta-up">+34%</span>
                 </div>
                 <div className="mt-3 h-12 w-full overflow-hidden">
                   <Sparkline />
                 </div>
               </div>
-              <div className="rounded-xl border border-brand-500/30 bg-gradient-to-b from-brand-500/10 to-transparent p-4">
-                <div className="flex items-center justify-between text-xs text-white/50">
+              <div className="landing-tile is-accent p-4">
+                <div className="landing-tile-head flex items-center justify-between">
                   <span>SEO Health Score</span>
-                  <Bot className="h-3.5 w-3.5 text-brand-400" />
+                  <Bot className="h-3.5 w-3.5" />
                 </div>
-                <div className="mt-2 flex items-end gap-1 text-3xl font-bold text-brand-300">
-                  92<span className="text-base text-white/40">/100</span>
+                <div className="landing-tile-value is-brand mt-2 flex items-end gap-1">
+                  92<span className="landing-tile-unit">/100</span>
                 </div>
-                <div className="mt-3 h-2 w-full overflow-hidden rounded-full bg-white/10">
-                  <div
-                    className="h-full rounded-full bg-gradient-to-r from-brand-500 to-amber-400"
-                    style={{ width: "92%" }}
-                  />
+                <div className="landing-meter mt-3">
+                  <div className="landing-meter-fill" style={{ width: "92%" }} />
                 </div>
               </div>
-              <div className="rounded-xl border border-white/10 bg-white/[0.02] p-4">
-                <div className="flex items-center justify-between text-xs text-white/50">
+              <div className="landing-tile p-4">
+                <div className="landing-tile-head flex items-center justify-between">
                   <span>Tracked Keywords</span>
-                  <Search className="h-3.5 w-3.5 text-brand-400" />
+                  <Search className="h-3.5 w-3.5" />
                 </div>
-                <div className="mt-2 text-2xl font-bold">12,840</div>
-                <div className="mt-3 flex items-center gap-1 text-xs">
-                  <span className="rounded-md bg-emerald-500/10 px-2 py-0.5 text-emerald-400">
-                    ↑ 412
-                  </span>
-                  <span className="rounded-md bg-rose-500/10 px-2 py-0.5 text-rose-400">↓ 38</span>
-                  <span className="text-white/40">vs last week</span>
+                <div className="landing-tile-value mt-2">12,840</div>
+                <div className="mt-3 flex items-center gap-1">
+                  <span className="landing-pill is-up">↑ 412</span>
+                  <span className="landing-pill is-down">↓ 38</span>
+                  <span className="landing-pill-note">vs last week</span>
                 </div>
               </div>
             </div>
             {/* Bottom row */}
-            <div className="border-t border-white/10 bg-white/[0.01] p-5 sm:p-6">
-              <div className="mb-3 flex items-center justify-between text-xs text-white/50">
+            <div className="landing-preview-foot p-5 sm:p-6">
+              <div className="landing-tile-head mb-3 flex items-center justify-between">
                 <span>Top Performing Entities</span>
-                <span className="text-brand-400">View all →</span>
+                <span className="landing-foot-link">View all →</span>
               </div>
               <EntityRow name="machine learning" score={94} delta="+12" />
               <EntityRow name="semantic search" score={88} delta="+9" />
@@ -209,20 +198,18 @@ function Sparkline() {
 function EntityRow({ name, score, delta }) {
   return (
     <div className="flex items-center gap-3 py-2">
-      <span className="w-32 truncate text-sm font-medium text-white/80 sm:w-48">{name}</span>
-      <div className="relative h-2 flex-1 overflow-hidden rounded-full bg-white/5">
+      <span className="landing-entity-name w-32 truncate sm:w-48">{name}</span>
+      <div className="landing-meter relative flex-1">
         <motion.div
           initial={{ width: 0 }}
           whileInView={{ width: `${score}%` }}
           viewport={{ once: true }}
           transition={{ duration: 1.4, ease: "easeOut" }}
-          className="h-full rounded-full bg-gradient-to-r from-brand-500 to-amber-400"
+          className="landing-meter-fill"
         />
       </div>
-      <span className="w-10 text-right text-sm font-bold text-white/90">{score}</span>
-      <span className="w-12 rounded-md bg-emerald-500/10 px-2 py-0.5 text-right text-xs text-emerald-400">
-        {delta}
-      </span>
+      <span className="landing-entity-score w-10 text-right">{score}</span>
+      <span className="landing-pill is-up w-12 text-right">{delta}</span>
     </div>
   );
 }

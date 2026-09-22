@@ -1800,106 +1800,688 @@ button [class*="text-stone"] {
   background: var(--border) !important;
 }
 
+/* ==================================================================
+   AUTHENTICATION  (/login; /register shares the shell)
+
+   This was previously a stack of !important corrections layered over
+   dark-theme markup and keyed on structural selectors such as
+   `.login-form > button:first-of-type`. The markup now carries real
+   class names, so these are plain component rules built on the same
+   tokens the dashboard uses: --surface cards on --bg-app, one hairline
+   --border, --radius-md controls at --control-h-lg, and brand red kept
+   for the single primary action.
+
+   Layout, element order and behaviour are unchanged — presentation only.
+
+   The button rules below carry !important and a --btn-fg entry because
+   the application-wide button colour system further down this file
+   paints any button without a recognised variant class brand red with
+   !important. Named component rules opt out the same way everywhere
+   else in this file (see .speed-retest-button).
+   ================================================================== */
+
+/* --- Shell ------------------------------------------------------- */
 .auth-shell {
-  background: var(--surface-sunken) !important;
-  color: var(--text-primary) !important;
+  background: var(--bg-app);
+  color: var(--text-primary);
 }
-.auth-shell > div:first-child {
-  opacity: 0.45;
+
+/* Atmosphere: two very low-opacity washes and a faint grid — the same
+   restraint as the dashboard header, not drifting blurred blobs. */
+/* The atmosphere sits above the shell's own background fill and below
+   the content. It was authored at -z-10, which paints a child behind its
+   parent's background box, so none of it was ever visible. */
+.auth-atmosphere {
+  z-index: 0;
+  opacity: 0.85;
 }
-.auth-shell header > a,
-.auth-shell header > a span,
-.auth-shell header > a + a {
-  color: var(--brand-blue) !important;
+.auth-shell > header,
+.auth-shell > main {
+  position: relative;
+  z-index: 1;
 }
-.auth-shell header > a + a:hover {
-  color: var(--brand-red) !important;
+.auth-wash {
+  position: absolute;
+  border-radius: var(--radius-pill);
+  filter: blur(120px);
 }
-.login-form h1 {
-  color: var(--text-primary) !important;
+.auth-wash-brand {
+  top: -18rem;
+  left: 18%;
+  height: 34rem;
+  width: 34rem;
+  background: rgba(223, 60, 39, 0.07);
 }
-.login-form > p,
-.login-form label,
-.login-form .text-white\/40,
-.login-form .text-white\/30 {
-  color: var(--text-secondary) !important;
+.auth-wash-navy {
+  right: -10rem;
+  bottom: -14rem;
+  height: 30rem;
+  width: 30rem;
+  background: rgba(45, 43, 111, 0.06);
 }
-.login-form a,
-.login-form button.text-brand-300,
-.login-form button[class*="text-brand"] {
-  color: #c2410c !important;
+.auth-grid {
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(45, 43, 111, 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(45, 43, 111, 0.05) 1px, transparent 1px);
+  background-size: 56px 56px;
+  -webkit-mask-image: radial-gradient(ellipse 80% 60% at 50% 0%, #000 0%, transparent 78%);
+  mask-image: radial-gradient(ellipse 80% 60% at 50% 0%, #000 0%, transparent 78%);
 }
-.login-form > button:first-of-type {
-  background: #ffffff !important;
-  border-color: var(--border) !important;
-  color: var(--text-secondary) !important;
-  box-shadow: 0 4px 12px rgba(45, 43, 111, 0.05);
+
+.auth-shell header a {
+  color: var(--brand-blue);
 }
-.login-form > button:first-of-type:hover:not(:disabled) {
-  background: var(--surface-sunken) !important;
-  border-color: var(--border-strong) !important;
+.auth-back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border-radius: var(--radius-sm);
+  color: var(--text-secondary);
+  font-size: 13px;
+  font-weight: 600;
+  transition: color var(--dur) ease;
 }
-.login-form form input {
-  color: var(--text-primary) !important;
+.auth-back-link:hover {
+  color: var(--brand-red);
 }
-.login-form form label > div {
-  background: #ffffff !important;
-  border-color: var(--border-strong) !important;
+
+/* --- Form card --------------------------------------------------- */
+.auth-card {
+  padding: 32px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-2xl);
+  background: var(--surface);
+  box-shadow: var(--shadow-lg);
 }
-.login-form form label > div > svg {
-  color: var(--text-secondary) !important;
+
+.auth-title {
+  color: var(--brand-blue);
+  font-family: "Galano Grotesque", "Gotham", "Space Grotesk", "Inter", ui-sans-serif, sans-serif;
+  font-size: 1.625rem;
+  font-weight: 700;
+  letter-spacing: -0.022em;
+  line-height: 2.125rem;
 }
-.login-form form input::placeholder {
-  color: var(--text-disabled) !important;
+.auth-subtitle {
+  margin-top: 6px;
+  color: var(--text-secondary);
+  font-size: 13px;
 }
-.login-form form label button {
+
+.auth-link {
+  border-radius: var(--radius-xs);
+  color: var(--brand-red-hover);
+  font-weight: 600;
+  transition: color var(--dur) ease;
+}
+.auth-link:hover {
+  color: var(--brand-red-active);
+  text-decoration: underline;
+}
+/* "Forgot password?" is a <button>; keep it reading as a link. */
+button.auth-link {
+  --btn-fg: var(--brand-red-hover);
+  padding: 0;
+  min-height: 0;
   background: transparent !important;
   border-color: transparent !important;
-  color: var(--text-secondary) !important;
+  color: var(--brand-red-hover) !important;
+  box-shadow: none !important;
 }
-.login-form form button[type="submit"] {
-  background: var(--brand-red) !important;
-  border-color: var(--brand-red) !important;
-  color: #ffffff !important;
+button.auth-link:hover:not(:disabled) {
+  background: transparent !important;
+  color: var(--brand-red-active) !important;
+  text-decoration: underline;
 }
-.login-form form button[type="submit"]:hover:not(:disabled) {
-  background: var(--brand-red-hover) !important;
+
+/* --- Google / social --------------------------------------------- */
+.auth-social-button {
+  --btn-fg: var(--text-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  min-height: var(--control-h-lg);
+  margin-top: 24px;
+  padding: 0 14px;
+  border: 1px solid var(--border) !important;
+  border-radius: var(--radius-md);
+  background: var(--surface) !important;
+  color: var(--text-primary) !important;
+  font-size: 13px;
+  font-weight: 600;
+  box-shadow: var(--shadow-xs);
 }
-.auth-brand-panel {
-  background: linear-gradient(145deg, var(--surface-muted) 0%, #ffffff 52%, #fff7ed 100%) !important;
-  border-color: var(--border) !important;
-  box-shadow: 0 18px 45px rgba(45, 43, 111, 0.08);
+.auth-social-button:hover:not(:disabled) {
+  background: var(--surface-sunken) !important;
+  border-color: var(--border-strong) !important;
+  color: var(--text-primary) !important;
+  box-shadow: var(--shadow-sm);
 }
-.auth-brand-panel h2 {
+.auth-social-button:active:not(:disabled) {
+  background: var(--surface-muted) !important;
+  box-shadow: none;
+}
+
+/* --- Divider ------------------------------------------------------ */
+.auth-divider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 20px 0;
+  color: var(--text-secondary);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.auth-divider-rule {
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+}
+
+/* --- Fields ------------------------------------------------------- */
+.auth-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.auth-field {
+  display: block;
+}
+.auth-field-label {
+  display: block;
+  margin-bottom: 6px;
+  color: var(--text-secondary);
+  font-size: 13px;
+  font-weight: 500;
+}
+.auth-control {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: var(--control-h-lg);
+  padding: 0 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  transition: border-color var(--dur) ease, box-shadow var(--dur) ease;
+}
+.auth-control:hover {
+  border-color: var(--border-strong);
+}
+.auth-control:focus-within {
+  border-color: var(--brand-red);
+  box-shadow: 0 0 0 3px rgba(223, 60, 39, 0.12);
+}
+.auth-control-icon {
+  color: var(--text-disabled);
+  transition: color var(--dur) ease;
+}
+.auth-control:focus-within .auth-control-icon {
+  color: var(--brand-red);
+}
+.auth-input {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  background: transparent;
+  color: var(--text-primary);
+  font-size: 14px;
+}
+.auth-input:focus,
+.auth-input:focus-visible {
+  outline: none;
+}
+.auth-input::placeholder {
+  color: var(--text-disabled);
+}
+/* Edge draws its own reveal/clear affordances inside a focused password
+   field, which lands a second eye beside the one this form provides. */
+.auth-input::-ms-reveal,
+.auth-input::-ms-clear {
+  display: none;
+}
+/* The wrapper carries the invalid and disabled states so the border and
+   ring stay on the box the user sees, not on the borderless input. */
+.auth-control:has(.auth-input[aria-invalid="true"]) {
+  border-color: var(--error);
+}
+.auth-control:has(.auth-input[aria-invalid="true"]):focus-within {
+  box-shadow: 0 0 0 3px rgba(217, 45, 32, 0.12);
+}
+.auth-control:has(.auth-input:disabled) {
+  background: var(--surface-muted);
+  border-color: var(--border);
+}
+.auth-input:disabled {
+  background: transparent !important;
+}
+
+.auth-control-slot {
+  display: flex;
+  align-items: center;
+}
+.auth-reveal {
+  --btn-fg: var(--text-muted);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 28px;
+  width: 28px;
+  min-height: 0;
+  padding: 0;
+  border-radius: var(--radius-sm);
+  background: transparent !important;
+  border-color: transparent !important;
+  color: var(--text-muted) !important;
+  box-shadow: none !important;
+}
+.auth-reveal:hover:not(:disabled) {
+  background: var(--surface-muted) !important;
+  border-color: transparent !important;
   color: var(--text-primary) !important;
 }
-.auth-brand-panel p,
-.auth-brand-panel [class*="text-white/"] {
-  color: var(--text-secondary) !important;
+
+/* --- Remember / forgot row ---------------------------------------- */
+.auth-meta-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: -2px;
+  font-size: 13px;
 }
-.auth-brand-panel .gradient-text {
-  color: #c2410c !important;
-  background-image: none !important;
+.auth-remember {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  color: var(--text-secondary);
+  font-size: 13px;
+  font-weight: 500;
 }
-.auth-brand-panel > div > span {
-  background: #fff7ed !important;
-  border-color: #fed7aa !important;
-  color: #c2410c !important;
+/* The product-wide coarse-pointer rule gives every input a 36px minimum,
+   which stretches a checkbox into a rectangle. The label around it is
+   what gets padded out to a comfortable target instead. */
+.auth-checkbox {
+  height: 16px;
+  width: 16px;
+  min-height: 16px;
+  flex-shrink: 0;
+  cursor: pointer;
+  accent-color: var(--brand-red);
 }
-.auth-brand-panel > div > span > span {
+@media (pointer: coarse) {
+  .auth-remember {
+    padding: 6px 0;
+  }
+}
+.auth-meta-row button.auth-link {
+  font-size: 13px;
+}
+
+/* --- Alerts -------------------------------------------------------- */
+.auth-alert {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 10px 12px;
+  border: 1px solid transparent;
+  border-radius: var(--radius-md);
+  font-size: 13px;
+  line-height: 1.25rem;
+  animation: slide-up 180ms var(--ease);
+}
+.auth-alert svg {
+  margin-top: 1px;
+}
+.auth-alert-error {
+  background: var(--error-bg);
+  border-color: var(--error-border);
+  color: var(--error-text);
+}
+.auth-alert-success {
+  background: var(--success-bg);
+  border-color: var(--success-border);
+  color: var(--success-text);
+}
+
+/* --- Primary action ------------------------------------------------ */
+/* The .ui-button-primary recipe at the larger height this form uses. */
+.auth-submit {
+  --btn-fg: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  min-height: var(--control-h-lg);
+  margin-top: 4px;
+  padding: 0 16px;
+  border: 1px solid var(--brand-red) !important;
+  border-radius: var(--radius-md);
   background: var(--brand-red) !important;
+  box-shadow: var(--shadow-xs);
+  color: #ffffff !important;
+  font-size: 14px;
+  font-weight: 600;
 }
-.auth-brand-panel .rounded-xl,
-.auth-brand-panel .rounded-2xl {
-  border-color: var(--border) !important;
-  background: rgba(255, 255, 255, 0.8) !important;
+.auth-submit:hover:not(:disabled) {
+  background: var(--brand-red-hover) !important;
+  border-color: var(--brand-red-hover) !important;
+  box-shadow: var(--shadow-sm);
 }
-.auth-brand-panel .rounded-xl svg {
-  color: var(--brand-red) !important;
+.auth-submit:active:not(:disabled) {
+  background: var(--brand-red-active) !important;
+  border-color: var(--brand-red-active) !important;
+  box-shadow: none;
 }
-.auth-brand-panel .bg-emerald-500\/15 {
-  background: #d1fae5 !important;
-  color: #047857 !important;
+
+/* --- Password strength (register) ---------------------------------- */
+/* The meter was four Tailwind colour classes picked against the dark
+   theme, with brand red standing for 'Strong' — the same red the error
+   alert uses. It reads off the semantic scale instead: error, warning,
+   info, success, keyed on the score the component already computes. */
+.auth-strength {
+  margin-top: 12px;
+}
+.auth-strength-bars {
+  display: flex;
+  gap: 4px;
+}
+.auth-strength-bar {
+  height: 4px;
+  flex: 1;
+  border-radius: var(--radius-pill);
+  background: var(--surface-muted);
+  transition: background-color var(--dur) ease;
+}
+.auth-strength[data-score="0"] .auth-strength-bar[data-on="1"],
+.auth-strength[data-score="1"] .auth-strength-bar[data-on="1"] {
+  background: var(--error);
+}
+.auth-strength[data-score="2"] .auth-strength-bar[data-on="1"] {
+  background: var(--warning);
+}
+.auth-strength[data-score="3"] .auth-strength-bar[data-on="1"] {
+  background: var(--info);
+}
+.auth-strength[data-score="4"] .auth-strength-bar[data-on="1"] {
+  background: var(--success);
+}
+.auth-strength-caption {
+  margin-top: 6px;
+  color: var(--text-secondary);
+  font-size: 12px;
+}
+.auth-strength-value {
+  font-weight: 600;
+}
+.auth-strength[data-score="0"] .auth-strength-value,
+.auth-strength[data-score="1"] .auth-strength-value { color: var(--error-text); }
+.auth-strength[data-score="2"] .auth-strength-value { color: var(--warning-text); }
+.auth-strength[data-score="3"] .auth-strength-value { color: var(--info-text); }
+.auth-strength[data-score="4"] .auth-strength-value { color: var(--success-text); }
+
+/* --- Consent checkbox (register) ----------------------------------- */
+.auth-consent {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  cursor: pointer;
+  color: var(--text-secondary);
+  font-size: 13px;
+  font-weight: 400;
+  line-height: 1.25rem;
+}
+.auth-consent .auth-checkbox {
+  margin-top: 2px;
+}
+
+/* --- Legal --------------------------------------------------------- */
+.auth-legal {
+  margin-top: 20px;
+  padding-top: 18px;
+  border-top: 1px solid var(--border-subtle);
+  color: var(--text-secondary);
+  font-size: 12px;
+  text-align: center;
+}
+.auth-legal-link {
+  border-radius: var(--radius-xs);
+  color: var(--brand-red-hover);
+  font-weight: 600;
+  transition: color var(--dur) ease;
+}
+.auth-legal-link:hover {
+  color: var(--brand-red-active);
+  text-decoration: underline;
+}
+
+/* ==================================================================
+   BRAND PANEL  (desktop only)
+   A surface in the same family as the form card, not a second hero.
+   ================================================================== */
+.auth-brand-panel {
+  padding: 36px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-2xl);
+  background-color: var(--surface);
+  background-image:
+    radial-gradient(120% 110% at 100% 0%, rgba(223, 60, 39, 0.055) 0%, transparent 55%),
+    radial-gradient(90% 110% at 0% 100%, rgba(45, 43, 111, 0.04) 0%, transparent 60%);
+  box-shadow: var(--shadow-sm);
+}
+
+.auth-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 12px;
+  border: 1px solid var(--brand-red-border);
+  border-radius: var(--radius-pill);
+  background: var(--brand-red-subtle);
+  color: var(--brand-red-hover);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.auth-eyebrow-dot {
+  height: 6px;
+  width: 6px;
+  border-radius: var(--radius-pill);
+  background: var(--brand-red);
+}
+
+.auth-brand-heading {
+  margin-top: 22px;
+  color: var(--brand-blue);
+  font-family: "Galano Grotesque", "Gotham", "Space Grotesk", "Inter", ui-sans-serif, sans-serif;
+  font-size: 2rem;
+  font-weight: 700;
+  letter-spacing: -0.022em;
+  line-height: 2.5rem;
+}
+.auth-brand-copy {
+  margin-top: 14px;
+  max-width: 44ch;
+  color: var(--text-secondary);
+  font-size: 14px;
+  line-height: 1.5rem;
+}
+
+/* --- Trust stats --------------------------------------------------- */
+.auth-stat-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 28px;
+}
+.auth-stat {
+  padding: 14px 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--surface-sunken);
+  text-align: center;
+}
+.auth-stat-icon {
+  margin: 0 auto;
+  color: var(--brand-red);
+}
+/* These figures inherited white on a white tile before the markup was
+   given names, so the panel showed three labels and no numbers. */
+.auth-stat-value {
+  margin-top: 6px;
+  color: var(--text-primary);
+  font-family: "Galano Grotesque", "Gotham", "Space Grotesk", "Inter", ui-sans-serif, sans-serif;
+  font-size: 1.25rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+.auth-stat-label {
+  margin-top: 2px;
+  color: var(--text-secondary);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+/* --- Audit preview -------------------------------------------------- */
+.auth-preview {
+  margin-top: 24px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  box-shadow: var(--shadow-xs);
+}
+.auth-preview-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--border-subtle);
+  background: var(--surface-sunken);
+}
+.auth-dot {
+  height: 8px;
+  width: 8px;
+  border-radius: var(--radius-pill);
+}
+.auth-dot-red { background: #f87171; }
+.auth-dot-amber { background: #fbbf24; }
+.auth-dot-green { background: #4ade80; }
+.auth-preview-title {
+  margin-left: 8px;
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-weight: 500;
+}
+.auth-preview-live {
+  padding: 3px 8px;
+  border: 1px solid var(--success-border);
+  border-radius: var(--radius-sm);
+  background: var(--success-bg);
+  color: var(--success-text);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+}
+.auth-preview-body {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px 14px;
+}
+.auth-line {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.auth-line-label {
+  width: 78px;
+  flex-shrink: 0;
+  color: var(--text-secondary);
+  font-size: 12px;
+}
+.auth-line-track {
+  position: relative;
+  flex: 1;
+  height: 6px;
+  overflow: hidden;
+  border-radius: var(--radius-pill);
+  background: var(--surface-muted);
+}
+.auth-line-fill {
+  height: 100%;
+  border-radius: var(--radius-pill);
+  background: var(--brand-red);
+}
+.auth-line-value {
+  width: 28px;
+  flex-shrink: 0;
+  color: var(--text-primary);
+  font-size: 12px;
+  font-weight: 700;
+  text-align: right;
+}
+
+.auth-brand-footnote {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 26px;
+  padding-top: 20px;
+  border-top: 1px solid var(--border-subtle);
+  color: var(--text-muted);
+  font-size: 12px;
+}
+.auth-brand-footnote svg {
+  color: var(--brand-red);
+}
+
+/* --- Responsive ------------------------------------------------------ */
+@media (max-width: 1023px) {
+  /* Without the brand column beside it, the form should sit near the top
+     of the viewport rather than float in a tall, mostly empty grid. */
+  .auth-shell main {
+    align-content: start;
+    min-height: 0;
+  }
+}
+@media (max-width: 640px) {
+  .auth-card {
+    padding: 24px 20px;
+    border-radius: var(--radius-xl);
+    box-shadow: var(--shadow-sm);
+  }
+  .auth-title {
+    font-size: 1.5rem;
+    line-height: 2rem;
+  }
+  .auth-divider {
+    margin: 18px 0;
+    font-size: 10px;
+    letter-spacing: 0.05em;
+  }
+  .auth-remember,
+  .auth-meta-row button.auth-link {
+    font-size: 12px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .auth-alert {
+    animation: none;
+  }
 }
 
 .gsc-stat-card {
@@ -15424,7 +16006,9 @@ input[type="week"]:focus-visible {
 .ub-field :focus,
 .ub-field :focus-visible,
 .lead-search-bar :focus,
-.lead-search-bar :focus-visible {
+.lead-search-bar :focus-visible,
+.auth-control input:focus,
+.auth-control input:focus-visible {
   box-shadow: none !important;
   outline: none !important;
 }
@@ -16298,4 +16882,1498 @@ input[type="week"]:focus-visible {
   background: var(--surface);
   border-radius: var(--radius-lg);
   padding: 20px;
+}
+
+/* ==================================================================
+   LANDING PAGE  (/)
+
+   RootLayout, Navbar and Footer are mounted by the "/" route only, so
+   everything below is scoped to .landing / .landing-* and cannot reach
+   another screen.
+
+   The markup was dark-theme era and leaned on an amber-to-orange accent
+   the product no longer has: the dashboard's palette is brand red, brand
+   navy and a navy-tinted neutral ramp, nothing else. These rules put the
+   page on that palette and on the same card, control and elevation scale
+   the dashboard uses — white --surface panels, one hairline --border,
+   --radius-xl corners, --shadow-xs at rest and --shadow-sm on hover.
+
+   Section order, markup and copy are unchanged; this is presentation.
+
+   Button rules carry !important and a --btn-fg entry because the
+   application-wide button colour system earlier in this file paints any
+   button without a recognised variant class brand red with !important.
+   ================================================================== */
+
+.landing {
+  background: var(--bg-app);
+  color: var(--text-primary);
+}
+
+/* --- Page atmosphere ---------------------------------------------- */
+/* Three saturated blur orbs (brand, amber, orange) became two very low
+   opacity washes, the same restraint as the dashboard header. */
+.landing-atmosphere {
+  z-index: 0;
+  overflow: hidden;
+}
+.landing > main,
+.landing > footer {
+  position: relative;
+  z-index: 1;
+}
+.landing-wash {
+  position: absolute;
+  border-radius: var(--radius-pill);
+  filter: blur(140px);
+}
+.landing-wash-top {
+  top: -14rem;
+  left: 50%;
+  height: 34rem;
+  width: 62rem;
+  transform: translateX(-50%);
+  background: rgba(223, 60, 39, 0.07);
+}
+.landing-wash-left {
+  top: 42%;
+  left: -14rem;
+  height: 30rem;
+  width: 30rem;
+  background: rgba(45, 43, 111, 0.05);
+}
+.landing-wash-right {
+  top: 82%;
+  right: -12rem;
+  height: 30rem;
+  width: 30rem;
+  background: rgba(223, 60, 39, 0.045);
+}
+
+/* ==================================================================
+   NAVIGATION
+   ================================================================== */
+.landing-nav {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  border-bottom: 1px solid transparent;
+  transition: background-color var(--dur) ease, border-color var(--dur) ease,
+    box-shadow var(--dur) ease;
+}
+.landing-nav.is-scrolled {
+  background: rgba(255, 255, 255, 0.88);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom-color: var(--border);
+  box-shadow: var(--shadow-xs);
+}
+.landing .home-user-menu {
+  z-index: 110;
+}
+
+.landing-nav-link {
+  border-radius: var(--radius-sm);
+  color: var(--text-secondary);
+  font-size: 13px;
+  font-weight: 500;
+  transition: color var(--dur) ease;
+}
+.landing-nav-link:hover {
+  color: var(--brand-red);
+}
+.landing-nav-cta {
+  --btn-fg: #ffffff;
+  min-height: var(--control-h);
+}
+.landing-nav-toggle {
+  --btn-fg: var(--text-secondary);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px;
+  border-radius: var(--radius-md);
+  background: transparent !important;
+  border-color: transparent !important;
+  color: var(--text-secondary) !important;
+  box-shadow: none !important;
+}
+.landing-nav-toggle:hover:not(:disabled) {
+  background: var(--surface-muted) !important;
+  color: var(--text-primary) !important;
+}
+.landing-nav-skeleton {
+  border-radius: var(--radius-pill);
+  background: var(--surface-muted);
+}
+.landing-nav-sheet {
+  border-top: 1px solid var(--border);
+  background: var(--surface);
+  box-shadow: var(--shadow-sm);
+}
+.landing-nav-sheet-link {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 40px;
+  padding: 8px 12px;
+  border-radius: var(--radius-md);
+  color: var(--text-secondary);
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1.5;
+  text-align: left;
+}
+.landing-nav-sheet-link:hover {
+  background: var(--surface-sunken);
+  color: var(--text-primary);
+}
+.landing-nav-sheet-link.is-danger {
+  --btn-fg: var(--error-text);
+  width: 100%;
+  background: transparent !important;
+  border-color: transparent !important;
+  color: var(--error-text) !important;
+  box-shadow: none !important;
+}
+.landing-nav-sheet-link.is-danger:hover:not(:disabled) {
+  background: var(--error-bg) !important;
+  color: var(--error-text) !important;
+}
+.landing-nav-sheet-rule {
+  height: 1px;
+  background: var(--border-subtle);
+}
+.landing-nav-sheet-name {
+  color: var(--text-primary);
+  font-size: 13px;
+  font-weight: 600;
+}
+.landing-nav-sheet-email {
+  color: var(--text-muted);
+  font-size: 12px;
+}
+
+/* ==================================================================
+   SHARED LANDING PRIMITIVES
+   ================================================================== */
+
+/* Eyebrow / chip — one shape for every section label on the page. */
+.landing-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 12px;
+  border: 1px solid var(--brand-red-border);
+  border-radius: var(--radius-pill);
+  background: var(--brand-red-subtle);
+  color: var(--brand-red-hover);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.landing-eyebrow.is-compact {
+  padding: 4px 10px;
+  font-size: 10px;
+}
+.landing-eyebrow svg {
+  height: 13px;
+  width: 13px;
+}
+.landing-eyebrow-dot {
+  height: 6px;
+  width: 6px;
+  flex-shrink: 0;
+  border-radius: var(--radius-pill);
+  background: var(--brand-red);
+}
+
+/* The accent word in a heading: solid brand red, not the gradient. At the
+   sizes these headings use (>=28px, 700) 4.0:1 clears AA for large text. */
+.landing-accent {
+  color: var(--brand-red);
+}
+
+/* Section heading pair. 48px display type was wider than its measure. */
+.landing-section-title {
+  color: var(--brand-blue);
+  font-family: "Galano Grotesque", "Gotham", "Space Grotesk", "Inter", ui-sans-serif, sans-serif;
+  font-size: clamp(1.75rem, 1.15rem + 2.1vw, 2.375rem);
+  font-weight: 700;
+  letter-spacing: -0.022em;
+  line-height: 1.2;
+}
+.landing-section-sub {
+  color: var(--text-secondary);
+  font-size: 15px;
+  line-height: 1.6;
+}
+
+/* The one card recipe the whole page uses. */
+.landing-card {
+  position: relative;
+  padding: 24px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  background: var(--surface);
+  box-shadow: var(--shadow-xs);
+  transition: border-color var(--dur) var(--ease), box-shadow var(--dur) var(--ease),
+    transform var(--dur) var(--ease);
+}
+.landing-card:hover {
+  border-color: var(--border-strong);
+  box-shadow: var(--shadow-sm);
+}
+
+/* Meters: one track, one fill, brand red. Previously five different
+   brand-to-amber gradients. */
+.landing-meter {
+  height: 6px;
+  width: 100%;
+  overflow: hidden;
+  border-radius: var(--radius-pill);
+  background: var(--surface-muted);
+}
+.landing-meter.is-thin {
+  height: 5px;
+}
+.landing-meter-fill {
+  height: 100%;
+  border-radius: var(--radius-pill);
+  background: var(--brand-red);
+}
+
+/* Delta / status pills. */
+.landing-pill {
+  display: inline-block;
+  padding: 2px 7px;
+  border-radius: var(--radius-sm);
+  font-size: 11px;
+  font-weight: 600;
+}
+.landing-pill.is-up {
+  background: var(--success-bg);
+  color: var(--success-text);
+}
+.landing-pill.is-down {
+  background: var(--error-bg);
+  color: var(--error-text);
+}
+.landing-pill-note {
+  color: var(--text-secondary);
+  font-size: 11px;
+}
+.landing-delta-up {
+  color: var(--success-text);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+/* Trust row under the two main CTAs. */
+.landing-trust {
+  color: var(--text-secondary);
+  font-size: 12px;
+}
+.landing-trust svg {
+  color: var(--brand-red);
+}
+
+/* Landing CTAs sit at the larger control height. */
+.landing-cta {
+  min-height: var(--control-h-lg);
+  padding-inline: 18px;
+  font-size: 14px;
+}
+
+/* ==================================================================
+   HERO
+   ================================================================== */
+.landing-hero-title {
+  color: var(--brand-blue);
+  font-family: "Galano Grotesque", "Gotham", "Space Grotesk", "Inter", ui-sans-serif, sans-serif;
+  /* Was a fixed 88px at lg, which overran the container and left the
+     second line nearly edge to edge. */
+  font-size: clamp(2.125rem, 1.1rem + 4.3vw, 3.5rem);
+  font-weight: 700;
+  letter-spacing: -0.028em;
+  line-height: 1.08;
+  text-wrap: balance;
+}
+.landing-hero-sub {
+  color: var(--text-secondary);
+  font-size: 16px;
+  line-height: 1.65;
+}
+
+/* --- Product shot -------------------------------------------------- */
+.landing-preview {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  background: var(--surface);
+  box-shadow: var(--shadow-lg);
+}
+.landing-preview-bar {
+  border-bottom: 1px solid var(--border-subtle);
+  background: var(--surface-sunken);
+}
+.landing-preview-title {
+  color: var(--text-secondary);
+  font-size: 13px;
+  font-weight: 500;
+}
+.landing-preview-url {
+  padding: 5px 14px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-pill);
+  background: var(--surface);
+  color: var(--text-secondary);
+  font-size: 12px;
+}
+.landing-preview-foot {
+  border-top: 1px solid var(--border-subtle);
+  background: var(--surface-sunken);
+}
+.landing-dot {
+  height: 10px;
+  width: 10px;
+  border-radius: var(--radius-pill);
+}
+.landing-dot-red { background: #f87171; }
+.landing-dot-amber { background: #fbbf24; }
+.landing-dot-green { background: #4ade80; }
+
+.landing-live {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 9px;
+  border: 1px solid var(--success-border);
+  border-radius: var(--radius-sm);
+  background: var(--success-bg);
+  color: var(--success-text);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+}
+.landing-live-dot {
+  height: 6px;
+  width: 6px;
+  border-radius: var(--radius-pill);
+  background: var(--success);
+}
+
+.landing-tile {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  text-align: left;
+}
+.landing-tile.is-accent {
+  border-color: var(--brand-red-border);
+  background: var(--brand-red-subtle);
+}
+.landing-tile-head {
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-weight: 500;
+}
+.landing-tile-head svg {
+  color: var(--text-disabled);
+}
+.landing-tile-value {
+  color: var(--text-primary);
+  font-family: "Galano Grotesque", "Gotham", "Space Grotesk", "Inter", ui-sans-serif, sans-serif;
+  font-size: 1.5rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+.landing-tile-value.is-brand {
+  color: var(--brand-red-hover);
+  font-size: 1.75rem;
+}
+.landing-tile-unit {
+  color: var(--text-secondary);
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+.landing-foot-link {
+  color: var(--brand-red-hover);
+  font-weight: 600;
+}
+.landing-entity-name {
+  color: var(--text-primary);
+  font-size: 13px;
+  font-weight: 500;
+}
+.landing-entity-score {
+  color: var(--text-primary);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+/* ==================================================================
+   BRANDS STRIP
+   ================================================================== */
+.landing-brands {
+  border-block: 1px solid var(--border-subtle);
+  background: var(--surface);
+}
+.landing-brands-label {
+  color: var(--text-secondary);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.24em;
+  text-align: center;
+  text-transform: uppercase;
+}
+.landing-brand-name {
+  color: var(--text-muted);
+  font-family: "Galano Grotesque", "Gotham", "Space Grotesk", "Inter", ui-sans-serif, sans-serif;
+  font-size: 1.375rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  transition: color var(--dur) ease;
+}
+.landing-brand-name:hover {
+  color: var(--brand-blue);
+}
+
+/* ==================================================================
+   STATS
+   ================================================================== */
+.landing-stat {
+  padding: 22px 16px;
+}
+.landing-stat-icon {
+  color: var(--brand-red);
+}
+.landing-stat-value {
+  color: var(--brand-blue);
+  font-family: "Galano Grotesque", "Gotham", "Space Grotesk", "Inter", ui-sans-serif, sans-serif;
+  font-size: 1.875rem;
+  font-weight: 700;
+  letter-spacing: -0.022em;
+}
+.landing-stat-label {
+  color: var(--text-secondary);
+  font-size: 13px;
+}
+
+/* ==================================================================
+   FEATURES
+   ================================================================== */
+.landing-feature {
+  padding: 22px;
+}
+.landing-icon-tile {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 40px;
+  width: 40px;
+  border: 1px solid var(--brand-red-border);
+  border-radius: var(--radius-lg);
+  background: var(--brand-red-subtle);
+  color: var(--brand-red);
+  transition: background-color var(--dur) ease, color var(--dur) ease;
+}
+.landing-feature:hover .landing-icon-tile {
+  background: var(--brand-red);
+  color: #ffffff;
+}
+.landing-tag {
+  padding: 3px 9px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface-sunken);
+  color: var(--text-secondary);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+.landing-feature-title {
+  color: var(--brand-blue);
+  font-family: "Galano Grotesque", "Gotham", "Space Grotesk", "Inter", ui-sans-serif, sans-serif;
+  font-size: 1rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+.landing-feature-desc {
+  color: var(--text-secondary);
+  font-size: 13px;
+  line-height: 1.55;
+}
+/* The "Explore tool" affordance was hover-only, so it did not exist for
+   keyboard or touch. It is always present and merely gains colour. */
+.landing-feature-link {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-weight: 600;
+  transition: color var(--dur) ease;
+}
+.landing-feature:hover .landing-feature-link {
+  color: var(--brand-red-hover);
+}
+
+/* ==================================================================
+   COMPARISON
+   ================================================================== */
+.landing-panel {
+  padding: 26px;
+}
+.landing-panel.is-solution {
+  border-color: var(--brand-red-border);
+}
+.landing-panel-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 40px;
+  width: 40px;
+  border-radius: var(--radius-lg);
+  flex-shrink: 0;
+}
+.landing-panel-icon.is-problem {
+  background: var(--error-bg);
+  color: var(--error-text);
+}
+.landing-panel-icon.is-solution {
+  background: var(--brand-red);
+  color: #ffffff;
+}
+.landing-panel-title {
+  color: var(--brand-blue);
+  font-family: "Galano Grotesque", "Gotham", "Space Grotesk", "Inter", ui-sans-serif, sans-serif;
+  font-size: 1.125rem;
+  font-weight: 700;
+}
+.landing-panel-sub {
+  color: var(--text-secondary);
+  font-size: 12px;
+}
+.landing-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 11px 14px;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  background: var(--surface-sunken);
+}
+.landing-row-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--text-primary);
+  font-size: 13px;
+}
+.landing-row-dot {
+  height: 6px;
+  width: 6px;
+  flex-shrink: 0;
+  border-radius: var(--radius-pill);
+}
+.landing-row-dot.is-problem { background: var(--error); }
+.landing-row-dot.is-solution { background: var(--brand-red); }
+.landing-issue-value {
+  color: var(--error-text);
+  font-size: 12px;
+  font-weight: 700;
+}
+.landing-solution-value {
+  color: var(--brand-red-hover);
+  font-size: 12px;
+  font-weight: 700;
+}
+.landing-panel-total {
+  padding: 14px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--surface-sunken);
+  text-align: center;
+}
+.landing-panel-total.is-solution {
+  border-color: var(--brand-red-border);
+  background: var(--brand-red-subtle);
+}
+.landing-panel-total-label {
+  color: var(--text-secondary);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.landing-panel-total-value {
+  margin-top: 2px;
+  font-family: "Galano Grotesque", "Gotham", "Space Grotesk", "Inter", ui-sans-serif, sans-serif;
+  font-size: 1.75rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+.landing-panel-total.is-problem .landing-panel-total-value { color: var(--error-text); }
+.landing-panel-total.is-solution .landing-panel-total-value { color: var(--brand-red-hover); }
+
+.landing-arrow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 48px;
+  width: 48px;
+  border-radius: var(--radius-pill);
+  background: var(--brand-red);
+  box-shadow: var(--shadow-sm);
+  color: #ffffff;
+}
+
+/* ==================================================================
+   WORKFLOW
+   ================================================================== */
+.landing-connector {
+  position: absolute;
+  left: 50%;
+  top: 2.5rem;
+  height: 1px;
+  width: 66%;
+  transform: translateX(-50%);
+  background: linear-gradient(90deg, transparent, var(--border-strong), transparent);
+}
+.landing-step-badge {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 72px;
+  width: 72px;
+  border: 1px solid var(--brand-red-border);
+  border-radius: var(--radius-pill);
+  background: var(--surface);
+  box-shadow: var(--shadow-xs);
+  color: var(--brand-red);
+}
+.landing-step-title {
+  color: var(--brand-blue);
+  font-family: "Galano Grotesque", "Gotham", "Space Grotesk", "Inter", ui-sans-serif, sans-serif;
+  font-size: 1.0625rem;
+  font-weight: 700;
+}
+.landing-step-desc {
+  color: var(--text-secondary);
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+/* ==================================================================
+   TESTIMONIALS
+   ================================================================== */
+.landing-quote {
+  padding: 22px;
+}
+.landing-quote-mark {
+  color: var(--brand-red);
+  opacity: 0.12;
+}
+.landing-stars svg {
+  fill: var(--brand-red);
+  color: var(--brand-red);
+}
+.landing-quote-text {
+  color: var(--text-primary);
+  font-size: 13.5px;
+  line-height: 1.6;
+}
+.landing-quote-foot {
+  border-top: 1px solid var(--border-subtle);
+}
+/* Six unrelated warm gradients became two on-brand tints. */
+.landing-avatar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 40px;
+  width: 40px;
+  flex-shrink: 0;
+  border-radius: var(--radius-pill);
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+.landing-avatar.is-brand { background: var(--brand-red-hover); }
+.landing-avatar.is-navy { background: var(--brand-blue); }
+.landing-quote-name {
+  color: var(--text-primary);
+  font-size: 13px;
+  font-weight: 600;
+}
+.landing-quote-role {
+  color: var(--text-secondary);
+  font-size: 12px;
+}
+
+/* ==================================================================
+   PRICING
+   ================================================================== */
+.landing-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 3px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--surface-muted);
+}
+.landing-toggle-option {
+  --btn-fg: var(--text-secondary);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 32px;
+  padding: 0 14px;
+  border-radius: var(--radius-md);
+  background: transparent !important;
+  border: 1px solid transparent !important;
+  color: var(--text-secondary) !important;
+  box-shadow: none !important;
+  font-size: 13px;
+  font-weight: 600;
+}
+.landing-toggle-option:hover:not(:disabled) {
+  background: transparent !important;
+  color: var(--text-primary) !important;
+}
+.landing-toggle-option.is-active,
+.landing-toggle-option.is-active:hover:not(:disabled) {
+  --btn-fg: var(--brand-blue);
+  background: var(--surface) !important;
+  border-color: var(--border) !important;
+  color: var(--brand-blue) !important;
+  box-shadow: var(--shadow-xs) !important;
+}
+.landing-save-badge {
+  padding: 2px 6px;
+  border-radius: var(--radius-xs);
+  background: var(--success-bg);
+  color: var(--success-text);
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.landing-plan {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  background: var(--surface);
+  box-shadow: var(--shadow-xs);
+  transition: border-color var(--dur) var(--ease), box-shadow var(--dur) var(--ease);
+}
+.landing-plan:hover {
+  border-color: var(--border-strong);
+  box-shadow: var(--shadow-sm);
+}
+.landing-plan.is-featured {
+  border-color: var(--brand-red);
+  box-shadow: var(--shadow-md);
+}
+/* Replaces a masked orange/amber gradient ring. */
+.landing-plan-ring {
+  position: absolute;
+  inset: -1px;
+  border: 1px solid var(--brand-red);
+  border-radius: calc(var(--radius-xl) + 1px);
+}
+.landing-plan-badge {
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: var(--radius-pill);
+  background: var(--brand-red-hover);
+  box-shadow: var(--shadow-sm);
+  color: #ffffff;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.landing-plan-name {
+  color: var(--brand-blue);
+  font-family: "Galano Grotesque", "Gotham", "Space Grotesk", "Inter", ui-sans-serif, sans-serif;
+  font-size: 1.125rem;
+  font-weight: 700;
+}
+.landing-plan-tagline {
+  color: var(--text-secondary);
+  font-size: 13px;
+}
+/* The featured plan's figure had no colour of its own and resolved to
+   white on a near-white card — the price was invisible. */
+.landing-plan-price {
+  color: var(--text-primary);
+  font-family: "Galano Grotesque", "Gotham", "Space Grotesk", "Inter", ui-sans-serif, sans-serif;
+  font-size: 2.5rem;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  line-height: 1;
+}
+.landing-plan-currency {
+  color: var(--text-secondary);
+  font-size: 1rem;
+  font-weight: 500;
+}
+.landing-plan-period {
+  color: var(--text-secondary);
+  font-size: 13px;
+}
+.landing-plan-note {
+  color: var(--success-text);
+  font-size: 12px;
+}
+.landing-plan-rule {
+  height: 1px;
+  background: var(--border-subtle);
+}
+.landing-check {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 16px;
+  width: 16px;
+  flex-shrink: 0;
+  border-radius: var(--radius-pill);
+  background: var(--brand-red-subtle);
+  color: var(--brand-red);
+}
+.landing-check.is-off {
+  background: var(--surface-muted);
+  color: var(--text-disabled);
+}
+.landing-plan-feature {
+  color: var(--text-primary);
+  font-size: 13px;
+}
+.landing-plan-feature.is-off {
+  color: var(--text-secondary);
+}
+.landing-plan-cta {
+  min-height: var(--control-h-lg);
+  font-size: 14px;
+}
+.landing-plan-footnote {
+  color: var(--text-secondary);
+  font-size: 12px;
+}
+
+/* ==================================================================
+   FAQ
+   ================================================================== */
+.landing-faq {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  transition: border-color var(--dur) var(--ease), box-shadow var(--dur) var(--ease),
+    background-color var(--dur) var(--ease);
+}
+/* Open-state rail. An overlay rather than a border, so it cannot disturb the
+   corner geometry; overflow:hidden clips it to the card radius. */
+.landing-faq::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 3px;
+  background: var(--brand-red);
+  opacity: 0;
+  transition: opacity var(--dur) var(--ease);
+  pointer-events: none;
+}
+.landing-faq.is-open::before {
+  opacity: 1;
+}
+.landing-faq:not(.is-open):hover {
+  border-color: var(--border-strong);
+  background: var(--surface-sunken);
+}
+/* The open row used to be a solid brand-red slab with white text — the
+   same misuse of the action colour the dashboard header corrected. It is
+   a plain surface with a brand rail down its leading edge. */
+.landing-faq.is-open,
+.landing-faq.is-open:hover {
+  border-color: var(--border);
+  box-shadow: var(--shadow-xs);
+}
+.landing-faq-button {
+  --btn-fg: var(--brand-blue);
+  display: flex;
+  width: 100%;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 18px 22px;
+  border-radius: 0;
+  background: transparent !important;
+  border-color: transparent !important;
+  color: var(--brand-blue) !important;
+  box-shadow: none !important;
+  text-align: left;
+}
+.landing-faq-button:hover:not(:disabled) {
+  background: transparent !important;
+  color: var(--brand-blue) !important;
+}
+.landing-faq-q {
+  color: var(--brand-blue);
+  font-size: 14.5px;
+  font-weight: 600;
+}
+.landing-faq-icon {
+  display: flex;
+  height: 28px;
+  width: 28px;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-sm);
+  background: var(--surface-muted);
+  color: var(--text-secondary);
+  transition: background-color var(--dur) ease, color var(--dur) ease;
+}
+.landing-faq-icon.is-open {
+  background: var(--brand-red);
+  color: #ffffff;
+}
+.landing-faq-a {
+  padding: 0 22px 18px;
+  color: var(--text-secondary);
+  font-size: 13.5px;
+  line-height: 1.65;
+}
+
+/* ==================================================================
+   FINAL CTA
+   ================================================================== */
+/* Was a saturated brand-to-orange slab with two floating blur orbs: the
+   loudest surface on the page carrying the least information. */
+.landing-cta-panel {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-2xl);
+  background-color: var(--surface);
+  background-image:
+    radial-gradient(110% 120% at 100% 0%, rgba(223, 60, 39, 0.07) 0%, transparent 55%),
+    radial-gradient(90% 110% at 0% 100%, rgba(45, 43, 111, 0.045) 0%, transparent 60%);
+  box-shadow: var(--shadow-sm);
+}
+.landing-cta-grid {
+  background-image:
+    linear-gradient(rgba(45, 43, 111, 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(45, 43, 111, 0.05) 1px, transparent 1px);
+  background-size: 48px 48px;
+  -webkit-mask-image: radial-gradient(ellipse at center, #000 25%, transparent 72%);
+  mask-image: radial-gradient(ellipse at center, #000 25%, transparent 72%);
+  pointer-events: none;
+}
+.landing-cta-title {
+  color: var(--brand-blue);
+  font-family: "Galano Grotesque", "Gotham", "Space Grotesk", "Inter", ui-sans-serif, sans-serif;
+  font-size: clamp(1.75rem, 1.1rem + 2.4vw, 2.5rem);
+  font-weight: 700;
+  letter-spacing: -0.025em;
+  line-height: 1.15;
+  text-wrap: balance;
+}
+.landing-cta-sub {
+  color: var(--text-secondary);
+  font-size: 15px;
+  line-height: 1.6;
+}
+
+/* ==================================================================
+   AUDIT DEMO
+   ================================================================== */
+.landing-run-state {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  font-size: 11px;
+  font-weight: 600;
+}
+.landing-run-state.is-running {
+  background: var(--brand-red-subtle);
+  border-color: var(--brand-red-border);
+  color: var(--brand-red-hover);
+}
+.landing-run-state.is-done {
+  background: var(--success-bg);
+  border-color: var(--success-border);
+  color: var(--success-text);
+}
+.landing-demo-label {
+  display: block;
+  color: var(--text-secondary);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-align: center;
+  text-transform: uppercase;
+}
+.landing-demo-icon {
+  color: var(--text-disabled);
+}
+.landing-demo-url {
+  display: flex;
+  height: 44px;
+  align-items: center;
+  padding-left: 44px;
+  padding-right: 16px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface-sunken);
+  color: var(--text-primary);
+  font-family: var(--font-mono, ui-monospace, SFMono-Regular, Menlo, Consolas, monospace);
+  font-size: 13px;
+}
+.landing-caret {
+  display: inline-block;
+  height: 16px;
+  width: 2px;
+  margin-left: 4px;
+  background: var(--brand-red);
+  animation: fade-in 1s steps(2, start) infinite alternate;
+}
+.landing-progress-value {
+  color: var(--brand-red-hover);
+  font-family: var(--font-mono, ui-monospace, SFMono-Regular, Menlo, Consolas, monospace);
+  font-weight: 600;
+}
+.landing-result {
+  padding: 14px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  transition: border-color var(--dur) var(--ease), box-shadow var(--dur) var(--ease);
+}
+.landing-result:hover {
+  border-color: var(--border-strong);
+  box-shadow: var(--shadow-xs);
+}
+.landing-result-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 32px;
+  width: 32px;
+  flex-shrink: 0;
+  border-radius: var(--radius-md);
+  background: var(--brand-red-subtle);
+  color: var(--brand-red);
+}
+.landing-result-name {
+  color: var(--brand-blue);
+  font-size: 14px;
+  font-weight: 600;
+}
+.landing-result-score {
+  color: var(--text-primary);
+  font-family: var(--font-mono, ui-monospace, SFMono-Regular, Menlo, Consolas, monospace);
+  font-size: 1rem;
+  font-weight: 700;
+}
+.landing-result-unit {
+  color: var(--text-secondary);
+  font-size: 11px;
+  font-weight: 500;
+}
+.landing-result-desc {
+  color: var(--text-secondary);
+  font-size: 12px;
+}
+.landing-demo-foot {
+  border-top: 1px solid var(--border-subtle);
+}
+.landing-demo-stat {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--surface-sunken);
+}
+.landing-demo-stat-label {
+  color: var(--text-secondary);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.landing-demo-stat-value {
+  font-family: "Galano Grotesque", "Gotham", "Space Grotesk", "Inter", ui-sans-serif, sans-serif;
+  font-size: 1.125rem;
+  font-weight: 700;
+}
+.landing-demo-stat-value.is-error { color: var(--error-text); }
+.landing-demo-stat-value.is-info { color: var(--info-text); }
+.landing-demo-stat-value.is-brand { color: var(--brand-red-hover); }
+
+/* ==================================================================
+   FOOTER
+   ================================================================== */
+.landing-footer {
+  border-top: 1px solid var(--border);
+  background: var(--surface);
+}
+.landing-footer-blurb {
+  color: var(--text-secondary);
+  font-size: 13px;
+  line-height: 1.6;
+}
+.landing-footer-heading {
+  color: var(--brand-blue);
+  font-size: 13px;
+  font-weight: 600;
+}
+.landing-footer-link {
+  color: var(--text-secondary);
+  font-size: 13px;
+  transition: color var(--dur) ease;
+}
+.landing-footer-link:hover {
+  color: var(--brand-red);
+}
+.landing-newsletter {
+  display: flex;
+  width: 100%;
+  max-width: 24rem;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 5px 5px 4px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  transition: border-color var(--dur) ease, box-shadow var(--dur) ease;
+}
+.landing-newsletter:focus-within {
+  border-color: var(--brand-red);
+  box-shadow: 0 0 0 3px rgba(223, 60, 39, 0.12);
+}
+.landing-newsletter svg {
+  color: var(--text-disabled);
+}
+.landing-newsletter-input {
+  width: 100%;
+  border: 0;
+  background: transparent;
+  color: var(--text-primary);
+  font-size: 13px;
+}
+.landing-newsletter-input:focus,
+.landing-newsletter-input:focus-visible {
+  outline: none;
+  box-shadow: none !important;
+}
+.landing-newsletter-input::placeholder {
+  color: var(--text-disabled);
+}
+.landing-newsletter-submit {
+  --btn-fg: #ffffff;
+  min-height: 32px;
+  flex-shrink: 0;
+  font-size: 12px;
+}
+.landing-social {
+  display: flex;
+  height: 36px;
+  width: 36px;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  color: var(--text-secondary);
+  transition: border-color var(--dur) ease, background-color var(--dur) ease, color var(--dur) ease;
+}
+.landing-social:hover {
+  border-color: var(--brand-red-border);
+  background: var(--brand-red-subtle);
+  color: var(--brand-red);
+}
+.landing-footer-bottom {
+  border-top: 1px solid var(--border-subtle);
+}
+.landing-footer-copy {
+  color: var(--text-secondary);
+  font-size: 12px;
+}
+.landing-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 10px;
+  border: 1px solid var(--success-border);
+  border-radius: var(--radius-sm);
+  background: var(--success-bg);
+  color: var(--success-text);
+  font-size: 11px;
+  font-weight: 600;
+}
+
+/* ==================================================================
+   RESPONSIVE
+   ================================================================== */
+@media (max-width: 640px) {
+  .landing-card,
+  .landing-feature,
+  .landing-quote {
+    padding: 18px;
+  }
+  .landing-panel {
+    padding: 20px;
+  }
+  .landing-cta-panel {
+    border-radius: var(--radius-xl);
+  }
+  .landing-faq-button {
+    padding: 15px 16px;
+  }
+  .landing-faq-a {
+    padding: 0 16px 15px;
+  }
+  .landing-faq-q {
+    font-size: 13.5px;
+  }
+  .landing-brand-name {
+    font-size: 1.125rem;
+  }
+  .landing-preview-foot,
+  .landing-preview-bar {
+    padding-inline: 14px;
+  }
+  /* Full-width primary actions read better than two half-width pills. */
+  .landing-cta {
+    width: 100%;
+  }
+}
+
+/* The marquee and the counters are decorative motion. */
+@media (prefers-reduced-motion: reduce) {
+  .landing .animate-scroll-x,
+  .landing .animate-float,
+  .landing .animate-float-slow,
+  .landing-caret {
+    animation: none !important;
+  }
+}
+
+/* ==================================================================
+   LANDING — SECTION RHYTHM
+
+   The page read as one continuous grey because --bg-app and
+   --surface-sunken are the same value (#f7f8fb): the page background IS
+   the sunken surface, so a section using it could never register as a
+   section. Every section therefore inherited the same field.
+
+   The six surfaces the token set actually provides are used instead,
+   assigned by what each section contains rather than by alternation:
+
+     Hero        white + brand wash   the page's strongest moment
+     Brands      --surface-muted      a quiet rail between hero and content
+     Audit demo  page ground          lets the white product shot lift off it
+     Stats       navy                 the one accent band; figures, not prose
+     Features    white                twelve cards need the calmest field
+     Comparison  page ground          two elevated panels read against it
+     Workflow    white                three steps, calm
+     Testimonials--brand-blue-subtle  a cool tint; human voices, not product
+     Pricing     white                the commercial decision, no distraction
+     FAQ         page ground          long-form reading
+     CTA         white + brand panel  the climax carries the only brand fill
+     Footer      --surface-muted      closes the page against the rail it opened with
+
+   Sections left on the page ground are transparent on purpose, so the
+   fixed brand wash behind them still shows through and the greys are not
+   all flat. Section order, markup and content are unchanged.
+   ================================================================== */
+
+.landing-section {
+  position: relative;
+}
+
+/* --- Hero: white, carrying its own brand light ---------------------- */
+.landing-section.is-hero {
+  background-color: transparent;
+}
+
+/* --- Brands: a compressed rail, not a section ----------------------- */
+.landing-section.is-brands {
+  border-block: 1px solid var(--border);
+  background: var(--surface-muted);
+}
+
+/* --- Audit demo: sits on the page ground so the shot lifts off it --- */
+.landing-section.is-demo {
+  background: var(--surface);
+}
+
+/* --- Stats: the page's one accent band ------------------------------ */
+/* Navy is already a surface in this product (the dashboard icon rail
+   uses --brand-blue-active), so this is the palette, not a new colour. */
+.landing-section.is-stats {
+  background-color: var(--brand-blue-active);
+  background-image:
+    radial-gradient(90% 140% at 100% 0%, rgba(223, 60, 39, 0.18) 0%, transparent 60%);
+}
+.is-stats .landing-stat {
+  border-color: rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.05);
+  box-shadow: none;
+}
+.is-stats .landing-stat:hover {
+  border-color: rgba(255, 255, 255, 0.26);
+  background: rgba(255, 255, 255, 0.09);
+  box-shadow: none;
+}
+.is-stats .landing-stat-icon {
+  color: var(--brand-red);
+}
+.is-stats .landing-stat-value {
+  color: #ffffff;
+}
+.is-stats .landing-stat-label {
+  color: rgba(255, 255, 255, 0.78);
+}
+
+/* --- Features: white field, cards recede into it -------------------- */
+.landing-section.is-features {
+  background: var(--surface);
+}
+/* On a white field a white card needs another way to read, so the cards
+   sit slightly below the page and rise on hover. */
+.is-features .landing-card,
+.is-workflow .landing-card {
+  background: var(--surface-sunken);
+  box-shadow: none;
+}
+.is-features .landing-card:hover,
+.is-workflow .landing-card:hover {
+  background: var(--surface);
+  border-color: var(--border-strong);
+  box-shadow: var(--shadow-sm);
+}
+.is-features .landing-tag {
+  background: var(--surface);
+}
+
+/* --- Comparison: page ground, panels elevated off it ---------------- */
+.landing-section.is-compare {
+  background: transparent;
+}
+.is-compare .landing-panel {
+  box-shadow: var(--shadow-sm);
+}
+
+/* --- Workflow: white, matching Features' calm ----------------------- */
+.landing-section.is-workflow {
+  background: var(--surface);
+}
+
+/* --- Testimonials: a cool tint for the human chapter ---------------- */
+.landing-section.is-voices {
+  background: var(--brand-blue-subtle);
+}
+.is-voices .landing-quote {
+  background: var(--surface);
+  box-shadow: var(--shadow-xs);
+}
+.is-voices .landing-quote:hover {
+  box-shadow: var(--shadow-md);
+}
+.is-voices .landing-quote-foot {
+  border-top-color: var(--border);
+}
+
+/* --- Pricing: white, plans carry the elevation ---------------------- */
+.landing-section.is-pricing {
+  background: var(--surface);
+}
+.is-pricing .landing-plan {
+  border-color: var(--border-strong);
+  box-shadow: var(--shadow-sm);
+}
+.is-pricing .landing-plan:hover {
+  box-shadow: var(--shadow-md);
+}
+.is-pricing .landing-plan.is-featured {
+  border-color: var(--brand-red);
+  box-shadow: var(--shadow-lg);
+}
+/* The segmented control needs a visible trough on a white field. */
+.is-pricing .landing-toggle {
+  background: var(--surface-muted);
+}
+
+/* --- FAQ: page ground for long-form reading ------------------------- */
+.landing-section.is-faq {
+  background: transparent;
+}
+.is-faq .landing-faq {
+  box-shadow: var(--shadow-xs);
+}
+
+/* --- CTA: white field, the panel carries the only brand fill -------- */
+.landing-section.is-cta {
+  background: var(--surface);
+}
+.is-cta .landing-cta-panel {
+  border-color: var(--brand-red-border);
+  background-color: var(--brand-red-subtle);
+  background-image:
+    radial-gradient(110% 130% at 100% 0%, rgba(223, 60, 39, 0.10) 0%, transparent 58%),
+    radial-gradient(90% 110% at 0% 100%, rgba(45, 43, 111, 0.05) 0%, transparent 62%);
+  box-shadow: var(--shadow-md);
+}
+.is-cta .landing-cta-grid {
+  background-image:
+    linear-gradient(rgba(45, 43, 111, 0.045) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(45, 43, 111, 0.045) 1px, transparent 1px);
+}
+.is-cta .landing-eyebrow {
+  border-color: var(--brand-red-border);
+  background: var(--surface);
+}
+/* The secondary action needs a solid surface to sit on the tint. */
+.is-cta .ui-button-secondary {
+  background: var(--surface) !important;
+}
+
+/* --- Footer: closes against the rail the page opened with ----------- */
+.landing-footer {
+  margin-top: 0;
+  border-top: 1px solid var(--border);
+  background: var(--surface-muted);
+}
+.landing-newsletter,
+.landing-social {
+  background: var(--surface);
+}
+.landing-footer-bottom {
+  border-top-color: var(--border);
+}
+
+/* ==================================================================
+   RESPONSIVE
+   Backgrounds are set on full-bleed <section> elements, so they extend
+   edge to edge at every width with nothing to overflow. Only the
+   vertical rhythm is tightened on small screens.
+   ================================================================== */
+@media (max-width: 640px) {
+  .landing-section.is-brands {
+    padding-block: 32px;
+  }
+  .landing-section.is-stats {
+    padding-block: 44px;
+  }
 }

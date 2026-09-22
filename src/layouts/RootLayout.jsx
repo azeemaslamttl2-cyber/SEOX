@@ -20,12 +20,10 @@ export default function RootLayout({ children }) {
   }, [pathname, hash]);
 
   return (
-    <div className="relative min-h-screen overflow-x-clip bg-ink-900 text-white">
+    <div className="landing relative min-h-[100dvh] overflow-x-clip">
       {/* Background gradients */}
-      <div className="pointer-events-none fixed inset-0 -z-10">
-        <div className="absolute -top-40 left-1/2 h-[600px] w-[1100px] -translate-x-1/2 rounded-full bg-brand-500/20 blur-[140px]" />
-        <div className="absolute top-[40%] -left-40 h-[500px] w-[500px] rounded-full bg-amber-500/10 blur-[140px]" />
-        <div className="absolute top-[80%] right-0 h-[500px] w-[500px] rounded-full bg-orange-600/10 blur-[140px]" />
+      <div class="auth-atmosphere pointer-events-none absolute inset-0">
+        <div class="auth-grid"></div>
       </div>
 
       <Navbar />

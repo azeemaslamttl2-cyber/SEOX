@@ -1,29 +1,40 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import {
-  AlertCircle,
-  AlertTriangle,
+  Check,
   ExternalLink,
-  Info,
+  KeyRound,
   Loader2,
-  MinusCircle,
   Puzzle,
+  Radar,
   ShieldCheck,
   ShieldQuestion,
+  Trash2,
 } from 'lucide-react';
-import { useProjectSelection } from '../../context/CrawlContext.jsx';
+import { useSelectedProjectDomain } from '../../hooks/useSelectedProjectDomain.js';
 import { getSessionToken } from '../../lib/authSession.js';
+import WordPressSecurityDashboard, {
+  SEVERITY_META,
+} from '../../components/techseo/WordPressSecurityDashboard.jsx';
 
 const card = 'rounded-2xl border border-white/10 bg-white/[0.02] p-5';
 
-const SEVERITY_META = {
-  critical: { label: 'Critical', className: 'border-rose-500/30 bg-rose-500/[0.07]', text: 'text-rose-300', Icon: AlertCircle },
-  high: { label: 'High', className: 'border-amber-500/30 bg-amber-500/[0.07]', text: 'text-amber-300', Icon: AlertTriangle },
-  medium: { label: 'Medium', className: 'border-sky-500/25 bg-sky-500/[0.06]', text: 'text-sky-300', Icon: Info },
-  low: { label: 'Low', className: 'border-white/[0.12] bg-white/[0.03]', text: 'text-white/60', Icon: MinusCircle },
-  info: { label: 'Info', className: 'border-white/[0.10] bg-white/[0.02]', text: 'text-white/45', Icon: Info },
-};
-
 const KIND_LABELS = { core: 'WordPress core', plugin: 'Plugin', theme: 'Theme', exposure: 'Exposure' };
+
+// The plugin answers synchronously today. These only matter for a build that
+// queues the scan and reports it as running.
+const POLL_ATTEMPTS = 3;
+const POLL_DELAY_MS = 5000;
+
+const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+/**
+ * Development tracing for the scan: which project, which website URL, which
+ * endpoint, what came back. Silent in a production build, and the admin token
+ * is never part of it - the browser never holds one.
+ */
+function devLog(message, detail) {
+  if (import.meta.env?.DEV) console.debug(`[WordPress security] ${message}`, detail);
+}
 
 async function api(path, { method = 'GET', body, params } = {}) {
   const url = new URL(path, window.location.origin);
@@ -51,13 +62,30 @@ async function api(path, { method = 'GET', body, params } = {}) {
 }
 
 export default function WordPressSecurity() {
-  const { project } = useProjectSelection();
+  // The site picker at the top of the app is the only place a website URL is
+  // chosen; this page reads it from there and never asks for it again.
+  const { project, projectUrl } = useSelectedProjectDomain();
   const projectId = project?.id || '';
 
   const [data, setData] = useState(null);
+  const [portal, setPortal] = useState(null);
   const [loading, setLoading] = useState(true);
   const [scanning, setScanning] = useState(false);
+  const [portalScanning, setPortalScanning] = useState(false);
+  const [portalNotice, setPortalNotice] = useState('');
   const [error, setError] = useState('');
+
+  // A scan can outlive the page: the plugin walks every file on the site and a
+  // large install takes a while. Nothing is written to state after unmount.
+  const mounted = useRef(true);
+  useEffect(() => () => { mounted.current = false; }, []);
+
+  // Token panel. `tokenInput` is only ever the value being typed - a saved
+  // token is never sent back from the server, so there is nothing to prefill.
+  const [tokenInput, setTokenInput] = useState('');
+  const [tokenBusy, setTokenBusy] = useState(false);
+  const [tokenNotice, setTokenNotice] = useState('');
+  const [tokenPanelOpen, setTokenPanelOpen] = useState(false);
 
   const load = useCallback(async () => {
     if (!projectId) {
@@ -66,7 +94,9 @@ export default function WordPressSecurity() {
     }
     setError('');
     try {
-      setData(await api('/api/tech-seo/wordpress-security', { params: { projectId } }));
+      const result = await api('/api/tech-seo/wordpress-security', { params: { projectId } });
+      setData(result);
+      setPortal(result?.portal || null);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -78,6 +108,65 @@ export default function WordPressSecurity() {
     setLoading(true);
     load();
   }, [load]);
+
+  /**
+   * Ask the SEOX plugin on the site to audit itself. The credentials never
+   * touch this component: the server resolves them from the signed-in account
+   * and the selected project.
+   */
+  const handlePortalScan = async () => {
+    setPortalScanning(true);
+    setError('');
+    setPortalNotice('');
+    setTokenNotice('');
+
+    devLog('Run scan requested', {
+      project: project?.name || project?.domain || projectId,
+      projectId,
+      websiteUrl: projectUrl || '(none in the selected project)',
+    });
+
+    try {
+      const request = () =>
+        api('/api/tech-seo/wordpress-security', {
+          method: 'POST',
+          // The URL comes from the selected project. The server checks it is
+          // that project's own host before it scans anything.
+          body: { action: 'portal-scan', projectId, siteUrl: projectUrl, scanType: 'full' },
+        });
+
+      let result = await request();
+      if (mounted.current) setPortal(result.portal);
+      devLog('Scan response', {
+        endpoint: result.portal?.endpoint,
+        status: result.portal?.lastScan?.status,
+        securityScore: result.portal?.securityScore,
+      });
+
+      // Only a plugin build that queues the scan ever reports it as running;
+      // the current one returns finished results in the first response.
+      for (let attempt = 0; attempt < POLL_ATTEMPTS && result.portal?.pending; attempt += 1) {
+        await wait(POLL_DELAY_MS);
+        if (!mounted.current) return;
+        result = await request();
+        if (mounted.current) setPortal(result.portal);
+      }
+
+      if (!mounted.current) return;
+
+      const score = result.portal?.securityScore;
+      setPortalNotice(
+        result.portal?.pending
+          ? 'The site is still running the scan. Results will update on the next run.'
+          : `Scan complete${typeof score === 'number' ? ` — security score ${score}/100.` : '.'}`
+      );
+    } catch (err) {
+      devLog('Scan failed', { status: err.status, message: err.message });
+      if (mounted.current) setError(err.message);
+    } finally {
+      if (mounted.current) setPortalScanning(false);
+    }
+  };
 
   const handleScan = async () => {
     setScanning(true);
@@ -95,6 +184,45 @@ export default function WordPressSecurity() {
     }
   };
 
+  const saveToken = async () => {
+    setTokenBusy(true);
+    setError('');
+    setTokenNotice('');
+    try {
+      const result = await api('/api/tech-seo/wordpress-security', {
+        method: 'POST',
+        body: { action: 'save-token', projectId, token: tokenInput.trim() },
+      });
+      setData((current) => ({ ...current, ...result }));
+      setTokenInput('');
+      setTokenPanelOpen(false);
+      setTokenNotice('Token saved for this project.');
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setTokenBusy(false);
+    }
+  };
+
+  const clearToken = async () => {
+    setTokenBusy(true);
+    setError('');
+    setTokenNotice('');
+    try {
+      const result = await api('/api/tech-seo/wordpress-security', {
+        method: 'POST',
+        body: { action: 'clear-token', projectId },
+      });
+      setData((current) => ({ ...current, ...result }));
+      setTokenInput('');
+      setTokenNotice('Token removed from this project.');
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setTokenBusy(false);
+    }
+  };
+
   if (!projectId) {
     return (
       <div className={card}>
@@ -109,7 +237,7 @@ export default function WordPressSecurity() {
     return (
       <div className="flex items-center gap-2 text-sm text-white/50">
         <Loader2 className="h-4 w-4 animate-spin" />
-        Loading last scanâ€¦
+        Loading last scan…
       </div>
     );
   }
@@ -124,18 +252,33 @@ export default function WordPressSecurity() {
         <div>
           <h1 className="font-display text-xl font-bold">WordPress Security</h1>
           <p className="mt-1 text-sm text-white/45">
-            Passive check of {project?.domain || project?.name} against the WPScan vulnerability
-            database.
+            Security audit of {project?.domain || project?.name}, run by the SEOX plugin on the site
+            itself.
           </p>
         </div>
-        <button
-          onClick={handleScan}
-          disabled={scanning}
-          className="inline-flex items-center gap-2 rounded-xl bg-brand-500 px-3.5 py-2 text-sm font-semibold text-white transition hover:bg-brand-600 disabled:opacity-50"
-        >
-          {scanning ? <Loader2 className="h-4 w-4 animate-spin" /> : <ShieldCheck className="h-4 w-4" />}
-          Run scan
-        </button>
+        <div className="flex flex-wrap items-center gap-2">
+          <button
+            onClick={handleScan}
+            disabled={scanning || portalScanning}
+            title="Check the public site against the WPScan vulnerability database"
+            className="inline-flex items-center gap-2 rounded-xl border border-white/15 px-3.5 py-2 text-sm font-semibold text-white/70 transition hover:text-white disabled:opacity-50"
+          >
+            {scanning ? <Loader2 className="h-4 w-4 animate-spin" /> : <Radar className="h-4 w-4" />}
+            Passive scan
+          </button>
+          <button
+            onClick={handlePortalScan}
+            disabled={portalScanning || scanning}
+            className="inline-flex items-center gap-2 rounded-xl bg-brand-500 px-3.5 py-2 text-sm font-semibold text-white transition hover:bg-brand-600 disabled:opacity-50"
+          >
+            {portalScanning ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <ShieldCheck className="h-4 w-4" />
+            )}
+            {portalScanning ? 'Scanning…' : 'Run scan'}
+          </button>
+        </div>
       </div>
 
       {error ? (
@@ -144,23 +287,187 @@ export default function WordPressSecurity() {
         </div>
       ) : null}
 
-      {!data?.vulnDbConfigured ? (
-        <div className="rounded-xl border border-amber-500/25 bg-amber-500/[0.06] p-4 text-sm">
-          <p className="font-semibold text-amber-200">No WPScan API token configured</p>
-          <p className="mt-1 leading-relaxed text-white/60">
-            Components will be listed but not checked against the vulnerability database. Add{' '}
-            <code className="text-white/75">WPSCAN_API_TOKEN</code> to enable it. The free tier is 25
-            requests a day and is licensed for non-commercial use â€” a commercial install needs a paid
-            plan.
-          </p>
+      {portalNotice ? (
+        <div className="flex items-center gap-2 rounded-xl border border-emerald-500/25 bg-emerald-500/[0.06] p-3 text-sm text-emerald-200">
+          <Check className="h-4 w-4 shrink-0" />
+          {portalNotice}
         </div>
       ) : null}
+
+      {/* The scan runs inside WordPress and can take a minute on a large site,
+          so the page says what is happening rather than looking frozen. */}
+      {portalScanning ? (
+        <div className="flex items-center gap-2 rounded-xl border border-sky-500/25 bg-sky-500/[0.06] p-4 text-sm text-sky-200">
+          <Loader2 className="h-4 w-4 shrink-0 animate-spin" />
+          Running the security scan on {project?.domain || project?.name}. Checking core, plugins,
+          themes, users, malware, database, server, SSL, backups and monitoring…
+        </div>
+      ) : null}
+
+      {portal ? (
+        <WordPressSecurityDashboard portal={portal} />
+      ) : (
+        <div className={card}>
+          <p className="text-sm text-white/50">
+            No security scan yet. Press <span className="text-white/80">Run scan</span> to have the
+            SEOX plugin on {project?.domain || project?.name} audit the site and report back.
+          </p>
+        </div>
+      )}
+
+      <div className="border-t border-white/[0.08] pt-5">
+        <h2 className="font-display text-sm font-bold text-white/70">Passive WPScan check</h2>
+        <p className="mt-1 text-xs text-white/35">
+          A second, outside-in view: what the site exposes publicly, matched against the WPScan
+          vulnerability database. It needs no plugin on the site.
+        </p>
+      </div>
+
+      {tokenNotice ? (
+        <div className="flex items-center gap-2 rounded-xl border border-emerald-500/25 bg-emerald-500/[0.06] p-3 text-sm text-emerald-200">
+          <Check className="h-4 w-4 shrink-0" />
+          {tokenNotice}
+        </div>
+      ) : null}
+
+      {/* Vulnerability database token.
+          Amber while nothing is configured, because the scan then runs with
+          no CVE matching at all; neutral once a token is in place. */}
+      <div
+        className={
+          data?.vulnDbConfigured
+            ? 'rounded-xl border border-white/10 bg-white/[0.02] p-4 text-sm'
+            : 'rounded-xl border border-amber-500/25 bg-amber-500/[0.06] p-4 text-sm'
+        }
+      >
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div className="min-w-0">
+            <p
+              className={
+                data?.vulnDbConfigured
+                  ? 'flex items-center gap-2 font-semibold text-white/80'
+                  : 'flex items-center gap-2 font-semibold text-amber-200'
+              }
+            >
+              <KeyRound className="h-4 w-4 shrink-0" />
+              {data?.vulnDbConfigured
+                ? 'WPScan vulnerability database connected'
+                : 'No WPScan API token configured'}
+            </p>
+
+            {data?.tokenError ? (
+              <p className="mt-1 leading-relaxed text-rose-300">{data.tokenError}</p>
+            ) : data?.vulnDbConfigured ? (
+              <p className="mt-1 leading-relaxed text-white/55">
+                {data.tokenSource === 'project' ? (
+                  <>
+                    Using this project&apos;s own token
+                    {data.tokenPreview ? (
+                      <>
+                        {' '}
+                        (<code className="text-white/75">{data.tokenPreview}</code>)
+                      </>
+                    ) : null}
+                    , so scans here spend its quota and not the install-wide one.
+                  </>
+                ) : (
+                  <>
+                    Using the install-wide <code className="text-white/75">WPSCAN_API_TOKEN</code>{' '}
+                    and its shared daily quota. Add a token below to give this project its own.
+                  </>
+                )}
+              </p>
+            ) : (
+              <p className="mt-1 leading-relaxed text-white/60">
+                Components will be listed but not checked against the vulnerability database. Add a
+                token for this project below, or set{' '}
+                <code className="text-white/75">WPSCAN_API_TOKEN</code> for the whole install. The
+                free tier is 25 requests a day and is licensed for non-commercial use — a commercial
+                install needs a paid plan.
+              </p>
+            )}
+          </div>
+
+          <div className="flex shrink-0 items-center gap-2">
+            <button
+              type="button"
+              onClick={() => {
+                setTokenPanelOpen((open) => !open);
+                setTokenNotice('');
+              }}
+              className="rounded-lg border border-white/15 px-2.5 py-1.5 text-xs font-semibold text-white/70 transition hover:text-white"
+            >
+              {data?.tokenSource === 'project' ? 'Replace token' : 'Add token'}
+            </button>
+            {data?.tokenSource === 'project' ? (
+              <button
+                type="button"
+                onClick={clearToken}
+                disabled={tokenBusy}
+                title="Remove this project's token"
+                className="inline-flex items-center gap-1.5 rounded-lg border border-white/15 px-2.5 py-1.5 text-xs font-semibold text-rose-300 transition hover:border-rose-500/40 disabled:opacity-50"
+              >
+                <Trash2 className="h-3.5 w-3.5" />
+                Remove
+              </button>
+            ) : null}
+          </div>
+        </div>
+
+        {tokenPanelOpen ? (
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              if (tokenInput.trim()) saveToken();
+            }}
+            className="mt-4 border-t border-white/[0.08] pt-4"
+          >
+            <label htmlFor="wpscan-token" className="text-xs font-semibold text-white/60">
+              WPScan API token for {project?.domain || project?.name}
+            </label>
+            <div className="mt-2 flex flex-wrap gap-2">
+              <input
+                id="wpscan-token"
+                type="password"
+                autoComplete="off"
+                spellCheck="false"
+                value={tokenInput}
+                onChange={(e) => setTokenInput(e.target.value)}
+                placeholder="Paste the token from your WPScan profile"
+                className="min-w-0 flex-1 rounded-lg border border-white/12 bg-white/[0.03] px-3 py-2 text-sm text-white/85 outline-none placeholder:text-white/25 focus:border-brand-500/50"
+              />
+              <button
+                type="submit"
+                disabled={tokenBusy || !tokenInput.trim()}
+                className="inline-flex items-center gap-2 rounded-lg bg-brand-500 px-3.5 py-2 text-sm font-semibold text-white transition hover:bg-brand-600 disabled:opacity-50"
+              >
+                {tokenBusy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
+                Save
+              </button>
+            </div>
+            <p className="mt-2 text-xs leading-relaxed text-white/35">
+              Stored against this project only and never shown again after saving
+              {data?.tokenEncrypted ? ', encrypted at rest with AES-256-GCM' : ''}. Get one from
+              your profile at{' '}
+              <a
+                href="https://wpscan.com/api"
+                target="_blank"
+                rel="noreferrer noopener"
+                className="text-white/55 underline decoration-white/20 hover:text-white/80"
+              >
+                wpscan.com/api
+              </a>
+              .
+            </p>
+          </form>
+        ) : null}
+      </div>
 
       {!scan ? (
         <div className={card}>
           <p className="text-sm text-white/50">
-            No scan yet. Press <span className="text-white/80">Run scan</span> to fingerprint the site
-            and check what it exposes.
+            No passive scan yet. Press <span className="text-white/80">Passive scan</span> to
+            fingerprint the site and check what it exposes.
           </p>
         </div>
       ) : !scan.isWordPress ? (
@@ -192,7 +499,7 @@ export default function WordPressSecurity() {
                 <p className="text-[11px] font-semibold uppercase tracking-wider text-white/35">
                   Core version
                 </p>
-                <p className="mt-1 font-display text-lg font-bold">{scan.coreVersion || 'â€”'}</p>
+                <p className="mt-1 font-display text-lg font-bold">{scan.coreVersion || '—'}</p>
                 {scan.coreVersionSource ? (
                   <p className="mt-0.5 text-[10px] text-white/30">{scan.coreVersionSource}</p>
                 ) : null}
@@ -212,7 +519,7 @@ export default function WordPressSecurity() {
             <p className="mt-4 border-t border-white/[0.06] pt-3 text-[11px] text-white/30">
               Scanned {scan.targetUrl} on {new Date(scan.createdAt).toLocaleString()}
               {scan.vulnDbRemaining !== null && scan.vulnDbRemaining !== undefined
-                ? ` Â· ${scan.vulnDbRemaining} WPScan requests left today`
+                ? ` · ${scan.vulnDbRemaining} WPScan requests left today`
                 : ''}
             </p>
           </div>
@@ -276,7 +583,7 @@ export default function WordPressSecurity() {
                               <Puzzle className="h-3 w-3" />
                               {finding.componentName}
                               {finding.installedVersion ? ` ${finding.installedVersion}` : ''}
-                              {finding.fixedIn ? ` â†’ fixed in ${finding.fixedIn}` : ''}
+                              {finding.fixedIn ? ` → fixed in ${finding.fixedIn}` : ''}
                             </p>
                           ) : null}
 
@@ -359,8 +666,8 @@ export default function WordPressSecurity() {
       )}
 
       <p className="text-[11px] leading-relaxed text-white/30">
-        This scan is passive: it reads the pages the site already serves publicly and the standard
-        WordPress files. It does not bruteforce plugin or theme names, enumerate users, or attempt
+        The WPScan check above is passive: it reads the pages the site already serves publicly and
+        the standard WordPress files. It does not bruteforce plugin or theme names, enumerate users, or attempt
         any login. Version numbers a site advertises can be stripped or faked, so a finding marked
         Unconfirmed means the version could not be compared against the fix.
       </p>

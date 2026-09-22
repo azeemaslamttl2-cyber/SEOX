@@ -18,7 +18,7 @@ function parseProjectData(value) {
   }
 }
 
-function normalizeProjectDomain(value) {
+export function normalizeProjectDomain(value) {
   try {
     const url = new URL(String(value || "").trim());
     return url.hostname.replace(/^www\./i, "").toLowerCase();

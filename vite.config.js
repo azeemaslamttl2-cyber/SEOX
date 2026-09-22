@@ -17,6 +17,13 @@ import { onRequest as gbpInsightsOnRequest } from "./functions/api/gbp/insights.
 import { onRequest as gbpQandaOnRequest } from "./functions/api/gbp/qanda.js";
 import { onRequest as gbpRecommendationsOnRequest } from "./functions/api/gbp/recommendations.js";
 import { onRequest as gbpHistoryOnRequest } from "./functions/api/gbp/history.js";
+import { onRequest as jiraConnectOnRequest } from "./functions/api/jira/connect.js";
+import { onRequest as jiraStatusOnRequest } from "./functions/api/jira/status.js";
+import { onRequest as jiraMetadataOnRequest } from "./functions/api/jira/metadata.js";
+import { onRequest as jiraMappingOnRequest } from "./functions/api/jira/mapping.js";
+import { onRequest as jiraIssuesOnRequest } from "./functions/api/jira/issues.js";
+import { onRequest as jiraWebhookOnRequest } from "./functions/api/jira/webhook.js";
+import { onRequest as jiraJobsOnRequest } from "./functions/api/jira/jobs.js";
 import { onRequest as wordpressSecurityOnRequest } from "./functions/api/tech-seo/wordpress-security.js";
 import { onRequest as deepseekSettingsOnRequest } from "./functions/api/deepseek-settings.js";
 import { onRequest as pagespeedOnRequest } from "./functions/api/pagespeed.js";
@@ -514,6 +521,51 @@ function gbpApiPlugin() {
     },
     configurePreviewServer(server) {
       registerGbpMiddleware(server);
+    },
+  };
+}
+
+// Pages Functions route functions/api/jira/<name>.js to /api/jira/<name>; as
+// with GBP, the Node process that serves the app needs the same mapping
+// registered by hand. Production runs `vite preview` on :4173 and serves
+// /api/* from these very middlewares, so every route MUST be registered for
+// configurePreviewServer as well as configureServer - a route registered only
+// for dev works locally and 404s in production.
+const JIRA_ROUTES = {
+  "/api/jira/connect": jiraConnectOnRequest,
+  "/api/jira/status": jiraStatusOnRequest,
+  "/api/jira/metadata": jiraMetadataOnRequest,
+  "/api/jira/mapping": jiraMappingOnRequest,
+  "/api/jira/issues": jiraIssuesOnRequest,
+  "/api/jira/webhook": jiraWebhookOnRequest,
+  "/api/jira/jobs": jiraJobsOnRequest,
+};
+
+function registerJiraMiddleware(server) {
+  for (const [mountPath, handler] of Object.entries(JIRA_ROUTES)) {
+    server.middlewares.use(mountPath, async (req, res) => {
+      try {
+        const request = await createWebRequest(req, mountPath);
+        const response = await handler({ request, env: loadDevApiEnv() });
+        await sendWebResponse(res, response);
+      } catch (error) {
+        sendJson(res, error?.status || 500, {
+          error: "Jira request failed",
+          message: error?.message || "Unknown error",
+        });
+      }
+    });
+  }
+}
+
+function jiraApiPlugin() {
+  return {
+    name: "seox-jira-api",
+    configureServer(server) {
+      registerJiraMiddleware(server);
+    },
+    configurePreviewServer(server) {
+      registerJiraMiddleware(server);
     },
   };
 }
@@ -2315,7 +2367,7 @@ function sendJson(res, status, payload) {
 }
 
 export default defineConfig({
-  plugins: [react(), proxyApiPlugin(), deepseekApiPlugin(), deepseekSettingsApiPlugin(), fetchUrlMetaApiPlugin(), pagespeedApiPlugin(), speedApiPlugin(), wordpressSecurityApiPlugin(), screamingFrogApiPlugin(), webmasterApiPlugin(), autocompleteApiPlugin(), gscTokenApiPlugin(), gbpApiPlugin(), projectsApiPlugin(), projectDetailsApiPlugin(), settingsApiPlugin(), backlinksAnalyzeApiPlugin(), w3cValidationApiPlugin(), expiredDomainsCheckApiPlugin(), backlinkCleanerApiPlugin(), backlinkIndexerApiPlugin(), keywordResearchApiPlugin(), ubersuggestApiPlugin(), authApiPlugin(), contentOutlineApiPlugin(), entitiesExtractorApiPlugin(), entitiesGeneratorApiPlugin(), contentNgramsApiPlugin(), contentNlpApiPlugin(), contentGrammarApiPlugin(), contentUniqueNgramsApiPlugin(), contentSkipGramApiPlugin(), contentOptimizationApiPlugin(), contentWatermarkRemoverApiPlugin(), contentSemanticGeneratorApiPlugin(), contentAnalyzerApiPlugin(), aiHelperApiPlugin(), textEditorApiPlugin(), domainSeparatorApiPlugin(), wordCounterApiPlugin(), botViewerApiPlugin(), daPaCheckerApiPlugin(), metaExtractorApiPlugin(), sitemapExtractorApiPlugin(), seoToolsApiPlugin(), promptTrackingApiPlugin(), brandSentimentApiPlugin(), citationFlowApiPlugin(), competitorResearchApiPlugin(), internalLinksApiPlugin(), aiChatApiPlugin(), llmsGeneratorApiPlugin(), aiModelCheckerApiPlugin(), aiCompatibilityApiPlugin(), semanticWriterEditorApiPlugin(), contentWriterApiPlugin(), auditorApiPlugin(), crawlerApiPlugin()],
+  plugins: [react(), proxyApiPlugin(), deepseekApiPlugin(), deepseekSettingsApiPlugin(), fetchUrlMetaApiPlugin(), pagespeedApiPlugin(), speedApiPlugin(), wordpressSecurityApiPlugin(), screamingFrogApiPlugin(), webmasterApiPlugin(), autocompleteApiPlugin(), gscTokenApiPlugin(), gbpApiPlugin(), jiraApiPlugin(), projectsApiPlugin(), projectDetailsApiPlugin(), settingsApiPlugin(), backlinksAnalyzeApiPlugin(), w3cValidationApiPlugin(), expiredDomainsCheckApiPlugin(), backlinkCleanerApiPlugin(), backlinkIndexerApiPlugin(), keywordResearchApiPlugin(), ubersuggestApiPlugin(), authApiPlugin(), contentOutlineApiPlugin(), entitiesExtractorApiPlugin(), entitiesGeneratorApiPlugin(), contentNgramsApiPlugin(), contentNlpApiPlugin(), contentGrammarApiPlugin(), contentUniqueNgramsApiPlugin(), contentSkipGramApiPlugin(), contentOptimizationApiPlugin(), contentWatermarkRemoverApiPlugin(), contentSemanticGeneratorApiPlugin(), contentAnalyzerApiPlugin(), aiHelperApiPlugin(), textEditorApiPlugin(), domainSeparatorApiPlugin(), wordCounterApiPlugin(), botViewerApiPlugin(), daPaCheckerApiPlugin(), metaExtractorApiPlugin(), sitemapExtractorApiPlugin(), seoToolsApiPlugin(), promptTrackingApiPlugin(), brandSentimentApiPlugin(), citationFlowApiPlugin(), competitorResearchApiPlugin(), internalLinksApiPlugin(), aiChatApiPlugin(), llmsGeneratorApiPlugin(), aiModelCheckerApiPlugin(), aiCompatibilityApiPlugin(), semanticWriterEditorApiPlugin(), contentWriterApiPlugin(), auditorApiPlugin(), crawlerApiPlugin()],
   server: {
     port: 3000,
     host: true,

@@ -11,9 +11,9 @@ const brands = [
 
 export default function Brands() {
   return (
-    <section className="border-y border-white/5 bg-ink-800/30 py-12">
+    <section className="landing-section is-brands landing-brands py-12">
       <div className="container-px">
-        <p className="text-center text-[11px] font-semibold uppercase tracking-[0.3em] text-white/40">
+        <p className="landing-brands-label">
           Inspired by global search experts
         </p>
 
@@ -22,7 +22,7 @@ export default function Brands() {
             {[...brands, ...brands].map((b, i) => (
               <span
                 key={i}
-                className="font-display text-2xl font-bold tracking-tight text-white/40 transition-colors hover:text-brand-300 sm:text-3xl"
+                className="landing-brand-name"
               >
                 {b}
               </span>

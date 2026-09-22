@@ -21,14 +21,14 @@ const steps = [
 
 export default function Workflow() {
   return (
-    <section className="py-20 sm:py-28">
+    <section className="landing-section is-workflow py-20 sm:py-28">
       <div className="container-px">
         <div className="text-center">
           <span className="chip">How It Works</span>
-          <h2 className="mt-5 font-display text-4xl font-bold tracking-tight sm:text-5xl">
-            From Insight to <span className="gradient-text">Impact</span> in 3 steps
+          <h2 className="landing-section-title mt-5">
+            From Insight to <span className="landing-accent">Impact</span> in 3 steps
           </h2>
-          <p className="mx-auto mt-4 max-w-2xl text-white/60">
+          <p className="landing-section-sub mx-auto mt-4 max-w-2xl">
             No agencies. No spreadsheets. Just one elegant framework that thinks like a senior SEO
             strategist.
           </p>
@@ -36,7 +36,7 @@ export default function Workflow() {
 
         <div className="relative mt-14 grid gap-6 lg:grid-cols-3">
           {/* Connector line */}
-          <div className="absolute left-1/2 top-10 hidden h-0.5 w-2/3 -translate-x-1/2 bg-gradient-to-r from-transparent via-brand-500/40 to-transparent lg:block" />
+          <div className="landing-connector hidden lg:block" />
           {steps.map((s, i) => {
             const Icon = s.icon;
             return (
@@ -49,14 +49,13 @@ export default function Workflow() {
                 className="relative"
               >
                 <div className="relative mx-auto mb-5 flex h-20 w-20 items-center justify-center">
-                  <div className="absolute inset-0 rounded-full bg-gradient-to-br from-brand-500/30 to-brand-700/0 blur-xl" />
-                  <div className="relative flex h-20 w-20 items-center justify-center rounded-full border border-brand-500/30 bg-gradient-to-br from-brand-500/20 to-ink-800">
-                    <Icon className="h-8 w-8 text-brand-300" />
+                  <div className="landing-step-badge">
+                    <Icon className="h-8 w-8" />
                   </div>
                 </div>
-                <div className="feature-card text-center">
-                  <h3 className="font-display text-xl font-bold">{s.title}</h3>
-                  <p className="mt-2 text-sm leading-relaxed text-white/55">{s.desc}</p>
+                <div className="landing-card text-center">
+                  <h3 className="landing-step-title">{s.title}</h3>
+                  <p className="landing-step-desc mt-2">{s.desc}</p>
                 </div>
               </motion.div>
             );

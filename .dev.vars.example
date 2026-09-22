@@ -3,6 +3,11 @@
 
 DEEPSEEK_API_KEY=
 PAGESPEED_API_KEY=
+
+# WPScan vulnerability database token (optional).
+# Tech SEO > WordPress Security lists components without it, but cannot match
+# them to known CVEs. Free tier: 25 requests/day, non-commercial use only.
+WPSCAN_API_TOKEN=
 DATAFORSEO_LOGIN=
 DATAFORSEO_PASSWORD=
 
@@ -20,3 +25,33 @@ ADMIN_EMAILS=
 
 STRIPE_SECRET_KEY=
 APP_URL=http://localhost:8788
+
+# --- Jira integration (optional) ---------------------------------------------
+# Jira is an optional integration. With these unset, every Jira screen reports
+# "not connected" and the rest of SEOX is unaffected.
+
+# REQUIRED to use Jira. Encrypts the stored Jira API token and webhook secret.
+# Generate with: openssl rand -base64 32
+# Changing or losing it invalidates every stored Jira credential - users then
+# have to reconnect.
+JIRA_TOKEN_ENCRYPTION_KEY=
+
+# REQUIRED for background sync (status reconciliation and fix verification).
+# A long random string, sent as the X-Jira-Scheduler-Token header by whatever
+# calls POST /api/jira/jobs on a timer. If it is unset the job runner is
+# DISABLED rather than left open.
+JIRA_SCHEDULER_TOKEN=
+
+# Optional. A second shared secret additionally required as the
+# X-SEOX-Webhook-Secret header on the Jira webhook. Only useful where a proxy
+# can inject a header; leave unset otherwise.
+JIRA_WEBHOOK_SECRET=
+
+# Optional tuning for outbound Jira calls. Defaults shown.
+# JIRA_DEFAULT_TIMEOUT_MS=15000
+# JIRA_INTERACTIVE_TIMEOUT_MS=8000
+# JIRA_MAX_RETRIES=2
+
+# Testing only - permits an http:// or private-network Jira base URL.
+# Ignored when NODE_ENV=production. MUST stay unset in production.
+# JIRA_ALLOW_INSECURE_BASE_URL=

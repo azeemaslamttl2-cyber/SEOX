@@ -52,18 +52,26 @@ test("the settings categories are not collapsed back into three tabs", () => {
   // that the General page's own categories are separated too.
   assert.ok(SETTINGS_TABS.length >= 4);
   const ids = SETTINGS_TABS.map((tab) => tab.id);
-  assert.deepEqual(ids, ["seo-apis", "google", "stripe", "deepseek"]);
+  // The first four are the original split and their order is load-bearing:
+  // "seo-apis" is the default tab every unknown value falls back to. Jira was
+  // appended as an optional integration panel; further integrations belong on
+  // the end too, not interleaved.
+  assert.deepEqual(ids.slice(0, 4), ["seo-apis", "google", "stripe", "deepseek"]);
+  assert.deepEqual(ids, ["seo-apis", "google", "stripe", "deepseek", "jira"]);
 });
 
 test("the integration tabs render their existing panels rather than new storage", () => {
   const stripe = getTab("stripe");
   const deepseek = getTab("deepseek");
+  const jira = getTab("jira");
   assert.equal(stripe.panel, "stripe");
   assert.equal(deepseek.panel, "deepseek");
+  assert.equal(jira.panel, "jira");
   // An integration tab owns no admin_settings keys, so it cannot create a
   // second copy of a credential that already lives in its own table.
   assert.deepEqual(keysForTab(stripe), []);
   assert.deepEqual(keysForTab(deepseek), []);
+  assert.deepEqual(keysForTab(jira), []);
 });
 
 test("unknown, legacy and empty tab values resolve to a real tab", () => {
@@ -91,10 +99,20 @@ test("the old settings URLs redirect to their tab instead of 404ing", () => {
   );
 });
 
-test("the sidebar offers one settings entry point", () => {
+test("the sidebar links one settings page, never per-category routes", () => {
+  // The rule being pinned is that per-category settings ROUTES stay gone -
+  // /settings/stripe, /settings/deepseek and the rest were collapsed into
+  // tabs, and LegacySettingsRedirect exists to keep their bookmarks working.
+  // A `?tab=` deep link is not a reintroduction of that: it is the same
+  // route and the same component, with a tab preselected.
   const section = sidebarSource.slice(sidebarSource.indexOf('section: "Settings"'));
   const links = [...section.matchAll(/to: "(\/settings[^"]*)"/g)].map((match) => match[1]);
-  assert.deepEqual(links, ["/settings/general"]);
+
+  for (const link of links) {
+    const [path] = link.split("?");
+    assert.equal(path, "/settings/general", `${link} must not be a separate settings route`);
+  }
+  assert.ok(links.includes("/settings/general"), "the settings page itself must stay linked");
 });
 
 test("the selected tab stays visually distinct from the unselected ones", () => {

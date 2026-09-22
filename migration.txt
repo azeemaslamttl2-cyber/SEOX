@@ -1,0 +1,576 @@
+================================================================================
+SEOX DATABASE MIGRATIONS - REVIEW AND RUN MANUALLY
+================================================================================
+
+NOTHING IN THIS FILE HAS BEEN EXECUTED.
+
+No CREATE, ALTER, DROP, INSERT, UPDATE or DELETE was run against any database
+while this integration was implemented. Review the statements below and apply
+them yourself.
+
+Target database : code-step-mysql
+Server          : MySQL 9.1.0 (per the header of mysql_tables.sql)
+Charset         : utf8mb4 / utf8mb4_general_ci  (matches every existing table)
+Engine          : InnoDB
+
+
+--------------------------------------------------------------------------------
+SECTION 0 - PREVIOUSLY PENDING (unrelated to Jira, left as it was found)
+--------------------------------------------------------------------------------
+This statement was already in migration.txt before the Jira work and is kept
+here untouched. Check whether it has already been applied - the equivalent
+file migration/mysql/20260918_project_site_token.sql also exists.
+
+ALTER TABLE user_projects
+ADD COLUMN site_token VARCHAR(255) NULL
+COMMENT 'WPScan API token for WordPress security scans';
+
+
+================================================================================
+SEOX JIRA INTEGRATION DATABASE MIGRATION
+================================================================================
+
+  1. Jira Connection Tables
+  2. SEOX Project <-> Jira Project Mapping
+  3. SEO Finding <-> Jira Issue Mapping
+  4. Jira Synchronization (activity / audit log)
+  5. Jira Webhooks (idempotency ledger and inbox)
+  6. Jira Background Jobs
+  7. Indexes (all inline; this section explains the reasoning)
+  8. Seed / Default Data
+  9. Verification Queries
+ 10. Rollback Queries
+ 11. Retention / Housekeeping
+ 12. Pre-flight Checks
+
+DESIGN NOTES THAT APPLY TO EVERY STATEMENT BELOW
+
+  * ADDITIVE ONLY. Not one existing table is altered. Rolling the application
+    code back therefore needs NO database rollback - the new tables simply go
+    unread. This is what makes Jira safe to deploy and safe to remove.
+
+  * Every table is CREATE TABLE IF NOT EXISTS, so the script is idempotent and
+    can be re-run without harm.
+
+  * Scoping follows the existing convention exactly: `user_id` BIGINT UNSIGNED
+    plus `project_id` VARCHAR(255). Note that `project_id` is the APPLICATION
+    id in user_projects.project_id, not the bigint primary key - every existing
+    server query scopes on that pair, and so do these.
+
+  * Naming follows the existing dumps: uq_<table>_<cols>, idx_<table>_<purpose>,
+    fk_<table>_<ref>.
+
+  * Foreign keys to users(id) ON DELETE CASCADE, matching user_projects,
+    tool_results, gsc_connections and stripe_connections. There is deliberately
+    NO foreign key on connection_id, mirroring the existing loose coupling
+    between gbp_locations and gbp_connections - disconnecting must not cascade
+    away the record of what was filed.
+
+  * The application NEVER creates these tables. If they are absent, every Jira
+    read degrades to "not connected" (see the tolerant() helper in
+    functions/_lib/jira-repository.js) and the rest of SEOX is unaffected.
+
+
+--------------------------------------------------------------------------------
+1. JIRA CONNECTION TABLES
+--------------------------------------------------------------------------------
+Purpose : one Jira credential per (user, project). Modelled directly on
+          gbp_connections.
+Secrets : api_token_encrypted and webhook_secret_encrypted hold AES-GCM
+          ciphertext in the format "v1.<base64 iv>.<base64 ciphertext>",
+          produced by functions/_lib/secret-crypto.js under the key
+          JIRA_TOKEN_ENCRYPTION_KEY. Plaintext is never written.
+          (gsc_connections stores its tokens in plaintext TEXT. That is a
+          pre-existing weakness, not a precedent - this table follows
+          gbp_connections instead.)
+Note    : webhook_secret_lookup is sha256(secret) in hex. The secret itself is
+          encrypted and so cannot appear in a WHERE clause; this non-reversible
+          hash lets the webhook endpoint find its connection in one indexed
+          read, after which the decrypted secret is compared in constant time.
+          (This column is an addition to the written plan - the plan stored only
+          the encrypted secret, which is not searchable.)
+
+CREATE TABLE IF NOT EXISTS `jira_connections` (
+  `id`                       bigint UNSIGNED NOT NULL AUTO_INCREMENT,
+  `user_id`                  bigint UNSIGNED NOT NULL,
+  `project_id`               varchar(255) COLLATE utf8mb4_general_ci NOT NULL,
+  `base_url`                 varchar(500) COLLATE utf8mb4_general_ci NOT NULL,
+  `auth_type`                varchar(20)  COLLATE utf8mb4_general_ci NOT NULL DEFAULT 'api_token',
+  `account_email`            varchar(255) COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `account_id`               varchar(128) COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `account_display_name`     varchar(255) COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `api_token_encrypted`      text COLLATE utf8mb4_general_ci,
+  `oauth_refresh_encrypted`  text COLLATE utf8mb4_general_ci,
+  `oauth_expires_at`         datetime DEFAULT NULL,
+  `cloud_id`                 varchar(128) COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `scope`                    text COLLATE utf8mb4_general_ci,
+  `webhook_secret_encrypted` text COLLATE utf8mb4_general_ci,
+  `webhook_secret_lookup`    char(64) COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `webhook_created_at`       datetime DEFAULT NULL,
+  `status`                   varchar(32)  COLLATE utf8mb4_general_ci NOT NULL DEFAULT 'connected',
+  `status_detail`            varchar(500) COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `last_checked_at`          datetime DEFAULT NULL,
+  `last_sync_at`             datetime DEFAULT NULL,
+  `last_event_at`            datetime DEFAULT NULL,
+  `authorized_by_email`      varchar(255) COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `connected_at`             datetime NOT NULL,
+  `updated_at`               datetime NOT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uq_jira_connections_user_project` (`user_id`,`project_id`),
+  UNIQUE KEY `uq_jira_connections_webhook_lookup` (`webhook_secret_lookup`),
+  KEY `idx_jira_connections_status` (`status`),
+  CONSTRAINT `fk_jira_connections_user`
+    FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+  status values written by the code:
+    'connected' | 'invalid_credentials' | 'error' | 'disconnected'
+
+  The oauth_* / cloud_id / scope columns are unused today. They exist so that
+  adding OAuth 2.0 3LO later is a code change rather than a migration; they
+  cost nothing while NULL.
+
+
+--------------------------------------------------------------------------------
+2. SEOX PROJECT <-> JIRA PROJECT MAPPING
+--------------------------------------------------------------------------------
+Purpose : which Jira project a SEOX project files into, and how.
+Why separate from jira_connections: a connection is a credential and may be
+          re-authorised without disturbing the configuration. Keeping them
+          apart also keeps the credential row small and rarely written.
+
+CREATE TABLE IF NOT EXISTS `jira_project_mappings` (
+  `id`                            bigint UNSIGNED NOT NULL AUTO_INCREMENT,
+  `user_id`                       bigint UNSIGNED NOT NULL,
+  `project_id`                    varchar(255) COLLATE utf8mb4_general_ci NOT NULL,
+  `connection_id`                 bigint UNSIGNED NOT NULL,
+  `jira_project_id`               varchar(64)  COLLATE utf8mb4_general_ci NOT NULL,
+  `jira_project_key`              varchar(64)  COLLATE utf8mb4_general_ci NOT NULL,
+  `jira_project_name`             varchar(255) COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `default_issue_type_id`         varchar(64)  COLLATE utf8mb4_general_ci NOT NULL,
+  `default_issue_type_name`       varchar(120) COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `default_priority_id`           varchar(64)  COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `priority_supported`            tinyint(1) NOT NULL DEFAULT '1',
+  `default_assignee_account_id`   varchar(128) COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `default_assignee_display_name` varchar(255) COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `default_labels`                json DEFAULT NULL,
+  `components`                    json DEFAULT NULL,
+  `severity_priority_map`         json DEFAULT NULL,
+  `auto_create_enabled`           tinyint(1) NOT NULL DEFAULT '0',
+  `auto_sync_enabled`             tinyint(1) NOT NULL DEFAULT '1',
+  `post_verification_comments`    tinyint(1) NOT NULL DEFAULT '1',
+  `reopen_behaviour`              varchar(20) COLLATE utf8mb4_general_ci NOT NULL DEFAULT 'reopen',
+  `on_duplicate`                  varchar(20) COLLATE utf8mb4_general_ci NOT NULL DEFAULT 'adopt',
+  `verification_delay_minutes`    smallint UNSIGNED NOT NULL DEFAULT '10',
+  `auto_create_rules`             json DEFAULT NULL,
+  `status`                        varchar(20) COLLATE utf8mb4_general_ci NOT NULL DEFAULT 'active',
+  `status_detail`                 varchar(500) COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `last_validated_at`             datetime DEFAULT NULL,
+  `created_at`                    datetime NOT NULL,
+  `updated_at`                    datetime NOT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uq_jira_mapping_user_project` (`user_id`,`project_id`),
+  KEY `idx_jira_mapping_connection` (`connection_id`),
+  CONSTRAINT `fk_jira_mapping_user`
+    FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+  auto_create_enabled DEFAULT 0 is deliberate and load-bearing. A first crawl
+  of a neglected site can produce thousands of findings; defaulting this on
+  would fill a client's Jira board on day one.
+
+  Value vocabularies written by the code:
+    reopen_behaviour : 'reopen' | 'comment' | 'none'
+    on_duplicate     : 'adopt'  | 'block'
+    status           : 'active' | 'invalid' | 'disabled'
+    severity_priority_map : {"error":"<jiraPriorityId>","warning":"...","notice":"..."}
+    auto_create_rules     : reserved for the phase-4 automation config; NULL today
+
+
+--------------------------------------------------------------------------------
+3. SEO FINDING <-> JIRA ISSUE MAPPING            *** THE CORE TABLE ***
+--------------------------------------------------------------------------------
+Purpose : the link between an SEO finding and a Jira issue, its state, and
+          everything needed to RE-VERIFY the finding later without a browser.
+
+Why verification_spec exists: the SEOX crawler runs in the browser
+(src/context/CrawlContext.jsx). When a developer closes a ticket at 2am no
+browser is open, so the server must already know what to re-check. That
+record is written at creation time and lives in this column.
+
+CREATE TABLE IF NOT EXISTS `jira_issue_links` (
+  `id`                     bigint UNSIGNED NOT NULL AUTO_INCREMENT,
+  `user_id`                bigint UNSIGNED NOT NULL,
+  `project_id`             varchar(255)  COLLATE utf8mb4_general_ci NOT NULL,
+  `connection_id`          bigint UNSIGNED NOT NULL,
+  `fingerprint`            char(64)      COLLATE utf8mb4_general_ci NOT NULL,
+  `source_module`          varchar(40)   COLLATE utf8mb4_general_ci NOT NULL,
+  `finding_type`           varchar(191)  COLLATE utf8mb4_general_ci NOT NULL,
+  `scope_kind`             varchar(16)   COLLATE utf8mb4_general_ci NOT NULL DEFAULT 'url',
+  `scope_key`              varchar(1024) COLLATE utf8mb4_general_ci NOT NULL,
+  `scope_key_hash`         char(64)      COLLATE utf8mb4_general_ci NOT NULL,
+  `finding_title`          varchar(500)  COLLATE utf8mb4_general_ci NOT NULL,
+  `severity`               varchar(16)   COLLATE utf8mb4_general_ci NOT NULL DEFAULT 'warning',
+  `affected_url`           varchar(2048) COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `affected_url_count`     int UNSIGNED NOT NULL DEFAULT '1',
+  `finding_snapshot`       json DEFAULT NULL,
+  `verification_spec`      json DEFAULT NULL,
+  `jira_issue_id`          varchar(64)   COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `jira_issue_key`         varchar(64)   COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `jira_issue_url`         varchar(1000) COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `jira_status`            varchar(120)  COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `jira_status_category`   varchar(20)   COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `jira_resolution`        varchar(120)  COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `jira_priority`          varchar(120)  COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `jira_assignee_id`       varchar(128)  COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `jira_assignee_name`     varchar(255)  COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `remote_created_at`      datetime DEFAULT NULL,
+  `remote_updated_at`      datetime DEFAULT NULL,
+  `previous_issue_keys`    json DEFAULT NULL,
+  `state`                  varchar(20)   COLLATE utf8mb4_general_ci NOT NULL DEFAULT 'creating',
+  `seox_state`             varchar(24)   COLLATE utf8mb4_general_ci NOT NULL DEFAULT 'open',
+  `created_by`             varchar(255)  COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `creation_mode`          varchar(12)   COLLATE utf8mb4_general_ci NOT NULL DEFAULT 'manual',
+  `ai_used`                tinyint(1) NOT NULL DEFAULT '0',
+  `last_error`             varchar(1000) COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `last_synced_at`         datetime DEFAULT NULL,
+  `verified_at`            datetime DEFAULT NULL,
+  `verification_result`    json DEFAULT NULL,
+  `verification_attempts`  tinyint UNSIGNED NOT NULL DEFAULT '0',
+  `reopened_count`         smallint UNSIGNED NOT NULL DEFAULT '0',
+  `last_comment`           json DEFAULT NULL,
+  `comment_count`          int UNSIGNED NOT NULL DEFAULT '0',
+  `created_at`             datetime NOT NULL,
+  `updated_at`             datetime NOT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uq_jira_link_fingerprint` (`user_id`,`fingerprint`),
+  UNIQUE KEY `uq_jira_link_issue` (`connection_id`,`jira_issue_id`),
+  KEY `idx_jira_link_project_state` (`user_id`,`project_id`,`seox_state`),
+  KEY `idx_jira_link_issue_lookup` (`jira_issue_id`),
+  KEY `idx_jira_link_sync_due` (`seox_state`,`last_synced_at`),
+  KEY `idx_jira_link_type` (`user_id`,`project_id`,`source_module`,`finding_type`),
+  CONSTRAINT `fk_jira_link_user`
+    FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+  *** DO NOT REMOVE OR WEAKEN uq_jira_link_fingerprint ***
+  It is the actual duplicate-prevention guarantee. Two concurrent "Create Jira
+  Issue" clicks both reach the INSERT; one wins and the other receives
+  ER_DUP_ENTRY, which the code (functions/api/jira/issues.js) treats as
+  "already linked" and serves the winner's row. An application-level check
+  alone cannot be correct under concurrency.
+  It is scoped by user_id, not global, so two tenants auditing the same public
+  URL do not collide.
+
+  uq_jira_link_issue stops two findings pointing at one Jira issue within a
+  connection, which would make webhook routing ambiguous. jira_issue_id is
+  NULL while state='creating', and MySQL permits multiple NULLs in a unique
+  index, so this does not block concurrent creates.
+
+  scope_key_hash exists because scope_key can hold a 2048-character URL, which
+  exceeds InnoDB's 3072-byte index limit under utf8mb4. The hash is what would
+  be indexed if a lookup by scope is ever needed; scope_key itself is kept for
+  display and audit.
+
+  Value vocabularies:
+    state      : 'creating' | 'linked' | 'failed' | 'unlinked' | 'orphaned'
+    seox_state : 'open' | 'in_progress' | 'resolved_pending' | 'verified'
+                 | 'reopened' | 'wont_fix' | 'unlinked'
+    scope_kind : 'url' | 'site' | 'batch'
+    creation_mode : 'manual' | 'auto'
+
+  Two state columns, not one, because they answer different questions: "did we
+  manage to file it" versus "is the SEO problem actually fixed". Collapsing
+  them loses information the UI needs.
+
+
+--------------------------------------------------------------------------------
+4. JIRA SYNCHRONIZATION - ACTIVITY AND AUDIT LOG
+--------------------------------------------------------------------------------
+Purpose : append-only record of every Jira action, in both directions. This IS
+          the audit log - it already carries actor, action, target, result and
+          timestamp, so a second audit table would only split the trail.
+
+CREATE TABLE IF NOT EXISTS `jira_sync_logs` (
+  `id`             bigint UNSIGNED NOT NULL AUTO_INCREMENT,
+  `user_id`        bigint UNSIGNED NOT NULL,
+  `project_id`     varchar(255)  COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `link_id`        bigint UNSIGNED DEFAULT NULL,
+  `action`         varchar(64)   COLLATE utf8mb4_general_ci NOT NULL,
+  `direction`      varchar(12)   COLLATE utf8mb4_general_ci NOT NULL DEFAULT 'outbound',
+  `result`         varchar(20)   COLLATE utf8mb4_general_ci NOT NULL,
+  `jira_issue_key` varchar(64)   COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `message`        varchar(1000) COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `http_status`    smallint DEFAULT NULL,
+  `duration_ms`    int UNSIGNED DEFAULT NULL,
+  `actor_email`    varchar(255)  COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `actor_kind`     varchar(16)   COLLATE utf8mb4_general_ci NOT NULL DEFAULT 'user',
+  `context`        json DEFAULT NULL,
+  `created_at`     datetime NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `idx_jira_sync_logs_project` (`user_id`,`project_id`,`created_at`),
+  KEY `idx_jira_sync_logs_link` (`link_id`,`created_at`),
+  KEY `idx_jira_sync_logs_errors` (`result`,`created_at`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+  action values written by the code:
+    connection.connect | connection.test | connection.disconnect |
+    connection.rotate  | mapping.save    | issue.create | issue.sync |
+    issue.unlink | issue.transition | comment.post | webhook.receive |
+    verify.run | job.retry | job.dead_letter
+  direction : 'outbound' | 'inbound' | 'internal'
+  result    : 'success' | 'error' | 'skipped' | 'rate_limited'
+  actor_kind: 'user' | 'system' | 'webhook' | 'scheduler'
+
+  NEVER contains a credential, an API token, a webhook secret or a full
+  webhook URL. No foreign key on link_id on purpose: the log must outlive the
+  row it refers to.
+
+
+--------------------------------------------------------------------------------
+5. JIRA WEBHOOKS - IDEMPOTENCY LEDGER AND INBOX
+--------------------------------------------------------------------------------
+Purpose : make inbound events exactly-once, and let the endpoint acknowledge
+          in under a second while the work happens in a job.
+
+CREATE TABLE IF NOT EXISTS `jira_webhook_events` (
+  `id`             bigint UNSIGNED NOT NULL AUTO_INCREMENT,
+  `connection_id`  bigint UNSIGNED NOT NULL,
+  `user_id`        bigint UNSIGNED NOT NULL,
+  `project_id`     varchar(255)  COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `event_key`      char(64)      COLLATE utf8mb4_general_ci NOT NULL,
+  `event_type`     varchar(64)   COLLATE utf8mb4_general_ci NOT NULL,
+  `jira_issue_id`  varchar(64)   COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `jira_issue_key` varchar(64)   COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `link_id`        bigint UNSIGNED DEFAULT NULL,
+  `payload`        json DEFAULT NULL,
+  `status`         varchar(20)   COLLATE utf8mb4_general_ci NOT NULL DEFAULT 'pending',
+  `attempts`       tinyint UNSIGNED NOT NULL DEFAULT '0',
+  `last_error`     varchar(1000) COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `received_at`    datetime NOT NULL,
+  `processed_at`   datetime DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uq_jira_webhook_event` (`event_key`),
+  KEY `idx_jira_webhook_pending` (`status`,`received_at`),
+  KEY `idx_jira_webhook_issue` (`jira_issue_id`,`received_at`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+  uq_jira_webhook_event IS the idempotency guarantee. Jira retries on non-2xx
+  and proxies can duplicate; an INSERT that raises ER_DUP_ENTRY means "already
+  seen" and the endpoint returns 200 immediately.
+  event_key = sha256(issueId | eventType | timestamp | changelogOrCommentId).
+
+  status : 'pending' | 'processed' | 'ignored' | 'failed'
+
+  `payload` holds a TRIMMED copy, not the raw body. A raw Jira payload embeds
+  the whole issue including every custom field and the reporter's email
+  address; storing that wholesale is both a size and a privacy problem.
+
+  This is the highest-volume table in the design. Its retention (section 11)
+  is mandatory, not optional.
+
+
+--------------------------------------------------------------------------------
+6. JIRA BACKGROUND JOBS
+--------------------------------------------------------------------------------
+Purpose : the work queue. A near-copy of gbp_jobs so the proven claim / retry /
+          dead-letter logic carries over.
+
+CREATE TABLE IF NOT EXISTS `jira_jobs` (
+  `id`              bigint UNSIGNED NOT NULL AUTO_INCREMENT,
+  `user_id`         bigint UNSIGNED NOT NULL,
+  `project_id`      varchar(255)  COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `link_id`         bigint UNSIGNED DEFAULT NULL,
+  `job_type`        varchar(40)   COLLATE utf8mb4_general_ci NOT NULL,
+  `payload`         json DEFAULT NULL,
+  `idempotency_key` varchar(191)  COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `status`          varchar(20)   COLLATE utf8mb4_general_ci NOT NULL DEFAULT 'pending',
+  `attempts`        tinyint UNSIGNED NOT NULL DEFAULT '0',
+  `max_attempts`    tinyint UNSIGNED NOT NULL DEFAULT '3',
+  `run_after`       datetime NOT NULL,
+  `locked_at`       datetime DEFAULT NULL,
+  `lock_token`      char(36) COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `last_error`      varchar(1000) COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `created_at`      datetime NOT NULL,
+  `updated_at`      datetime NOT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uq_jira_jobs_idempotency` (`idempotency_key`),
+  KEY `idx_jira_jobs_claim` (`status`,`run_after`),
+  KEY `idx_jira_jobs_owner` (`user_id`,`project_id`),
+  KEY `idx_jira_jobs_link` (`link_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+  job_type : 'jira_verify' | 'jira_reconcile' | 'jira_webhook' |
+             'jira_reopen' | 'jira_prune'
+  status   : 'pending' | 'running' | 'done' | 'dead'
+
+  The code NULLs idempotency_key when a job reaches 'done' or 'dead', so the
+  same logical work can be queued again later. MySQL permits multiple NULLs in
+  a unique index, which is what makes that work.
+
+  RELATED OBSERVATION, worth acting on separately: functions/_lib/gbp-jobs.js
+  relies on ER_DUP_ENTRY from a unique index on gbp_jobs.idempotency_key
+  (see the comment at gbp-jobs.js:245), but no such index appears in
+  seox-main/migration/mysql/20260912_gbp_schema_completion.sql. Either it
+  exists in the live database and not in the checked-in DDL, or that race
+  guard is currently ineffective. Worth checking:
+    SHOW INDEX FROM gbp_jobs;
+  It is NOT changed by this migration.
+
+
+--------------------------------------------------------------------------------
+7. INDEXES - WHY EACH ONE EXISTS
+--------------------------------------------------------------------------------
+All indexes are declared inline above. The reasoning, since removing one would
+be easy and expensive:
+
+  uq_jira_link_fingerprint        duplicate prevention under concurrency (§3)
+  uq_jira_link_issue              unambiguous webhook routing
+  idx_jira_link_project_state     the per-project link list and the dashboard
+                                  counts (one grouped query, no table scan)
+  idx_jira_link_issue_lookup      the webhook hot path: issue id -> link
+  idx_jira_link_sync_due          picking links the reconcile sweep should look
+                                  at
+  idx_jira_link_type              "have we filed this finding type before"
+  uq_jira_webhook_event           inbound idempotency
+  idx_jira_webhook_pending        the job runner's claim query
+  uq_jira_jobs_idempotency        stops duplicate queued work
+  idx_jira_jobs_claim             the job claim UPDATE ... ORDER BY run_after
+  idx_jira_sync_logs_project      the activity card
+  idx_jira_sync_logs_errors       the error count and the failures list
+  uq_jira_connections_webhook_lookup  one indexed read from webhook token to
+                                  connection
+
+No index is added to any existing table.
+
+
+--------------------------------------------------------------------------------
+8. SEED / DEFAULT DATA
+--------------------------------------------------------------------------------
+NONE REQUIRED. Every default is a column DEFAULT, and every setting is created
+by the user through Settings -> Jira.
+
+In particular:
+  * NO rows are added to `admin_settings`. Jira credentials are per user and
+    per project, so SETTING_DEFINITIONS in functions/_lib/app-settings.js gains
+    nothing and is not touched.
+  * NO new rows in `api_rate_limits`. Only new bucket NAMES were added, in
+    code (functions/_lib/rate-limit.js): jira:connect, jira:test, jira:create,
+    jira:sync, jira:metadata, jira:webhook. The table stores them on first use.
+    Note: the jira:webhook bucket is counted per CONNECTION id rather than per
+    user id, because inbound events have no user session. api_rate_limits has
+    no foreign key on user_id, so this is safe, and the bucket name keeps the
+    two namespaces from colliding.
+
+
+--------------------------------------------------------------------------------
+9. VERIFICATION QUERIES - run these AFTER applying
+--------------------------------------------------------------------------------
+-- All six tables present?
+SELECT TABLE_NAME
+  FROM information_schema.TABLES
+ WHERE TABLE_SCHEMA = DATABASE()
+   AND TABLE_NAME LIKE 'jira\_%'
+ ORDER BY TABLE_NAME;
+-- Expect exactly: jira_connections, jira_issue_links, jira_jobs,
+--                 jira_project_mappings, jira_sync_logs, jira_webhook_events
+
+-- The duplicate-prevention index really exists?
+SHOW INDEX FROM `jira_issue_links` WHERE Key_name = 'uq_jira_link_fingerprint';
+
+-- The idempotency indexes really exist?
+SHOW INDEX FROM `jira_webhook_events` WHERE Key_name = 'uq_jira_webhook_event';
+SHOW INDEX FROM `jira_jobs`           WHERE Key_name = 'uq_jira_jobs_idempotency';
+
+-- Charset and engine match the rest of the schema?
+SELECT TABLE_NAME, ENGINE, TABLE_COLLATION
+  FROM information_schema.TABLES
+ WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME LIKE 'jira\_%';
+-- Expect InnoDB / utf8mb4_general_ci for all six.
+
+-- No credential is ever stored in plaintext. After connecting once, every
+-- value here must start with "v1." (the AES-GCM envelope):
+SELECT id, LEFT(api_token_encrypted, 3) AS envelope
+  FROM `jira_connections` WHERE api_token_encrypted IS NOT NULL;
+
+
+--------------------------------------------------------------------------------
+10. ROLLBACK QUERIES
+--------------------------------------------------------------------------------
+Rolling the application code back needs NO database rollback - the tables are
+simply unread, and no existing table was modified. Drop them only if you want
+the schema clean.
+
+Order matters only for readability; there are no foreign keys between these
+tables.
+
+-- DROP TABLE IF EXISTS `jira_webhook_events`;
+-- DROP TABLE IF EXISTS `jira_jobs`;
+-- DROP TABLE IF EXISTS `jira_sync_logs`;
+-- DROP TABLE IF EXISTS `jira_issue_links`;
+-- DROP TABLE IF EXISTS `jira_project_mappings`;
+-- DROP TABLE IF EXISTS `jira_connections`;
+
+  WARNING: dropping jira_issue_links destroys the record of every SEO finding
+  that was filed and every fix that was verified. The Jira issues themselves
+  are untouched - SEOX never deletes anything in Jira - but the link between
+  them and the findings is gone and cannot be rebuilt.
+
+  Commented out deliberately. Uncomment only when you mean it.
+
+
+--------------------------------------------------------------------------------
+11. RETENTION / HOUSEKEEPING
+--------------------------------------------------------------------------------
+The application prunes these itself, inside the job drain (the 'jira_prune'
+handler in functions/_lib/jira-jobs.js), using the same statements shown here.
+They are listed so the policy is visible and can be run by hand if the job
+runner is not yet scheduled.
+
+  jira_sync_logs        success 90 days, errors 365 days
+  jira_webhook_events   processed/ignored 30 days, failed 90 days
+  jira_jobs             done 7 days, dead 90 days
+
+-- DELETE FROM `jira_sync_logs`
+--  WHERE (result <> 'error' AND created_at < DATE_SUB(UTC_TIMESTAMP(), INTERVAL 90 DAY))
+--     OR (result =  'error' AND created_at < DATE_SUB(UTC_TIMESTAMP(), INTERVAL 365 DAY));
+
+-- DELETE FROM `jira_webhook_events`
+--  WHERE (status IN ('processed','ignored') AND received_at < DATE_SUB(UTC_TIMESTAMP(), INTERVAL 30 DAY))
+--     OR (status = 'failed'                 AND received_at < DATE_SUB(UTC_TIMESTAMP(), INTERVAL 90 DAY));
+
+-- DELETE FROM `jira_jobs`
+--  WHERE (status = 'done' AND updated_at < DATE_SUB(UTC_TIMESTAMP(), INTERVAL 7 DAY))
+--     OR (status = 'dead' AND updated_at < DATE_SUB(UTC_TIMESTAMP(), INTERVAL 90 DAY));
+
+Without pruning, jira_webhook_events and jira_sync_logs grow without bound.
+This project has already been bitten once by a size-related MySQL problem
+(see SORT_BUFFER_FIX.md), so treat the retention as part of the deployment
+rather than as a later nicety.
+
+
+--------------------------------------------------------------------------------
+12. PRE-FLIGHT CHECKS - run these BEFORE applying
+--------------------------------------------------------------------------------
+-- 1. Nothing named jira_* already exists (this migration would skip it
+--    silently thanks to IF NOT EXISTS, which could hide a schema mismatch):
+SHOW TABLES LIKE 'jira\_%';
+-- Expect an empty result on a first run.
+
+-- 2. The database charset matches what these tables declare:
+SELECT DEFAULT_CHARACTER_SET_NAME, DEFAULT_COLLATE_NAME
+  FROM information_schema.SCHEMATA WHERE SCHEMA_NAME = DATABASE();
+-- Expect utf8mb4 / utf8mb4_general_ci.
+
+-- 3. users.id is BIGINT UNSIGNED, so the foreign keys will attach:
+SHOW COLUMNS FROM `users` LIKE 'id';
+
+-- 4. Confirm the target database before running anything:
+SELECT DATABASE();
+
+-- 5. TAKE A BACKUP FIRST.
+--    mysqldump -u <user> -p code-step-mysql > backup-before-jira.sql
+
+================================================================================
+END OF MIGRATION
+================================================================================

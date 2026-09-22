@@ -32,14 +32,14 @@ const faqs = [
 export default function FAQ() {
   const [open, setOpen] = useState(0);
   return (
-    <section id="faq" className="py-20 sm:py-28">
+    <section id="faq" className="landing-section is-faq py-20 sm:py-28">
       <div className="container-px">
         <div className="text-center">
           <span className="chip">FAQ</span>
-          <h2 className="mt-5 font-display text-4xl font-bold tracking-tight sm:text-5xl">
-            Frequently Asked <span className="gradient-text">Questions</span>
+          <h2 className="landing-section-title mt-5">
+            Frequently Asked <span className="landing-accent">Questions</span>
           </h2>
-          <p className="mx-auto mt-4 max-w-xl text-white/60">
+          <p className="landing-section-sub mx-auto mt-4 max-w-xl">
             Everything you need to know — and a few things you didn't ask.
           </p>
         </div>
@@ -52,22 +52,15 @@ export default function FAQ() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ delay: i * 0.05 }}
-              className={`overflow-hidden rounded-2xl border transition-all ${
-                open === i
-                  ? "border-brand-500/40 bg-gradient-to-b from-brand-500/[0.06] to-transparent"
-                  : "border-white/10 bg-white/[0.02]"
-              }`}
+              className={`landing-faq ${open === i ? "is-open" : ""}`}
             >
               <button
                 onClick={() => setOpen(open === i ? -1 : i)}
-                className="flex w-full items-center justify-between gap-4 px-6 py-5 text-left"
+                className="landing-faq-button"
+                aria-expanded={open === i}
               >
-                <span className="font-semibold text-white">{f.q}</span>
-                <span
-                  className={`flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full transition-all ${
-                    open === i ? "bg-brand-500 text-white" : "bg-white/5 text-white/60"
-                  }`}
-                >
+                <span className="landing-faq-q">{f.q}</span>
+                <span className={`landing-faq-icon ${open === i ? "is-open" : ""}`}>
                   {open === i ? <Minus className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
                 </span>
               </button>
@@ -80,7 +73,7 @@ export default function FAQ() {
                     transition={{ duration: 0.3 }}
                     className="overflow-hidden"
                   >
-                    <p className="px-6 pb-5 text-sm leading-relaxed text-white/65">{f.a}</p>
+                    <p className="landing-faq-a">{f.a}</p>
                   </motion.div>
                 )}
               </AnimatePresence>

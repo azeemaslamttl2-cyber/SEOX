@@ -5,8 +5,8 @@
 // Nothing probes for components that were not already referenced.
 //
 // This is deliberately the quiet half of what the WPScan CLI does. Its
-// aggressive modes â€” bruteforcing plugin and theme slugs, enumerating users via
-// ?author=N, password attacks â€” are not implemented here. From shared
+// aggressive modes — bruteforcing plugin and theme slugs, enumerating users via
+// ?author=N, password attacks — are not implemented here. From shared
 // Cloudflare egress IPs that traffic reads as an attack and gets the range
 // blocked, and user enumeration is reconnaissance for credential attacks rather
 // than site auditing. What is left still finds the thing that actually matters:
