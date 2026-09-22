@@ -158,6 +158,8 @@ job drain (`X-Jira-Scheduler-Token`). Errors use the standard envelope
 | GET | `/api/jira/issues?projectId=[&fingerprint=]` | Link list, or specific fingerprints | Session |
 | POST | `/api/jira/issues` with `admin_token` in the body | **Read-only** feed of every Jira-eligible SEO finding (§3.1) | `admin_token` |
 | POST | `/api/jira/issues` | `create` / `sync` / `unlink` / `retry` / `verify` | Session |
+| GET | `/api/jira/issues/status?admin_token=&jira_issue_key=` | Transitions this issue can make now (§3.2) | `admin_token` |
+| POST | `/api/jira/issues/status` | **Perform a transition, in Jira** (§3.2) | `admin_token` |
 | POST | `/api/jira/webhook?t=<secret>` | Receive Jira events | URL secret |
 | GET | `/api/jira/jobs?projectId=` | Queue stats, dead jobs, activity | Session |
 | POST | `/api/jira/jobs` | Drain the queue / `retry-job` | Scheduler token / Session |
@@ -322,6 +324,140 @@ logged server-side and reported as a generic message.
 | 400 | `project_id and url refer to different projects` |
 | 500 | `Failed to retrieve Jira-eligible issues` |
 
+### 3.2 Updating a ticket's status
+
+```
+POST /api/jira/issues/status
+Content-Type: application/json
+
+{ "admin_token": "YOUR_ADMIN_TOKEN", "jira_issue_key": "SEO-123" }
+```
+
+**This calls Jira.** It is the one endpoint that changes a Jira issue because a
+user asked it to. It does not write a status into `jira_issue_links` and call
+the ticket resolved — the local row is updated *afterwards*, from what Jira
+reports back, and only if Jira accepted the transition. If Jira is down,
+nothing changes anywhere.
+
+`admin_token` and nothing else, exactly as in §3.1. A session Bearer header is
+not read, and a request without the field is a 400 rather than a fall-through.
+
+**Naming the target.** Three forms, in precedence order:
+
+| Field | Meaning |
+|---|---|
+| `transition_id` | An id read from the GET above. Preferred. |
+| `status` | A destination status name, e.g. `"Done"`, `"In Progress"`. |
+| `action` | An intent: `resolve` (the default), `reopen`, `in progress`, `open`. |
+
+**Transition ids are never hardcoded and never assumed.** They are per
+project, per workflow and per the issue's *current* status, so every request
+reads `GET /rest/api/3/issue/{key}/transitions` first and resolves the target
+against that live list. A `transition_id` that is not on it is refused rather
+than sent. A `status` is matched on the destination status name, then on the
+transition's own label, and only then — if the word is one SEOX recognises —
+on the destination's `statusCategory`, which is the sole part of a Jira
+workflow that is stable across projects. An unrecognised name is an error, not
+a guess.
+
+There is no assumption that a "Resolved" status exists. `action: "resolve"`
+finds the transition whose destination is in the **done** category, which
+works on a board whose done column is called "Shipped to prod". If the only
+done transitions decline the work ("Won't Do", "Duplicate"), it refuses with
+`ONLY_DECLINING_TRANSITIONS` rather than recording a fix that never happened —
+those remain available by explicit `transition_id`.
+
+**Authorisation is four checks**, because an `admin_token` identifies a SEOX
+user, not a right to drive somebody's board:
+
+1. the issue has a `jira_issue_links` row owned by this user — otherwise 404,
+   never 403, which would confirm the issue exists
+2. that project still has a usable connection and an active mapping
+3. the issue key's prefix matches `jira_project_mappings.jira_project_key`
+4. the issue Jira actually serves is still in that project — this catches an
+   issue **moved** between Jira projects after SEOX linked it
+
+So an arbitrary key such as `OPS-9` cannot be used to close a ticket on a board
+SEOX was never pointed at.
+
+**Success** carries Jira's own values, re-read after the transition, because a
+post-function can set a resolution, reassign, or route the issue somewhere
+other than the transition's nominal destination:
+
+```json
+{
+  "success": true,
+  "message": "Jira ticket SEO-123 updated successfully",
+  "data": {
+    "jira_issue_key": "SEO-123",
+    "previous_status": "In Progress",
+    "new_status": "Done",
+    "new_status_category": "done",
+    "jira_resolution": "Done",
+    "jira_issue_url": "https://company.atlassian.net/browse/SEO-123",
+    "transition_id": "31",
+    "transition_name": "Done",
+    "seox_state": "resolved_pending",
+    "seox_state_label": "Awaiting verification",
+    "awaiting_verification": true,
+    "updated_at": "2026-09-22T16:00:00.000Z"
+  }
+}
+```
+
+**Note `seox_state`.** Resolving the Jira ticket moves the finding to
+*Awaiting verification* and queues the re-check — it never writes `verified`.
+Only the verification job decides between `verified` and `reopened`. That is
+the same path a webhook-delivered transition takes; both go through
+`applyRemoteState()`, so the two cannot disagree.
+
+**Errors**, all `{ "success": false, "error": "...", "code": "..." }`:
+
+| Status | `error` | `code` |
+|---|---|---|
+| 400 | `admin_token is required` | |
+| 401 | `Invalid admin_token` | |
+| 400 | `jira_issue_key is required` | |
+| 404 | `Jira issue not found` | |
+| 409 | `Jira integration is not configured` | `NOT_CONNECTED` |
+| 401 | credentials no longer valid | `INVALID_CREDENTIALS` |
+| 409 | no Jira project mapped | `NO_MAPPING` |
+| 403 | issue is not in the mapped Jira project | `WRONG_JIRA_PROJECT` |
+| 403 | issue was moved to another Jira project | `ISSUE_MOVED` |
+| 400 | `The requested Jira status transition is not available` | `TRANSITION_UNAVAILABLE` |
+| 400 | `No valid Jira transition is available to resolve this issue.` | `TRANSITION_UNAVAILABLE` |
+| 400 | only declining transitions on offer | `ONLY_DECLINING_TRANSITIONS` |
+| 429 | rate limited (`jira:transition`, 120/hour) | |
+| 502/504 | Jira unreachable — nothing was changed | |
+
+A `TRANSITION_UNAVAILABLE` response includes `data.available_transitions`, so
+the caller can offer what does exist instead of guessing again.
+
+### 3.3 The Jira Tickets page
+
+`/jira/tickets`, in the sidebar under **Jira → Tickets**. Lazy-loaded like
+every other page; `src/App.jsx` imports it dynamically, so a Jira-less install
+never downloads it.
+
+It reads **the existing feed** — one `POST /api/jira/issues` with
+`jira_created: true` per project selection — and adds no retrieval logic of
+its own. The project list comes from `ProjectsContext`, which the application
+already holds, so selecting a project costs one request and not two. Jira
+itself is called for exactly one thing: the transitions of the single ticket
+whose detail panel is open. There is no per-row Jira call.
+
+Default view is **Pending**, decided on `jira_status_category` being anything
+other than `done` — never on a list of status names, which are per-project and
+renameable. After a successful resolve the row is rewritten in place from the
+response and simply stops matching Pending; nothing reloads.
+
+**It asks for an admin token.** The ticket APIs accept `admin_token` and refuse
+every other credential, and nothing hands the browser one — so the page has a
+token field, stored in `localStorage` under `seox.jira.adminToken`, the same
+pattern Settings uses for the DeepSeek API key. Adding an endpoint that minted
+an admin token from a session was considered and rejected: it would quietly
+undo the separation these endpoints exist to keep.
+
 ### Notable status codes
 
 - `200 { "connected": false }` — Jira not set up. **Normal**, not an error.
@@ -350,6 +486,7 @@ Added to `LIMITS` in `functions/_lib/rate-limit.js`, using the existing
 | `jira:create` | 100 / hour |
 | `jira:sync` | 60 / hour |
 | `jira:metadata` | 60 / hour |
+| `jira:transition` | 120 / hour |
 | `jira:webhook` | 600 / hour, **per connection** |
 
 AI enrichment spends the existing `ai:generate` bucket — no Jira-specific AI
@@ -447,6 +584,9 @@ npx node --test tests/jiraIssueBuilder.test.js    # ADF, labels, truncation
 npx node --test tests/jiraVerification.test.js    # verification specs
 npx node --test tests/jiraSecurity.test.js        # auth, SSRF, secrets
 npx node --test tests/jiraBackwardCompat.test.js  # SEOX works without Jira
+npx node --test tests/jiraTransitions.test.js     # transition resolution rules
+npx node --test tests/jiraIssueStatus.test.js     # status endpoint auth
+npx node --test tests/jiraTicketsView.test.js     # what counts as pending
 npx node --test tests/                            # everything
 ```
 
@@ -475,18 +615,36 @@ No HTTP server and no live Jira are needed — handlers are called directly with
 | `jira-sync.js` | Apply Jira state; the three writes back |
 | `jira-jobs.js` | Handlers, retry/dead-letter, reconcile scheduler |
 | `jira-ai.js` | DeepSeek enrichment, reusing `deepseek-key.js` |
+| `jira-transitions.js` | Reading and resolving workflow transitions (pure selection) |
 
 **Routes** (`functions/api/jira/`): `connect.js`, `status.js`, `metadata.js`,
-`mapping.js`, `issues.js`, `webhook.js`, `jobs.js`
+`mapping.js`, `issues.js`, `issues/status.js`, `webhook.js`, `jobs.js`
+
+> `issues/status.js` MUST be registered before `issues.js` in
+> `JIRA_ROUTES` (vite.config.js). Connect matches a mount path as a prefix, so
+> `/api/jira/issues` also matches `/api/jira/issues/status` and would swallow
+> it. `tests/jiraPreviewMount.test.js` asserts the ordering.
 
 **Frontend**: `src/lib/jiraApi.js`, `src/lib/jiraCache.js`,
-`src/lib/jiraFindings.js`, `src/hooks/useJira.js`,
-`src/pages/settings/panels/JiraPanel.jsx`,
-`src/components/auditor/JiraIssuePanel.jsx`
+`src/lib/jiraFindings.js`, `src/lib/jiraTickets.js`,
+`src/lib/jiraTicketsApi.js`, `src/lib/jiraAdminToken.js`,
+`src/hooks/useJira.js`, `src/pages/settings/panels/JiraPanel.jsx`,
+`src/pages/jira/JiraTickets.jsx`,
+`src/components/auditor/JiraIssuePanel.jsx`,
+`src/components/jira/JiraTicketDetail.jsx`,
+`src/components/jira/JiraAdminTokenGate.jsx`
+
+Two clients on purpose: `jiraApi.js` sends the session Bearer token to the
+session-authenticated routes, `jiraTicketsApi.js` sends `admin_token` to the
+two ticket routes. One module that sometimes sends one and sometimes the other
+is how a request ends up carrying the wrong credential.
 
 **Modified**: `vite.config.js` (route registration), `rate-limit.js` (buckets),
 `gbp-crypto.js` (re-export), `settingsCatalog.js` + `SettingsPage.jsx` (tab),
-`AuditorIssueDetail.jsx` (panel), `.env.example`, `.dev.vars.example`
+`AuditorIssueDetail.jsx` (panel), `src/App.jsx` (lazy `/jira/tickets` route),
+`DashboardSidebar.jsx` (Jira section), `jira-sync.js` +
+`jira-store.js` + `jira-eligible.js` (shared helpers),
+`.env.example`, `.dev.vars.example`
 
 ---
 

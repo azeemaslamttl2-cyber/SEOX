@@ -550,7 +550,107 @@ rather than as a later nicety.
 
 
 --------------------------------------------------------------------------------
-12. PRE-FLIGHT CHECKS - run these BEFORE applying
+12. JIRA TICKETS PAGE + STATUS-UPDATE API - NO SCHEMA CHANGE REQUIRED
+--------------------------------------------------------------------------------
+Added   : /jira/tickets  (src/pages/jira/JiraTickets.jsx)
+          GET|POST /api/jira/issues/status  (functions/api/jira/issues/status.js)
+Date    : 2026-09-22
+
+*** THERE IS NO SQL TO RUN FOR THIS FEATURE. ***
+
+This section exists so the next person does not go looking. The work was
+checked against the schema above column by column and needs nothing new:
+
+  What it reads
+    Ticket list        POST /api/jira/issues, unchanged. It already joins
+                       tool_results / screaming_frog_url_reports /
+                       wp_security_findings against jira_issue_links and
+                       serves the Jira columns. The page filters that feed;
+                       it issues no query of its own.
+    One issue's link   jira_issue_links, by (user_id, jira_issue_key) or
+                       (user_id, jira_issue_id). Both are already covered -
+                       see below.
+
+  What it writes, and to which EXISTING column
+    jira_status              ← Jira's status name after the transition
+    jira_status_category     ← its statusCategory key
+    jira_resolution          ← the resolution Jira set, if any
+    jira_priority            ← re-read, because a post-function can change it
+    jira_assignee_id/_name   ← likewise
+    remote_updated_at        ← the issue's `updated`, for staleness checks
+    last_synced_at           ← now
+    seox_state               ← 'resolved_pending' etc., via mapJiraStateToSeox
+    jira_sync_logs (row)     ← action 'issue.transition', already in the
+                               documented action vocabulary in section 4
+
+  Every one of those writes goes through applyRemoteState() in
+  functions/_lib/jira-store.js - the SAME function the webhook and the
+  reconcile sweep use. A user-initiated transition and a webhook-delivered
+  one therefore cannot write different things, which is why no new column
+  and no new state value was needed.
+
+  *** seox_state is NOT set to 'verified' here. ***
+  Resolving a Jira ticket moves the finding to 'resolved_pending' and queues
+  a jira_verify job. Only that job's result writes 'verified' or 'reopened'.
+  The two states exist precisely so "the team closed the ticket" and "the SEO
+  problem is gone" stay separate claims - do not collapse them.
+
+INDEXES - the lookup this feature adds is already covered
+---------------------------------------------------------
+getOwnedLinkByIssueRef() filters on user_id AND (jira_issue_key = ? OR
+jira_issue_id = ?). The existing indexes serve it:
+
+  uq_jira_link_issue       (connection_id, jira_issue_id)
+  idx_jira_link_issue_lookup (jira_issue_id)
+
+A composite index on (user_id, jira_issue_key) was considered and DELIBERATELY
+NOT added. The endpoint is called once per user click, never in a loop, and
+jira_issue_links holds one row per filed finding - tens to low thousands per
+tenant, not millions. A fourth index on a write-hot table to save a scan that
+never runs hot is a cost with no return. Revisit only if
+`SELECT COUNT(*) FROM jira_issue_links` passes ~500k, or if the slow query log
+names this statement.
+
+-- Optional, and only if that day comes. NOT part of this delivery:
+-- ALTER TABLE `jira_issue_links`
+--   ADD INDEX `idx_jira_link_user_issue_key` (`user_id`,`jira_issue_key`);
+-- Rollback:
+-- ALTER TABLE `jira_issue_links` DROP INDEX `idx_jira_link_user_issue_key`;
+
+VERIFICATION - after deploying the page, not after running SQL
+---------------------------------------------------------------
+-- 1. Transitions performed from the Tickets page, newest first:
+SELECT created_at, jira_issue_key, message, duration_ms
+  FROM jira_sync_logs
+ WHERE action = 'issue.transition'
+ ORDER BY created_at DESC
+ LIMIT 20;
+
+-- 2. Jira said done, SEOX has not verified it yet. This is the CORRECT
+--    resting state after a resolve - not a bug:
+SELECT jira_issue_key, jira_status, seox_state, last_synced_at
+  FROM jira_issue_links
+ WHERE jira_status_category = 'done' AND seox_state = 'resolved_pending';
+
+-- 3. The verification jobs those resolves queued:
+SELECT status, COUNT(*) FROM jira_jobs
+ WHERE job_type = 'jira_verify' GROUP BY status;
+
+-- 4. Nothing jumped straight to verified without a verification run:
+SELECT COUNT(*) AS should_be_zero
+  FROM jira_issue_links
+ WHERE seox_state = 'verified' AND verified_at IS NULL;
+
+ROLLBACK
+--------
+Nothing to roll back - no DDL was issued. Reverting the feature is a code
+revert (the files listed at the top of this section, plus the route entry in
+vite.config.js and src/App.jsx). The jira_sync_logs rows it wrote are audit
+history and should be kept.
+
+
+--------------------------------------------------------------------------------
+13. PRE-FLIGHT CHECKS - run these BEFORE applying
 --------------------------------------------------------------------------------
 -- 1. Nothing named jira_* already exists (this migration would skip it
 --    silently thanks to IF NOT EXISTS, which could hide a schema mismatch):

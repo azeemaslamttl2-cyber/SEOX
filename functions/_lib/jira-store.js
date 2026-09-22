@@ -86,6 +86,44 @@ export async function getLinkByIssueKey(connectionId, jiraIssueKey) {
   );
 }
 
+/**
+ * Locate a link by its Jira issue key OR id, scoped to the owner.
+ *
+ * The status-update endpoint is reached with a Jira issue key rather than a
+ * SEOX link id, so this is the statement that decides whether the caller is
+ * allowed to touch that issue at all: an issue with no link row owned by this
+ * user is simply not found. Without the user_id pin, any admin_token could
+ * transition any tenant's ticket.
+ */
+export async function getOwnedLinkByIssueRef(userId, { issueKey, issueId } = {}) {
+  const key = String(issueKey || '').trim();
+  const id = String(issueId || '').trim();
+  if (!key && !id) return null;
+
+  const clauses = [];
+  const params = [userId];
+  if (key) {
+    clauses.push('jira_issue_key = ?');
+    params.push(key);
+  }
+  if (id) {
+    clauses.push('jira_issue_id = ?');
+    params.push(id);
+  }
+
+  return tolerant(
+    () =>
+      queryOne(
+        `SELECT * FROM jira_issue_links
+          WHERE user_id = ? AND (${clauses.join(' OR ')})
+          ORDER BY (state = 'linked') DESC, updated_at DESC
+          LIMIT 1`,
+        params
+      ),
+    null
+  );
+}
+
 export async function listLinks(userId, projectId, { states, limit = 500 } = {}) {
   const clauses = ['user_id = ?', 'project_id = ?'];
   const params = [userId, projectId];

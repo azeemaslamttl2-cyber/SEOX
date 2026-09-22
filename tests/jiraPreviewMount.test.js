@@ -6,6 +6,7 @@ const { default: config } = await import("../vite.config.js");
 const plugin = config.plugins.find((entry) => entry && entry.name === "seox-jira-api");
 
 const JIRA_ROUTES = [
+  "/api/jira/issues/status",
   "/api/jira/connect",
   "/api/jira/status",
   "/api/jira/metadata",
@@ -45,6 +46,26 @@ test("the dev server mounts exactly the same routes as preview", () => {
   plugin.configurePreviewServer({ middlewares: { use: (path) => preview.push(path) } });
 
   assert.deepEqual(dev.sort(), preview.sort());
+});
+
+test("/api/jira/issues/status is mounted BEFORE /api/jira/issues", () => {
+  // Connect matches a middleware mount path as a PREFIX, so the
+  // "/api/jira/issues" handler also matches "/api/jira/issues/status". The
+  // first registration wins, so the longer path must come first - otherwise
+  // every status update is silently answered by the eligible-issues feed,
+  // which reads `admin_token` too and would return 200 with the wrong body.
+  const mounted = [];
+  plugin.configurePreviewServer({ middlewares: { use: (path) => mounted.push(path) } });
+
+  const statusAt = mounted.indexOf("/api/jira/issues/status");
+  const issuesAt = mounted.indexOf("/api/jira/issues");
+
+  assert.notEqual(statusAt, -1, "/api/jira/issues/status is not mounted");
+  assert.notEqual(issuesAt, -1, "/api/jira/issues is not mounted");
+  assert.ok(
+    statusAt < issuesAt,
+    `/api/jira/issues/status (${statusAt}) must be registered before /api/jira/issues (${issuesAt})`
+  );
 });
 
 test("adding Jira did not disturb the existing API plugins", () => {

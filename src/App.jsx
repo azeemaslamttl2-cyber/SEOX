@@ -64,6 +64,12 @@ const ProjectsList = lazy(() => import("./pages/projects/ProjectsList.jsx"));
 const SettingsPage = lazy(() => import("./pages/settings/SettingsPage.jsx"));
 const LegacySettingsRedirect = lazy(() => import("./pages/settings/LegacySettingsRedirect.jsx"));
 
+/* ---- Jira ----
+ * Lazy like every other page. It also keeps the Jira ticket client, which
+ * carries an admin_token rather than the session Bearer token, out of the
+ * bundle every other screen downloads. */
+const JiraTickets = lazy(() => import("./pages/jira/JiraTickets.jsx"));
+
 /* ---- Site Auditor ---- */
 const AuditorLayout = lazy(() => import("./layouts/AuditorLayout.jsx"));
 const AuditorOverview = lazy(() => import("./pages/auditor/AuditorOverview.jsx"));
@@ -311,6 +317,12 @@ export default function App() {
             >
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/projects" element={<ProjectsList />} />
+              {/* Jira tickets. A page rather than another settings tab: it is
+                  a working surface across every project, while Settings > Jira
+                  stays the per-project connection screen. */}
+              <Route path="/jira/tickets" element={<JiraTickets />} />
+              <Route path="/jira" element={<Navigate to="/jira/tickets" replace />} />
+              <Route path="/jira/*" element={<Navigate to="/jira/tickets" replace />} />
               {/* One central settings page; every category is a tab on it. The
                   old per-category URLs redirect to their tab so existing
                   bookmarks and the Stripe onboarding return link keep working. */}

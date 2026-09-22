@@ -90,25 +90,39 @@ function boolFilter(value) {
 // --- input -----------------------------------------------------------------
 
 /**
+ * A query string only ever yields strings, but a JSON body carries real
+ * numbers and booleans ({"limit": 100}), so scalars are coerced rather than
+ * ignored - otherwise a POSTed limit would silently fall back to the default.
+ */
+function pickScalar(params, key) {
+  const value = params?.[key];
+  if (typeof value === 'string') return value.trim();
+  if (typeof value === 'number' && Number.isFinite(value)) return String(value);
+  if (typeof value === 'boolean') return String(value);
+  return '';
+}
+
+/**
+ * The admin_token field, validated. Shared with the status-update endpoint so
+ * both report a missing and an over-long token identically - a caller should
+ * not be able to tell which Jira endpoint it hit from the auth error.
+ */
+export function readAdminToken(params = {}) {
+  const adminToken = pickScalar(params, 'admin_token');
+  if (!adminToken) throw httpError('admin_token is required', 400);
+  if (adminToken.length > MAX_TOKEN_LENGTH) throw httpError('Invalid admin_token', 401);
+  return adminToken;
+}
+
+/**
  * Validate and normalise the request parameters - the POST JSON body, or the
  * GET query string. Pure, so the precedence rules below are testable without
  * a database.
  */
 export function parseEligibleQuery(params = {}) {
-  // A query string only ever yields strings, but a JSON body carries real
-  // numbers and booleans ({"limit": 100}), so scalars are coerced rather than
-  // ignored - otherwise a POSTed limit would silently fall back to the default.
-  const pick = (key) => {
-    const value = params[key];
-    if (typeof value === 'string') return value.trim();
-    if (typeof value === 'number' && Number.isFinite(value)) return String(value);
-    if (typeof value === 'boolean') return String(value);
-    return '';
-  };
+  const pick = (key) => pickScalar(params, key);
 
-  const adminToken = pick('admin_token');
-  if (!adminToken) throw httpError('admin_token is required', 400);
-  if (adminToken.length > MAX_TOKEN_LENGTH) throw httpError('Invalid admin_token', 401);
+  const adminToken = readAdminToken(params);
 
   const projectId = pick('project_id');
   if (projectId.length > MAX_PROJECT_ID_LENGTH) throw httpError('project_id is too long', 400);
@@ -142,8 +156,12 @@ export function parseEligibleQuery(params = {}) {
 /**
  * admin_token only, against `users.admin_token` - the same statement
  * _handlers/project-details.js uses. No session, cookie or OAuth fallback.
+ *
+ * Exported so the status-update endpoint authenticates through this exact
+ * function rather than its own copy. Two implementations of "who is this"
+ * drift, and the one that drifts is the one that gets it wrong.
  */
-async function authenticateAdmin(adminToken) {
+export async function authenticateAdmin(adminToken) {
   const admin = await queryOne(
     `SELECT id
        FROM users

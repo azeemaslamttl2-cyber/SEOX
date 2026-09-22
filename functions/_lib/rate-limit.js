@@ -39,6 +39,11 @@ export const LIMITS = {
   'jira:create': { limit: 100, windowSeconds: 3600 },
   'jira:sync': { limit: 60, windowSeconds: 3600 },
   'jira:metadata': { limit: 60, windowSeconds: 3600 },
+  // Resolving a ticket from the Jira Tickets page. Higher than sync because
+  // working through a backlog is the whole point of that screen, but still
+  // capped: each one spends three Jira calls (read, transitions, transition)
+  // plus a read-back, against the customer's shared tenant allowance.
+  'jira:transition': { limit: 120, windowSeconds: 3600 },
   // Inbound, per connection rather than per human: a webhook storm is dropped
   // rather than queued, because the reconcile sweep will catch up anyway.
   'jira:webhook': { limit: 600, windowSeconds: 3600 },
