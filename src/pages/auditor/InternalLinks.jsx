@@ -386,7 +386,7 @@ function findAnchorFromSentence(sentence, targetTerms) {
 
 function findOriginalPhraseInSentence(sentence, phrase) {
   const phraseTokens = tokenizeText(phrase);
-  const words = sentence.match(/[A-Za-z0-9][A-Za-z0-9'â€™-]*/g) || [];
+  const words = sentence.match(/[A-Za-z0-9][A-Za-z0-9'’-]*/g) || [];
   for (let i = 0; i <= words.length - phraseTokens.length; i += 1) {
     const rawWords = words.slice(i, i + phraseTokens.length);
     const rawTokens = rawWords.map(normalizeToken).filter(Boolean);

@@ -52,11 +52,13 @@ import {
   replaceLocationCategories,
   replaceLocationServices,
   replaceLocationAttributes,
+  listCachedAccounts,
   upsertAccounts,
   upsertQuestions,
   upsertReviews,
   upsertSearchKeywords,
 } from './gbp-store.js';
+import { quotaKey, quotaState, singleFlight } from './gbp-quota.js';
 import { buildSectionPatch, validateSection } from './gbp-profile.js';
 import { sentimentOf, summarise } from './gbp-reviews.js';
 
@@ -111,21 +113,127 @@ function shiftDays(date, days) {
 
 // --- Connection ------------------------------------------------------------
 
-export async function getAccounts(env, { userId, projectId }) {
+/**
+ * The Business Profile accounts this connection can manage.
+ *
+ * Reads the database unless the caller explicitly asks for a live list.
+ *
+ * `refresh` is the whole contract: a page load never sets it, so opening
+ * /local-seo/gbp costs nothing, whatever the cache holds. Only a first
+ * connection, a reconnect, or the user pressing Refresh reaches Google. The
+ * earlier version fell through to a live call whenever the cache was empty,
+ * which under a zero quota is permanently - so every page load spent a request
+ * to be refused again. That is the loop behind the "Retrying in 73s" banner.
+ *
+ * Resolves rather than throws when Google is refusing: the caller gets whatever
+ * is stored plus `quotaError`, so the page keeps working on last-synced data.
+ *
+ * @param {{ refresh?: boolean }} options
+ */
+export async function getAccounts(env, { userId, projectId, refresh = false, userInitiated = false }) {
   const connection = await requireConnection(userId, projectId, { needsAccount: false });
-  const accounts = await listAccounts(env, connection);
-  await upsertAccounts(userId, projectId, connection.id, accounts);
-  return { accounts, selectedAccountId: connection.account_id || null };
+  const selectedAccountId = connection.account_id || null;
+  const cached = await listCachedAccounts(userId, projectId);
+  const syncedAt = cached.reduce(
+    (latest, account) => (account.syncedAt && account.syncedAt > latest ? account.syncedAt : latest),
+    null
+  );
+
+  const fromDatabase = (extra = {}) => ({
+    accounts: cached,
+    selectedAccountId,
+    dataSource: 'database',
+    fromCache: true,
+    syncedAt,
+    neverSynced: cached.length === 0,
+    ...extra,
+  });
+
+  // A page load, a second tab, a component remount: all answered from storage.
+  if (!refresh) return fromDatabase();
+
+  // Persisted, so a restart does not reopen the tap; exponential with jitter,
+  // per Google's guidance. Checked before the call, never as a retry after one.
+  const state = await quotaState(userId, projectId, { userInitiated });
+  if (state.blocked) {
+    return fromDatabase({
+      quotaError: quotaMessage(cached.length > 0, state.retryAfterSeconds),
+      quotaBlocked: true,
+      likelyUnapprovedQuota: state.consecutiveFailures >= 3,
+      retryAfterSeconds: state.retryAfterSeconds,
+    });
+  }
+
+  // One live read per project at a time, however many callers arrive together.
+  return singleFlight(quotaKey(userId, projectId), async () => {
+    try {
+      const accounts = await listAccounts(env, connection);
+      await upsertAccounts(userId, projectId, connection.id, accounts);
+      return { accounts, selectedAccountId, dataSource: 'google', fromCache: false, syncedAt: new Date() };
+    } catch (error) {
+      if (error?.code !== 'QUOTA_EXCEEDED') throw error;
+      // The refusal has just been written to gbp_api_usage by gbpFetch, so the
+      // ladder below already counts it.
+      const next = await quotaState(userId, projectId);
+      return fromDatabase({
+        quotaError: quotaMessage(cached.length > 0, next.retryAfterSeconds),
+        quotaBlocked: true,
+        likelyUnapprovedQuota: Boolean(error.likelyUnapprovedQuota),
+        retryAfterSeconds: next.retryAfterSeconds,
+      });
+    }
+  });
+}
+
+/** One sentence, and it must not read as "your connection failed". */
+function quotaMessage(hasCachedData, retryAfterSeconds) {
+  const when = retryAfterSeconds
+    ? ` A fresh sync can be tried again in about ${formatWait(retryAfterSeconds)}.`
+    : '';
+  return hasCachedData
+    ? `Google's Business Profile API quota for this Cloud project is exhausted, so SEOX could not ` +
+        `sync. The information shown is the last data synchronised successfully.${when}`
+    : `Google Business Profile is temporarily unavailable because the Google API quota has been ` +
+        `exceeded. Please try again after the quota resets.${when}`;
+}
+
+function formatWait(seconds) {
+  if (seconds < 90) return `${seconds} seconds`;
+  return `${Math.round(seconds / 60)} minutes`;
 }
 
 export async function selectAccount(env, { userId, projectId, accountId }) {
   const connection = await requireConnection(userId, projectId, { needsAccount: false });
-  const accounts = await listAccounts(env, connection);
+
+  // Validated against the stored list, which was written by the live read that
+  // produced the very choice being submitted. Re-reading from Google here was a
+  // second call for an answer seconds old, and it charged the shared quota once
+  // per click. The cache is scoped to this (user, project, connection) and is
+  // deleted on disconnect, so it is the same trust boundary - an attacker still
+  // cannot name an account that this connection never saw.
+  let accounts = await listCachedAccounts(userId, projectId);
+
+  if (accounts.length === 0) {
+    // Nothing stored to check against - the only case that needs a live read.
+    const state = await quotaState(userId, projectId);
+    if (state.blocked) {
+      throw httpError(
+        quotaMessage(false, state.retryAfterSeconds),
+        429,
+        'QUOTA_EXCEEDED'
+      );
+    }
+    accounts = await singleFlight(quotaKey(userId, projectId), async () => {
+      const live = await listAccounts(env, connection);
+      await upsertAccounts(userId, projectId, connection.id, live);
+      return live;
+    });
+  }
+
   const match = accounts.find((account) => account.accountId === accountId);
   if (!match) {
     throw httpError('That Business Profile account is no longer available to this Google login.', 403);
   }
-  await upsertAccounts(userId, projectId, connection.id, accounts);
   await setConnectionAccount(userId, connection.id, match);
   return match;
 }

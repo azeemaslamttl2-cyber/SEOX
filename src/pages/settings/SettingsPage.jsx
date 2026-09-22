@@ -5,10 +5,12 @@ import { useAppSettings } from "./useAppSettings.js";
 import AppCredentialsPanel from "./panels/AppCredentialsPanel.jsx";
 import StripePanel from "./panels/StripePanel.jsx";
 import DeepSeekPanel from "./panels/DeepSeekPanel.jsx";
+import JiraPanel from "./panels/JiraPanel.jsx";
 
 const PANELS = {
   stripe: StripePanel,
   deepseek: DeepSeekPanel,
+  jira: JiraPanel,
 };
 
 /**
@@ -20,6 +22,7 @@ const PANELS = {
  *   SEO APIs / Google -> /api/settings/general  -> admin_settings
  *   Stripe & Payments -> /api/stripe-connect    -> stripe_connections
  *   DeepSeek AI       -> /api/deepseek-settings -> deepseek_api_settings
+ *   Jira              -> /api/jira/*            -> jira_connections
  *
  * The active tab lives in the query string, so a tab can be linked to directly
  * and survives a refresh.

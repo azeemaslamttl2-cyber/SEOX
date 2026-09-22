@@ -17,6 +17,7 @@ CREATE TABLE IF NOT EXISTS user_projects (
   user_id VARCHAR(128) NOT NULL,
   project_id VARCHAR(255) NOT NULL,
   project_data JSON NOT NULL,
+  site_token VARCHAR(512) NULL,
   selected_project_id VARCHAR(255) NULL,
   deleted_project_ids JSON NULL,
   created_at DATETIME NOT NULL,

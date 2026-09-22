@@ -48,11 +48,20 @@ DATAFORSEO_PASSWORD
 FIREBASE_SERVICE_ACCOUNT_KEY
 STRIPE_SECRET_KEY
 AUTH_JWT_SECRET
+WPSCAN_API_TOKEN
 ```
 
 `DATAFORSEO_LOGIN` and `DATAFORSEO_PASSWORD` power keyword tools and the
 DataForSEO-backed Brand Radar API calls. Users can still provide credentials in
 the app for local testing, but server secrets are preferred for production.
+
+`WPSCAN_API_TOKEN` is optional and powers only the vulnerability-database half
+of Tech SEO > WordPress Security. Without it the scan still fingerprints the
+site and lists core, plugin and theme versions; it just cannot match them
+against known CVEs, and the page says so. Note the licensing: the free tier is
+25 requests a day and is for non-commercial use only, so a commercial
+deployment needs a paid WPScan plan. There is no in-app settings field for this
+token - it is read from the environment only.
 
 Server configuration:
 

@@ -26,8 +26,22 @@ export const LIMITS = {
   // WPScan's free tier is 25 requests a day for the whole install, and one scan
   // can spend a dozen.
   'wpscan:scan': { limit: 3, windowSeconds: 86400 },
+  // The portal scan costs no third-party quota, but it does make the user's own
+  // WordPress walk every file on disk, so it is not free to the site either.
+  'wp-portal:scan': { limit: 20, windowSeconds: 3600 },
   // AI generation costs money rather than quota, but runs away just as easily.
   'ai:generate': { limit: 60, windowSeconds: 3600 },
+  // Jira Cloud rate limits per tenant, so one SEOX user filing in bulk spends
+  // an allowance the customer's whole team shares - including tools other than
+  // SEOX. These caps keep that from happening before Jira ever sees it.
+  'jira:connect': { limit: 10, windowSeconds: 3600 },
+  'jira:test': { limit: 20, windowSeconds: 3600 },
+  'jira:create': { limit: 100, windowSeconds: 3600 },
+  'jira:sync': { limit: 60, windowSeconds: 3600 },
+  'jira:metadata': { limit: 60, windowSeconds: 3600 },
+  // Inbound, per connection rather than per human: a webhook storm is dropped
+  // rather than queued, because the reconcile sweep will catch up anyway.
+  'jira:webhook': { limit: 600, windowSeconds: 3600 },
 };
 
 function windowStart(windowSeconds, at = Date.now()) {
@@ -178,7 +192,7 @@ export async function getHeartbeat(worker) {
     lastDurationMs: row.last_duration_ms,
     lastMessage: row.last_message,
     message: stale
-      ? `The scheduler last ran ${minutesSince} minutes ago. It should run every 5 minutes â€” nothing is syncing or publishing while it is down.`
+      ? `The scheduler last ran ${minutesSince} minutes ago. It should run every 5 minutes — nothing is syncing or publishing while it is down.`
       : null,
   };
 }

@@ -1,33 +1,58 @@
 // GET  /api/tech-seo/wordpress-security?projectId=[&scanId=][&history=1]
-// POST /api/tech-seo/wordpress-security  { action: 'scan', projectId }
+// POST /api/tech-seo/wordpress-security  { action: 'portal-scan', projectId[, scanType, checks] }
+//                                        { action: 'scan', projectId }
+//                                        { action: 'save-token', projectId, token }
+//                                        { action: 'clear-token', projectId }
 //
-// WordPress security audit for a site the user owns.
+// WordPress security audit for a site the user owns, from two sources:
 //
-// Two controls define the scope of this endpoint:
+//   * 'portal-scan' asks the SEOX plugin installed on the site to audit itself
+//     and return its dashboard. It sees the real plugin, theme, user and file
+//     state, because it runs inside WordPress.
+//
+//   * 'scan' is the passive fallback for a site with no plugin: it reads what
+//     the site already serves publicly and checks components against the
+//     WPScan vulnerability database.
+//
+// Three controls define the scope of this endpoint:
 //
 //   1. The target must be the domain of one of the caller's own projects. SEOX
 //      will not scan an arbitrary URL on request, which is what separates a
 //      site auditor from a scanning service.
 //
-//   2. Detection is passive (wpscan-detect.js). Component discovery reads the
-//      site's own asset URLs; it does not bruteforce plugin slugs, enumerate
-//      users, or attempt any authentication.
+//   2. Passive detection (wpscan-detect.js) reads the site's own asset URLs; it
+//      does not bruteforce plugin slugs, enumerate users, or attempt any
+//      authentication.
+//
+//   3. The portal scan authenticates with the account's admin token, which is
+//      read server-side and never sent to the browser.
 //
 // Vulnerability data comes from the WPScan API. Its CLI is Ruby and cannot run
 // on Pages Functions, so only the database half is used.
 
 import { corsHeaders, emptyResponse, errorResponse, jsonResponse, readJson } from '../../_lib/http.js';
-import { getStoredDocument, verifyAccessToken } from '../../_lib/mysql-storage.js';
+import {
+  getStoredDocument,
+  upsertStoredDocument,
+  verifyAccessToken,
+} from '../../_lib/mysql-storage.js';
 import { consumeRateLimit } from '../../_lib/rate-limit.js';
-import { configureMysqlConnection } from '../../_lib/mysql.js';
+import { configureMysqlConnection, queryOne } from '../../_lib/mysql.js';
+import { PORTAL_CHECKS, buildPortalEndpoint, runPortalScan } from '../../_lib/wp-security-portal.js';
 import { parsePublicHttpUrl } from '../../_lib/url-security.js';
 import { fingerprintSite } from '../../_lib/wpscan-detect.js';
 import {
   getCoreVulnerabilities,
   getPluginVulnerabilities,
   getThemeVulnerabilities,
-  hasApiToken,
 } from '../../_lib/wpscan-api.js';
+import {
+  TOKEN_SOURCE,
+  clearWpscanToken,
+  resolveWpscanToken,
+  saveWpscanToken,
+  tokenEncryptionAvailable,
+} from '../../_lib/wpscan-token.js';
 import {
   buildFinding,
   countBySeverity,
@@ -39,6 +64,10 @@ import { getScan, latestScan, saveScan, scanHistory } from '../../_lib/wpscan-st
 // The free WPScan tier allows 25 requests a day. Even on a paid plan there is no
 // point asking about forty plugins found on one page load.
 const MAX_COMPONENT_LOOKUPS = 12;
+
+// Where the plugin's dashboard is kept between visits, so the page opens on the
+// last result instead of an empty shell.
+const PORTAL_TOOL_KEY = 'wordpressSecurity';
 
 function fail(message, status = 400) {
   const error = new Error(message);
@@ -55,27 +84,68 @@ function normaliseHost(value) {
     .trim();
 }
 
+function parseJson(value, fallback) {
+  if (value === null || value === undefined || value === '') return fallback;
+  if (typeof value === 'object') return value;
+  try {
+    return JSON.parse(value);
+  } catch {
+    return fallback;
+  }
+}
+
+/**
+ * The project the selector at the top of the app is pointing at.
+ *
+ * Read straight from the row rather than through getStoredDocument(), which
+ * returns only the project_data JSON blob - the website URL lives in the
+ * `full_url` and `domain` columns, so a project that has one looks like it has
+ * none when it is read through the document view.
+ */
+async function loadProjectRecord(userId, projectId) {
+  if (!projectId) fail('A project must be selected.', 400);
+
+  const row = await queryOne(
+    `SELECT project_id, project_name, domain, full_url, project_data
+       FROM user_projects
+      WHERE user_id = ? AND project_id = ?
+      LIMIT 1`,
+    [userId, projectId]
+  );
+  if (!row) fail('Project was not found.', 404);
+  return row;
+}
+
+/**
+ * The project's own website URL, with its protocol kept as configured. Falls
+ * back through the places older rows kept it before settling for the bare
+ * domain, which the projects API requires and so is always present.
+ */
+export function projectSiteUrl(row) {
+  const data = parseJson(row?.project_data, {});
+  const candidate = String(
+    row?.full_url || data.fullUrl || data.full_url || data.url || row?.domain || ''
+  ).trim();
+  if (!candidate) return null;
+
+  return parsePublicHttpUrl(
+    /^https?:\/\//i.test(candidate) ? candidate : `https://${candidate}`,
+    'Project URL'
+  ).toString();
+}
+
 /**
  * Resolve the URL to scan from the caller's own project, and refuse anything
  * else. A caller-supplied URL is only accepted when it is on the project's own
  * host, so this endpoint cannot be pointed at a third party.
  */
-async function resolveTarget(env, userId, projectId, requestedUrl) {
-  if (!projectId) fail('A project must be selected.', 400);
-
-  const project = await getStoredDocument(env, `users/${userId}/projects`, projectId);
-  if (!project) fail('Project was not found.', 404);
-
-  const projectUrl = project.fullUrl || project.full_url || project.domain;
+export function resolveTargetUrl(row, requestedUrl) {
+  const projectUrl = projectSiteUrl(row);
   if (!projectUrl) {
     fail('This project has no website URL, so there is nothing to scan.', 400);
   }
 
-  const base = parsePublicHttpUrl(
-    String(projectUrl).startsWith('http') ? projectUrl : `https://${projectUrl}`,
-    'Project URL'
-  );
-
+  const base = new URL(projectUrl);
   if (!requestedUrl) return base.toString();
 
   const requested = parsePublicHttpUrl(requestedUrl, 'Target URL');
@@ -86,6 +156,70 @@ async function resolveTarget(env, userId, projectId, requestedUrl) {
     );
   }
   return requested.toString();
+}
+
+async function resolveTarget(userId, projectId, requestedUrl) {
+  return resolveTargetUrl(await loadProjectRecord(userId, projectId), requestedUrl);
+}
+
+/**
+ * The site's SEOX plugin is configured with the account's admin token, so that
+ * is what proves the request comes from the account the site is connected to.
+ * It is read here and used server-side only.
+ */
+async function loadAdminToken(userId) {
+  const row = await queryOne(
+    'SELECT admin_token FROM users WHERE id = ? AND deleted_at IS NULL LIMIT 1',
+    [userId]
+  );
+  return String(row?.admin_token || '').trim();
+}
+
+/**
+ * The website to scan for the selected project. The page passes the URL it is
+ * showing in the project selector; it is honoured only when it is the same host
+ * the project is registered under, so the endpoint still cannot be aimed
+ * somewhere else.
+ */
+async function resolvePortalProject(userId, projectId, requestedUrl) {
+  const row = await loadProjectRecord(userId, projectId);
+  return { row, siteUrl: resolveTargetUrl(row, requestedUrl) };
+}
+
+async function loadPortalDashboard(userId, projectId) {
+  try {
+    const row = await queryOne(
+      `SELECT result FROM tool_results
+        WHERE user_id = ? AND project_id = ? AND tool_key = ?
+        LIMIT 1`,
+      [userId, projectId, PORTAL_TOOL_KEY]
+    );
+
+    // The column is JSON, but whether the driver hands back an object or the
+    // raw text depends on the server it is talking to.
+    const saved = typeof row?.result === 'string' ? JSON.parse(row.result) : row?.result;
+    return saved && typeof saved === 'object' && saved.summary ? saved : null;
+  } catch (error) {
+    // A saved result that cannot be read must never stop the page loading: the
+    // user can always run the scan again.
+    console.warn('WordPress security: reading the saved portal scan failed:', error?.message);
+    return null;
+  }
+}
+
+async function savePortalDashboard(env, userId, projectId, dashboard, siteUrl) {
+  try {
+    await upsertStoredDocument(
+      env,
+      `users/${userId}/projects/${projectId}/toolResults`,
+      PORTAL_TOOL_KEY,
+      { result: dashboard, projectUrl: siteUrl }
+    );
+  } catch (error) {
+    // Persistence is a convenience: the scan the user just ran is already in
+    // the response, so a write failure is logged rather than surfaced.
+    console.warn('WordPress security: saving the portal scan failed:', error?.message);
+  }
 }
 
 function serializeScan(scan) {
@@ -181,12 +315,28 @@ export async function onRequest({ request, env }) {
 
       const scanId = url.searchParams.get('scanId');
       const scan = scanId ? await getScan(userId, scanId) : await latestScan(userId, projectId);
+      const portal = await loadPortalDashboard(userId, projectId);
+
+      // A project token that will not decrypt must not read as "no token":
+      // the fix is to re-enter it, not to add one.
+      let token = { token: '', source: TOKEN_SOURCE.NONE, preview: null };
+      let tokenError = null;
+      try {
+        token = await resolveWpscanToken(env, userId, projectId);
+      } catch (cause) {
+        tokenError = cause?.message || 'The saved WPScan token could not be read.';
+      }
 
       return jsonResponse(
         {
           scan: serializeScan(scan),
-          vulnDbConfigured: hasApiToken(env),
-          needsFirstScan: !scan,
+          portal,
+          vulnDbConfigured: Boolean(token.token),
+          tokenSource: token.source,
+          tokenPreview: token.preview,
+          tokenEncrypted: tokenEncryptionAvailable(env),
+          tokenError,
+          needsFirstScan: !scan && !portal,
         },
         200,
         headers
@@ -198,12 +348,78 @@ export async function onRequest({ request, env }) {
     }
 
     const body = await readJson(request);
+
+    // Token management. Both actions confirm the project belongs to the
+    // caller first, so a token can never be written onto someone else's row.
+    if (body.action === 'save-token' || body.action === 'clear-token') {
+      if (!body.projectId) fail('A project must be selected.', 400);
+      const owned = await getStoredDocument(env, `users/${userId}/projects`, body.projectId);
+      if (!owned) fail('Project was not found.', 404);
+
+      if (body.action === 'clear-token') {
+        await clearWpscanToken(userId, body.projectId);
+      } else {
+        await saveWpscanToken(env, userId, body.projectId, body.token);
+      }
+
+      const token = await resolveWpscanToken(env, userId, body.projectId);
+      return jsonResponse(
+        {
+          success: true,
+          vulnDbConfigured: Boolean(token.token),
+          tokenSource: token.source,
+          tokenPreview: token.preview,
+          tokenEncrypted: tokenEncryptionAvailable(env),
+          tokenError: null,
+        },
+        200,
+        headers
+      );
+    }
+
+    // The scan the site's own plugin runs. The admin token never leaves the
+    // server: the browser asks for a scan, not for the credential.
+    if (body.action === 'portal-scan') {
+      const { row, siteUrl } = await resolvePortalProject(userId, body.projectId, body.siteUrl);
+      const endpoint = buildPortalEndpoint(siteUrl);
+      await consumeRateLimit(userId, 'wp-portal:scan');
+
+      // Enough to follow a scan end to end in the logs. The admin token is not
+      // part of it, here or anywhere else.
+      console.log('WordPress security scan requested:', {
+        projectId: row.project_id,
+        projectName: row.project_name,
+        siteUrl,
+        endpoint,
+      });
+
+      const dashboard = await runPortalScan({
+        siteUrl,
+        adminToken: await loadAdminToken(userId),
+        projectId: body.projectId,
+        scanType: body.scanType,
+        checks: Array.isArray(body.checks) ? body.checks : PORTAL_CHECKS,
+      });
+
+      console.log('WordPress security scan finished:', {
+        projectId: row.project_id,
+        endpoint,
+        status: dashboard.lastScan.status || 'unknown',
+        securityScore: dashboard.securityScore,
+        riskLevel: dashboard.riskLevel,
+      });
+
+      await savePortalDashboard(env, userId, body.projectId, dashboard, siteUrl);
+
+      return jsonResponse({ success: true, portal: dashboard }, 200, headers);
+    }
+
     if (body.action !== 'scan') return jsonResponse({ error: 'Invalid action' }, 400, headers);
     // One scan can spend a dozen of the 25 daily WPScan requests the whole
     // install shares.
     await consumeRateLimit(userId, 'wpscan:scan');
 
-    const targetUrl = await resolveTarget(env, userId, body.projectId, body.targetUrl);
+    const targetUrl = await resolveTarget(userId, body.projectId, body.targetUrl);
     const startedAt = Date.now();
 
     const fingerprint = await fingerprintSite(targetUrl);
@@ -253,13 +469,33 @@ export async function onRequest({ request, env }) {
     let vulnDbStatus = 'skipped';
     let remaining = null;
 
-    if (!hasApiToken(env)) {
+    // A token that cannot be read must not throw away a scan that has already
+    // fingerprinted the site: the component list is still worth returning, and
+    // the warning tells the user what to fix.
+    let apiToken = '';
+    let tokenSource = TOKEN_SOURCE.NONE;
+    try {
+      ({ token: apiToken, source: tokenSource } = await resolveWpscanToken(
+        env,
+        userId,
+        body.projectId
+      ));
+    } catch (cause) {
+      warnings.push(cause?.message || 'The saved WPScan token could not be read.');
+    }
+
+    if (!apiToken) {
       warnings.push(
         'No WPScan API token is configured, so components were listed but not checked against the vulnerability database.'
       );
       vulnDbStatus = 'not_configured';
     } else {
       vulnDbStatus = 'ok';
+      if (tokenSource === TOKEN_SOURCE.ENVIRONMENT) {
+        warnings.push(
+          "This scan used the install-wide WPScan token and its shared daily quota. Add a token to this project to give it its own."
+        );
+      }
 
       const lookups = [
         ...(fingerprint.coreVersion.version
@@ -280,9 +516,9 @@ export async function onRequest({ request, env }) {
       for (const lookup of lookups) {
         try {
           let result;
-          if (lookup.kind === 'core') result = await getCoreVulnerabilities(env, lookup.version);
-          else if (lookup.kind === 'plugin') result = await getPluginVulnerabilities(env, lookup.slug);
-          else result = await getThemeVulnerabilities(env, lookup.slug);
+          if (lookup.kind === 'core') result = await getCoreVulnerabilities(apiToken, lookup.version);
+          else if (lookup.kind === 'plugin') result = await getPluginVulnerabilities(apiToken, lookup.slug);
+          else result = await getThemeVulnerabilities(apiToken, lookup.slug);
 
           if (result.remaining !== null && Number.isFinite(result.remaining)) {
             remaining = result.remaining;
@@ -348,6 +584,11 @@ export async function onRequest({ request, env }) {
         success: true,
         scan: serializeScan(await getScan(userId, scanId)),
         suppressed: findings.length - reportable.length,
+        // Echoed so a scan that consumed the last of a quota, or ran against a
+        // token that turned out to be rejected, leaves the page's token panel
+        // showing the truth without a second request.
+        vulnDbConfigured: Boolean(apiToken),
+        tokenSource,
       },
       200,
       headers

@@ -32,6 +32,7 @@ import {
   Network,
   SlidersHorizontal,
   FolderKanban,
+  SquareKanban,
 } from "lucide-react";
 
 const nav = [
@@ -119,9 +120,16 @@ const nav = [
   {
     section: "Settings",
     items: [
-      // One entry point: every category (SEO APIs, Google, Stripe, DeepSeek)
-      // is a tab on this page.
+      // One settings PAGE: every category is a tab on it. The rule this
+      // preserves is that per-category settings *routes* stay gone - see
+      // LegacySettingsRedirect, which exists because /settings/stripe and
+      // friends were removed.
       { label: "General Settings", to: "/settings/general", icon: SlidersHorizontal },
+      // Jira is deep-linked to its tab rather than given a route of its own.
+      // It earns a nav entry because, unlike the credential tabs, it is a
+      // workflow surface a user returns to: connection health, sync errors
+      // and the retry queue all live there.
+      { label: "Jira", to: "/settings/general?tab=jira", icon: SquareKanban },
     ],
   },
 ];

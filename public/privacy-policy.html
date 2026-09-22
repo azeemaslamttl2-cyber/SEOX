@@ -1,0 +1,1469 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Privacy Policy | Northwind Labs</title>
+<meta name="description" content="Read the Northwind Labs Privacy Policy to learn what personal information we collect, how we use and share it, how long we keep it, and the privacy rights and choices available to you.">
+<meta name="robots" content="index, follow">
+<link rel="canonical" href="https://www.example.com/privacy-policy">
+<meta name="theme-color" content="#0f172a" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
+
+<!-- Open Graph / social -->
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Northwind Labs">
+<meta property="og:title" content="Privacy Policy | Northwind Labs">
+<meta property="og:description" content="What personal information Northwind Labs collects, how we use and share it, how long we keep it, and the privacy rights available to you.">
+<meta property="og:url" content="https://www.example.com/privacy-policy">
+<meta name="twitter:card" content="summary">
+
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>&#128274;</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+<style>
+/* ==========================================================================
+   Design tokens
+   ========================================================================== */
+:root{
+  --bg:#ffffff;
+  --bg-subtle:#f6f8fb;
+  --bg-elevated:#ffffff;
+  --surface-alt:#f1f5f9;
+  --text:#0f172a;
+  --text-muted:#51607a;
+  --text-faint:#7b8798;
+  --border:#e2e8f0;
+  --border-strong:#cbd5e1;
+  --brand:#2563eb;
+  --brand-hover:#1d4ed8;
+  --brand-soft:#eff4ff;
+  --accent:#0d9488;
+  --warn-bg:#fffbeb;
+  --warn-border:#fcd34d;
+  --warn-text:#78350f;
+  --code-bg:#0f172a;
+  --code-text:#e2e8f0;
+  --shadow-sm:0 1px 2px rgba(15,23,42,.06);
+  --shadow-md:0 4px 16px rgba(15,23,42,.07);
+  --shadow-lg:0 12px 32px rgba(15,23,42,.10);
+  --radius:12px;
+  --radius-lg:18px;
+  --maxw:1200px;
+  --header-h:68px;
+  --font:"Inter",system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  --mono:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0b1220;
+    --bg-subtle:#0f172a;
+    --bg-elevated:#111c31;
+    --surface-alt:#16233c;
+    --text:#e9eef7;
+    --text-muted:#a4b2c8;
+    --text-faint:#8695ad;
+    --border:#22314d;
+    --border-strong:#2f4166;
+    --brand:#7aa5ff;
+    --brand-hover:#9dbcff;
+    --brand-soft:#16233c;
+    --accent:#2dd4bf;
+    --warn-bg:#241d07;
+    --warn-border:#7c5e12;
+    --warn-text:#fde68a;
+    --code-bg:#070d18;
+    --code-text:#dbe4f3;
+    --shadow-sm:0 1px 2px rgba(0,0,0,.4);
+    --shadow-md:0 4px 16px rgba(0,0,0,.45);
+    --shadow-lg:0 12px 32px rgba(0,0,0,.55);
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0b1220;
+  --bg-subtle:#0f172a;
+  --bg-elevated:#111c31;
+  --surface-alt:#16233c;
+  --text:#e9eef7;
+  --text-muted:#a4b2c8;
+  --text-faint:#8695ad;
+  --border:#22314d;
+  --border-strong:#2f4166;
+  --brand:#7aa5ff;
+  --brand-hover:#9dbcff;
+  --brand-soft:#16233c;
+  --accent:#2dd4bf;
+  --warn-bg:#241d07;
+  --warn-border:#7c5e12;
+  --warn-text:#fde68a;
+  --code-bg:#070d18;
+  --code-text:#dbe4f3;
+  --shadow-sm:0 1px 2px rgba(0,0,0,.4);
+  --shadow-md:0 4px 16px rgba(0,0,0,.45);
+  --shadow-lg:0 12px 32px rgba(0,0,0,.55);
+}
+
+/* ==========================================================================
+   Base
+   ========================================================================== */
+*,*::before,*::after{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%;scroll-behavior:smooth;scroll-padding-top:calc(var(--header-h) + 20px)}
+@media (prefers-reduced-motion: reduce){
+  html{scroll-behavior:auto}
+  *{animation-duration:.001ms !important;transition-duration:.001ms !important}
+}
+body{
+  margin:0;
+  background:var(--bg);
+  color:var(--text);
+  font-family:var(--font);
+  font-size:17px;
+  line-height:1.7;
+  -webkit-font-smoothing:antialiased;
+  text-rendering:optimizeLegibility;
+}
+img{max-width:100%;height:auto;display:block}
+a{color:var(--brand);text-decoration:none}
+a:hover{color:var(--brand-hover);text-decoration:underline;text-underline-offset:3px}
+:focus-visible{outline:3px solid var(--brand);outline-offset:2px;border-radius:4px}
+hr{border:0;border-top:1px solid var(--border);margin:2.5rem 0}
+
+.container{width:100%;max-width:var(--maxw);margin-inline:auto;padding-inline:16px}
+@media (min-width:768px){.container{padding-inline:32px}}
+
+.skip-link{
+  position:absolute;left:8px;top:-60px;z-index:200;
+  background:var(--brand);color:#fff;padding:.7rem 1.1rem;border-radius:8px;font-weight:600;
+  transition:top .18s ease;
+}
+.skip-link:focus{top:8px;text-decoration:none;color:#fff}
+
+/* ==========================================================================
+   Header / navigation
+   ========================================================================== */
+.site-header{
+  position:sticky;top:0;z-index:100;
+  background:color-mix(in srgb,var(--bg) 88%,transparent);
+  backdrop-filter:saturate(180%) blur(12px);
+  -webkit-backdrop-filter:saturate(180%) blur(12px);
+  border-bottom:1px solid var(--border);
+}
+.header-inner{display:flex;align-items:center;gap:1rem;height:var(--header-h)}
+.brand{display:flex;align-items:center;gap:.65rem;font-weight:700;font-size:1.06rem;color:var(--text);letter-spacing:-.01em}
+.brand:hover{text-decoration:none;color:var(--text)}
+.brand-mark{
+  width:34px;height:34px;flex:0 0 34px;border-radius:10px;
+  background:linear-gradient(135deg,var(--brand),var(--accent));
+  display:grid;place-items:center;color:#fff;font-size:.95rem;font-weight:700;
+  box-shadow:var(--shadow-sm);
+}
+.brand-mark svg{width:18px;height:18px}
+
+.primary-nav{margin-left:auto}
+.nav-list{display:flex;align-items:center;gap:.25rem;list-style:none;margin:0;padding:0}
+.nav-list a{
+  display:block;padding:.5rem .8rem;border-radius:8px;font-size:.94rem;font-weight:500;color:var(--text-muted);
+}
+.nav-list a:hover{background:var(--surface-alt);color:var(--text);text-decoration:none}
+.nav-list a[aria-current="page"]{color:var(--brand);background:var(--brand-soft);font-weight:600}
+.header-actions{display:flex;align-items:center;gap:.5rem;margin-left:.75rem}
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:.5rem;
+  padding:.6rem 1.05rem;border-radius:10px;font-size:.93rem;font-weight:600;
+  border:1px solid transparent;cursor:pointer;font-family:inherit;
+  transition:background-color .16s ease,border-color .16s ease,color .16s ease,transform .16s ease;
+}
+.btn:hover{text-decoration:none}
+.btn-primary{background:var(--brand);color:#fff;box-shadow:var(--shadow-sm)}
+.btn-primary:hover{background:var(--brand-hover);color:#fff}
+.btn-ghost{background:transparent;color:var(--text-muted);border-color:var(--border-strong)}
+.btn-ghost:hover{background:var(--surface-alt);color:var(--text)}
+.icon-btn{
+  width:40px;height:40px;padding:0;border-radius:10px;border:1px solid var(--border-strong);
+  background:transparent;color:var(--text-muted);display:grid;place-items:center;cursor:pointer;
+}
+.icon-btn:hover{background:var(--surface-alt);color:var(--text)}
+.icon-btn svg{width:18px;height:18px}
+.nav-toggle{display:none}
+
+@media (max-width:900px){
+  .header-actions .btn-primary{display:none}
+  .nav-toggle{display:grid}
+  .primary-nav{
+    position:absolute;left:0;right:0;top:var(--header-h);
+    background:var(--bg-elevated);border-bottom:1px solid var(--border);
+    box-shadow:var(--shadow-lg);padding:.75rem 16px 1rem;display:none;
+  }
+  .primary-nav.is-open{display:block}
+  .nav-list{flex-direction:column;align-items:stretch;gap:.15rem}
+  .nav-list a{padding:.75rem .85rem}
+}
+
+/* ==========================================================================
+   Hero
+   ========================================================================== */
+.hero{
+  background:
+    radial-gradient(900px 340px at 12% -10%, color-mix(in srgb,var(--brand) 14%,transparent), transparent 70%),
+    radial-gradient(700px 300px at 88% 0%, color-mix(in srgb,var(--accent) 12%,transparent), transparent 70%),
+    var(--bg-subtle);
+  border-bottom:1px solid var(--border);
+  padding:3.25rem 0 2.75rem;
+}
+.breadcrumb{font-size:.86rem;color:var(--text-faint);margin-bottom:1.1rem}
+.breadcrumb ol{list-style:none;display:flex;flex-wrap:wrap;align-items:center;gap:.45rem;margin:0;padding:0}
+.breadcrumb li::after{content:"/";margin-left:.45rem;color:var(--border-strong)}
+.breadcrumb li:last-child::after{content:""}
+.breadcrumb a{color:var(--text-muted)}
+.eyebrow{
+  display:inline-flex;align-items:center;gap:.5rem;
+  background:var(--brand-soft);color:var(--brand);
+  border:1px solid color-mix(in srgb,var(--brand) 25%,transparent);
+  padding:.34rem .8rem;border-radius:999px;font-size:.78rem;font-weight:600;
+  letter-spacing:.06em;text-transform:uppercase;margin-bottom:1rem;
+}
+.hero h1{
+  font-size:clamp(2.1rem,5.2vw,3.35rem);line-height:1.12;letter-spacing:-.025em;
+  margin:0 0 .85rem;font-weight:700;
+}
+.hero .lede{font-size:clamp(1.03rem,1.9vw,1.19rem);color:var(--text-muted);max-width:68ch;margin:0 0 1.6rem}
+.hero-meta{display:flex;flex-wrap:wrap;gap:.6rem 1.6rem;align-items:center;font-size:.9rem;color:var(--text-muted)}
+.hero-meta .meta-item{display:inline-flex;align-items:center;gap:.45rem}
+.hero-meta svg{width:16px;height:16px;color:var(--text-faint);flex:0 0 16px}
+.hero-meta time{font-weight:600;color:var(--text)}
+.hero-actions{display:flex;flex-wrap:wrap;gap:.6rem;margin-top:1.6rem}
+
+/* ==========================================================================
+   Layout: TOC + article
+   ========================================================================== */
+.layout{display:grid;grid-template-columns:1fr;gap:2.5rem;padding:2.75rem 0 4rem;align-items:start}
+@media (min-width:1024px){
+  .layout{grid-template-columns:272px minmax(0,1fr);gap:3.5rem}
+}
+
+.toc{
+  position:sticky;top:calc(var(--header-h) + 22px);
+  background:var(--bg-elevated);border:1px solid var(--border);border-radius:var(--radius-lg);
+  padding:1.25rem 1.1rem;box-shadow:var(--shadow-sm);
+  max-height:calc(100vh - var(--header-h) - 48px);overflow:auto;
+}
+.toc h2{
+  font-size:.76rem;text-transform:uppercase;letter-spacing:.09em;color:var(--text-faint);
+  margin:0 0 .85rem;font-weight:700;
+}
+.toc ol{list-style:none;margin:0;padding:0;counter-reset:toc}
+.toc li{counter-increment:toc}
+.toc a{
+  display:flex;gap:.6rem;padding:.42rem .6rem;border-radius:8px;
+  font-size:.9rem;line-height:1.45;color:var(--text-muted);font-weight:500;
+  border-left:2px solid transparent;
+}
+.toc a::before{content:counter(toc) ".";color:var(--text-faint);font-variant-numeric:tabular-nums;font-size:.82rem;padding-top:.1rem}
+.toc a:hover{background:var(--surface-alt);color:var(--text);text-decoration:none}
+.toc a.is-active{color:var(--brand);background:var(--brand-soft);font-weight:600}
+.toc a.is-active::before{color:var(--brand)}
+@media (max-width:1023px){
+  .toc{position:static;max-height:none}
+  .toc-details summary{
+    cursor:pointer;font-weight:600;list-style:none;display:flex;align-items:center;justify-content:space-between;gap:1rem;
+  }
+  .toc-details summary::-webkit-details-marker{display:none}
+  .toc-details summary::after{content:"\25BE";color:var(--text-faint);transition:transform .2s ease}
+  .toc-details[open] summary::after{transform:rotate(180deg)}
+  .toc-details summary h2{margin:0}
+  .toc-details ol{margin-top:.85rem}
+}
+
+/* ==========================================================================
+   Article content
+   ========================================================================== */
+.policy{max-width:80ch}
+.policy section{
+  scroll-margin-top:calc(var(--header-h) + 20px);
+  padding:1.9rem 0;
+  border-top:1px solid var(--border);
+}
+.policy section:first-of-type{border-top:0;padding-top:0}
+.policy h2{
+  font-size:clamp(1.42rem,2.6vw,1.72rem);line-height:1.3;letter-spacing:-.015em;
+  margin:0 0 .9rem;font-weight:700;display:flex;align-items:baseline;gap:.7rem;
+}
+.policy h2 .sec-num{
+  font-size:.82rem;font-weight:700;color:var(--brand);background:var(--brand-soft);
+  border:1px solid color-mix(in srgb,var(--brand) 22%,transparent);
+  border-radius:7px;padding:.18rem .5rem;font-variant-numeric:tabular-nums;flex:0 0 auto;
+  transform:translateY(-2px);
+}
+.policy h3{font-size:1.09rem;font-weight:600;margin:1.9rem 0 .6rem;letter-spacing:-.005em}
+.policy p{margin:0 0 1.05rem}
+.policy ul,.policy ol{margin:0 0 1.15rem;padding-left:1.3rem}
+.policy li{margin-bottom:.55rem}
+.policy li::marker{color:var(--brand)}
+.policy strong{font-weight:600;color:var(--text)}
+.policy dl{margin:0 0 1.15rem}
+.policy dt{font-weight:600;margin-top:.9rem}
+.policy dd{margin:.2rem 0 0;color:var(--text-muted)}
+
+.anchor-link{
+  opacity:0;margin-left:.4rem;color:var(--text-faint);font-size:.8em;font-weight:500;
+  transition:opacity .15s ease;text-decoration:none;
+}
+.policy h2:hover .anchor-link,.anchor-link:focus{opacity:1}
+
+/* Cards, callouts, tables */
+.card{
+  background:var(--bg-elevated);border:1px solid var(--border);border-radius:var(--radius);
+  padding:1.25rem 1.35rem;box-shadow:var(--shadow-sm);margin:0 0 1.25rem;
+}
+.card h3{margin-top:0}
+.card > :last-child{margin-bottom:0}
+
+.card-grid{display:grid;gap:1rem;grid-template-columns:1fr;margin-bottom:1.25rem}
+@media (min-width:640px){.card-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.card-grid .card{margin:0}
+.card-icon{
+  width:36px;height:36px;border-radius:9px;display:grid;place-items:center;margin-bottom:.8rem;
+  background:var(--brand-soft);color:var(--brand);border:1px solid color-mix(in srgb,var(--brand) 20%,transparent);
+}
+.card-icon svg{width:18px;height:18px}
+.card h4{margin:0 0 .4rem;font-size:1rem;font-weight:600}
+.card p{margin:0;font-size:.94rem;color:var(--text-muted)}
+
+.callout{
+  display:flex;gap:.9rem;border-radius:var(--radius);padding:1rem 1.15rem;margin:0 0 1.35rem;
+  background:var(--warn-bg);border:1px solid var(--warn-border);color:var(--warn-text);
+  font-size:.94rem;line-height:1.62;
+}
+.callout svg{width:20px;height:20px;flex:0 0 20px;margin-top:.15rem}
+.callout p{margin:0 0 .5rem}
+.callout > div > :last-child{margin-bottom:0}
+.callout strong{color:inherit}
+.callout a{color:inherit;text-decoration:underline}
+.callout code{background:color-mix(in srgb,var(--warn-text) 12%,transparent);color:inherit}
+
+.placeholder{
+  font-family:var(--mono);font-size:.88em;background:var(--surface-alt);
+  border:1px dashed var(--border-strong);border-radius:6px;padding:.08em .4em;
+  color:var(--text-muted);white-space:nowrap;
+}
+
+.table-wrap{overflow-x:auto;margin:0 0 1.35rem;border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow-sm)}
+table{border-collapse:collapse;width:100%;min-width:560px;font-size:.93rem;background:var(--bg-elevated)}
+caption{text-align:left;font-size:.86rem;color:var(--text-faint);padding:.75rem 1rem;border-bottom:1px solid var(--border)}
+th,td{text-align:left;padding:.8rem 1rem;border-bottom:1px solid var(--border);vertical-align:top}
+thead th{background:var(--surface-alt);font-weight:600;font-size:.82rem;text-transform:uppercase;letter-spacing:.05em;color:var(--text-muted)}
+tbody tr:last-child td{border-bottom:0}
+tbody tr:hover{background:var(--surface-alt)}
+
+/* Code blocks */
+.code-block{margin:0 0 1.4rem;border-radius:var(--radius);overflow:hidden;border:1px solid var(--border);box-shadow:var(--shadow-sm)}
+.code-head{
+  display:flex;align-items:center;justify-content:space-between;gap:1rem;
+  background:var(--surface-alt);border-bottom:1px solid var(--border);
+  padding:.55rem .55rem .55rem .95rem;
+}
+.code-title{font-family:var(--mono);font-size:.8rem;color:var(--text-muted);font-weight:500}
+.copy-btn{
+  display:inline-flex;align-items:center;gap:.4rem;font-family:inherit;font-size:.78rem;font-weight:600;
+  padding:.35rem .65rem;border-radius:7px;border:1px solid var(--border-strong);
+  background:var(--bg-elevated);color:var(--text-muted);cursor:pointer;
+}
+.copy-btn:hover{color:var(--text);border-color:var(--text-faint)}
+.copy-btn svg{width:13px;height:13px}
+.code-block pre{
+  margin:0;background:var(--code-bg);color:var(--code-text);
+  padding:1.1rem 1.2rem;overflow-x:auto;font-size:.855rem;line-height:1.72;
+  font-family:var(--mono);tab-size:2;
+}
+.code-block code{font-family:inherit;font-size:inherit;background:none;padding:0;color:inherit;border:0}
+:not(pre) > code{
+  font-family:var(--mono);font-size:.875em;background:var(--surface-alt);
+  border:1px solid var(--border);border-radius:5px;padding:.1em .38em;color:var(--text);
+}
+.code-note{font-size:.88rem;color:var(--text-faint);margin:-.85rem 0 1.4rem}
+
+/* Contact block */
+.contact-card{
+  background:linear-gradient(140deg,var(--brand-soft),var(--bg-elevated) 65%);
+  border:1px solid color-mix(in srgb,var(--brand) 22%,transparent);
+  border-radius:var(--radius-lg);padding:1.6rem;box-shadow:var(--shadow-md);
+}
+.contact-card h3{margin-top:0}
+.contact-card .intro{margin-bottom:0;color:var(--text-muted)}
+.contact-grid{display:grid;gap:1.25rem;grid-template-columns:1fr;margin-top:1.1rem}
+@media (min-width:640px){.contact-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.contact-grid h4{margin:0 0 .3rem;font-size:.78rem;text-transform:uppercase;letter-spacing:.07em;color:var(--text-faint)}
+.contact-grid address{font-style:normal;margin:0;font-size:.96rem;line-height:1.65}
+.related-links{margin-top:1.5rem}
+
+.updates-list{list-style:none;padding:0;margin:0}
+.updates-list li{display:flex;gap:1rem;padding:.75rem 0;border-bottom:1px solid var(--border);margin:0}
+.updates-list li:last-child{border-bottom:0}
+.updates-list time{font-family:var(--mono);font-size:.84rem;color:var(--text-faint);flex:0 0 96px;padding-top:.15rem}
+
+/* ==========================================================================
+   Footer
+   ========================================================================== */
+.site-footer{background:var(--bg-subtle);border-top:1px solid var(--border);padding:3rem 0 1.75rem;font-size:.93rem}
+.footer-grid{display:grid;gap:2rem;grid-template-columns:1fr}
+@media (min-width:640px){.footer-grid{grid-template-columns:repeat(2,1fr)}}
+@media (min-width:960px){.footer-grid{grid-template-columns:1.6fr 1fr 1fr 1fr}}
+.footer-about p{color:var(--text-muted);margin:.85rem 0 0;max-width:38ch}
+.site-footer h3{font-size:.79rem;text-transform:uppercase;letter-spacing:.08em;color:var(--text-faint);margin:0 0 .9rem;font-weight:700}
+.site-footer ul{list-style:none;margin:0;padding:0;display:grid;gap:.55rem}
+.site-footer ul a{color:var(--text-muted)}
+.site-footer ul a:hover{color:var(--brand)}
+.footer-bottom{
+  display:flex;flex-wrap:wrap;gap:.75rem 1.5rem;align-items:center;justify-content:space-between;
+  margin-top:2.5rem;padding-top:1.5rem;border-top:1px solid var(--border);color:var(--text-faint);font-size:.87rem;
+}
+.footer-bottom p{margin:0}
+.footer-legal{display:flex;flex-wrap:wrap;gap:1rem}
+.footer-legal a{color:var(--text-faint)}
+
+/* Back to top */
+.to-top{
+  position:fixed;right:18px;bottom:18px;z-index:90;
+  width:44px;height:44px;border-radius:50%;display:grid;place-items:center;
+  background:var(--brand);color:#fff;border:0;cursor:pointer;box-shadow:var(--shadow-lg);
+  opacity:0;visibility:hidden;transform:translateY(8px);transition:opacity .2s ease,transform .2s ease,visibility .2s;
+}
+.to-top.is-visible{opacity:1;visibility:visible;transform:none}
+.to-top:hover{background:var(--brand-hover)}
+.to-top svg{width:19px;height:19px}
+
+.visually-hidden{
+  position:absolute!important;width:1px;height:1px;padding:0;margin:-1px;
+  overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0;
+}
+
+/* Print */
+@media print{
+  .site-header,.toc,.to-top,.hero-actions,.site-footer,.copy-btn,.skip-link{display:none!important}
+  body{font-size:11pt;background:#fff;color:#000}
+  .hero{background:none;border:0;padding:0 0 1rem}
+  .layout{display:block;padding:0}
+  .policy{max-width:none}
+  .policy section{break-inside:avoid;page-break-inside:avoid}
+  .code-block pre{background:#f4f4f4;color:#000;border:1px solid #ccc}
+  a::after{content:" (" attr(href) ")";font-size:9pt;color:#555}
+  a[href^="#"]::after{content:""}
+}
+</style>
+</head>
+<body>
+
+<a class="skip-link" href="#main">Skip to main content</a>
+
+<!-- ======================= HEADER ======================= -->
+<header class="site-header">
+  <div class="container header-inner">
+    <a class="brand" href="/" aria-label="Northwind Labs &ndash; home">
+      <span class="brand-mark" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 2 4 6v6c0 5 3.4 8.9 8 10 4.6-1.1 8-5 8-10V6l-8-4Z"/>
+        </svg>
+      </span>
+      <span>Northwind&nbsp;Labs</span>
+    </a>
+
+    <button class="icon-btn nav-toggle" id="navToggle" type="button"
+            aria-expanded="false" aria-controls="primaryNav" aria-label="Open navigation menu">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+        <path d="M3 6h18M3 12h18M3 18h18"/>
+      </svg>
+    </button>
+
+    <nav class="primary-nav" id="primaryNav" aria-label="Primary">
+      <ul class="nav-list">
+        <li><a href="/">Home</a></li>
+        <li><a href="/product">Product</a></li>
+        <li><a href="/pricing">Pricing</a></li>
+        <li><a href="/docs">Docs</a></li>
+        <li><a href="/about">About</a></li>
+        <li><a href="/contact">Contact</a></li>
+      </ul>
+    </nav>
+
+    <div class="header-actions">
+      <button class="icon-btn" id="themeToggle" type="button" aria-label="Switch colour theme" title="Switch colour theme">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8Z"/>
+        </svg>
+      </button>
+      <a class="btn btn-primary" href="/signup">Get started</a>
+    </div>
+  </div>
+</header>
+
+<!-- ======================= HERO ======================= -->
+<div class="hero">
+  <div class="container">
+    <nav class="breadcrumb" aria-label="Breadcrumb">
+      <ol>
+        <li><a href="/">Home</a></li>
+        <li><a href="/legal">Legal</a></li>
+        <li aria-current="page">Privacy Policy</li>
+      </ol>
+    </nav>
+
+    <p class="eyebrow">Legal &amp; Trust Center</p>
+    <h1>Privacy Policy</h1>
+    <p class="lede">
+      This policy explains what personal information Northwind Labs collects when you visit our website
+      or use our services, why we collect it, who we share it with, how long we keep it, and the choices
+      and rights you have over it.
+    </p>
+
+    <div class="hero-meta">
+      <span class="meta-item">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/>
+        </svg>
+        Last updated:&nbsp;<time datetime="2026-09-01">1 September 2026</time>
+      </span>
+      <span class="meta-item">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>
+        </svg>
+        Effective:&nbsp;<time datetime="2026-09-15">15 September 2026</time>
+      </span>
+      <span class="meta-item">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2Z"/>
+        </svg>
+        About a 9&nbsp;minute read
+      </span>
+    </div>
+
+    <div class="hero-actions">
+      <button class="btn btn-ghost" id="printBtn" type="button">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M6 9V2h12v7M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><path d="M6 14h12v8H6z"/>
+        </svg>
+        Print or save as PDF
+      </button>
+      <a class="btn btn-ghost" href="#contact-information">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <rect x="2" y="4" width="20" height="16" rx="2"/><path d="m2 7 10 6 10-6"/>
+        </svg>
+        Contact our privacy team
+      </a>
+    </div>
+  </div>
+</div>
+
+<!-- ======================= MAIN ======================= -->
+<div class="container">
+  <div class="layout">
+
+    <!-- Table of contents -->
+    <aside class="toc" aria-labelledby="toc-heading">
+      <details class="toc-details" open>
+        <summary><h2 id="toc-heading">On this page</h2></summary>
+        <ol>
+          <li><a href="#introduction">Introduction</a></li>
+          <li><a href="#information-we-collect">Information We Collect</a></li>
+          <li><a href="#how-we-use-your-information">How We Use Your Information</a></li>
+          <li><a href="#cookies-and-tracking">Cookies and Tracking Technologies</a></li>
+          <li><a href="#third-party-services">Third-Party Services</a></li>
+          <li><a href="#data-storage-and-security">Data Storage and Security</a></li>
+          <li><a href="#data-retention">Data Retention</a></li>
+          <li><a href="#user-rights">Your Rights and Choices</a></li>
+          <li><a href="#childrens-privacy">Children&rsquo;s Privacy</a></li>
+          <li><a href="#policy-changes">Changes to This Privacy Policy</a></li>
+          <li><a href="#contact-information">Contact Information</a></li>
+        </ol>
+      </details>
+    </aside>
+
+    <!-- Policy body -->
+    <main id="main">
+      <article class="policy">
+
+        <div class="callout" role="note">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/>
+          </svg>
+          <div>
+            <p><strong>Sample content notice.</strong> This page is a realistic template. &ldquo;Northwind Labs&rdquo; is a
+            fictional company, and every value shown in a dashed box &mdash; for example
+            <span class="placeholder">[COMPANY LEGAL NAME]</span> or <span class="placeholder">[REGISTERED ADDRESS]</span> &mdash;
+            is example text that must be replaced with your own legal details.</p>
+            <p>It is drafting scaffolding, not legal advice. Have qualified counsel review the final wording against the
+            laws that apply to you (such as the GDPR, UK GDPR, CCPA/CPRA, PIPEDA or your local equivalent) and confirm
+            that it matches what your systems actually do before publishing.</p>
+          </div>
+        </div>
+
+        <!-- 1 -->
+        <section id="introduction" aria-labelledby="introduction-h">
+          <h2 id="introduction-h"><span class="sec-num">01</span>Introduction<a class="anchor-link" href="#introduction" aria-label="Link to the Introduction section">#</a></h2>
+          <p>
+            <span class="placeholder">[COMPANY LEGAL NAME]</span>, trading as <strong>Northwind Labs</strong> (&ldquo;Northwind
+            Labs&rdquo;, &ldquo;we&rdquo;, &ldquo;us&rdquo; or &ldquo;our&rdquo;), operates the website at <span class="placeholder">[https://www.example.com]</span>
+            and the related applications, APIs and services that link to this policy (together, the &ldquo;Services&rdquo;).
+          </p>
+          <p>
+            We take the privacy of visitors, customers and their end users seriously. This Privacy Policy describes the
+            personal information we handle, the purposes we handle it for, the legal bases we rely on where that concept
+            applies, and how you can exercise your rights. It applies to everyone who interacts with the Services,
+            wherever they are located.
+          </p>
+          <p>
+            It does not apply to third-party websites, products or services that we link to but do not control. Those are
+            governed by their own privacy notices, and we encourage you to read them.
+          </p>
+
+          <div class="card">
+            <h3>Who is responsible for your data</h3>
+            <p>
+              For the purposes of the EU and UK General Data Protection Regulation, the controller of personal
+              information collected through the Services is
+              <span class="placeholder">[COMPANY LEGAL NAME]</span>,
+              registered at <span class="placeholder">[REGISTERED ADDRESS]</span>,
+              company number <span class="placeholder">[COMPANY REGISTRATION NUMBER]</span>.
+              Where we process customer content on behalf of a business customer, we act as a processor and handle that
+              content under our <a href="/legal/dpa">Data Processing Addendum</a> rather than this policy.
+            </p>
+          </div>
+
+          <h3>Summary at a glance</h3>
+          <div class="card-grid">
+            <div class="card">
+              <div class="card-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+              </div>
+              <h4>We never sell your data</h4>
+              <p>We do not sell personal information, and we do not share it for cross-context behavioural advertising.</p>
+            </div>
+            <div class="card">
+              <div class="card-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+              </div>
+              <h4>Encrypted end to end</h4>
+              <p>Data is encrypted in transit with TLS 1.2+ and at rest with AES-256 on our hosting provider.</p>
+            </div>
+            <div class="card">
+              <div class="card-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+              </div>
+              <h4>Non-essential cookies are opt-in</h4>
+              <p>Analytics and marketing cookies only load after you give consent, and you can withdraw it at any time.</p>
+            </div>
+            <div class="card">
+              <div class="card-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="m8 11 4 4 4-4"/><path d="M4 19h16"/></svg>
+              </div>
+              <h4>Export or delete anytime</h4>
+              <p>Download a machine-readable copy of your account data or ask us to erase it from your account settings.</p>
+            </div>
+          </div>
+        </section>
+
+        <!-- 2 -->
+        <section id="information-we-collect" aria-labelledby="information-we-collect-h">
+          <h2 id="information-we-collect-h"><span class="sec-num">02</span>Information We Collect<a class="anchor-link" href="#information-we-collect" aria-label="Link to the Information We Collect section">#</a></h2>
+          <p>We collect information in three ways: information you give us directly, information collected automatically
+             as you use the Services, and information we receive from third parties.</p>
+
+          <h3>2.1 Information you provide to us</h3>
+          <dl>
+            <dt>Account information</dt>
+            <dd>Name, work email address, password hash, job title, company name and the time zone you select when you create an account.</dd>
+            <dt>Billing information</dt>
+            <dd>Billing contact, billing address, VAT or tax identifier, and the last four digits and expiry of your payment card. Full card numbers are entered directly into our payment provider&rsquo;s hosted fields and never reach our servers.</dd>
+            <dt>Support and communications</dt>
+            <dd>The content of support tickets, emails, chat transcripts, call notes and any attachments you send us.</dd>
+            <dt>Customer content</dt>
+            <dd>Files, records and other content you or your team upload to your workspace, which may itself contain personal information about your own users.</dd>
+            <dt>Optional submissions</dt>
+            <dd>Newsletter sign-ups, webinar registrations, survey responses, testimonials and job applications.</dd>
+          </dl>
+
+          <h3>2.2 Information collected automatically</h3>
+          <ul>
+            <li><strong>Device and connection data</strong> &mdash; IP address, browser type and version, operating system, screen size, device type and preferred language.</li>
+            <li><strong>Usage data</strong> &mdash; pages and features viewed, referring URL, buttons clicked, session duration, and timestamps of each request.</li>
+            <li><strong>Server logs</strong> &mdash; HTTP method, requested path, status code, response time, and a truncated IP address retained for security monitoring.</li>
+            <li><strong>Cookies and similar technologies</strong> &mdash; as described in <a href="#cookies-and-tracking">Section&nbsp;4</a>.</li>
+          </ul>
+
+          <h3>2.3 Information from third parties</h3>
+          <ul>
+            <li><strong>Single sign-on providers</strong> &mdash; if you sign in with a workplace identity provider, we receive your name, email address and avatar URL from that provider.</li>
+            <li><strong>Payment processors</strong> &mdash; transaction status, fraud signals and the billing country associated with your payment method.</li>
+            <li><strong>Business data providers</strong> &mdash; publicly available company details (industry, size, website) used to route enquiries to the right team.</li>
+          </ul>
+
+          <div class="callout" role="note">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M10.3 3.2 1.8 17.5A2 2 0 0 0 3.5 20.5h17a2 2 0 0 0 1.7-3L13.7 3.2a2 2 0 0 0-3.4 0Z"/><path d="M12 9v4M12 17h.01"/>
+            </svg>
+            <div>
+              <p><strong>We do not knowingly collect special category data.</strong> Please do not send us health,
+              biometric, genetic, racial or ethnic origin, political, religious or sexual orientation data through
+              support channels or free-text fields. If you do, we will delete it once it is identified.</p>
+            </div>
+          </div>
+        </section>
+
+        <!-- 3 -->
+        <section id="how-we-use-your-information" aria-labelledby="how-we-use-your-information-h">
+          <h2 id="how-we-use-your-information-h"><span class="sec-num">03</span>How We Use Your Information<a class="anchor-link" href="#how-we-use-your-information" aria-label="Link to the How We Use Your Information section">#</a></h2>
+          <p>We use personal information only for the purposes set out below. Where the GDPR or UK GDPR applies, the
+             legal basis we rely on for each purpose is listed alongside it.</p>
+
+          <div class="table-wrap">
+            <table>
+              <caption>Sample processing table &mdash; replace each row with the purposes that genuinely apply to your service.</caption>
+              <thead>
+                <tr><th scope="col">Purpose</th><th scope="col">Data used</th><th scope="col">Legal basis (EU/UK)</th></tr>
+              </thead>
+              <tbody>
+                <tr><td>Creating and administering your account</td><td>Account information</td><td>Performance of a contract</td></tr>
+                <tr><td>Providing, maintaining and supporting the Services</td><td>Account, usage, customer content</td><td>Performance of a contract</td></tr>
+                <tr><td>Processing payments and preventing payment fraud</td><td>Billing information, device data</td><td>Contract; legal obligation</td></tr>
+                <tr><td>Responding to support requests</td><td>Communications, account information</td><td>Contract; legitimate interests</td></tr>
+                <tr><td>Securing our systems and investigating abuse</td><td>Server logs, device data</td><td>Legitimate interests; legal obligation</td></tr>
+                <tr><td>Measuring and improving product performance</td><td>Aggregated usage and analytics data</td><td>Consent (analytics cookies)</td></tr>
+                <tr><td>Sending product updates and marketing emails</td><td>Contact details, engagement data</td><td>Consent, or soft opt-in for existing customers</td></tr>
+                <tr><td>Meeting tax, accounting and legal obligations</td><td>Billing records, correspondence</td><td>Legal obligation</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <h3>Automated decision-making</h3>
+          <p>
+            We use automated rules to flag suspected spam, abuse and fraudulent payments. These checks may temporarily
+            restrict an account, but a member of our team reviews every restriction before it becomes permanent. We do
+            not carry out automated decision-making that produces legal or similarly significant effects without human
+            involvement.
+          </p>
+
+          <h3>What we will not do</h3>
+          <p>
+            We do not sell personal information for money, share it for cross-context behavioural advertising, or use
+            your customer content to train machine-learning models unless you have asked us to enable a feature that
+            says so explicitly.
+          </p>
+        </section>
+
+        <!-- 4 -->
+        <section id="cookies-and-tracking" aria-labelledby="cookies-and-tracking-h">
+          <h2 id="cookies-and-tracking-h"><span class="sec-num">04</span>Cookies and Tracking Technologies<a class="anchor-link" href="#cookies-and-tracking" aria-label="Link to the Cookies and Tracking Technologies section">#</a></h2>
+          <p>
+            Cookies are small text files stored on your device. We also use closely related technologies such as
+            <code>localStorage</code>, pixels and software development kits. Strictly necessary cookies are set as soon
+            as you arrive because the Services cannot function without them. Every other category loads only after you
+            opt in through our consent banner.
+          </p>
+
+          <div class="table-wrap">
+            <table>
+              <caption>Example cookie inventory &mdash; audit your own site and list the real cookies, providers and durations.</caption>
+              <thead>
+                <tr><th scope="col">Cookie</th><th scope="col">Category</th><th scope="col">Purpose</th><th scope="col">Expires</th></tr>
+              </thead>
+              <tbody>
+                <tr><td><code>nw_session</code></td><td>Strictly necessary</td><td>Keeps you signed in between page loads</td><td>Session</td></tr>
+                <tr><td><code>nw_csrf</code></td><td>Strictly necessary</td><td>Protects forms against cross-site request forgery</td><td>Session</td></tr>
+                <tr><td><code>nw_consent</code></td><td>Strictly necessary</td><td>Stores your cookie preferences</td><td>6 months</td></tr>
+                <tr><td><code>nw_locale</code></td><td>Functional</td><td>Remembers your language and theme preference</td><td>12 months</td></tr>
+                <tr><td><code>_analytics_id</code></td><td>Analytics</td><td>Distinguishes visitors for aggregate traffic reporting</td><td>13 months</td></tr>
+                <tr><td><code>_campaign_ref</code></td><td>Marketing</td><td>Measures campaign performance across referrals</td><td>90 days</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <h3>Managing your preferences</h3>
+          <p>
+            You can change your choices at any time from the <a href="#" data-open-preferences>cookie preferences panel</a>,
+            or by clearing cookies in your browser settings. Blocking strictly necessary cookies will break sign-in and
+            other core features. We also honour the
+            <a href="https://globalprivacycontrol.org/" rel="noopener noreferrer" target="_blank">Global Privacy Control</a>
+            signal where it is legally recognised.
+          </p>
+
+          <h3>Example: a minimal consent gate</h3>
+          <p>
+            The snippet below shows the pattern we follow &mdash; no analytics tag is loaded until consent is stored. Treat it
+            as an illustration of the approach rather than production code; a real deployment should use an audited
+            consent management platform.
+          </p>
+
+          <div class="code-block">
+            <div class="code-head">
+              <span class="code-title">consent-gate.js &mdash; sample</span>
+              <button class="copy-btn" type="button" data-copy>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                <span>Copy</span>
+              </button>
+            </div>
+<pre><code>// SAMPLE ONLY - replace IDs and endpoints with your own values.
+const CONSENT_KEY = 'nw_consent';
+const CONSENT_VERSION = 2; // bump to re-prompt after a policy change
+
+function readConsent() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(CONSENT_KEY) || 'null');
+    return saved &amp;&amp; saved.version === CONSENT_VERSION ? saved : null;
+  } catch {
+    return null; // storage blocked (private mode, blocked cookies)
+  }
+}
+
+function saveConsent(categories) {
+  const record = {
+    version: CONSENT_VERSION,
+    grantedAt: new Date().toISOString(),
+    analytics: Boolean(categories.analytics),
+    marketing: Boolean(categories.marketing),
+  };
+  try { localStorage.setItem(CONSENT_KEY, JSON.stringify(record)); } catch {}
+  applyConsent(record);
+}
+
+function applyConsent(consent) {
+  if (consent.analytics) loadAnalytics();
+  // Marketing tags would be gated the same way:
+  // if (consent.marketing) loadMarketingPixel();
+}
+
+let analyticsLoaded = false;
+function loadAnalytics() {
+  if (analyticsLoaded) return;
+  analyticsLoaded = true;
+
+  const s = document.createElement('script');
+  s.src = 'https://analytics.example.com/tag.js?id=MEASUREMENT_ID';
+  s.async = true;
+  document.head.appendChild(s);
+
+  window.dataLayer = window.dataLayer || [];
+  window.track = function () { window.dataLayer.push(arguments); };
+  track('init', 'MEASUREMENT_ID', {
+    anonymize_ip: true,        // truncate the visitor IP address
+    cookie_flags: 'SameSite=Lax;Secure',
+  });
+}
+
+// Respect an opt-out signal before showing any banner.
+const gpcOptOut = navigator.globalPrivacyControl === true;
+const existing = readConsent();
+
+if (gpcOptOut) {
+  saveConsent({ analytics: false, marketing: false });
+} else if (existing) {
+  applyConsent(existing);
+} else {
+  showConsentBanner(); // your banner UI calls saveConsent({...})
+}
+</code></pre>
+          </div>
+
+          <p>If your analytics vendor supports a consent-mode API, the default state should deny every non-essential purpose until the visitor chooses:</p>
+
+          <div class="code-block">
+            <div class="code-head">
+              <span class="code-title">consent-defaults.html &mdash; sample</span>
+              <button class="copy-btn" type="button" data-copy>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                <span>Copy</span>
+              </button>
+            </div>
+<pre><code>&lt;!-- Place before any tag manager or analytics script. --&gt;
+&lt;script&gt;
+  window.dataLayer = window.dataLayer || [];
+  function track(){ dataLayer.push(arguments); }
+
+  track('consent', 'default', {
+    ad_storage: 'denied',
+    ad_user_data: 'denied',
+    ad_personalization: 'denied',
+    analytics_storage: 'denied',
+    functionality_storage: 'granted',
+    security_storage: 'granted',
+    wait_for_update: 500
+  });
+
+  // Called by your banner once the visitor accepts analytics:
+  function grantAnalytics() {
+    track('consent', 'update', { analytics_storage: 'granted' });
+  }
+&lt;/script&gt;
+</code></pre>
+          </div>
+          <p class="code-note">Replace <code>MEASUREMENT_ID</code> and the vendor endpoint with your own values, and remove any category you do not actually use.</p>
+        </section>
+
+        <!-- 5 -->
+        <section id="third-party-services" aria-labelledby="third-party-services-h">
+          <h2 id="third-party-services-h"><span class="sec-num">05</span>Third-Party Services<a class="anchor-link" href="#third-party-services" aria-label="Link to the Third-Party Services section">#</a></h2>
+          <p>
+            We rely on a small set of vetted providers (sub-processors) to run the Services. Each one is bound by a
+            written data processing agreement, may use personal information only on our documented instructions, and is
+            reviewed before onboarding and annually thereafter.
+          </p>
+
+          <div class="table-wrap">
+            <table>
+              <caption>Example sub-processor list &mdash; publish and maintain your own at a stable URL.</caption>
+              <thead>
+                <tr><th scope="col">Provider</th><th scope="col">Function</th><th scope="col">Data processed</th><th scope="col">Region</th></tr>
+              </thead>
+              <tbody>
+                <tr><td><span class="placeholder">[CLOUD PROVIDER]</span></td><td>Application hosting and storage</td><td>All service data</td><td>EU, US</td></tr>
+                <tr><td><span class="placeholder">[PAYMENT PROCESSOR]</span></td><td>Payments and invoicing</td><td>Billing details</td><td>US, EU</td></tr>
+                <tr><td><span class="placeholder">[EMAIL PROVIDER]</span></td><td>Transactional and marketing email</td><td>Name, email, engagement</td><td>EU</td></tr>
+                <tr><td><span class="placeholder">[ANALYTICS PROVIDER]</span></td><td>Aggregate product analytics</td><td>Pseudonymous usage events</td><td>EU</td></tr>
+                <tr><td><span class="placeholder">[SUPPORT DESK]</span></td><td>Help desk and live chat</td><td>Ticket content, contact details</td><td>EU</td></tr>
+                <tr><td><span class="placeholder">[ERROR MONITORING]</span></td><td>Crash and error reporting</td><td>Stack traces, scrubbed request data</td><td>EU</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <h3>International transfers</h3>
+          <p>
+            Some providers process data outside the country where you live. When we transfer personal information out of
+            the European Economic Area, the United Kingdom or Switzerland, we rely on an adequacy decision where one
+            exists, and otherwise on the European Commission&rsquo;s Standard Contractual Clauses together with the UK
+            International Data Transfer Addendum, supported by a transfer impact assessment. You can request a copy of
+            the safeguards we use by writing to <span class="placeholder">[privacy@example.com]</span>.
+          </p>
+
+          <h3>Other disclosures</h3>
+          <ul>
+            <li><strong>Legal and regulatory</strong> &mdash; where we are required to comply with a valid court order, subpoena or lawful request from a public authority. We notify affected customers unless legally prohibited.</li>
+            <li><strong>Enforcement and safety</strong> &mdash; to enforce our <a href="/legal/terms">Terms of Service</a> or to protect the rights, property or safety of our users and the public.</li>
+            <li><strong>Corporate transactions</strong> &mdash; in connection with a merger, acquisition, financing or sale of assets. Personal information stays subject to this policy until it is replaced by a notice we tell you about in advance.</li>
+            <li><strong>With your direction</strong> &mdash; when you connect a third-party integration, we share only the data that integration requires, and its own privacy policy then applies.</li>
+          </ul>
+        </section>
+
+        <!-- 6 -->
+        <section id="data-storage-and-security" aria-labelledby="data-storage-and-security-h">
+          <h2 id="data-storage-and-security-h"><span class="sec-num">06</span>Data Storage and Security<a class="anchor-link" href="#data-storage-and-security" aria-label="Link to the Data Storage and Security section">#</a></h2>
+          <p>
+            Production data is stored in <span class="placeholder">[PRIMARY DATA REGION]</span> with encrypted backups
+            replicated to <span class="placeholder">[BACKUP REGION]</span>. We maintain technical and organisational
+            measures appropriate to the risk, reviewed at least annually.
+          </p>
+
+          <div class="card-grid">
+            <div class="card">
+              <div class="card-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div>
+              <h4>Encryption</h4>
+              <p>TLS 1.2+ with HSTS for data in transit; AES-256 for data and backups at rest. Secrets are held in a managed key vault with automatic rotation.</p>
+            </div>
+            <div class="card">
+              <div class="card-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="m19 8 2 2 3-3"/></svg></div>
+              <h4>Access control</h4>
+              <p>Least-privilege, role-based access with mandatory multi-factor authentication. Administrative access is time-bound and logged.</p>
+            </div>
+            <div class="card">
+              <div class="card-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg></div>
+              <h4>Monitoring</h4>
+              <p>Centralised audit logging, anomaly alerting and 24/7 on-call coverage for security events affecting production.</p>
+            </div>
+            <div class="card">
+              <div class="card-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><path d="M14 2v6h6"/><path d="m9 15 2 2 4-4"/></svg></div>
+              <h4>Assurance</h4>
+              <p>Annual third-party penetration testing, continuous dependency scanning, and <span class="placeholder">[SOC 2 TYPE II / ISO 27001]</span> certification.</p>
+            </div>
+          </div>
+
+          <h3>Security headers we set</h3>
+          <p>As one example of our hardening baseline, every response from the Services carries the following headers:</p>
+
+          <div class="code-block">
+            <div class="code-head">
+              <span class="code-title">response-headers.conf &mdash; sample</span>
+              <button class="copy-btn" type="button" data-copy>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                <span>Copy</span>
+              </button>
+            </div>
+<pre><code>Strict-Transport-Security: max-age=63072000; includeSubDomains; preload
+Content-Security-Policy: default-src 'self'; img-src 'self' data:; frame-ancestors 'none'
+Referrer-Policy: strict-origin-when-cross-origin
+X-Content-Type-Options: nosniff
+Permissions-Policy: geolocation=(), camera=(), microphone=()
+Set-Cookie: nw_session=...; HttpOnly; Secure; SameSite=Lax; Path=/
+</code></pre>
+          </div>
+
+          <h3>Breach notification</h3>
+          <p>
+            No system is perfectly secure, and we cannot guarantee absolute security. If a personal data breach is
+            likely to result in a risk to your rights and freedoms, we will notify the relevant supervisory authority
+            within 72 hours of becoming aware of it and inform affected users without undue delay. To report a
+            vulnerability, see our <a href="/security/disclosure">responsible disclosure policy</a> or email
+            <span class="placeholder">[security@example.com]</span>.
+          </p>
+        </section>
+
+        <!-- 7 -->
+        <section id="data-retention" aria-labelledby="data-retention-h">
+          <h2 id="data-retention-h"><span class="sec-num">07</span>Data Retention<a class="anchor-link" href="#data-retention" aria-label="Link to the Data Retention section">#</a></h2>
+          <p>
+            We keep personal information only for as long as we need it for the purpose it was collected for, plus any
+            period required by law. When a retention period ends, the data is deleted or irreversibly anonymised on our
+            next scheduled purge.
+          </p>
+
+          <div class="table-wrap">
+            <table>
+              <caption>Example retention schedule &mdash; align these periods with your own legal and operational requirements.</caption>
+              <thead>
+                <tr><th scope="col">Category</th><th scope="col">Retention period</th><th scope="col">Reason</th></tr>
+              </thead>
+              <tbody>
+                <tr><td>Active account data</td><td>For the life of the account</td><td>To provide the Services</td></tr>
+                <tr><td>Closed account data</td><td>30 days, then deleted</td><td>Grace period for accidental closure</td></tr>
+                <tr><td>Encrypted backups</td><td>35 days on a rolling cycle</td><td>Disaster recovery</td></tr>
+                <tr><td>Invoices and tax records</td><td><span class="placeholder">[7 years]</span></td><td>Statutory accounting obligations</td></tr>
+                <tr><td>Support tickets</td><td>24 months after closure</td><td>Service quality and dispute handling</td></tr>
+                <tr><td>Security and access logs</td><td>12 months</td><td>Incident investigation</td></tr>
+                <tr><td>Marketing contacts</td><td>Until you unsubscribe, then 12 months</td><td>Proof of consent withdrawal</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <p>
+            Data held in encrypted backups may persist for up to 35 days after deletion from live systems. It is
+            isolated from production, is not used for any other purpose, and is removed when the backup expires.
+          </p>
+        </section>
+
+        <!-- 8 -->
+        <section id="user-rights" aria-labelledby="user-rights-h">
+          <h2 id="user-rights-h"><span class="sec-num">08</span>Your Rights and Choices<a class="anchor-link" href="#user-rights" aria-label="Link to the Your Rights and Choices section">#</a></h2>
+          <p>Depending on where you live, you may have some or all of the following rights over your personal information.</p>
+          <ul>
+            <li><strong>Access</strong> &mdash; ask whether we hold data about you and receive a copy of it.</li>
+            <li><strong>Rectification</strong> &mdash; have inaccurate or incomplete data corrected.</li>
+            <li><strong>Erasure</strong> &mdash; ask us to delete data we no longer have a lawful reason to keep.</li>
+            <li><strong>Restriction</strong> &mdash; ask us to pause processing while a dispute is resolved.</li>
+            <li><strong>Portability</strong> &mdash; receive your data in a structured, commonly used, machine-readable format, or have it sent to another provider.</li>
+            <li><strong>Objection</strong> &mdash; object to processing based on our legitimate interests, including profiling.</li>
+            <li><strong>Withdraw consent</strong> &mdash; withdraw consent at any time, without affecting processing already carried out.</li>
+            <li><strong>Opt out of marketing</strong> &mdash; unsubscribe from any marketing email using the link in its footer.</li>
+            <li><strong>Non-discrimination</strong> &mdash; receive equal service and pricing when you exercise a privacy right.</li>
+          </ul>
+
+          <h3>How to make a request</h3>
+          <p>
+            Signed-in users can export or delete account data directly from <strong>Settings &rarr; Privacy</strong>. Otherwise,
+            email <span class="placeholder">[privacy@example.com]</span> with the subject line &ldquo;Privacy request&rdquo;. We will
+            acknowledge within 5 business days and respond within 30 days, or within 45 days where US state law permits an
+            extension and we tell you why. We may ask for information to verify your identity, and we use it only for that
+            verification. An authorised agent may submit a request on your behalf with written proof of authorisation.
+          </p>
+
+          <h3>Example: a data export request</h3>
+          <div class="code-block">
+            <div class="code-head">
+              <span class="code-title">export-my-data.sh &mdash; sample API call</span>
+              <button class="copy-btn" type="button" data-copy>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                <span>Copy</span>
+              </button>
+            </div>
+<pre><code># SAMPLE - illustrative endpoint and token.
+curl -X POST "https://api.example.com/v1/privacy/export" \
+  -H "Authorization: Bearer $NORTHWIND_API_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{ "format": "json", "include": ["profile", "activity", "billing"] }'
+
+# 202 Accepted
+# {
+#   "request_id": "exp_9f3a21c4",
+#   "status": "queued",
+#   "estimated_ready_at": "2026-09-18T09:00:00Z",
+#   "delivery": "A signed download link is emailed to the account owner and
+#                expires 72 hours after it is generated."
+# }
+</code></pre>
+          </div>
+
+          <h3>Region-specific rights</h3>
+          <dl>
+            <dt>European Economic Area, United Kingdom and Switzerland</dt>
+            <dd>You may lodge a complaint with your local supervisory authority &mdash; for example the <span class="placeholder">[LEAD SUPERVISORY AUTHORITY]</span> or the UK Information Commissioner&rsquo;s Office. We would appreciate the chance to address your concern first.</dd>
+            <dt>California (CCPA/CPRA)</dt>
+            <dd>You may request the categories and specific pieces of personal information collected, request deletion or correction, and limit the use of sensitive personal information. We do not sell or share personal information as those terms are defined by the CPRA, and we have not done so in the preceding 12 months.</dd>
+            <dt>Other US states</dt>
+            <dd>Residents of states with comprehensive privacy laws &mdash; including Colorado, Connecticut, Virginia, Utah and Texas &mdash; have comparable rights, including the right to appeal a refused request by replying to our decision email.</dd>
+            <dt>Canada, Australia and elsewhere</dt>
+            <dd>Rights under PIPEDA, the Australian Privacy Principles and other applicable laws are honoured through the same request process described above.</dd>
+          </dl>
+        </section>
+
+        <!-- 9 -->
+        <section id="childrens-privacy" aria-labelledby="childrens-privacy-h">
+          <h2 id="childrens-privacy-h"><span class="sec-num">09</span>Children&rsquo;s Privacy<a class="anchor-link" href="#childrens-privacy" aria-label="Link to the Children&rsquo;s Privacy section">#</a></h2>
+          <p>
+            The Services are designed for businesses and are not directed to children. We do not knowingly collect
+            personal information from anyone under <span class="placeholder">[16]</span> years of age (or under 13 where
+            local law sets that threshold, such as COPPA in the United States).
+          </p>
+          <p>
+            If we learn that we have collected personal information from a child without the consent required by law, we
+            will delete it promptly. If you believe a child has provided us with personal information, contact
+            <span class="placeholder">[privacy@example.com]</span> and we will investigate and remove the data.
+          </p>
+          <p>
+            Business customers are responsible for ensuring that the end users whose data they upload to their workspace
+            meet the age requirements of their own terms and applicable law.
+          </p>
+        </section>
+
+        <!-- 10 -->
+        <section id="policy-changes" aria-labelledby="policy-changes-h">
+          <h2 id="policy-changes-h"><span class="sec-num">10</span>Changes to This Privacy Policy<a class="anchor-link" href="#policy-changes" aria-label="Link to the Changes to This Privacy Policy section">#</a></h2>
+          <p>
+            We may update this policy as our Services, our providers or the law change. The &ldquo;Last updated&rdquo; date at the
+            top of the page always reflects the most recent revision, and previous versions are archived at
+            <a href="/legal/privacy/archive">/legal/privacy/archive</a>.
+          </p>
+          <p>
+            For material changes &mdash; for instance a new purpose for processing, a new category of recipient, or a change
+            that reduces your rights &mdash; we will give at least <span class="placeholder">[30]</span> days&rsquo; notice by email
+            to account owners and by an in-product banner before the change takes effect. Continuing to use the Services
+            after the effective date means the updated policy applies to you.
+          </p>
+
+          <h3>Revision history</h3>
+          <ul class="updates-list">
+            <li><time datetime="2026-09-01">2026-09-01</time><span>Added the sub-processor table, documented Global Privacy Control support, and clarified backup retention.</span></li>
+            <li><time datetime="2026-03-14">2026-03-14</time><span>Expanded US state privacy rights and introduced the request appeal process.</span></li>
+            <li><time datetime="2025-08-22">2025-08-22</time><span>Moved analytics to a consent-gated loader; shortened log retention from 24 to 12 months.</span></li>
+            <li><time datetime="2025-01-10">2025-01-10</time><span>First published.</span></li>
+          </ul>
+        </section>
+
+        <!-- 11 -->
+        <section id="contact-information" aria-labelledby="contact-information-h">
+          <h2 id="contact-information-h"><span class="sec-num">11</span>Contact Information<a class="anchor-link" href="#contact-information" aria-label="Link to the Contact Information section">#</a></h2>
+          <p>Questions, requests or complaints about this policy are welcome. We aim to reply within 5 business days.</p>
+
+          <div class="contact-card">
+            <h3>Get in touch</h3>
+            <p class="intro">Please use the privacy channels below rather than general support so your request is logged and tracked correctly.</p>
+            <div class="contact-grid">
+              <div>
+                <h4>Privacy enquiries</h4>
+                <address>
+                  <a href="mailto:privacy@example.com">privacy@example.com</a><br>
+                  <span class="placeholder">[+1 (555) 010-0199]</span>
+                </address>
+              </div>
+              <div>
+                <h4>Data Protection Officer</h4>
+                <address>
+                  <span class="placeholder">[DPO FULL NAME]</span><br>
+                  <a href="mailto:dpo@example.com">dpo@example.com</a>
+                </address>
+              </div>
+              <div>
+                <h4>Postal address</h4>
+                <address>
+                  <span class="placeholder">[COMPANY LEGAL NAME]</span><br>
+                  <span class="placeholder">[STREET ADDRESS]</span><br>
+                  <span class="placeholder">[CITY, POSTAL CODE, COUNTRY]</span>
+                </address>
+              </div>
+              <div>
+                <h4>EU / UK representative</h4>
+                <address>
+                  <span class="placeholder">[ARTICLE 27 REPRESENTATIVE NAME]</span><br>
+                  <span class="placeholder">[REPRESENTATIVE ADDRESS]</span>
+                </address>
+              </div>
+            </div>
+          </div>
+
+          <p class="related-links">
+            Related documents: <a href="/legal/terms">Terms of Service</a> &middot;
+            <a href="/legal/cookies">Cookie Policy</a> &middot;
+            <a href="/legal/dpa">Data Processing Addendum</a> &middot;
+            <a href="/legal/subprocessors">Sub-processor list</a>
+          </p>
+        </section>
+
+      </article>
+    </main>
+  </div>
+</div>
+
+<!-- ======================= FOOTER ======================= -->
+<footer class="site-footer">
+  <div class="container">
+    <div class="footer-grid">
+      <div class="footer-about">
+        <a class="brand" href="/">
+          <span class="brand-mark" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 4 6v6c0 5 3.4 8.9 8 10 4.6-1.1 8-5 8-10V6l-8-4Z"/></svg>
+          </span>
+          <span>Northwind&nbsp;Labs</span>
+        </a>
+        <p>Sample company used for demonstration. Replace this description, the links and every contact detail with your organisation&rsquo;s real information.</p>
+      </div>
+
+      <nav aria-labelledby="f-product">
+        <h3 id="f-product">Product</h3>
+        <ul>
+          <li><a href="/product">Overview</a></li>
+          <li><a href="/pricing">Pricing</a></li>
+          <li><a href="/integrations">Integrations</a></li>
+          <li><a href="/changelog">Changelog</a></li>
+        </ul>
+      </nav>
+
+      <nav aria-labelledby="f-company">
+        <h3 id="f-company">Company</h3>
+        <ul>
+          <li><a href="/about">About</a></li>
+          <li><a href="/careers">Careers</a></li>
+          <li><a href="/blog">Blog</a></li>
+          <li><a href="/contact">Contact</a></li>
+        </ul>
+      </nav>
+
+      <nav aria-labelledby="f-legal">
+        <h3 id="f-legal">Legal</h3>
+        <ul>
+          <li><a href="/legal/privacy" aria-current="page">Privacy Policy</a></li>
+          <li><a href="/legal/terms">Terms of Service</a></li>
+          <li><a href="/legal/cookies">Cookie Policy</a></li>
+          <li><a href="/legal/subprocessors">Sub-processors</a></li>
+          <li><a href="#" data-open-preferences>Cookie preferences</a></li>
+        </ul>
+      </nav>
+    </div>
+
+    <div class="footer-bottom">
+      <p>&copy; <span id="year">2026</span> <span class="placeholder">[COMPANY LEGAL NAME]</span>. All rights reserved.</p>
+      <div class="footer-legal">
+        <a href="/legal/privacy">Privacy</a>
+        <a href="/legal/terms">Terms</a>
+        <a href="/security">Security</a>
+        <a href="/accessibility">Accessibility</a>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<button class="to-top" id="toTop" type="button" aria-label="Back to top">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+    <path d="M12 19V5M5 12l7-7 7 7"/>
+  </svg>
+</button>
+
+<p aria-live="polite" class="visually-hidden" id="srStatus"></p>
+
+<!-- Structured data for search engines -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebPage",
+  "name": "Privacy Policy",
+  "description": "What personal information Northwind Labs collects, how we use and share it, how long we keep it, and the privacy rights available to you.",
+  "url": "https://www.example.com/privacy-policy",
+  "dateModified": "2026-09-01",
+  "inLanguage": "en",
+  "isPartOf": { "@type": "WebSite", "name": "Northwind Labs", "url": "https://www.example.com" },
+  "publisher": { "@type": "Organization", "name": "Northwind Labs", "url": "https://www.example.com" },
+  "breadcrumb": {
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://www.example.com/" },
+      { "@type": "ListItem", "position": 2, "name": "Legal", "item": "https://www.example.com/legal" },
+      { "@type": "ListItem", "position": 3, "name": "Privacy Policy" }
+    ]
+  }
+}
+</script>
+
+<script>
+(function () {
+  'use strict';
+
+  function announce(msg) {
+    var el = document.getElementById('srStatus');
+    if (el) { el.textContent = msg; }
+  }
+
+  /* ---- Current year in the footer ---------------------------------- */
+  var yearEl = document.getElementById('year');
+  if (yearEl) { yearEl.textContent = String(new Date().getFullYear()); }
+
+  /* ---- Mobile navigation ------------------------------------------- */
+  var navToggle = document.getElementById('navToggle');
+  var primaryNav = document.getElementById('primaryNav');
+
+  function closeNav() {
+    if (!primaryNav || !navToggle) { return; }
+    primaryNav.classList.remove('is-open');
+    navToggle.setAttribute('aria-expanded', 'false');
+    navToggle.setAttribute('aria-label', 'Open navigation menu');
+  }
+
+  if (navToggle && primaryNav) {
+    navToggle.addEventListener('click', function () {
+      var open = primaryNav.classList.toggle('is-open');
+      navToggle.setAttribute('aria-expanded', String(open));
+      navToggle.setAttribute('aria-label', open ? 'Close navigation menu' : 'Open navigation menu');
+    });
+    primaryNav.addEventListener('click', function (e) {
+      if (e.target.closest('a')) { closeNav(); }
+    });
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape' && primaryNav.classList.contains('is-open')) {
+        closeNav();
+        navToggle.focus();
+      }
+    });
+    window.addEventListener('resize', function () {
+      if (window.innerWidth > 900) { closeNav(); }
+    });
+  }
+
+  /* ---- Colour theme toggle (per-viewer convenience only) ------------ */
+  var THEME_KEY = 'nw_theme';
+  var themeToggle = document.getElementById('themeToggle');
+
+  function storedTheme() {
+    try { return localStorage.getItem(THEME_KEY); } catch (err) { return null; }
+  }
+  function currentTheme() {
+    var explicit = document.documentElement.getAttribute('data-theme');
+    if (explicit) { return explicit; }
+    return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+  }
+  function applyTheme(theme) {
+    document.documentElement.setAttribute('data-theme', theme);
+    if (themeToggle) {
+      themeToggle.setAttribute('aria-label', theme === 'dark' ? 'Switch to light theme' : 'Switch to dark theme');
+    }
+  }
+
+  var saved = storedTheme();
+  if (saved === 'dark' || saved === 'light') { applyTheme(saved); }
+
+  if (themeToggle) {
+    themeToggle.addEventListener('click', function () {
+      var next = currentTheme() === 'dark' ? 'light' : 'dark';
+      applyTheme(next);
+      try { localStorage.setItem(THEME_KEY, next); } catch (err) { /* storage blocked */ }
+      announce(next === 'dark' ? 'Dark theme enabled' : 'Light theme enabled');
+    });
+  }
+
+  /* ---- Print / save as PDF ----------------------------------------- */
+  var printBtn = document.getElementById('printBtn');
+  if (printBtn) {
+    printBtn.addEventListener('click', function () { window.print(); });
+  }
+
+  /* ---- Copy buttons on code blocks --------------------------------- */
+  Array.prototype.forEach.call(document.querySelectorAll('[data-copy]'), function (btn) {
+    btn.addEventListener('click', function () {
+      var block = btn.closest('.code-block');
+      var code = block && block.querySelector('code');
+      if (!code) { return; }
+
+      var label = btn.querySelector('span');
+      function done(ok) {
+        announce(ok ? 'Code copied to clipboard' : 'Copy failed, the code has been selected for you');
+        if (!label) { return; }
+        label.textContent = ok ? 'Copied' : 'Press Ctrl+C';
+        window.setTimeout(function () { label.textContent = 'Copy'; }, 2000);
+      }
+
+      if (navigator.clipboard && window.isSecureContext) {
+        navigator.clipboard.writeText(code.innerText).then(
+          function () { done(true); },
+          function () { done(false); }
+        );
+      } else {
+        // Fallback for non-secure contexts: select the text for the user.
+        var range = document.createRange();
+        range.selectNodeContents(code);
+        var sel = window.getSelection();
+        sel.removeAllRanges();
+        sel.addRange(range);
+        done(false);
+      }
+    });
+  });
+
+  /* ---- Table-of-contents scroll spy -------------------------------- */
+  var tocLinks = Array.prototype.slice.call(document.querySelectorAll('.toc a[href^="#"]'));
+  var sections = tocLinks
+    .map(function (link) { return document.querySelector(link.getAttribute('href')); })
+    .filter(Boolean);
+
+  if (sections.length && 'IntersectionObserver' in window) {
+    var order = sections.map(function (s) { return s.id; });
+
+    function setActive(id) {
+      tocLinks.forEach(function (link) {
+        var active = link.getAttribute('href') === '#' + id;
+        link.classList.toggle('is-active', active);
+        if (active) { link.setAttribute('aria-current', 'true'); }
+        else { link.removeAttribute('aria-current'); }
+      });
+    }
+
+    var visible = {};
+    var observer = new IntersectionObserver(function (entries) {
+      entries.forEach(function (entry) {
+        if (entry.isIntersecting) { visible[entry.target.id] = true; }
+        else { delete visible[entry.target.id]; }
+      });
+      var ids = Object.keys(visible);
+      if (ids.length) {
+        ids.sort(function (a, b) { return order.indexOf(a) - order.indexOf(b); });
+        setActive(ids[0]);
+      }
+    }, { rootMargin: '-90px 0px -65% 0px', threshold: 0 });
+
+    sections.forEach(function (section) { observer.observe(section); });
+  }
+
+  /* ---- Back to top -------------------------------------------------- */
+  var toTop = document.getElementById('toTop');
+  if (toTop) {
+    var onScroll = function () {
+      toTop.classList.toggle('is-visible', window.scrollY > 600);
+    };
+    window.addEventListener('scroll', onScroll, { passive: true });
+    onScroll();
+
+    toTop.addEventListener('click', function () {
+      var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      window.scrollTo({ top: 0, behavior: reduce ? 'auto' : 'smooth' });
+      var skip = document.querySelector('.skip-link');
+      if (skip) { skip.focus(); }
+    });
+  }
+
+  /* ---- Cookie preferences hooks ------------------------------------- */
+  // SAMPLE: wire these to your real consent management platform.
+  Array.prototype.forEach.call(document.querySelectorAll('[data-open-preferences]'), function (link) {
+    link.addEventListener('click', function (e) {
+      e.preventDefault();
+      if (typeof window.openCookiePreferences === 'function') {
+        window.openCookiePreferences();
+      } else {
+        window.alert('Sample placeholder: connect this button to your cookie consent manager.');
+      }
+    });
+  });
+})();
+</script>
+</body>
+</html>

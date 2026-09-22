@@ -1,6 +1,6 @@
 // WPScan vulnerability database client.
 //
-// https://wpscan.com/api â€” the CLI is Ruby and cannot run on Cloudflare Pages
+// https://wpscan.com/api — the CLI is Ruby and cannot run on Cloudflare Pages
 // Functions, so SEOX uses the HTTP API for the part that actually matters: the
 // vulnerability data. Fingerprinting is done by wpscan-detect.js.
 //
@@ -12,10 +12,6 @@
 const API_BASE = 'https://wpscan.com/api/v3';
 const TIMEOUT_MS = 15000;
 
-export function hasApiToken(env) {
-  return Boolean(String(env?.WPSCAN_API_TOKEN || '').trim());
-}
-
 function configError(message) {
   const error = new Error(message);
   error.status = 400;
@@ -23,11 +19,17 @@ function configError(message) {
   return error;
 }
 
-async function call(env, path) {
-  const token = String(env?.WPSCAN_API_TOKEN || '').trim();
+/**
+ * Every exported call takes the token to use rather than reading it from the
+ * environment. The token is resolved per project by wpscan-token.js, which
+ * prefers the project's own token and falls back to WPSCAN_API_TOKEN, so this
+ * module has no opinion about where it came from.
+ */
+async function call(apiToken, path) {
+  const token = String(apiToken || '').trim();
   if (!token) {
     throw configError(
-      'No WPScan API token configured. Add WPSCAN_API_TOKEN to check components against the vulnerability database.'
+      'No WPScan API token configured. Add one for this project, or set WPSCAN_API_TOKEN, to check components against the vulnerability database.'
     );
   }
 
@@ -82,8 +84,8 @@ async function call(env, path) {
   }
 }
 
-export async function getStatus(env) {
-  const { data } = await call(env, '/status');
+export async function getStatus(apiToken) {
+  const { data } = await call(apiToken, '/status');
   return data;
 }
 
@@ -92,9 +94,9 @@ function versionKey(version) {
   return String(version || '').replace(/\./g, '');
 }
 
-export async function getCoreVulnerabilities(env, version) {
+export async function getCoreVulnerabilities(apiToken, version) {
   if (!version) return { vulnerabilities: [], remaining: null };
-  const { found, data, remaining } = await call(env, `/wordpresses/${versionKey(version)}`);
+  const { found, data, remaining } = await call(apiToken, `/wordpresses/${versionKey(version)}`);
   if (!found || !data) return { vulnerabilities: [], remaining };
 
   // The response is keyed by the version string.
@@ -102,8 +104,8 @@ export async function getCoreVulnerabilities(env, version) {
   return { vulnerabilities: entry.vulnerabilities || [], releaseDate: entry.release_date, remaining };
 }
 
-export async function getPluginVulnerabilities(env, slug) {
-  const { found, data, remaining } = await call(env, `/plugins/${encodeURIComponent(slug)}`);
+export async function getPluginVulnerabilities(apiToken, slug) {
+  const { found, data, remaining } = await call(apiToken, `/plugins/${encodeURIComponent(slug)}`);
   if (!found || !data) return { vulnerabilities: [], remaining, known: false };
 
   const entry = data[slug] || Object.values(data)[0] || {};
@@ -117,8 +119,8 @@ export async function getPluginVulnerabilities(env, slug) {
   };
 }
 
-export async function getThemeVulnerabilities(env, slug) {
-  const { found, data, remaining } = await call(env, `/themes/${encodeURIComponent(slug)}`);
+export async function getThemeVulnerabilities(apiToken, slug) {
+  const { found, data, remaining } = await call(apiToken, `/themes/${encodeURIComponent(slug)}`);
   if (!found || !data) return { vulnerabilities: [], remaining, known: false };
 
   const entry = data[slug] || Object.values(data)[0] || {};

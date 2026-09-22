@@ -25,16 +25,41 @@ export async function onRequest({ request, env }) {
       const projectId = url.searchParams.get('projectId');
       const connection = await requireConnection(env, userId, projectId);
       // Through the service so the accounts are cached in gbp_accounts, not
-      // just returned to the browser and forgotten.
-      const { accounts, selectedAccountId } = await getAccounts(env, { userId, projectId });
+      // just returned to the browser and forgotten. Reads that cache unless the
+      // caller explicitly asks for a live list, so opening the page costs no
+      // Google quota once a connection has been made.
+      const result = await getAccounts(env, {
+        userId,
+        projectId,
+        refresh: url.searchParams.get('refresh') === '1',
+        // A person pressed Refresh, so allow one attempt through a backoff.
+        userInitiated: url.searchParams.get('refresh') === '1',
+      });
 
       return jsonResponse(
         {
-          accounts,
-          selectedAccountId,
+          accounts: result.accounts,
+          selectedAccountId: result.selectedAccountId,
           googleEmail: connection.google_email || null,
-          // Google returned a valid token but no manageable accounts.
-          needsAccountAccess: accounts.length === 0,
+          // Stale list plus the reason, rather than an empty list that reads as
+          // "this account manages nothing".
+          fromCache: Boolean(result.fromCache),
+          // 'database' or 'google', so the page can say where the list came
+          // from rather than implying every view is live.
+          dataSource: result.dataSource,
+          quotaError: result.quotaError || null,
+          quotaBlocked: Boolean(result.quotaBlocked),
+          likelyUnapprovedQuota: Boolean(result.likelyUnapprovedQuota),
+          retryAfterSeconds: result.retryAfterSeconds || null,
+          // When the stored list was last confirmed against Google, so the page
+          // can label cached data instead of implying it is live.
+          syncedAt: result.syncedAt || null,
+          neverSynced: Boolean(result.neverSynced),
+          // Only a clean read of zero accounts means the identity manages none.
+          // A quota refusal and a never-synced cache both say nothing about
+          // what this Google account manages.
+          needsAccountAccess:
+            !result.quotaError && !result.neverSynced && result.accounts.length === 0,
         },
         200,
         headers

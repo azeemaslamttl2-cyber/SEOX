@@ -54,7 +54,7 @@ export function compareVersions(a, b) {
 
 /**
  * Is `installed` affected by a vulnerability fixed in `fixedIn`?
- * null means "cannot tell" â€” no version, or versions that will not parse.
+ * null means "cannot tell" — no version, or versions that will not parse.
  */
 export function isAffected(installed, fixedIn) {
   if (!installed) return null;

@@ -1,4 +1,4 @@
-import { BrainCircuit, CreditCard, Gauge, Globe, KeyRound, Search, ShieldCheck } from "lucide-react";
+import { BrainCircuit, CreditCard, Gauge, Globe, KeyRound, Search, ShieldCheck, SquareKanban } from "lucide-react";
 
 /**
  * Catalog for the central Settings page (`/settings/general`).
@@ -9,6 +9,7 @@ import { BrainCircuit, CreditCard, Gauge, Globe, KeyRound, Search, ShieldCheck }
  *   admin_settings        -> /api/settings/general  (application-wide credentials)
  *   deepseek_api_settings -> /api/deepseek-settings (per-user AI provider key)
  *   stripe_connections    -> /api/stripe-connect    (per-user payouts account)
+ *   jira_connections      -> /api/jira/*            (per-user, per-project)
  *
  * Nothing here stores a value. Tabs only decide which existing UI is shown, so
  * every setting keeps the single source of truth it already had.
@@ -120,6 +121,14 @@ export const SETTINGS_TABS = [
     description: "The DeepSeek API key used by the AI-powered SEO and content tools.",
     panel: "deepseek",
   },
+  {
+    id: "jira",
+    label: "Jira",
+    icon: SquareKanban,
+    description:
+      "Connect a Jira project so SEO findings can be sent to your development backlog and their status tracked back into SEOX. Configured per project, so each site can use its own Jira.",
+    panel: "jira",
+  },
 ];
 
 export const DEFAULT_TAB_ID = SETTINGS_TABS[0].id;
@@ -143,6 +152,10 @@ const TAB_ALIASES = {
   payment: "stripe",
   payments: "stripe",
   ai: "deepseek",
+  atlassian: "jira",
+  issues: "jira",
+  tickets: "jira",
+  integrations: "jira",
 };
 
 const TAB_IDS = new Set(SETTINGS_TABS.map((tab) => tab.id));

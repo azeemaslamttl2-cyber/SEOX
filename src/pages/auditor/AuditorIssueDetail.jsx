@@ -13,6 +13,8 @@ import {
   AlertCircle,
 } from "lucide-react";
 import { useAuditData } from "../../hooks/useAuditData.js";
+import JiraIssuePanel from "../../components/auditor/JiraIssuePanel.jsx";
+import { buildAuditorFinding } from "../../lib/jiraFindings.js";
 
 const filterTabs = [
   "All URLs",
@@ -40,6 +42,15 @@ export default function AuditorIssueDetail() {
   ];
   const titleIssue = isTitleIssue(data.slug);
   const missingAltIssue = data.slug === "missing-alt-text";
+
+  // The Jira panel takes a self-describing finding rather than reading the
+  // crawl context, so the same component works on the Speed and WordPress
+  // Security pages too. The first affected URL is the one a single Jira issue
+  // is scoped to; `total` carries the real count into the description.
+  const jiraFinding = useMemo(
+    () => (data.urls.length ? buildAuditorFinding(data, data.urls[0]) : null),
+    [data]
+  );
 
   return (
     <div className="space-y-4">
@@ -123,6 +134,10 @@ export default function AuditorIssueDetail() {
           </div>
         </div>
       </details>
+
+      {/* Jira. Renders nothing at all unless Jira is connected and mapped for
+          this project, so the page is unchanged for everyone else. */}
+      <JiraIssuePanel finding={jiraFinding} />
 
       {/* Results filter + table */}
       <div className="overflow-hidden rounded-2xl border border-white/10 bg-ink-800/60 backdrop-blur">

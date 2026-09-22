@@ -154,6 +154,14 @@ export async function deleteConnection(userId, projectId) {
     userId,
     connection.id,
   ]);
+  // The cached account list belongs to the Google identity that was connected.
+  // Leaving it behind meant a reconnect - possibly with a different Google
+  // account - could be offered the previous account's profiles out of the
+  // cache. Disconnect has to clear the cache it seeded.
+  await deleteQuery('DELETE FROM gbp_accounts WHERE user_id = ? AND connection_id = ?', [
+    userId,
+    connection.id,
+  ]);
   await deleteQuery('DELETE FROM gbp_connections WHERE id = ? AND user_id = ?', [
     connection.id,
     userId,
@@ -377,6 +385,38 @@ export async function metricsFreshness(userId, locationRowId) {
 }
 
 // --- Observability ---------------------------------------------------------
+
+/**
+ * The most recent calls against one Google API, newest first.
+ *
+ * `gbp_api_usage` already records every request with its status and timestamp,
+ * so the quota backoff reads its state from here rather than from a new table
+ * or from process memory. That matters: a backoff held in a module-level Map is
+ * lost on every restart and is invisible to any other process, so each one
+ * would start spending the shared quota again from scratch.
+ */
+export async function recentApiCalls(userId, projectId, api, endpoint, limit = 12) {
+  return query(
+    // `age_seconds` is computed here, in SQL, and deliberately so.
+    //
+    // Every writer in this file stores `new Date().toISOString()` - a UTC
+    // string - into a plain DATETIME. The MySQL session runs on SYSTEM time
+    // (UTC+5 on this host), so mysql2 parses those strings back as local and
+    // hands JavaScript a Date five hours in the past. Subtracting that from
+    // Date.now() overstated every age by 18000s, which silently defeated the
+    // quota backoff: the wait always looked long expired.
+    //
+    // UTC_TIMESTAMP() is on the same clock as the values actually stored, so
+    // this arithmetic is correct regardless of the server's timezone.
+    `SELECT status_code, error_code, created_at,
+            TIMESTAMPDIFF(SECOND, created_at, UTC_TIMESTAMP()) AS age_seconds
+       FROM gbp_api_usage
+      WHERE user_id = ? AND project_id = ? AND api = ? AND endpoint = ?
+      ORDER BY id DESC
+      LIMIT ?`,
+    [userId, projectId, api, endpoint, Number(limit)]
+  );
+}
 
 export async function recordApiUsage(entry) {
   try {
