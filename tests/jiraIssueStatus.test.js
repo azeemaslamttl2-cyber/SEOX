@@ -1,4 +1,5 @@
-// POST /api/jira/issues/status - resolving a Jira ticket through Jira.
+// POST /api/jira/issues/status - resolving a Jira ticket through Jira, and
+// leaving a review on it.
 //
 // No database, no HTTP server and no live Jira: the route is called directly
 // with a Request and a stub env, the convention the other jira tests use. The
@@ -131,6 +132,45 @@ test("write verbs other than POST are refused", async () => {
     });
     assert.equal(response.status, 405, `${method} must not be served`);
   }
+});
+
+// --- The review -----------------------------------------------------------
+
+test("a review-only request is authenticated before anything else", async () => {
+  // Adding a comment is a WRITE to somebody's Jira board, so it is gated
+  // exactly as tightly as a transition - there is no lighter path for it.
+  const { status, body } = await post({
+    jira_issue_key: "SEO-1",
+    review: "Please update the screenshots and test again.",
+  });
+  assert.equal(status, 400);
+  assert.equal(body.success, false);
+  assert.equal(body.error, "admin_token is required");
+});
+
+test("a status + review request is authenticated before anything else", async () => {
+  const { status, body } = await post({
+    jira_issue_key: "SEO-1",
+    status: "In Review",
+    review: "Implementation completed. Please review.",
+  });
+  assert.equal(status, 400);
+  assert.equal(body.error, "admin_token is required");
+});
+
+test("a rejected request never echoes the review back", async () => {
+  // The review is the one field a caller controls completely, so it is the
+  // obvious vehicle for getting script into whatever renders an error.
+  const { status, body } = await post({
+    admin_token: "x".repeat(600),
+    jira_issue_key: "SEO-1",
+    status: "Done",
+    review: "<img src=x onerror=alert(1)> MARKERTEXT",
+  });
+  assert.equal(status, 401);
+  assert.equal(body.error, "Invalid admin_token");
+  assert.equal(JSON.stringify(body).includes("MARKERTEXT"), false);
+  assert.equal(JSON.stringify(body).includes("onerror"), false);
 });
 
 // --- Error shape -----------------------------------------------------------

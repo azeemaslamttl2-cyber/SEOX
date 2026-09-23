@@ -115,6 +115,27 @@ export function readAdminToken(params = {}) {
 }
 
 /**
+ * Which project(s) the caller is asking about: `project_id`, `url`, or
+ * neither (meaning all of them).
+ *
+ * Exported so the ticket feed selects projects through THIS function. A
+ * second URL-to-project implementation is how two endpoints end up disagreeing
+ * about which project `https://ucp.edu.pk/` is, and the normalisation here -
+ * scheme, `www.`, case, trailing slash - is the one `/api/project-details`
+ * already uses.
+ */
+export function parseProjectSelector(params = {}) {
+  const projectId = pickScalar(params, 'project_id');
+  if (projectId.length > MAX_PROJECT_ID_LENGTH) throw httpError('project_id is too long', 400);
+
+  const url = pickScalar(params, 'url');
+  const domain = url ? normalizeProjectDomain(url) : '';
+  if (url && !domain) throw httpError('url is invalid', 400);
+
+  return { projectId, url, domain };
+}
+
+/**
  * Validate and normalise the request parameters - the POST JSON body, or the
  * GET query string. Pure, so the precedence rules below are testable without
  * a database.
@@ -123,13 +144,7 @@ export function parseEligibleQuery(params = {}) {
   const pick = (key) => pickScalar(params, key);
 
   const adminToken = readAdminToken(params);
-
-  const projectId = pick('project_id');
-  if (projectId.length > MAX_PROJECT_ID_LENGTH) throw httpError('project_id is too long', 400);
-
-  const url = pick('url');
-  const domain = url ? normalizeProjectDomain(url) : '';
-  if (url && !domain) throw httpError('url is invalid', 400);
+  const { projectId, url, domain } = parseProjectSelector(params);
 
   const rawLimit = Number(pick('limit'));
   const limit = Number.isFinite(rawLimit) && rawLimit > 0 ? Math.min(Math.floor(rawLimit), MAX_LIMIT) : DEFAULT_LIMIT;
@@ -184,7 +199,7 @@ export async function authenticateAdmin(adminToken) {
  * not choose, and a Jira ticket filed against the wrong site is expensive to
  * undo.
  */
-async function resolveProjects(adminId, { projectId, url, domain }) {
+export async function resolveProjects(adminId, { projectId, url, domain }) {
   const columns = `id, user_id, project_id, project_name, domain, full_url,
                    total_urls, crawled_on, project_data, created_at, updated_at`;
 

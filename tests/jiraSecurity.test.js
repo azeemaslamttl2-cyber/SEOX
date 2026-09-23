@@ -337,3 +337,57 @@ test("the Jira browser client never sends a token anywhere but the connect call"
     "apiToken must only appear on the connect path"
   );
 });
+
+// --- project_id is an authorisation input, not a decoration ----------------
+
+test("a project_id on an unlinked issue selects the mapping, rather than being ignored", async () => {
+  // THE BUG THIS GUARDS: for a ticket SEOX did not file, the mapping used to
+  // be looked up from the ISSUE KEY in every case. A project_id in the
+  // request was then checked against nothing - the key found its own mapping
+  // and agreed with itself - so an issue on a board mapped to one site was
+  // accepted under the identifier of a different site. Verified against the
+  // real tenant: WPGC-1 sent with the internal project mapped to WUCP was
+  // accepted and reached Jira. It is now refused with WRONG_JIRA_PROJECT
+  // before any Jira call.
+  const { readFileSync } = await import("node:fs");
+  const source = readFileSync("functions/api/jira/issues/status.js", "utf8");
+  const fn = source.slice(
+    source.indexOf("async function resolveContext"),
+    source.indexOf("/** Jira's own errors already carry a status")
+  );
+  const code = fn.replace(/\/\*[\s\S]*?\*\//g, "").replace(/^\s*\/\/.*$/gm, "");
+
+  const claimed = code.indexOf("else if (claimedProjectId)");
+  const byKey = code.indexOf("getMappingByJiraProjectKey(");
+  assert.ok(claimed > -1, "a named internal project must have its own branch");
+  assert.ok(
+    claimed < byKey,
+    "the named project must supply the mapping BEFORE the issue key is allowed to"
+  );
+  assert.ok(
+    code.includes("getMapping(admin.id, claimedProjectId)"),
+    "the mapping must come from the project the caller named, scoped to that caller"
+  );
+});
+
+test("the issue key is still checked against whichever mapping was chosen", async () => {
+  // The branch above only decides WHICH Jira project may be driven. This is
+  // the check that refuses an issue belonging to a different one, and it has
+  // to run for every path through resolveContext, not just the link one.
+  const { readFileSync } = await import("node:fs");
+  const source = readFileSync("functions/api/jira/issues/status.js", "utf8");
+  const fn = source.slice(
+    source.indexOf("async function resolveContext"),
+    source.indexOf("/** Jira's own errors already carry a status")
+  );
+  const code = fn.replace(/\/\*[\s\S]*?\*\//g, "").replace(/^\s*\/\/.*$/gm, "");
+
+  assert.ok(code.includes("WRONG_JIRA_PROJECT"));
+  // After the if/else chain that picks a mapping - so it applies to all three
+  // of the authorisation paths the header documents.
+  const lastBranch = code.lastIndexOf("getMappingByJiraProjectKey(");
+  assert.ok(
+    code.indexOf("WRONG_JIRA_PROJECT") > lastBranch,
+    "the prefix check must come after the mapping is chosen, not inside one branch"
+  );
+});

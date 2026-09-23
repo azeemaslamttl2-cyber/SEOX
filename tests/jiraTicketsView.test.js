@@ -1,9 +1,12 @@
 // The Jira Tickets page's data rules, tested away from React.
 //
-// Two of them are worth guarding: what counts as "pending", and the fact
-// that the page only ever shows findings that really have a Jira issue. Both
-// are the kind of thing that breaks quietly - a page that shows nothing, or
-// one that offers a Resolve button on a finding that was never filed.
+// Three of them are worth guarding:
+//   1. a ticket raised BY HAND in Jira must appear (before the fix, only
+//      tickets SEOX itself had filed could, so a busy Jira board looked
+//      empty);
+//   2. what counts as "pending";
+//   3. a project that could not be queried must carry its state and must
+//      NOT read as "zero tickets".
 
 import test from "node:test";
 import assert from "node:assert/strict";
@@ -19,112 +22,159 @@ import {
   projectsFromFeed,
   sortTickets,
 } from "../src/lib/jiraTickets.js";
+import { presentState, isTrustworthy } from "../src/lib/jiraTicketStates.js";
 
-/** A trimmed copy of what POST /api/jira/issues actually returns. */
+/**
+ * A trimmed copy of what `POST /api/jira/tickets` returns for a selected
+ * Jira project.
+ *
+ * WUCP-1157 and WUCP-1156 were raised by hand in Jira and carry `seox: null`.
+ */
 const FEED = {
   success: true,
-  total_projects: 2,
+  mode: "tickets",
+  summary: { total_projects: 1, projects_queried: 1, projects_with_errors: 0, total_tickets: 3 },
   projects: [
     {
-      project_id: "proj_a",
-      project_name: "Alpha",
-      project_url: "https://alpha.example",
-      domain: "alpha.example",
-      jira_connected: true,
-      jira_project_key: "SEO",
-      issues: [
+      project: { project_id: null, project_name: "Web - UCP", project_url: "", domain: "" },
+      jira: {
+        configured: true,
+        connected: true,
+        base_url: "https://x.atlassian.net",
+        mapped: true,
+        project_id: "10055",
+        project_key: "WUCP",
+        project_name: "Web - UCP",
+      },
+      state: { ok: true, code: "OK", message: "Retrieved 3 Jira tickets from WUCP." },
+      ticket_count: 3,
+      next_page_token: "tok",
+      tickets: [
         {
-          issue_id: "f1",
-          issue_type: "title-tag-missing-or-empty",
-          title: "Title tag missing",
-          severity: "error",
-          url: "https://alpha.example/a",
-          status: "open",
-          source_module: "auditor",
-          jira_created: true,
-          jira_issue_key: "SEO-1",
-          jira_issue_url: "https://x.atlassian.net/browse/SEO-1",
-          jira_status: "To Do",
-          jira_status_category: "new",
-          jira_priority: "High",
-          jira_assignee: "Dev One",
-          jira_synced_at: "2026-09-22T10:00:00.000Z",
+          id: "10001",
+          key: "WUCP-1",
+          url: "https://x.atlassian.net/browse/WUCP-1",
+          summary: "Title tag missing on /admissions",
+          description: "The title element is absent.",
+          status: { id: "1", name: "To Do", category: "new", categoryName: "To Do" },
+          priority: { id: "2", name: "High" },
+          assignee: { accountId: "a1", displayName: "Dev One" },
+          reporter: { accountId: "a9", displayName: "Reporter One" },
+          issueType: { id: "10004", name: "Bug" },
+          project: { id: "10055", key: "WUCP", name: "Web - UCP" },
+          labels: ["seox"],
+          components: [],
+          fixVersions: [],
+          comments: [],
+          commentCount: 0,
+          attachments: [],
+          created: "2026-09-20T10:00:00.000Z",
+          updated: "2026-09-22T10:00:00.000Z",
+          createdBySeox: true,
+          seox: {
+            link_id: 7,
+            fingerprint: "abc",
+            finding_title: "Title tag missing or empty",
+            finding_type: "title-tag-missing-or-empty",
+            source_module: "auditor",
+            severity: "error",
+            affected_url: "https://ucp.edu.pk/admissions",
+            seox_state: "open",
+            seox_state_label: "Open",
+          },
         },
         {
-          issue_id: "f2",
-          issue_type: "meta-description-missing",
-          title: "Meta description missing",
-          severity: "warning",
-          url: "https://alpha.example/b",
-          status: "in_progress",
-          source_module: "auditor",
-          jira_created: true,
-          jira_issue_key: "SEO-2",
-          jira_status: "Doing",
-          jira_status_category: "indeterminate",
-          jira_priority: "Medium",
-          jira_assignee: "Dev Two",
-          jira_synced_at: "2026-09-22T09:00:00.000Z",
+          id: "10002",
+          key: "WUCP-1157",
+          url: "https://x.atlassian.net/browse/WUCP-1157",
+          summary: "Request for Newsletter Update",
+          status: { id: "10027", name: "Stagging", category: "indeterminate" },
+          priority: { id: "3", name: "Medium" },
+          assignee: { accountId: "a2", displayName: "Dev Two" },
+          issueType: { id: "10001", name: "Task" },
+          project: { id: "10055", key: "WUCP", name: "Web - UCP" },
+          labels: [],
+          updated: "2026-09-22T09:00:00.000Z",
+          createdBySeox: false,
+          seox: null,
         },
         {
-          issue_id: "f3",
-          issue_type: "missing-alt-text",
-          title: "Images without alt text",
-          severity: "notice",
-          url: "https://alpha.example/c",
-          status: "resolved_pending",
-          source_module: "auditor",
-          jira_created: true,
-          jira_issue_key: "SEO-3",
-          jira_status: "Shipped to prod",
-          jira_status_category: "done",
-          jira_priority: "Low",
-          jira_assignee: null,
-          jira_synced_at: "2026-09-21T09:00:00.000Z",
-        },
-        {
-          // Never filed. Belongs on the auditor pages, not here.
-          issue_id: "f4",
-          issue_type: "h1-tag-missing-or-empty",
-          title: "H1 missing",
-          severity: "error",
-          url: "https://alpha.example/d",
-          status: "open",
-          source_module: "auditor",
-          jira_created: false,
-          jira_issue_key: null,
+          id: "10003",
+          key: "WUCP-1156",
+          url: "https://x.atlassian.net/browse/WUCP-1156",
+          summary: "Banner Image Update on Landing Page",
+          status: { id: "6", name: "Closed", category: "done" },
+          priority: { id: "4", name: "Low" },
+          assignee: null,
+          issueType: { id: "10001", name: "Task" },
+          project: { id: "10055", key: "WUCP", name: "Web - UCP" },
+          labels: [],
+          updated: "2026-09-21T09:00:00.000Z",
+          createdBySeox: false,
+          seox: null,
         },
       ],
     },
+  ],
+};
+
+/** The same envelope when the project could not be queried at all. */
+const NOT_MAPPED_FEED = {
+  success: true,
+  mode: "tickets",
+  projects: [
     {
-      project_id: "proj_b",
-      project_name: "Beta",
-      domain: "beta.example",
-      jira_connected: false,
-      issues: [],
+      project: { project_id: "proj_a", project_name: "https://ucp.edu.pk/", domain: "ucp.edu.pk" },
+      jira: { configured: true, connected: true, mapped: false, project_key: null },
+      state: {
+        ok: false,
+        code: "JIRA_PROJECT_MAPPING_MISSING",
+        message: "Jira is connected, but no Jira project is mapped.",
+      },
+      ticket_count: 0,
+      tickets: [],
+      next_page_token: null,
     },
   ],
 };
 
 // --- What is a ticket ------------------------------------------------------
 
-test("only findings with a real Jira issue become tickets", () => {
+test("tickets raised by hand in Jira are shown, not only ones SEOX filed", () => {
   const tickets = flattenTickets(FEED);
   assert.deepEqual(
-    tickets.map((t) => t.jira_issue_key),
-    ["SEO-1", "SEO-2", "SEO-3"]
+    tickets.map((t) => t.key),
+    ["WUCP-1", "WUCP-1157", "WUCP-1156"]
   );
-  // The unfiled finding must not appear - a Resolve button on it would have
-  // nothing to resolve.
-  assert.equal(tickets.some((t) => t.issue_id === "f4"), false);
+  assert.deepEqual(
+    tickets.map((t) => t.createdBySeox),
+    [true, false, false]
+  );
+  // Every row carries a directly openable Jira link, whoever filed it.
+  assert.deepEqual(
+    tickets.map((t) => t.url),
+    [
+      "https://x.atlassian.net/browse/WUCP-1",
+      "https://x.atlassian.net/browse/WUCP-1157",
+      "https://x.atlassian.net/browse/WUCP-1156",
+    ]
+  );
 });
 
-test("each ticket carries the SEOX project it belongs to", () => {
+test("a SEOX finding is flattened onto the row when there is one", () => {
+  const [first, second] = flattenTickets(FEED);
+  assert.equal(first.severity, "error");
+  assert.equal(first.affectedUrl, "https://ucp.edu.pk/admissions");
+  assert.equal(first.seoxStateLabel, "Open");
+  // A hand-raised ticket has no SEO severity and must not be given one.
+  assert.equal(second.severity, "");
+  assert.equal(second.seox, null);
+});
+
+test("each ticket carries the Jira project it came from", () => {
   const [first] = flattenTickets(FEED);
-  assert.equal(first.project_id, "proj_a");
-  assert.equal(first.project_name, "Alpha");
-  assert.equal(first.project_url, "https://alpha.example");
-  assert.equal(first.jira_project_key, "SEO");
+  assert.equal(first.jiraProjectKey, "WUCP");
+  assert.equal(first.projectName, "Web - UCP");
 });
 
 test("a malformed or empty feed yields no tickets rather than throwing", () => {
@@ -133,50 +183,119 @@ test("a malformed or empty feed yields no tickets rather than throwing", () => {
   }
 });
 
-test("every project the feed covered is listed, including ones with no tickets", () => {
-  const projects = projectsFromFeed(FEED);
-  assert.deepEqual(projects.map((p) => p.project_id), ["proj_a", "proj_b"]);
-  assert.equal(projects[1].jira_connected, false);
+test("a project that could not be queried carries its state, not an empty list", () => {
+  // The reported bug, in one assertion: this must NOT read as "zero tickets".
+  const [entry] = projectsFromFeed(NOT_MAPPED_FEED);
+  assert.equal(entry.state.ok, false);
+  assert.equal(entry.state.code, "JIRA_PROJECT_MAPPING_MISSING");
+  assert.equal(isTrustworthy(entry.state), false);
+  assert.deepEqual(flattenTickets(NOT_MAPPED_FEED), []);
+});
+
+test("projectsFromFeed exposes the paging cursor and the Jira identity", () => {
+  const [entry] = projectsFromFeed(FEED);
+  assert.equal(entry.jira.project_key, "WUCP");
+  assert.equal(entry.next_page_token, "tok");
+  assert.equal(entry.ticket_count, 3);
+});
+
+// --- How a state is explained ----------------------------------------------
+
+test("only a successful query is presented as an empty result", () => {
+  const ok = presentState({ ok: true, code: "OK", jira: { project_key: "WUCP" } });
+  assert.equal(ok.tone, "empty");
+  assert.match(ok.title, /No Jira tickets found/i);
+});
+
+test("every configuration failure is an error with its own advice", () => {
+  const cases = {
+    JIRA_NOT_CONFIGURED: /not connected/i,
+    JIRA_PROJECT_MAPPING_MISSING: /no jira project is mapped/i,
+    JIRA_PROJECT_KEY_MISSING: /project key/i,
+    JIRA_AUTHENTICATION_FAILED: /authentication failed/i,
+    JIRA_PROJECT_NOT_FOUND: /could not be found/i,
+    JIRA_PERMISSION_DENIED: /permission denied/i,
+    JIRA_API_UNAVAILABLE: /unable to connect/i,
+    JIRA_API_ERROR: /unexpected response/i,
+    PROJECT_NOT_FOUND: /project not found/i,
+    NETWORK_ERROR: /could not reach seox/i,
+  };
+
+  for (const [code, titlePattern] of Object.entries(cases)) {
+    const presented = presentState({ ok: false, code, message: "x" });
+    assert.equal(presented.tone, "error", `${code} must not be presented as an empty result`);
+    assert.match(presented.title, titlePattern, code);
+    // None of them may say "no tickets" - that is the confusion being fixed.
+    assert.equal(/no jira tickets found/i.test(presented.title), false, code);
+  }
+});
+
+test("the states that a user can fix link to the screen that fixes them", () => {
+  for (const code of [
+    "JIRA_NOT_CONFIGURED",
+    "JIRA_PROJECT_MAPPING_MISSING",
+    "JIRA_PROJECT_KEY_MISSING",
+    "JIRA_AUTHENTICATION_FAILED",
+    "JIRA_PROJECT_NOT_FOUND",
+  ]) {
+    const presented = presentState({ ok: false, code });
+    assert.ok(presented.action, `${code} should offer an action`);
+    assert.ok(presented.action.href.includes("tab=jira"), code);
+  }
+});
+
+test("transient failures offer a retry and permanent ones do not", () => {
+  assert.equal(presentState({ ok: false, code: "JIRA_API_UNAVAILABLE" }).retryable, true);
+  assert.equal(presentState({ ok: false, code: "NETWORK_ERROR" }).retryable, true);
+  assert.equal(presentState({ ok: false, code: "JIRA_PROJECT_MAPPING_MISSING" }).retryable, false);
+});
+
+test("an unrecognised code still produces an error, never an empty result", () => {
+  const presented = presentState({ ok: false, code: "SOMETHING_NEW", message: "boom" });
+  assert.equal(presented.tone, "error");
+  assert.equal(presented.detail, "boom");
+});
+
+test("a rate-limited response tells the user how long to wait", () => {
+  const presented = presentState({
+    ok: false,
+    code: "JIRA_API_UNAVAILABLE",
+    message: "Jira is rate limiting SEOX.",
+    retry_after_seconds: 120,
+  });
+  assert.match(presented.detail, /2 minute/);
 });
 
 // --- What is pending -------------------------------------------------------
 
 test("pending is decided on statusCategory, not on the status name", () => {
-  // "Shipped to prod" is not a name any list of pending statuses would
-  // contain, and "Doing" is not one any list of in-progress names would.
-  // Only the category gets both right.
+  // "Stagging" and "Closed" are this board's real names. No list of expected
+  // status names would classify them correctly; the category does.
   assert.deepEqual(ACTIONABLE_CATEGORIES, ["new", "indeterminate"]);
-
-  assert.equal(isPending({ jira_status: "Icebox", jira_status_category: "new" }), true);
-  assert.equal(isPending({ jira_status: "Doing", jira_status_category: "indeterminate" }), true);
-  assert.equal(isPending({ jira_status: "Shipped to prod", jira_status_category: "done" }), false);
+  assert.equal(isPending({ status: { name: "Icebox", category: "new" } }), true);
+  assert.equal(isPending({ status: { name: "Stagging", category: "indeterminate" } }), true);
+  assert.equal(isPending({ status: { name: "Closed", category: "done" } }), false);
 });
 
 test("an unknown category is treated as pending, never as done", () => {
-  // Being wrong in the "still needs attention" direction shows a ticket that
-  // is already finished. Being wrong the other way hides work.
-  assert.equal(isPending({ jira_status_category: "" }), true);
+  assert.equal(isPending({ status: { category: "" } }), true);
   assert.equal(isPending({}), true);
-  assert.equal(isPending({ jira_status_category: "something-new-from-atlassian" }), true);
+  assert.equal(isPending({ status: { category: "something-new-from-atlassian" } }), true);
 });
 
 test("the views partition the tickets as their labels claim", () => {
   const tickets = flattenTickets(FEED);
-  const keysIn = (view) =>
-    tickets.filter((t) => matchesView(t, view)).map((t) => t.jira_issue_key);
+  const keysIn = (view) => tickets.filter((t) => matchesView(t, view)).map((t) => t.key);
 
-  assert.deepEqual(keysIn("pending"), ["SEO-1", "SEO-2"]);
-  assert.deepEqual(keysIn("in_progress"), ["SEO-2"]);
-  assert.deepEqual(keysIn("done"), ["SEO-3"]);
-  assert.deepEqual(keysIn("all"), ["SEO-1", "SEO-2", "SEO-3"]);
+  assert.deepEqual(keysIn("pending"), ["WUCP-1", "WUCP-1157"]);
+  assert.deepEqual(keysIn("in_progress"), ["WUCP-1157"]);
+  assert.deepEqual(keysIn("done"), ["WUCP-1156"]);
+  assert.deepEqual(keysIn("all"), ["WUCP-1", "WUCP-1157", "WUCP-1156"]);
 });
 
 test("a resolved ticket leaves Pending but stays under All", () => {
-  // What the page does after a successful transition: it rewrites the row
-  // rather than reloading, so the row must fall out of one view and remain
-  // in the other purely on its new category.
-  const before = { jira_issue_key: "SEO-1", jira_status_category: "new" };
-  const after = { ...before, jira_status_category: "done", jira_status: "Done" };
+  const before = { key: "WUCP-1", status: { category: "new" } };
+  const after = { ...before, status: { category: "done", name: "Closed" } };
 
   assert.equal(matchesView(before, "pending"), true);
   assert.equal(matchesView(after, "pending"), false);
@@ -192,41 +311,52 @@ test("filter options are built from the rows on screen", () => {
   assert.deepEqual(facets.assignees, ["Dev One", "Dev Two"]);
   assert.deepEqual(
     facets.statuses.map((s) => s.name),
-    ["Doing", "Shipped to prod", "To Do"]
+    ["Closed", "Stagging", "To Do"]
   );
-  // An unassigned ticket contributes no assignee, so the dropdown cannot
-  // offer a value that matches nothing.
+  assert.deepEqual(facets.issueTypes, ["Bug", "Task"]);
   assert.equal(facets.assignees.includes(null), false);
 });
 
 test("search covers the fields a user would actually type", () => {
   const [ticket] = flattenTickets(FEED);
-  for (const term of ["SEO-1", "seo-1", "title tag", "alpha.example/a", "Alpha", "Dev One"]) {
+  for (const term of [
+    "WUCP-1",
+    "wucp-1",
+    "title tag",
+    "ucp.edu.pk/admissions",
+    "Web - UCP",
+    "Dev One",
+    "To Do",
+    // The SEO finding's own wording, which the Jira summary may not repeat.
+    "Title tag missing or empty",
+  ]) {
     assert.equal(matchesSearch(ticket, term), true, term);
   }
   assert.equal(matchesSearch(ticket, "nothing-like-this"), false);
-  // An empty search matches everything rather than nothing.
   assert.equal(matchesSearch(ticket, "   "), true);
 });
 
 test("filters combine, and each one narrows on its own field", () => {
   const tickets = flattenTickets(FEED);
   const keys = (options) =>
-    applyFilters(tickets, { view: "all", search: "", ...options }).map((t) => t.jira_issue_key);
+    applyFilters(tickets, { view: "all", search: "", ...options }).map((t) => t.key);
 
-  assert.deepEqual(keys({ priority: "High" }), ["SEO-1"]);
-  assert.deepEqual(keys({ severity: "warning" }), ["SEO-2"]);
-  assert.deepEqual(keys({ assignee: "Dev Two" }), ["SEO-2"]);
-  assert.deepEqual(keys({ status: "Doing" }), ["SEO-2"]);
-  assert.deepEqual(keys({ issueType: "missing-alt-text" }), ["SEO-3"]);
+  assert.deepEqual(keys({ priority: "High" }), ["WUCP-1"]);
+  assert.deepEqual(keys({ severity: "error" }), ["WUCP-1"]);
+  assert.deepEqual(keys({ assignee: "Dev Two" }), ["WUCP-1157"]);
+  assert.deepEqual(keys({ status: "Stagging" }), ["WUCP-1157"]);
+  assert.deepEqual(keys({ issueType: "Task" }), ["WUCP-1157", "WUCP-1156"]);
   assert.deepEqual(keys({ priority: "High", severity: "warning" }), []);
-  assert.deepEqual(keys({}), ["SEO-1", "SEO-2", "SEO-3"]);
+  assert.deepEqual(keys({}), ["WUCP-1", "WUCP-1157", "WUCP-1156"]);
 });
 
 test("the pending view and a filter apply together", () => {
   const tickets = flattenTickets(FEED);
   const result = applyFilters(tickets, { view: "pending", search: "", severity: "error" });
-  assert.deepEqual(result.map((t) => t.jira_issue_key), ["SEO-1"]);
+  assert.deepEqual(
+    result.map((t) => t.key),
+    ["WUCP-1"]
+  );
 });
 
 // --- Ordering --------------------------------------------------------------
@@ -234,8 +364,8 @@ test("the pending view and a filter apply together", () => {
 test("to-do comes before in-progress before done, then by severity", () => {
   const shuffled = [...flattenTickets(FEED)].reverse();
   assert.deepEqual(
-    sortTickets(shuffled).map((t) => t.jira_issue_key),
-    ["SEO-1", "SEO-2", "SEO-3"]
+    sortTickets(shuffled).map((t) => t.key),
+    ["WUCP-1", "WUCP-1157", "WUCP-1156"]
   );
 });
 
@@ -243,5 +373,8 @@ test("sorting does not mutate the list it was given", () => {
   const tickets = flattenTickets(FEED);
   const original = tickets.map((t) => t.jira_issue_key);
   sortTickets([...tickets].reverse());
-  assert.deepEqual(tickets.map((t) => t.jira_issue_key), original);
+  assert.deepEqual(
+    tickets.map((t) => t.jira_issue_key),
+    original
+  );
 });

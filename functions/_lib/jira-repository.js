@@ -76,6 +76,31 @@ export async function getConnection(userId, projectId) {
   );
 }
 
+/** Every Jira connection this user owns, across all their SEOX projects. */
+export async function listConnectionsForUser(userId) {
+  return tolerant(
+    () =>
+      query(
+        `SELECT * FROM jira_connections WHERE user_id = ? ORDER BY id`,
+        [userId]
+      ),
+    []
+  );
+}
+
+/** Every Jira project mapping this user owns. */
+export async function listMappingsForUser(userId) {
+  return tolerant(
+    () =>
+      query(
+        `SELECT project_id, jira_project_id, jira_project_key, jira_project_name, status
+           FROM jira_project_mappings WHERE user_id = ? ORDER BY id`,
+        [userId]
+      ),
+    []
+  );
+}
+
 export async function getConnectionById(connectionId) {
   return tolerant(
     () => queryOne(`SELECT * FROM jira_connections WHERE id = ? LIMIT 1`, [connectionId]),
@@ -240,6 +265,39 @@ export async function getMapping(userId, projectId) {
       queryOne(
         `SELECT * FROM jira_project_mappings WHERE user_id = ? AND project_id = ? LIMIT 1`,
         [userId, projectId]
+      ),
+    null
+  );
+}
+
+/**
+ * Find the caller's mapping for a given Jira project key.
+ *
+ * This is the authorisation rule for acting on a Jira issue that SEOX did not
+ * file. The Jira Tickets page shows the real contents of a mapped Jira
+ * project, most of which was raised by hand in Jira and therefore has no
+ * `jira_issue_links` row - but those tickets are still legitimately
+ * actionable, because the user explicitly mapped that Jira project to one of
+ * their own SEOX projects.
+ *
+ * The security property is unchanged and is what matters: an issue key is
+ * only usable if its project key is one THIS user has mapped. An arbitrary
+ * key on an unmapped board matches nothing and is refused.
+ *
+ * `status = 'active'` is not required - see the note in the status endpoint
+ * about why an invalid mapping must not strand tickets that already exist.
+ */
+export async function getMappingByJiraProjectKey(userId, jiraProjectKey) {
+  const key = String(jiraProjectKey || '').trim();
+  if (!key) return null;
+  return tolerant(
+    () =>
+      queryOne(
+        `SELECT * FROM jira_project_mappings
+          WHERE user_id = ? AND UPPER(jira_project_key) = UPPER(?)
+          ORDER BY (status = 'active') DESC, id DESC
+          LIMIT 1`,
+        [userId, key]
       ),
     null
   );

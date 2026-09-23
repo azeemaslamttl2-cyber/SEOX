@@ -7,6 +7,8 @@ const plugin = config.plugins.find((entry) => entry && entry.name === "seox-jira
 
 const JIRA_ROUTES = [
   "/api/jira/issues/status",
+  "/api/jira/tickets",
+  "/api/jira/projects",
   "/api/jira/connect",
   "/api/jira/status",
   "/api/jira/metadata",

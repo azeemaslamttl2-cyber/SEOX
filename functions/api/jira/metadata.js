@@ -20,6 +20,7 @@ import { verifyAccessToken } from '../../_lib/mysql-storage.js';
 import { consumeRateLimit } from '../../_lib/rate-limit.js';
 import { requireJiraConnection, requireJiraProject, httpError } from '../../_lib/jira-request.js';
 import { jiraRequestForConnection } from '../../_lib/jira-client.js';
+import { listJiraProjects } from '../../_lib/jira-projects.js';
 
 const CACHE_TTL_MS = 10 * 60 * 1000;
 const cache = new Map();
@@ -41,20 +42,27 @@ function cacheSet(key, value) {
   cache.set(key, { value, expiresAt: Date.now() + CACHE_TTL_MS });
 }
 
+/**
+ * Every Jira project the connection can see - not the first page of them.
+ *
+ * This used to pass `maxResults: 50` and return whatever came back, so an
+ * account with more than fifty boards had the rest cut off and the dropdown
+ * showed a fixed alphabetical prefix. `listJiraProjects` now walks the
+ * pagination; all this has to do is refuse to call a partial walk a complete
+ * list.
+ *
+ * Shared with the admin_token endpoint on /api/jira/projects, so the settings
+ * screen and the Jira Tickets page see the same project list.
+ */
 async function listProjects(env, connection, query) {
-  const { data } = await jiraRequestForConnection(env, connection, {
-    path: '/rest/api/3/project/search',
-    query: { maxResults: 50, query: query || undefined, orderBy: 'name' },
-    kind: 'interactive',
-  });
+  const { projects, total, truncated } = await listJiraProjects(env, connection, { query });
   return {
-    projects: (data?.values || []).map((project) => ({
-      id: String(project.id),
-      key: project.key,
-      name: project.name,
-      projectTypeKey: project.projectTypeKey || '',
-    })),
-    total: Number(data?.total || 0),
+    projects,
+    total,
+    // The contract the browser reads before it renders the dropdown. A
+    // partial list is worse than an error, because nothing about it looks
+    // wrong - so it is never reported as `complete`.
+    complete: !truncated,
   };
 }
 
@@ -210,7 +218,11 @@ export async function onRequest({ request, env }) {
         return jsonResponse({ error: 'Unknown resource' }, 400, headers);
     }
 
-    if (cacheKey) cacheSet(cacheKey, payload);
+    // *** AN INCOMPLETE LIST IS NEVER CACHED ***
+    // Caching one would turn a single bad walk into ten minutes of wrong
+    // answers for every open of the settings page, and the retry button would
+    // keep serving the same partial list back.
+    if (cacheKey && payload.complete !== false) cacheSet(cacheKey, payload);
     return jsonResponse({ ...payload, cached: false }, 200, headers);
   } catch (error) {
     return errorResponse(error, headers);

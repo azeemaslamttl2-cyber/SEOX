@@ -27,6 +27,7 @@ import {
 } from './jira-status-map.js';
 import { adfToPlainText, buildVerificationComment, buildRecurrenceComment } from './jira-issue-builder.js';
 import { executeTransition, fetchTransitions, selectTransition } from './jira-transitions.js';
+import { projectJql, searchAllIssues } from './jira-search.js';
 
 const SEARCH_FIELDS = 'status,resolution,assignee,priority,updated,created,summary';
 
@@ -84,40 +85,35 @@ export async function fetchIssue(env, connection, issueIdOrKey) {
 export async function reconcileProject(env, { connection, mapping, links, lookbackMinutes = 40 }) {
   if (!links.length) return { checked: 0, updated: 0, verifyQueue: [], missing: [] };
 
-  const jql = `project = "${mapping.jira_project_key}" AND labels = "seox" AND updated >= "-${lookbackMinutes}m" ORDER BY updated DESC`;
+  const jql = projectJql(mapping.jira_project_key, {
+    extra: `labels = "seox" AND updated >= "-${Number(lookbackMinutes) || 40}m"`,
+  });
 
   const byIssueId = new Map(links.filter((link) => link.jira_issue_id).map((link) => [String(link.jira_issue_id), link]));
 
   const updated = [];
   const verifyQueue = [];
-  let startAt = 0;
-  let checked = 0;
 
-  // Paged, and hard-capped: a reconcile must never turn into an unbounded
-  // walk of a large project.
-  for (let page = 0; page < 10; page += 1) {
-    const { data } = await jiraRequestForConnection(env, connection, {
-      path: '/rest/api/3/search',
-      query: { jql, fields: SEARCH_FIELDS, maxResults: 100, startAt },
-    });
+  // Cursor pagination, hard-capped at 10 pages. The old offset walk here
+  // counted up to `total`, which /rest/api/3/search/jql does not return -
+  // see jira-search.js for why that endpoint had to change at all.
+  const { issues, truncated } = await searchAllIssues(env, connection, {
+    jql,
+    fields: SEARCH_FIELDS,
+    pageSize: 100,
+    maxPages: 10,
+  });
 
-    const issues = Array.isArray(data?.issues) ? data.issues : [];
-    checked += issues.length;
-
-    for (const issue of issues) {
-      const link = byIssueId.get(String(issue.id));
-      if (!link) continue;
-      const result = await applyIssueToLink(link, issue);
-      if (!result.applied) continue;
-      updated.push({ linkId: link.id, seoxState: result.seoxState });
-      if (result.shouldVerify) verifyQueue.push(link);
-    }
-
-    startAt += issues.length;
-    if (issues.length === 0 || startAt >= Number(data?.total || 0)) break;
+  for (const issue of issues) {
+    const link = byIssueId.get(String(issue.id));
+    if (!link) continue;
+    const result = await applyIssueToLink(link, issue);
+    if (!result.applied) continue;
+    updated.push({ linkId: link.id, seoxState: result.seoxState });
+    if (result.shouldVerify) verifyQueue.push(link);
   }
 
-  return { checked, updated, verifyQueue, missing: [] };
+  return { checked: issues.length, updated, verifyQueue, missing: [], truncated };
 }
 
 /**

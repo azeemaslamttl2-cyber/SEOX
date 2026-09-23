@@ -2,7 +2,7 @@
  * The admin token the Jira Tickets page authenticates with.
  *
  * WHY THIS IS A SEPARATE CREDENTIAL FROM THE SESSION, AND WHY THE USER TYPES
- * IT IN: every Jira ticket API - the read-only feed on /api/jira/issues and
+ * IT IN: every Jira ticket API - the ticket list on /api/jira/tickets and
  * the status update on /api/jira/issues/status - authenticates on
  * `users.admin_token` and refuses to fall back to the session, a cookie or
  * anything else. That is deliberate, and it means the browser has to hold a

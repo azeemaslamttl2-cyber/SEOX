@@ -157,9 +157,10 @@ job drain (`X-Jira-Scheduler-Token`). Errors use the standard envelope
 | GET/POST | `/api/jira/mapping` | Read / save the project mapping | Session |
 | GET | `/api/jira/issues?projectId=[&fingerprint=]` | Link list, or specific fingerprints | Session |
 | POST | `/api/jira/issues` with `admin_token` in the body | **Read-only** feed of every Jira-eligible SEO finding (§3.1) | `admin_token` |
+| GET/POST | `/api/jira/tickets` | **Read-only** list of the mapped Jira project's open tickets (§3.2) | `admin_token` |
 | POST | `/api/jira/issues` | `create` / `sync` / `unlink` / `retry` / `verify` | Session |
-| GET | `/api/jira/issues/status?admin_token=&jira_issue_key=` | Transitions this issue can make now (§3.2) | `admin_token` |
-| POST | `/api/jira/issues/status` | **Perform a transition, in Jira** (§3.2) | `admin_token` |
+| GET | `/api/jira/issues/status?admin_token=&jira_issue_key=` | Transitions this issue can make now (§3.3) | `admin_token` |
+| POST | `/api/jira/issues/status` | **Perform a transition and/or add a review, in Jira** (§3.3) | `admin_token` |
 | POST | `/api/jira/webhook?t=<secret>` | Receive Jira events | URL secret |
 | GET | `/api/jira/jobs?projectId=` | Queue stats, dead jobs, activity | Session |
 | POST | `/api/jira/jobs` | Drain the queue / `retry-job` | Scheduler token / Session |
@@ -324,7 +325,220 @@ logged server-side and reported as a generic message.
 | 400 | `project_id and url refer to different projects` |
 | 500 | `Failed to retrieve Jira-eligible issues` |
 
-### 3.2 Updating a ticket's status
+### 3.2 The Jira ticket feed
+
+```
+POST /api/jira/tickets
+Content-Type: application/json
+
+{ "admin_token": "YOUR_ADMIN_TOKEN", "project_id": "proj_123" }
+```
+
+`GET /api/jira/tickets?admin_token=&project_id=` works too and takes the same
+field names, but POST is preferred: a query string lands in access logs, proxy
+logs and browser history, and an admin credential does not belong in any of
+them.
+
+> **Moved.** This was `POST /api/jira/issues` with `mode: "tickets"` — a mode
+> of a route whose other two modes are about SEOX's own findings and the
+> finding-to-issue links. The ticket list now has a URL that says what it
+> returns. The old form still answers, because it was a documented
+> `admin_token` API and something outside this repository may still call it,
+> but nothing in the application uses it and it will not gain new fields. Both
+> go through `getJiraTicketFeed()`, so they cannot drift apart.
+
+Answers a different question from §3.1. That feed reports **SEOX findings that
+could become Jira issues**, from SEOX's own store, with zero Jira calls. This
+one reports **what is actually in the mapped Jira project right now** — which
+includes every ticket the team raised by hand, none of which has a SEOX
+finding behind it and none of which §3.1 can structurally show.
+
+#### The chain
+
+```
+internal project (project_id / url)
+   -> jira_connections        is Jira connected for it?
+   -> jira_project_mappings   which Jira project is it mapped to?
+   -> jira_project_key        the key Jira itself reported
+   -> Jira /rest/api/3/search/jql
+   -> tickets
+```
+
+Every step is resolved **server-side**, from the mapping saved at
+**Settings → Jira**. The Jira project key is never hardcoded, never guessed
+from a website address, and never supplied by the browser. Alternatively the
+caller may name a **Jira** project directly with `jira_project_key` /
+`jira_project_id`, which is what the Tickets page's project selector does; that
+route is authorised against the project list the user's own Jira credential can
+see, so a board their Jira account cannot read is never in it.
+
+#### Resolved tickets are excluded by default
+
+The feed answers "what still needs attention". Everything in Jira's **`Done`
+status category** — Done, Closed, Resolved, Completed, and whatever else a
+project renamed them to — is left out unless asked for.
+
+The exclusion is a **JQL clause** (`statusCategory != "done"`), so Jira applies
+it across the whole project before the first page is built. A filter applied to
+the response instead would page through years of closed tickets to reach this
+week's work.
+
+It is written against the **category**, never a list of status names: names are
+per-project and renameable, categories are Jira's own and are not. It is
+deliberately **not** `resolution = EMPTY` — a reopened issue whose resolution
+was never cleared is still open work, and hiding a ticket that needs attention
+is the one failure this filter must not have.
+
+| Want | Send |
+|---|---|
+| Open work (**default**) | nothing |
+| One category | `"status_category": "new"` / `"indeterminate"` |
+| Only the finished ones | `"status_category": "done"` |
+| The whole board | `"include_resolved": true` or `"status_category": "all"` |
+
+`filters.status_category` and `filters.include_resolved` are echoed in the
+response, because a caller that does not know the resolved tickets were
+excluded cannot tell "nothing is open" from "nothing exists".
+
+`resolveStatusFilter()` in `functions/_lib/jira-ticket-feed.js` is the single
+place that decision is made, and `dropResolvedTickets()` re-checks the
+category locally afterwards — the JQL does the work, the local pass makes the
+guarantee independent of a remote system parsing a clause the way we expected.
+
+#### An empty list is a claim, not a fallback
+
+`state.code` per project says which link in the chain broke, and an empty
+`tickets` array is only ever returned when Jira was actually asked and
+answered none:
+
+| `state.code` | Meaning |
+|---|---|
+| `OK` | Jira was queried. The list is trustworthy. |
+| `JIRA_NOT_CONFIGURED` | No connection for this project, or no server encryption key |
+| `JIRA_AUTHENTICATION_FAILED` | Jira refused the stored credential |
+| `JIRA_PROJECT_MAPPING_MISSING` | Connected, but no Jira project mapped |
+| `JIRA_PROJECT_KEY_MISSING` | Mapped, but the mapping carries no key |
+| `JIRA_PROJECT_NOT_FOUND` / `JIRA_PERMISSION_DENIED` | The Jira account cannot see that project |
+| `JIRA_API_UNAVAILABLE` | Jira unreachable, rate limited, or the breaker is open |
+| `JIRA_API_ERROR` | Jira answered with something unexpected |
+
+Collapsing any of those into `[]` is how a configuration mistake gets mistaken
+for a clean board, which is the bug this mode was written to prevent.
+
+#### Cost and pagination
+
+**One Jira call per project that is actually connected and mapped**, plus one
+cached lookup of the site's custom-field ids (30 minutes per connection, and
+its failure is non-fatal). A project that is not configured costs zero, because
+its answer comes from the database. In practice one project is selected and it
+is one Jira call.
+
+`limit` defaults to 50, max 100. Paging is a **cursor**: send back the
+`next_page_token` you were given. `page_token` requires a single project.
+
+#### Response shape
+
+The envelope is `projects[]`, because a request may cover several internal
+projects and because each one carries its own `state` (below). The
+overwhelmingly common request names **one** project, so that case is also
+published flat at the top level — the same objects, so the two views cannot
+disagree:
+
+```json
+{
+  "success": true,
+  "mode": "tickets",
+  "filters": { "project_id": "proj_123", "status_category": null, "include_resolved": false },
+  "project":     { "project_id": "proj_123", "project_name": "Zero Carbon", "domain": "..." },
+  "jiraProject": { "id": "10061", "key": "WZC", "name": "Web - ZeroCarbon",
+                   "baseUrl": "https://your-site.atlassian.net" },
+  "state":       { "ok": true, "code": "OK", "message": "Retrieved 12 Jira tickets…" },
+  "ticketCount": 12,
+  "nextPageToken": null,
+  "tickets": [ … ],
+  "summary": { … },
+  "projects": [ … ]
+}
+```
+
+#### Ticket shape
+
+```json
+{
+  "id": "122672",
+  "key": "WZC-190",
+  "url": "https://your-site.atlassian.net/browse/WZC-190",
+  "summary": "Review & Finalization of Zero Carbon Website Content",
+  "description": "Dear Team,\n\nDuring the GSC indexed pages comparison…",
+  "issueType":  { "id": "10035", "name": "Bug / Incident / Issue", "iconUrl": "…",
+                  "subtask": false, "hierarchyLevel": 0 },
+  "status":     { "id": "10027", "name": "Stagging", "category": "indeterminate",
+                  "categoryName": "In Progress", "categoryColor": "yellow" },
+  "resolution": null,
+  "priority":   { "id": "3", "name": "Medium", "iconUrl": "…" },
+  "assignee":   { "accountId": "70121:…", "displayName": "Ada Lovelace",
+                  "avatarUrl": "…", "active": true },
+  "reporter":   { "accountId": "…", "displayName": "…" },
+  "creator":    { "accountId": "…", "displayName": "…" },
+  "project":    { "id": "10061", "key": "WZC", "name": "Web - ZeroCarbon",
+                  "projectTypeKey": "software", "avatarUrl": "…" },
+  "parent":     { "id": "100", "key": "WZC-128", "summary": "…", "url": "…" },
+  "created": "2026-07-23T09:03:50.246Z",
+  "updated": "2026-07-24T12:14:05.788Z",
+  "dueDate": "2026-07-24",
+  "labels": ["seox"],
+  "components":  [{ "id": "1", "name": "Frontend" }],
+  "fixVersions": [{ "id": "2", "name": "v2.0", "released": false, "releaseDate": "…" }],
+  "sprints":     [{ "id": "42", "name": "Sprint 9", "state": "active", "boardId": "7",
+                    "startDate": "…", "endDate": "…" }],
+  "storyPoints": 5,
+  "comments": [{ "id": "78170", "author": { … }, "body": "Noted.",
+                 "created": "…", "updated": "…", "url": "…?focusedCommentId=78170" }],
+  "commentCount": 3,
+  "attachments": [{ "id": "75945", "filename": "screenshot.png", "mimeType": "image/png",
+                    "size": 20480, "author": { … }, "created": "…", "url": "…" }],
+  "createdBySeox": false,
+  "seox": null
+}
+```
+
+`functions/_lib/jira-ticket-fields.js` owns this shaping. Five things about it
+are decisions rather than plumbing:
+
+**`url` is always present and always correct.** It is built from the
+connection's own stored base URL — what the user typed in Settings → Jira — so
+the frontend opens `ticket.url` and needs to know nothing about Jira's URL
+scheme. No Jira domain is hardcoded anywhere.
+
+**`description` and comment bodies are text, not markup.** Jira REST v3 returns
+them as ADF (Atlassian Document Format), a nested `{type, content}` tree.
+Handed to a browser it renders `[object Object]`; `JSON.stringify`d it renders
+the markup. `flattenAdf()` walks it into text, handles every node type
+(unknown nodes recurse into their children rather than throwing) and is bounded
+in both depth and length.
+
+**Sprint and story points are discovered, never assumed.** They are custom
+fields, so Sprint is `customfield_10020` on one Jira site and something else on
+the next. They are resolved from `/rest/api/3/field` by their schema type and
+cached for 30 minutes per connection. A site with neither returns
+`sprints: []` and `storyPoints: null` — normal, not an error. A test asserts
+that no `customfield_\d+` literal appears in the shaper.
+
+**`status` carries id, name *and* category.** The category key (`new` /
+`indeterminate` / `done`) is the only rename-proof one, and every open/resolved
+decision in SEOX is made on it.
+
+**Emails are not forwarded.** `accountId` and `displayName` identify a person
+well enough to render an assignee column; an email address is data about
+someone who never used SEOX. Most Jira sites do not return it at all under
+their privacy setting, so code depending on it would be broken as often as
+not. Neither `emailAddress` nor Jira's own `self` REST URLs cross the wire.
+
+`seox` is `null` for a ticket SEOX did not file, which on a real board is most
+of them. No Jira credential, bearer header or encrypted column ever appears in
+the response — the browser talks only to SEOX.
+
+### 3.3 Updating a ticket's status, and reviewing it
 
 ```
 POST /api/jira/issues/status
@@ -350,6 +564,9 @@ not read, and a request without the field is a 400 rather than a fall-through.
 | `status` | A destination status name, e.g. `"Done"`, `"In Progress"`. |
 | `action` | An intent: `resolve` (the default), `reopen`, `in progress`, `open`. |
 
+`issueKey` and `transitionId` are accepted as camelCase synonyms of
+`jira_issue_key` and `transition_id`.
+
 **Transition ids are never hardcoded and never assumed.** They are per
 project, per workflow and per the issue's *current* status, so every request
 reads `GET /rest/api/3/issue/{key}/transitions` first and resolves the target
@@ -367,18 +584,48 @@ done transitions decline the work ("Won't Do", "Duplicate"), it refuses with
 `ONLY_DECLINING_TRANSITIONS` rather than recording a fix that never happened —
 those remain available by explicit `transition_id`.
 
-**Authorisation is four checks**, because an `admin_token` identifies a SEOX
-user, not a right to drive somebody's board:
+**Authorisation is separate from authentication**, because an `admin_token`
+identifies a SEOX user, not a right to drive somebody's board. The rule is:
+**the issue must live in a Jira project this user has mapped.** Which mapping
+that is depends on what the request carries, in this order:
 
-1. the issue has a `jira_issue_links` row owned by this user — otherwise 404,
-   never 403, which would confirm the issue exists
-2. that project still has a usable connection and an active mapping
-3. the issue key's prefix matches `jira_project_mappings.jira_project_key`
-4. the issue Jira actually serves is still in that project — this catches an
-   issue **moved** between Jira projects after SEOX linked it
+1. **the issue has a `jira_issue_links` row owned by this user** — SEOX filed
+   it, so that row's internal project decides. A `project_id` in the request is
+   then a claim checked against the row, never a selector (403 `WRONG_PROJECT`).
+2. **no link row, but the request names an internal project** — that project's
+   mapping decides which Jira project may be driven, and the issue key must
+   belong to it. This is the documented chain:
+   `admin_token + internal project + mapping + issue`.
+3. **no link row and no `project_id`** — the issue key's own prefix must match
+   one of this user's rows in `jira_project_mappings`.
+
+(2) and (3) exist because the Tickets page shows the real contents of a mapped
+Jira project, most of which was raised by hand and has no link row. (2) is
+separate from (3) and takes priority: resolved through (3) a supplied
+`project_id` would mean nothing, because the mapping would be found from the
+issue key and would trivially agree with itself — `WPGC-1` sent with the
+internal project mapped to `WUCP` would be accepted. Under (2) it is refused
+with 403 `WRONG_JIRA_PROJECT`, before any call to Jira.
+
+Then, whichever path chose the mapping:
+
+- that mapping's connection must be usable (`NOT_CONNECTED` / `INVALID_CREDENTIALS`)
+- the issue Jira actually **serves** must still be in that project — this
+  catches an issue **moved** between Jira projects after SEOX linked it
+  (403 `ISSUE_MOVED`)
 
 So an arbitrary key such as `OPS-9` cannot be used to close a ticket on a board
-SEOX was never pointed at.
+SEOX was never pointed at: it matches no mapping and is refused as 404, never
+403, which would confirm the issue exists. A project the user *can* see but has
+not mapped is refused honestly with 409 `JIRA_PROJECT_NOT_MAPPED`, because
+"not found" about a ticket on screen sends them hunting for a typo that does
+not exist.
+
+The mapping's `status` is deliberately **not** required to be `active` here.
+That flag reports whether the mapping can still *create* an issue — it goes
+invalid when an issue-type or component id stops resolving — and none of that
+bears on moving an issue that already exists. Refusing would strand every open
+ticket behind a settings fix.
 
 **Success** carries Jira's own values, re-read after the transition, because a
 post-function can set a resolution, reassign, or route the issue somewhere
@@ -388,6 +635,13 @@ other than the transition's nominal destination:
 {
   "success": true,
   "message": "Jira ticket SEO-123 updated successfully",
+  "statusUpdated": true,
+  "commentAdded": true,
+  "issue": {
+    "key": "SEO-123",
+    "url": "https://company.atlassian.net/browse/SEO-123",
+    "status": { "id": "10002", "name": "Done", "category": "done" }
+  },
   "data": {
     "jira_issue_key": "SEO-123",
     "previous_status": "In Progress",
@@ -397,6 +651,10 @@ other than the transition's nominal destination:
     "jira_issue_url": "https://company.atlassian.net/browse/SEO-123",
     "transition_id": "31",
     "transition_name": "Done",
+    "status_updated": true,
+    "comment_added": true,
+    "comment_id": "10145",
+    "comment_error": null,
     "seox_state": "resolved_pending",
     "seox_state_label": "Awaiting verification",
     "awaiting_verification": true,
@@ -404,6 +662,77 @@ other than the transition's nominal destination:
   }
 }
 ```
+
+#### The review
+
+`review` is optional and is **posted to Jira as a Jira comment**, via
+`POST /rest/api/3/issue/{key}/comment`, so it lands in the ticket's own
+activity stream where everyone watching the board sees it. It is not stored in
+SEOX — storing it here instead would be a private note dressed up as a reply.
+`comment` is accepted as a synonym. Blank and absent mean the same thing: a
+textarea the user tabbed through must not post an empty comment.
+
+Three shapes, all valid:
+
+```json
+{ "issueKey": "SEO-123", "status": "In Review", "review": "Implementation completed." }
+{ "issueKey": "SEO-123", "status": "Done" }
+{ "issueKey": "SEO-123", "review": "Please update the screenshots and test again." }
+```
+
+The third is comment-only. **That is inferred, and the inference has one
+trap:** a request naming no `transition_id`, `status`, `action` or `intent`
+has always meant *resolve* — that is what the bare Resolve POST sends. So
+"status left unnamed" only reads as comment-only when a review is present.
+A bare request with neither still resolves, exactly as before.
+
+The review is carried as plain ADF text nodes, one paragraph per line. It is
+never interpreted: no wiki markup, no HTML, no mentions. Over
+`MAX_REVIEW_LENGTH` (32,000) characters it is refused by SEOX with
+`REVIEW_TOO_LONG` rather than by Jira with a 400 the user cannot act on.
+
+#### The two writes are ordered, and reported separately
+
+```
+validate -> read issue -> read transitions -> transition -> comment
+```
+
+- **Transition refused** → nothing is written and **no comment is posted**. A
+  review describing a move that did not happen is worse than no review. The
+  response is the transition error, with `statusUpdated: false` and
+  `commentAdded: false`.
+- **Transition applied, comment refused** → `success: false`,
+  `statusUpdated: true`, `commentAdded: false`, code `COMMENT_FAILED`. This
+  is the case the split flags exist for, so a frontend cannot report both
+  halves as having worked:
+
+  ```json
+  {
+    "success": false,
+    "statusUpdated": true,
+    "commentAdded": false,
+    "code": "COMMENT_FAILED",
+    "message": "Jira ticket SEO-123 status was updated, but the review/comment could not be added."
+  }
+  ```
+
+  **The HTTP status stays 200 here on purpose.** A 4xx/5xx would mean "nothing
+  happened, try again", and a retry would transition an issue that has already
+  moved. `success: false` carries the failure, and `readResponse()` in
+  `jiraTicketsApi.js` already treats that as an error whatever the status is.
+
+- **Comment-only failure** is total — Jira is exactly as it was — so it is an
+  ordinary error response carrying Jira's own status.
+
+Both writes share the `jira:transition` rate-limit budget, and both are
+written to `jira_sync_logs` (`issue.transition` and `comment.post`). **The
+review text itself is not logged**: it lives on the Jira ticket, which is the
+point, and a log copy would be a second, unasked-for copy of what the user
+wrote.
+
+A review does **not** move the SEOX finding. Commenting is not a claim that
+the SEO problem is fixed, so `seox_state` is untouched and no verification is
+queued on the comment-only path.
 
 **Note `seox_state`.** Resolving the Jira ticket moves the finding to
 *Awaiting verification* and queues the re-check — it never writes `verified`.
@@ -427,29 +756,71 @@ the same path a webhook-delivered transition takes; both go through
 | 400 | `The requested Jira status transition is not available` | `TRANSITION_UNAVAILABLE` |
 | 400 | `No valid Jira transition is available to resolve this issue.` | `TRANSITION_UNAVAILABLE` |
 | 400 | only declining transitions on offer | `ONLY_DECLINING_TRANSITIONS` |
+| 400 | `review must be text.` | `INVALID_REVIEW` |
+| 400 | review over 32,000 characters | `REVIEW_TOO_LONG` |
+| 200 | status moved, comment did not | `COMMENT_FAILED` (with `success: false`) |
+| 4xx/502 | comment-only request Jira refused | `COMMENT_FAILED` |
 | 429 | rate limited (`jira:transition`, 120/hour) | |
 | 502/504 | Jira unreachable — nothing was changed | |
 
 A `TRANSITION_UNAVAILABLE` response includes `data.available_transitions`, so
 the caller can offer what does exist instead of guessing again.
 
-### 3.3 The Jira Tickets page
+### 3.4 The Jira Tickets page
 
 `/jira/tickets`, in the sidebar under **Jira → Tickets**. Lazy-loaded like
 every other page; `src/App.jsx` imports it dynamically, so a Jira-less install
 never downloads it.
 
-It reads **the existing feed** — one `POST /api/jira/issues` with
-`jira_created: true` per project selection — and adds no retrieval logic of
-its own. The project list comes from `ProjectsContext`, which the application
-already holds, so selecting a project costs one request and not two. Jira
-itself is called for exactly one thing: the transitions of the single ticket
-whose detail panel is open. There is no per-row Jira call.
+It reads **the existing feed** — one `POST /api/jira/tickets` (§3.2) per
+project selection — and adds no retrieval logic of its own. The browser never talks to Jira and never holds a Jira credential;
+the internal project → mapping → Jira project chain is resolved server-side.
+Jira itself is called for exactly one thing beyond the list: the transitions of
+the single ticket whose detail panel is open. There is no per-row Jira call.
 
-Default view is **Pending**, decided on `jira_status_category` being anything
-other than `done` — never on a list of status names, which are per-project and
-renameable. After a successful resolve the row is rewritten in place from the
-response and simply stops matching Pending; nothing reloads.
+**The detail panel updates status and review together.** One `<select>`
+populated *entirely* from the transitions Jira reported for that issue in its
+current status — nothing is hardcoded, and the list legitimately differs
+between two tickets on the same board — plus a review textarea and one
+**Update Ticket** button that sends both in one request (§3.3). Leaving the
+dropdown on *Leave the status unchanged* posts the review on its own; writing
+no review sends the transition on its own. Jira being unreachable, or offering
+no step from this status, is a notice **above** the form rather than a
+replacement for it — commenting is a separate right on a separate Jira
+endpoint and does not depend on the workflow.
+
+On a partial result — the ticket moved but the comment did not — the panel
+shows **both** the green status line and the red comment error, clears the
+dropdown and **leaves the review in the box**, so pressing Update again
+retries the comment alone instead of transitioning the issue twice.
+
+The project selector lists **Jira** projects (`WUCP`, "Web - UCP"), from
+`POST /api/jira/projects` — the list Jira itself reports for the stored
+credential, never inferred from a website address.
+
+**The four views are server-side queries, not slices of one downloaded list.**
+`requestForView()` in `src/lib/jiraTickets.js` maps each to the filter §3.2
+describes:
+
+| View | Sends | Gets |
+|---|---|---|
+| **Pending** (default) | nothing | everything not in Jira's `Done` category |
+| In progress | `status_category: "indeterminate"` | that category |
+| Resolved | `status_category: "done"` | the finished tickets |
+| All | `include_resolved: true` | the whole board |
+
+Switching view re-asks Jira. That is the point: on a board of any age the
+closed tickets outnumber the open ones, and a client-side filter would page
+through all of them to find this week's work. Only the **active** view carries
+a count badge, because only its tickets have been fetched — a number on the
+other tabs would be a claim about tickets nobody asked Jira for.
+
+`isPending()`/`matchesView()` still run over the result. That is belt-and-
+braces, not duplication: after a successful resolve the row is rewritten in
+place from the response and simply stops matching Pending, with no reload.
+Both client and server decide on `jira_status_category`, never on a list of
+status names, which are per-project and renameable; if the two ever disagree
+the server wins, because it is the one talking to Jira.
 
 **It asks for an admin token.** The ticket APIs accept `admin_token` and refuse
 every other credential, and nothing hands the browser one — so the page has a

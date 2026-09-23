@@ -1,12 +1,11 @@
-import { SEOX_STATE_LABELS } from './jiraFindings.js';
-
 /**
- * Turning the /api/jira/issues feed into the rows the Jira Tickets page
+ * Turning the `/api/jira/tickets` response into the rows the Jira Tickets page
  * renders, and deciding which of them still need action.
  *
- * Pure on purpose: the feed's shape (projects[] each carrying issues[]) and
- * the definition of "pending" are the two things most likely to be got
- * subtly wrong, and both are testable here without a browser or a server.
+ * Pure on purpose: the response shape (projects[], each with its own `state`
+ * and `tickets[]`) and the definition of "pending" are the two things most
+ * likely to be got subtly wrong, and both are testable here without a browser
+ * or a server.
  */
 
 /**
@@ -38,7 +37,7 @@ export const ACTIONABLE_CATEGORIES = Object.freeze(['new', 'indeterminate']);
  * still needs work means nobody ever looks at it again.
  */
 export function isPending(ticket) {
-  return String(ticket?.jira_status_category || '').toLowerCase() !== 'done';
+  return String(ticket?.status?.category || '').toLowerCase() !== 'done';
 }
 
 export const STATUS_VIEWS = Object.freeze([
@@ -48,8 +47,38 @@ export const STATUS_VIEWS = Object.freeze([
   { id: 'all', label: 'All' },
 ]);
 
+/**
+ * The SERVER-SIDE query behind each view.
+ *
+ * The views are not four ways of slicing one downloaded list any more. The
+ * feed excludes resolved tickets unless asked, because on a board of any age
+ * the closed ones outnumber the open ones and a client-side filter would
+ * page through all of them to find this week's work. So switching view
+ * re-asks Jira, with the filter Jira itself can apply.
+ *
+ * `matchesView()` below still runs over the result. That is deliberate
+ * belt-and-braces, not duplication: after a transition the page updates the
+ * affected row in place rather than reloading, so a ticket just resolved from
+ * the Pending view has to stop matching it without another round trip.
+ */
+export function requestForView(view) {
+  switch (view) {
+    case 'in_progress':
+      return { statusCategory: 'indeterminate', includeResolved: false };
+    case 'done':
+      // The one view that asks for the finished tickets on purpose.
+      return { statusCategory: 'done', includeResolved: true };
+    case 'all':
+      return { statusCategory: '', includeResolved: true };
+    default:
+      // Pending: the feed's own default - everything not in Jira's Done
+      // category, decided by Jira, not by this list.
+      return { statusCategory: '', includeResolved: false };
+  }
+}
+
 export function matchesView(ticket, view) {
-  const category = String(ticket?.jira_status_category || '').toLowerCase();
+  const category = String(ticket?.status?.category || '').toLowerCase();
   switch (view) {
     case 'pending':
       return isPending(ticket);
@@ -87,31 +116,48 @@ export const SEVERITY_LABELS = Object.freeze({
 });
 
 /**
- * Flatten `projects[].issues[]` into one list, carrying each project's
- * identity onto its rows.
+ * Flatten the `/api/jira/tickets` response into one list of rows.
  *
- * Only findings that actually have a Jira issue become tickets. The feed also
- * serves findings that *could* be filed - those belong on the auditor pages,
- * not here, and the request already asks the server to exclude them; this is
- * the belt to that braces.
+ * Every ticket here came back from a live Jira query, so a ticket that was
+ * raised by hand in Jira is a first-class row - it simply has `seox: null`
+ * because no SEOX finding produced it. That is the whole difference from the
+ * old behaviour, which could only ever show tickets SEOX itself had filed and
+ * therefore showed nothing at all on a real, busy Jira board.
  */
 export function flattenTickets(feed) {
   const projects = Array.isArray(feed?.projects) ? feed.projects : [];
   const tickets = [];
 
-  for (const project of projects) {
-    const issues = Array.isArray(project?.issues) ? project.issues : [];
-    for (const issue of issues) {
-      if (!issue?.jira_created || !issue?.jira_issue_key) continue;
+  for (const entry of projects) {
+    const project = entry?.project || {};
+    const rows = Array.isArray(entry?.tickets) ? entry.tickets : [];
+    for (const ticket of rows) {
+      // `key` is what identifies a ticket everywhere - in the table, in the
+      // detail panel, in the transition call. A row without one cannot be
+      // acted on, so it is not a row.
+      if (!ticket?.key) continue;
+      const seox = ticket.seox || null;
       tickets.push({
-        ...issue,
-        project_id: project.project_id,
-        project_name: project.project_name || project.domain || project.project_id,
-        project_url: project.project_url || '',
-        project_domain: project.domain || '',
-        jira_project_key: project.jira_project_key || '',
-        jira_connected: Boolean(project.jira_connected),
-        seox_state_label: SEOX_STATE_LABELS[issue.status] || issue.status || '',
+        // The ticket as /api/jira/tickets returned it, unflattened: `url`,
+        // `summary`, `status`, `priority`, `assignee`, `issueType`, `labels`,
+        // `components`, `fixVersions`, `comments`, `attachments`, `sprints`,
+        // `storyPoints`, `description`. Spread rather than picked, so a field
+        // added server-side reaches the UI without a second edit here.
+        ...ticket,
+        // Which INTERNAL project this row belongs to. The Jira issue knows
+        // its Jira project; only the feed knows the SEOX one.
+        projectId: project.project_id,
+        projectName: project.project_name || project.domain || project.project_id,
+        projectUrl: project.project_url || '',
+        projectDomain: project.domain || '',
+        jiraProjectKey: ticket.project?.key || entry?.jira?.project_key || '',
+        // The SEO finding behind the ticket, if SEOX filed it. Lifted to the
+        // row because the table renders one flat shape per column.
+        severity: seox?.severity || '',
+        affectedUrl: seox?.affected_url || '',
+        sourceModule: seox?.source_module || '',
+        seoxState: seox?.seox_state || '',
+        seoxStateLabel: seox?.seox_state_label || '',
       });
     }
   }
@@ -119,17 +165,15 @@ export function flattenTickets(feed) {
   return tickets;
 }
 
-/** Every project the feed covered, whether or not it has tickets on this page. */
+/** Every project the feed covered, with the state each one reported. */
 export function projectsFromFeed(feed) {
   const projects = Array.isArray(feed?.projects) ? feed.projects : [];
-  return projects.map((project) => ({
-    project_id: project.project_id,
-    project_name: project.project_name || project.domain || project.project_id,
-    jira_connected: Boolean(project.jira_connected),
-    jira_connection_status: project.jira_connection_status || 'not_connected',
-    jira_project_key: project.jira_project_key || null,
-    jira_mapping_status: project.jira_mapping_status || 'not_mapped',
-    jira_created_issue_count: Number(project.jira_created_issue_count || 0),
+  return projects.map((entry) => ({
+    ...(entry?.project || {}),
+    jira: entry?.jira || null,
+    state: entry?.state || null,
+    ticket_count: Number(entry?.ticket_count || 0),
+    next_page_token: entry?.next_page_token || null,
   }));
 }
 
@@ -147,12 +191,12 @@ export function collectFacets(tickets) {
   const issueTypes = new Set();
 
   for (const ticket of tickets) {
-    if (ticket.jira_status) {
-      statuses.set(ticket.jira_status, ticket.jira_status_category || '');
+    if (ticket.status?.name) {
+      statuses.set(ticket.status.name, ticket.status.category || '');
     }
-    if (ticket.jira_priority) priorities.add(ticket.jira_priority);
-    if (ticket.jira_assignee) assignees.add(ticket.jira_assignee);
-    if (ticket.issue_type) issueTypes.add(ticket.issue_type);
+    if (ticket.priority?.name) priorities.add(ticket.priority.name);
+    if (ticket.assignee?.displayName) assignees.add(ticket.assignee.displayName);
+    if (ticket.issueType?.name) issueTypes.add(ticket.issueType.name);
   }
 
   const byName = (a, b) => a.localeCompare(b);
@@ -179,14 +223,19 @@ export function matchesSearch(ticket, term) {
   const needle = String(term || '').trim().toLowerCase();
   if (!needle) return true;
   const haystack = [
-    ticket.jira_issue_key,
-    ticket.title,
-    ticket.url,
-    ticket.project_name,
-    ticket.project_domain,
-    ticket.issue_type,
-    ticket.jira_status,
-    ticket.jira_assignee,
+    ticket.key,
+    ticket.summary,
+    ticket.affectedUrl,
+    ticket.projectName,
+    ticket.projectDomain,
+    ticket.issueType?.name,
+    ticket.status?.name,
+    ticket.assignee?.displayName,
+    ...(Array.isArray(ticket.labels) ? ticket.labels : []),
+    // The SEO finding's own title, for a ticket SEOX filed - the Jira summary
+    // is often an AI-rewritten version of it, so searching one is not
+    // searching the other.
+    ticket.seox?.finding_title,
   ];
   return haystack.some((value) => String(value || '').toLowerCase().includes(needle));
 }
@@ -194,10 +243,10 @@ export function matchesSearch(ticket, term) {
 export function applyFilters(tickets, { view, search, status, priority, assignee, issueType, severity }) {
   return tickets.filter((ticket) => {
     if (!matchesView(ticket, view)) return false;
-    if (status && ticket.jira_status !== status) return false;
-    if (priority && ticket.jira_priority !== priority) return false;
-    if (assignee && ticket.jira_assignee !== assignee) return false;
-    if (issueType && ticket.issue_type !== issueType) return false;
+    if (status && ticket.status?.name !== status) return false;
+    if (priority && ticket.priority?.name !== priority) return false;
+    if (assignee && ticket.assignee?.displayName !== assignee) return false;
+    if (issueType && ticket.issueType?.name !== issueType) return false;
     if (severity && ticket.severity !== severity) return false;
     return matchesSearch(ticket, search);
   });
@@ -210,10 +259,13 @@ const CATEGORY_RANK = { new: 0, indeterminate: 1, done: 2 };
 export function sortTickets(tickets) {
   return [...tickets].sort(
     (a, b) =>
-      (CATEGORY_RANK[a.jira_status_category] ?? 1) - (CATEGORY_RANK[b.jira_status_category] ?? 1) ||
+      (CATEGORY_RANK[a.status?.category] ?? 1) - (CATEGORY_RANK[b.status?.category] ?? 1) ||
+      // A ticket with no SEO severity is not "least severe" - it simply has
+      // none, so it sorts after the graded ones rather than above notices.
       (SEVERITY_RANK[a.severity] ?? 3) - (SEVERITY_RANK[b.severity] ?? 3) ||
-      String(a.project_name || '').localeCompare(String(b.project_name || '')) ||
-      String(a.jira_issue_key || '').localeCompare(String(b.jira_issue_key || ''), undefined, {
+      String(a.projectName || '').localeCompare(String(b.projectName || '')) ||
+      String(b.updated || '').localeCompare(String(a.updated || '')) ||
+      String(a.key || '').localeCompare(String(b.key || ''), undefined, {
         numeric: true,
       })
   );
