@@ -1,10 +1,13 @@
 // Applying Jira state to SEOX, and the operations SEOX performs back on Jira.
 //
-// SEOX writes to Jira in exactly three situations and never more: creating an
-// issue, commenting with a verification result, and transitioning an issue
-// back open when a finding recurs. It never changes the assignee, the
-// priority after creation, the sprint, or closes anything. A tool that
-// silently closes a team's tickets loses their trust permanently.
+// SEOX writes to Jira in exactly four situations and never more: creating an
+// issue, commenting with a verification result, transitioning an issue back
+// open when a finding recurs, and performing a transition a user explicitly
+// asked for on the Jira Tickets page (functions/api/jira/issues/status.js).
+// It never changes the assignee, the priority after creation, or the sprint,
+// and it never closes anything on its own initiative. A tool that silently
+// closes a team's tickets loses their trust permanently - the fourth case is
+// not an exception to that, because a human clicked it.
 
 import { jiraRequestForConnection } from './jira-client.js';
 import {
@@ -23,6 +26,8 @@ import {
   SEOX_STATES,
 } from './jira-status-map.js';
 import { adfToPlainText, buildVerificationComment, buildRecurrenceComment } from './jira-issue-builder.js';
+import { executeTransition, fetchTransitions, selectTransition } from './jira-transitions.js';
+import { projectJql, searchAllIssues } from './jira-search.js';
 
 const SEARCH_FIELDS = 'status,resolution,assignee,priority,updated,created,summary';
 
@@ -80,40 +85,35 @@ export async function fetchIssue(env, connection, issueIdOrKey) {
 export async function reconcileProject(env, { connection, mapping, links, lookbackMinutes = 40 }) {
   if (!links.length) return { checked: 0, updated: 0, verifyQueue: [], missing: [] };
 
-  const jql = `project = "${mapping.jira_project_key}" AND labels = "seox" AND updated >= "-${lookbackMinutes}m" ORDER BY updated DESC`;
+  const jql = projectJql(mapping.jira_project_key, {
+    extra: `labels = "seox" AND updated >= "-${Number(lookbackMinutes) || 40}m"`,
+  });
 
   const byIssueId = new Map(links.filter((link) => link.jira_issue_id).map((link) => [String(link.jira_issue_id), link]));
 
   const updated = [];
   const verifyQueue = [];
-  let startAt = 0;
-  let checked = 0;
 
-  // Paged, and hard-capped: a reconcile must never turn into an unbounded
-  // walk of a large project.
-  for (let page = 0; page < 10; page += 1) {
-    const { data } = await jiraRequestForConnection(env, connection, {
-      path: '/rest/api/3/search',
-      query: { jql, fields: SEARCH_FIELDS, maxResults: 100, startAt },
-    });
+  // Cursor pagination, hard-capped at 10 pages. The old offset walk here
+  // counted up to `total`, which /rest/api/3/search/jql does not return -
+  // see jira-search.js for why that endpoint had to change at all.
+  const { issues, truncated } = await searchAllIssues(env, connection, {
+    jql,
+    fields: SEARCH_FIELDS,
+    pageSize: 100,
+    maxPages: 10,
+  });
 
-    const issues = Array.isArray(data?.issues) ? data.issues : [];
-    checked += issues.length;
-
-    for (const issue of issues) {
-      const link = byIssueId.get(String(issue.id));
-      if (!link) continue;
-      const result = await applyIssueToLink(link, issue);
-      if (!result.applied) continue;
-      updated.push({ linkId: link.id, seoxState: result.seoxState });
-      if (result.shouldVerify) verifyQueue.push(link);
-    }
-
-    startAt += issues.length;
-    if (issues.length === 0 || startAt >= Number(data?.total || 0)) break;
+  for (const issue of issues) {
+    const link = byIssueId.get(String(issue.id));
+    if (!link) continue;
+    const result = await applyIssueToLink(link, issue);
+    if (!result.applied) continue;
+    updated.push({ linkId: link.id, seoxState: result.seoxState });
+    if (result.shouldVerify) verifyQueue.push(link);
   }
 
-  return { checked, updated, verifyQueue, missing: [] };
+  return { checked: issues.length, updated, verifyQueue, missing: [], truncated };
 }
 
 /**
@@ -193,26 +193,19 @@ export async function postRecurrenceComment(env, connection, link) {
 export async function transitionToOpen(env, connection, link) {
   const issueId = link.jira_issue_id || link.jira_issue_key;
 
-  const { data } = await jiraRequestForConnection(env, connection, {
-    path: `/rest/api/3/issue/${encodeURIComponent(issueId)}/transitions`,
-  });
+  // Same resolution rules the user-initiated status endpoint uses, so an
+  // automatic reopen and a manual one cannot disagree about which transition
+  // "open" means on a given board.
+  const transitions = await fetchTransitions(env, connection, issueId, { kind: 'background' });
+  const selection = selectTransition(transitions, { intent: 'reopen' });
 
-  const transitions = Array.isArray(data?.transitions) ? data.transitions : [];
-  const candidate =
-    transitions.find((item) => item?.to?.statusCategory?.key === 'new') ||
-    transitions.find((item) => item?.to?.statusCategory?.key === 'indeterminate');
-
-  if (!candidate) {
+  if (selection.error) {
     return { transitioned: false, reason: 'no_transition_available' };
   }
 
-  await jiraRequestForConnection(env, connection, {
-    path: `/rest/api/3/issue/${encodeURIComponent(issueId)}/transitions`,
-    method: 'POST',
-    body: { transition: { id: String(candidate.id) } },
-  });
+  await executeTransition(env, connection, issueId, selection.transition.id);
 
-  return { transitioned: true, to: candidate.to?.name || '' };
+  return { transitioned: true, to: selection.transition.to?.name || '' };
 }
 
 /**

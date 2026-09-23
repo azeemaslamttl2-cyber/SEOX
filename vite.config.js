@@ -22,6 +22,9 @@ import { onRequest as jiraStatusOnRequest } from "./functions/api/jira/status.js
 import { onRequest as jiraMetadataOnRequest } from "./functions/api/jira/metadata.js";
 import { onRequest as jiraMappingOnRequest } from "./functions/api/jira/mapping.js";
 import { onRequest as jiraIssuesOnRequest } from "./functions/api/jira/issues.js";
+import { onRequest as jiraIssueStatusOnRequest } from "./functions/api/jira/issues/status.js";
+import { onRequest as jiraTicketsOnRequest } from "./functions/api/jira/tickets.js";
+import { onRequest as jiraProjectsOnRequest } from "./functions/api/jira/projects.js";
 import { onRequest as jiraWebhookOnRequest } from "./functions/api/jira/webhook.js";
 import { onRequest as jiraJobsOnRequest } from "./functions/api/jira/jobs.js";
 import { onRequest as wordpressSecurityOnRequest } from "./functions/api/tech-seo/wordpress-security.js";
@@ -531,7 +534,18 @@ function gbpApiPlugin() {
 // /api/* from these very middlewares, so every route MUST be registered for
 // configurePreviewServer as well as configureServer - a route registered only
 // for dev works locally and 404s in production.
+//
+// *** ORDER IS SIGNIFICANT FOR /api/jira/issues/status ***
+// Connect's `use(path, fn)` matches on a PREFIX, so the "/api/jira/issues"
+// middleware also matches "/api/jira/issues/status". The longer path must
+// therefore be registered FIRST, or every status request is swallowed by the
+// issues route and answered as an eligible-issues feed. Object key order is
+// insertion order for non-numeric keys, and registerJiraMiddleware walks it
+// in that order, so this listing IS the precedence.
 const JIRA_ROUTES = {
+  "/api/jira/issues/status": jiraIssueStatusOnRequest,
+  "/api/jira/tickets": jiraTicketsOnRequest,
+  "/api/jira/projects": jiraProjectsOnRequest,
   "/api/jira/connect": jiraConnectOnRequest,
   "/api/jira/status": jiraStatusOnRequest,
   "/api/jira/metadata": jiraMetadataOnRequest,

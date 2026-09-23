@@ -82,13 +82,51 @@ test("no pre-existing frontend page or context gained a Jira dependency", () => 
     "src/lib/auditIssues.js",
     "src/pages/Dashboard.jsx",
     "src/pages/auditor/AuditorIssues.jsx",
-    "src/App.jsx",
   ];
 
   for (const file of untouched) {
     const source = readFileSync(file, "utf8");
     assert.equal(/jira/i.test(source), false, `${file} must not reference Jira`);
   }
+});
+
+test("the router declares the Jira Tickets route WITHOUT loading Jira eagerly", () => {
+  // src/App.jsx used to be in the list above, on the rule that no
+  // pre-existing file may depend on Jira. A page reachable from the sidebar
+  // has to have a route, so the rule it is held to now is the one that
+  // actually protects a Jira-less install: the route may be DECLARED here,
+  // but nothing Jira may be imported statically. A static import would pull
+  // the Jira client into the entry chunk every signed-in user downloads and
+  // would run its module side effects on a page that never mentions Jira.
+  const app = readFileSync("src/App.jsx", "utf8");
+
+  assert.match(app, /path="\/jira\/tickets"/, "the Jira Tickets route should be declared");
+
+  // Every static import in the file, i.e. `import ... from "..."` at the top
+  // level. lazy(() => import("...")) is a dynamic import and is not matched.
+  const staticImports = [...app.matchAll(/^\s*import\s[^;]*?from\s+["']([^"']+)["']/gm)].map(
+    (match) => match[1]
+  );
+  for (const specifier of staticImports) {
+    assert.equal(
+      /jira/i.test(specifier),
+      false,
+      `src/App.jsx statically imports ${specifier}; the Jira page must stay lazy`
+    );
+  }
+
+  // And it is loaded the same way every other page is.
+  assert.match(app, /const JiraTickets = lazy\(\(\) => import\(["']\.\/pages\/jira\/JiraTickets\.jsx["']\)\)/);
+});
+
+test("the Jira ticket client never sends the SEOX session token", () => {
+  // The ticket APIs authenticate on admin_token and refuse a session. A
+  // client that reached for the session token would produce a confusing 400
+  // rather than working, and would put the session token on a request that
+  // has no use for it.
+  const client = readFileSync("src/lib/jiraTicketsApi.js", "utf8");
+  assert.equal(/getSessionToken|Authorization/i.test(client), false);
+  assert.ok(client.includes("admin_token"));
 });
 
 test("the crawl and finding vocabulary was not forked", () => {

@@ -90,32 +90,61 @@ function boolFilter(value) {
 // --- input -----------------------------------------------------------------
 
 /**
+ * A query string only ever yields strings, but a JSON body carries real
+ * numbers and booleans ({"limit": 100}), so scalars are coerced rather than
+ * ignored - otherwise a POSTed limit would silently fall back to the default.
+ */
+function pickScalar(params, key) {
+  const value = params?.[key];
+  if (typeof value === 'string') return value.trim();
+  if (typeof value === 'number' && Number.isFinite(value)) return String(value);
+  if (typeof value === 'boolean') return String(value);
+  return '';
+}
+
+/**
+ * The admin_token field, validated. Shared with the status-update endpoint so
+ * both report a missing and an over-long token identically - a caller should
+ * not be able to tell which Jira endpoint it hit from the auth error.
+ */
+export function readAdminToken(params = {}) {
+  const adminToken = pickScalar(params, 'admin_token');
+  if (!adminToken) throw httpError('admin_token is required', 400);
+  if (adminToken.length > MAX_TOKEN_LENGTH) throw httpError('Invalid admin_token', 401);
+  return adminToken;
+}
+
+/**
+ * Which project(s) the caller is asking about: `project_id`, `url`, or
+ * neither (meaning all of them).
+ *
+ * Exported so the ticket feed selects projects through THIS function. A
+ * second URL-to-project implementation is how two endpoints end up disagreeing
+ * about which project `https://ucp.edu.pk/` is, and the normalisation here -
+ * scheme, `www.`, case, trailing slash - is the one `/api/project-details`
+ * already uses.
+ */
+export function parseProjectSelector(params = {}) {
+  const projectId = pickScalar(params, 'project_id');
+  if (projectId.length > MAX_PROJECT_ID_LENGTH) throw httpError('project_id is too long', 400);
+
+  const url = pickScalar(params, 'url');
+  const domain = url ? normalizeProjectDomain(url) : '';
+  if (url && !domain) throw httpError('url is invalid', 400);
+
+  return { projectId, url, domain };
+}
+
+/**
  * Validate and normalise the request parameters - the POST JSON body, or the
  * GET query string. Pure, so the precedence rules below are testable without
  * a database.
  */
 export function parseEligibleQuery(params = {}) {
-  // A query string only ever yields strings, but a JSON body carries real
-  // numbers and booleans ({"limit": 100}), so scalars are coerced rather than
-  // ignored - otherwise a POSTed limit would silently fall back to the default.
-  const pick = (key) => {
-    const value = params[key];
-    if (typeof value === 'string') return value.trim();
-    if (typeof value === 'number' && Number.isFinite(value)) return String(value);
-    if (typeof value === 'boolean') return String(value);
-    return '';
-  };
+  const pick = (key) => pickScalar(params, key);
 
-  const adminToken = pick('admin_token');
-  if (!adminToken) throw httpError('admin_token is required', 400);
-  if (adminToken.length > MAX_TOKEN_LENGTH) throw httpError('Invalid admin_token', 401);
-
-  const projectId = pick('project_id');
-  if (projectId.length > MAX_PROJECT_ID_LENGTH) throw httpError('project_id is too long', 400);
-
-  const url = pick('url');
-  const domain = url ? normalizeProjectDomain(url) : '';
-  if (url && !domain) throw httpError('url is invalid', 400);
+  const adminToken = readAdminToken(params);
+  const { projectId, url, domain } = parseProjectSelector(params);
 
   const rawLimit = Number(pick('limit'));
   const limit = Number.isFinite(rawLimit) && rawLimit > 0 ? Math.min(Math.floor(rawLimit), MAX_LIMIT) : DEFAULT_LIMIT;
@@ -142,8 +171,12 @@ export function parseEligibleQuery(params = {}) {
 /**
  * admin_token only, against `users.admin_token` - the same statement
  * _handlers/project-details.js uses. No session, cookie or OAuth fallback.
+ *
+ * Exported so the status-update endpoint authenticates through this exact
+ * function rather than its own copy. Two implementations of "who is this"
+ * drift, and the one that drifts is the one that gets it wrong.
  */
-async function authenticateAdmin(adminToken) {
+export async function authenticateAdmin(adminToken) {
   const admin = await queryOne(
     `SELECT id
        FROM users
@@ -166,7 +199,7 @@ async function authenticateAdmin(adminToken) {
  * not choose, and a Jira ticket filed against the wrong site is expensive to
  * undo.
  */
-async function resolveProjects(adminId, { projectId, url, domain }) {
+export async function resolveProjects(adminId, { projectId, url, domain }) {
   const columns = `id, user_id, project_id, project_name, domain, full_url,
                    total_urls, crawled_on, project_data, created_at, updated_at`;
 

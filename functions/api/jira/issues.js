@@ -49,6 +49,7 @@ import {
   unlinkLink,
 } from '../../_lib/jira-store.js';
 import { jiraRequestForConnection } from '../../_lib/jira-client.js';
+import { escapeJqlValue, projectJql, searchIssues } from '../../_lib/jira-search.js';
 import { buildCreateIssuePayload } from '../../_lib/jira-issue-builder.js';
 import { buildFindingSnapshot, normalizeFindingPayload } from '../../_lib/jira-finding.js';
 import { draftJiraIssueContent } from '../../_lib/jira-ai.js';
@@ -56,6 +57,7 @@ import { applyIssueToLink, fetchIssue } from '../../_lib/jira-sync.js';
 import { readIssueFields, toIso } from '../../_lib/jira-status-map.js';
 import { enqueueVerification, enqueueReconcile } from '../../_lib/jira-jobs.js';
 import { getJiraEligibleIssues } from '../../_lib/jira-eligible.js';
+import { getJiraTicketFeed } from '../../_lib/jira-ticket-feed.js';
 
 const MAX_FINGERPRINT_LOOKUPS = 200;
 
@@ -113,13 +115,20 @@ function describeLink(row, baseUrl) {
  */
 async function findAdoptableIssue(env, connection, mapping, fingerprint) {
   try {
-    const jql = `project = "${mapping.jira_project_key}" AND labels = "seox" AND description ~ "${fingerprint}" ORDER BY created DESC`;
-    const { data } = await jiraRequestForConnection(env, connection, {
-      path: '/rest/api/3/search',
-      query: { jql, fields: 'status,resolution,assignee,priority,updated,created,summary', maxResults: 5 },
+    // Goes through jira-search.js: this used to call /rest/api/3/search,
+    // which Atlassian removed. The 410 was caught below and logged as a
+    // warning, so adoption had been silently finding nothing on every create
+    // rather than failing visibly.
+    const jql = projectJql(mapping.jira_project_key, {
+      extra: `labels = "seox" AND description ~ "${escapeJqlValue(fingerprint)}"`,
+      orderBy: 'created DESC',
+    });
+    const { issues } = await searchIssues(env, connection, {
+      jql,
+      fields: 'status,resolution,assignee,priority,updated,created,summary',
+      maxResults: 5,
       kind: 'interactive',
     });
-    const issues = Array.isArray(data?.issues) ? data.issues : [];
     return (
       issues.find((issue) => issue?.fields?.status?.statusCategory?.key !== 'done') || null
     );
@@ -480,19 +489,54 @@ async function handleVerify({ user, body }) {
  *
  * @param {object} params  the POST JSON body, or the GET query string
  */
-async function handleAdminEligibleIssues(params, headers) {
+async function handleAdminEligibleIssues(env, params, headers) {
+  // Two read-only modes share this authentication, because they answer two
+  // different questions about the same project:
+  //
+  //   (default)        which SEO findings COULD become Jira issues, from
+  //                    SEOX's own store. Zero Jira calls. Unchanged.
+  //   mode: "tickets"  DEPRECATED - moved to its own route, GET/POST
+  //                    /api/jira/tickets, which is what the application now
+  //                    calls. Kept working here because it was a documented
+  //                    admin_token API and something outside this repository
+  //                    may still be calling it; removing a published endpoint
+  //                    without notice breaks callers silently. Both go
+  //                    through getJiraTicketFeed(), so they cannot drift.
+  //
+  // The tickets mode exists because the default one structurally cannot show
+  // a ticket SEOX did not file: it reports findings joined to
+  // `jira_issue_links`, so a Jira project full of issues raised by hand looks
+  // identical to an empty one. That is also why it outgrew being a mode of
+  // this route and now has one of its own.
+  const wantsTickets = String(params?.mode || '').trim().toLowerCase() === 'tickets';
+
   try {
-    const payload = await getJiraEligibleIssues(params);
+    const payload = wantsTickets
+      ? await getJiraTicketFeed(env, params)
+      : await getJiraEligibleIssues(params);
     return jsonResponse(payload, 200, headers);
   } catch (error) {
     const status = Number.isInteger(error?.status) ? error.status : 500;
     // Errors we raise carry a status, so their message is safe to return.
     // Anything else is a driver or runtime failure: log it, return nothing.
-    if (status >= 500) console.error('Jira eligible issues failed:', error?.message || error);
+    if (status >= 500) {
+      console.error(
+        wantsTickets ? 'Jira ticket feed failed:' : 'Jira eligible issues failed:',
+        error?.message || error
+      );
+    }
     return jsonResponse(
       {
         success: false,
-        error: status >= 500 ? 'Failed to retrieve Jira-eligible issues' : error.message,
+        error:
+          status >= 500
+            ? wantsTickets
+              ? 'Failed to retrieve Jira tickets'
+              : 'Failed to retrieve Jira-eligible issues'
+            : error.message,
+        // A project that cannot be resolved is the first link in the chain
+        // the tickets mode reports on, so it carries a code too.
+        ...(status === 404 ? { code: 'PROJECT_NOT_FOUND' } : {}),
       },
       status,
       headers
@@ -520,12 +564,13 @@ export async function onRequest({ request, env }) {
     // selects the mode, so a blank token is a 400 rather than silently becoming
     // an anonymous request.
     if (request.method === 'POST' && body && Object.hasOwn(body, 'admin_token')) {
-      return await handleAdminEligibleIssues(body, headers);
+      return await handleAdminEligibleIssues(env, body, headers);
     }
     if (request.method === 'GET') {
       const adminUrl = new URL(request.url);
       if (adminUrl.searchParams.has('admin_token')) {
         return await handleAdminEligibleIssues(
+          env,
           Object.fromEntries(adminUrl.searchParams.entries()),
           headers
         );

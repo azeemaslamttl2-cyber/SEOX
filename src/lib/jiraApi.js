@@ -19,7 +19,15 @@ function authHeaders(json = false) {
   return headers;
 }
 
-async function request(path, { method = 'GET', body, params } = {}) {
+/**
+ * `signal` is threaded through so a caller can genuinely CANCEL a request,
+ * not merely ignore its answer. Ignoring is enough for correctness - a
+ * component that drops a stale response cannot be corrupted by it - but the
+ * request still runs, still costs a Jira call against an hourly budget of 60,
+ * and still holds a connection. Switching project three times quickly used to
+ * leave three project-list walks in flight.
+ */
+async function request(path, { method = 'GET', body, params, signal } = {}) {
   const url = new URL(`${BASE}${path}`, window.location.origin);
   for (const [key, value] of Object.entries(params || {})) {
     if (value === undefined || value === null || value === '') continue;
@@ -31,6 +39,7 @@ async function request(path, { method = 'GET', body, params } = {}) {
     method,
     headers: authHeaders(Boolean(body)),
     ...(body ? { body: JSON.stringify(body) } : {}),
+    signal,
   });
 
   const data = await response.json().catch(() => ({}));
@@ -73,8 +82,17 @@ export function regenerateJiraWebhookSecret(projectId) {
 
 // --- Metadata --------------------------------------------------------------
 
-export function listJiraProjects(projectId, query) {
-  return request('/metadata', { params: { projectId, resource: 'projects', query } });
+/**
+ * Every Jira project the connection for `projectId` can see.
+ *
+ * The server walks Jira's pagination, so this is the complete list rather
+ * than its first page - and it answers `complete: false` when it could not
+ * finish the walk. A caller that ignores that field is displaying a partial
+ * list as though it were whole, which is the failure this endpoint was fixed
+ * to stop.
+ */
+export function listJiraProjects(projectId, query, { signal } = {}) {
+  return request('/metadata', { params: { projectId, resource: 'projects', query }, signal });
 }
 
 export function listJiraIssueTypes(projectId, jiraProjectId) {
@@ -85,8 +103,8 @@ export function listJiraStatuses(projectId, jiraProjectId) {
   return request('/metadata', { params: { projectId, resource: 'statuses', jiraProjectId } });
 }
 
-export function listJiraPriorities(projectId) {
-  return request('/metadata', { params: { projectId, resource: 'priorities' } });
+export function listJiraPriorities(projectId, { signal } = {}) {
+  return request('/metadata', { params: { projectId, resource: 'priorities' }, signal });
 }
 
 export function listJiraAssignable(projectId, jiraProjectKey, query) {
