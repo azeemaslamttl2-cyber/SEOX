@@ -4085,6 +4085,104 @@ select[aria-invalid="true"]:focus {
   box-shadow: 0 0 0 3px rgba(217, 45, 32, 0.12) !important;
 }
 
+/* --- Searchable select (components/ui/SearchableSelect.jsx) -------
+   Its trigger and its rows are <button>s, so the recipe above - which
+   matches on input/textarea/select - does not reach them. These rules
+   give the trigger the same surface, border, radius and focus ring from
+   the same variables, so it stays level with the real <select> beside
+   it.
+
+   The colours carry !important for the reason .speed-retest-button
+   does: the application-wide button colour system further down this
+   file paints any button without a recognised variant class brand red,
+   with !important, so a named component rule has to opt out the same
+   way. Without it the field rendered as a solid red button and every
+   row of the list turned red on hover.
+   ------------------------------------------------------------------ */
+.searchable-select-trigger {
+  background-color: var(--surface) !important;
+  border-color: var(--border) !important;
+  color: var(--text-primary) !important;
+  border-radius: var(--radius-md);
+  font-weight: 400;
+}
+/* Hover and active restate the background and the text colour rather
+   than only the border. The app-wide `button:hover` and `button:active`
+   rules score (0,2,1), which beats the base rule above, so anything left
+   undeclared here falls back to brand red - which is exactly how the
+   field first rendered as a solid red button the moment it was clicked. */
+.searchable-select-trigger:hover:not(:disabled),
+.searchable-select-trigger:active:not(:disabled) {
+  background-color: var(--surface) !important;
+  color: var(--text-primary) !important;
+  border-color: var(--border-strong) !important;
+}
+.searchable-select-trigger:focus-visible {
+  outline: none !important;
+  border-color: var(--brand-red) !important;
+  box-shadow: 0 0 0 3px rgba(223, 60, 39, 0.12) !important;
+}
+/* Open: the border alone. The ring is dropped because the panel sits
+   6px below and clips it, leaving a red sliver along the panel's top
+   edge rather than a ring. */
+.searchable-select-trigger[aria-expanded="true"] {
+  border-color: var(--brand-red) !important;
+  box-shadow: none !important;
+}
+.searchable-select-trigger:disabled {
+  background-color: var(--surface-muted) !important;
+  border-color: var(--border) !important;
+  color: var(--text-disabled) !important;
+  opacity: 1;
+}
+.searchable-select-placeholder {
+  color: var(--text-disabled) !important;
+}
+.searchable-select-panel {
+  background-color: var(--surface-raised);
+  border-color: var(--border);
+}
+/* A composed field: the icon and the input share one row, and the row
+   owns the border. The inner input is opted out of the global field ring
+   alongside the product's other composed fields. */
+.searchable-select-search {
+  border-color: var(--border-subtle);
+  color: var(--text-muted);
+}
+.searchable-select-search input {
+  color: var(--text-primary);
+}
+.searchable-select-search input::placeholder {
+  color: var(--text-disabled);
+  opacity: 1;
+}
+.searchable-select-empty {
+  color: var(--text-muted);
+}
+.searchable-select-option {
+  background-color: transparent !important;
+  color: var(--text-secondary) !important;
+  border-radius: 0;
+  font-weight: 400;
+  text-align: left;
+}
+/* Hover and keyboard highlight are the same state on purpose: the mouse
+   moves the highlight, so there is never a second one to explain. The
+   :hover selector is here only to outscore the app-wide button hover
+   fill, which would otherwise paint whichever row the pointer is over
+   brand red. */
+.searchable-select-option[data-active="true"],
+.searchable-select-option:hover:not(:disabled),
+.searchable-select-option:active:not(:disabled) {
+  background-color: var(--surface-hover) !important;
+  color: var(--text-primary) !important;
+}
+.searchable-select-option[data-selected="true"],
+.searchable-select-option[data-selected="true"]:hover:not(:disabled) {
+  color: var(--brand-red) !important;
+  font-weight: 600;
+}
+
 /* Labels and helper text share one rhythm. */
 label {
   font-size: 13px;
@@ -14011,7 +14109,8 @@ select:focus-visible {
 .app-topbar-search input:focus-visible,
 .sres-search input:focus-visible,
 .stool-inline-panel input:focus-visible,
-.schema-quickfill-head input:focus-visible {
+.schema-quickfill-head input:focus-visible,
+.searchable-select-search input:focus-visible {
   border-color: transparent !important;
   box-shadow: none !important;
 }
