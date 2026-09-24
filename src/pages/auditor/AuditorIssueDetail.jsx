@@ -502,7 +502,7 @@ function WhyFixTooltip({ data }) {
       </button>
       <span
         role="tooltip"
-        className="pointer-events-none absolute left-0 top-full z-30 mt-2 w-[340px] rounded-lg border border-white/10 bg-ink-950/95 p-3 text-left text-xs leading-relaxed text-white/70 opacity-0 shadow-2xl shadow-black/40 backdrop-blur transition group-hover:opacity-100 group-focus-within:opacity-100"
+        className="pointer-events-none absolute left-0 top-full z-10 mt-2 w-[340px] rounded-lg border border-white/10 bg-ink-950/95 p-3 text-left text-xs leading-relaxed text-white/70 opacity-0 shadow-2xl shadow-black/40 backdrop-blur transition group-hover:opacity-100 group-focus-within:opacity-100"
       >
         <span className="block text-[11px] font-semibold uppercase tracking-wide text-brand-200">
           Why it matters

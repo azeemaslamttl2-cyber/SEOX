@@ -12,6 +12,7 @@ import {
   Plus,
   Square,
   Trash2,
+  X,
 } from "lucide-react";
 import { project as fallbackProject } from "../../data/auditorData.js";
 import { useAuth } from "../../context/AuthContext.jsx";
@@ -196,11 +197,8 @@ export default function TopBar() {
         </button>
 
         {isCrawling ? (
-          <button
-            onClick={stopCrawl}
-            className="group inline-flex items-center gap-1.5 rounded-lg border border-rose-500/40 bg-rose-500/10 px-3.5 py-2 text-xs font-semibold text-rose-300 transition hover:bg-rose-500/20"
-          >
-            <Square className="h-3.5 w-3.5 fill-current" /> Stop crawl
+          <button onClick={stopCrawl} className="crawl-stop">
+            <Square className="fill-current" /> Stop crawl
           </button>
         ) : (
           <button
@@ -236,52 +234,116 @@ export default function TopBar() {
   );
 }
 
+/**
+ * The segment builder, opened from the top bar.
+ *
+ * Presentation only, as it was before: nothing here is wired up yet. Every
+ * control is a placeholder for the rule engine, so this is a layout of the
+ * form the engine will eventually fill, not a form that does anything.
+ *
+ * It was the last dark-theme screen left in the auditor. The panel carried a
+ * hard-coded `bg-[#2f3032]`, which the light-theme compatibility layer has no
+ * way to rewrite, and none of its buttons declared a recognised variant class
+ * - so the application-wide button hierarchy painted every one of them solid
+ * brand red. A filter builder where AND, OR, Previous, Current, + Rule,
+ * + Group and the remove button are all the same red pill says nothing about
+ * which of them is selected. Styling now lives in the `.segment-*` rules in
+ * index.css, on the same tokens as the rest of the product.
+ */
 function SegmentModal({ resultCount, onClose }) {
   return (
-    <div className="fixed inset-0 z-50 bg-black/50">
-      <div className="absolute right-6 top-16 w-[min(1030px,calc(100vw-48px))] overflow-hidden rounded-lg border border-white/10 bg-[#2f3032] text-white shadow-2xl">
-        <div className="flex items-center justify-between border-b border-white/10 px-3 py-3">
-          <h2 className="text-lg font-bold">Segment filter</h2>
-          <button onClick={onClose} className="rounded p-1 text-white/45 hover:bg-white/10 hover:text-white">
-            x
+    <div className="segment-backdrop">
+      <div
+        className="segment-panel"
+        role="dialog"
+        aria-modal="true"
+        aria-label="Segment filter"
+      >
+        <header className="segment-head">
+          <span className="segment-head-icon" aria-hidden="true">
+            <Layers />
+          </span>
+          <div className="segment-head-copy">
+            <h2>Segment filter</h2>
+            <p>Narrow the crawl to the pages that match these rules.</p>
+          </div>
+          <button onClick={onClose} className="segment-close" aria-label="Close">
+            <X />
           </button>
+        </header>
+
+        <div className="segment-body">
+          {/* How the rules combine. A segmented control, so the chosen one is
+              the only filled pill on the row. */}
+          <div className="segment-seg" role="group" aria-label="Combine rules with">
+            <button type="button" className="segment-seg-btn is-active" aria-pressed="true">
+              AND
+            </button>
+            <button type="button" className="segment-seg-btn" aria-pressed="false">
+              OR
+            </button>
+          </div>
+
+          <div className="segment-rule">
+            <div className="segment-seg" role="group" aria-label="Crawl to compare">
+              <button type="button" className="segment-seg-btn" aria-pressed="false">
+                Previous
+              </button>
+              <button type="button" className="segment-seg-btn is-active" aria-pressed="true">
+                Current
+              </button>
+            </div>
+
+            <label className="segment-field">
+              <span className="segment-field-label">Field</span>
+              <select className="segment-select" aria-label="Field">
+                <option>URL</option>
+                <option>Status code</option>
+                <option>Content type</option>
+              </select>
+            </label>
+
+            <label className="segment-field">
+              <span className="segment-field-label">Condition</span>
+              <select className="segment-select" aria-label="Condition">
+                <option>Exists</option>
+                <option>Contains</option>
+                <option>Does not contain</option>
+              </select>
+            </label>
+
+            <button type="button" className="segment-rule-remove" aria-label="Remove this rule">
+              <Trash2 />
+            </button>
+          </div>
+
+          <div className="segment-add">
+            <button type="button" className="segment-btn">
+              <Plus />
+              Rule
+            </button>
+            <button type="button" className="segment-btn">
+              <Plus />
+              Group
+            </button>
+          </div>
         </div>
-        <div className="space-y-2 border-b border-white/10 p-3">
-          <div className="flex items-center">
-            <button className="rounded-l border border-amber-500/40 bg-amber-600 px-3 py-1 text-xs font-bold">AND</button>
-            <button className="rounded-r border border-white/20 px-3 py-1 text-xs font-bold text-white/75">OR</button>
-          </div>
-          <div className="flex flex-wrap items-center gap-2">
-            <button className="rounded border border-white/20 px-3 py-1 text-xs font-semibold text-white/75">Previous</button>
-            <button className="rounded border border-amber-500/40 bg-amber-600 px-3 py-1 text-xs font-semibold">Current</button>
-            <select className="h-8 min-w-64 rounded border border-white/20 bg-[#353638] px-2 text-xs">
-              <option>URL</option>
-              <option>Status code</option>
-              <option>Content type</option>
-            </select>
-            <select className="h-8 min-w-48 rounded border border-white/20 bg-[#353638] px-2 text-xs">
-              <option>Exists</option>
-              <option>Contains</option>
-              <option>Does not contain</option>
-            </select>
-            <button className="h-8 rounded border border-white/20 px-3 text-lg leading-none text-white/80">x</button>
-          </div>
-          <div className="flex items-center gap-2">
-            <button className="rounded border border-white/20 px-3 py-1 text-xs font-semibold text-white/80">+ Rule</button>
-            <button className="rounded border border-white/20 px-3 py-1 text-xs font-semibold text-white/80">+ Group</button>
-          </div>
-        </div>
-        <div className="flex items-center gap-4 border-b border-white/10 px-3 py-4">
-          <button disabled className="rounded border border-white/10 bg-white/10 px-5 py-2 text-sm font-semibold text-white/35">
+
+        <footer className="segment-foot">
+          <button type="button" disabled className="segment-btn is-primary">
             Apply
           </button>
-          <span className="text-sm font-semibold text-white/55">
-            {resultCount.toLocaleString()} results matching
+          <span className="segment-count">
+            <strong>{resultCount.toLocaleString()}</strong> results matching
           </span>
-          <button className="text-sm font-semibold text-sky-300 hover:underline">Reset</button>
-          <button className="ml-auto text-sm font-semibold text-white/55 hover:text-white">+ Save segment...</button>
-        </div>
-        <div className="h-[50vh]" />
+          <button type="button" className="segment-link">
+            Reset
+          </button>
+          <button type="button" className="segment-link is-end">
+            <Plus />
+            Save segment
+          </button>
+        </footer>
       </div>
     </div>
   );

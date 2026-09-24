@@ -1,7 +1,16 @@
 import React, { useState } from 'react';
 import {
     BookOpen, Map, Globe, Presentation, Search, ExternalLink,
-    ChevronDown, ChevronUp, Link2, Sparkles
+    ChevronDown, ChevronUp, Link2, Sparkles,
+    // Per-resource icons. These replaced emoji: an emoji is drawn by the
+    // operating system, so it arrived flat on one machine and glossy on
+    // another, kept its own colours whatever the brand, and sat at a
+    // different optical weight from every lucide glyph beside it.
+    // A card never repeats the icon of the section it sits in: the section
+    // header names the whole group, so reusing it on the first card made the
+    // two read as the same thing.
+    Clapperboard, Compass, GraduationCap, ListChecks, MapPin, Network,
+    NotebookPen, Projector, Target
 } from 'lucide-react';
 
 // ============================================================================
@@ -14,7 +23,7 @@ const DOCUMENTS = [
         name: 'Advanced Semantic SEO Notes',
         description: 'In-depth notes on advanced semantic SEO strategies and techniques',
         url: 'https://docs.google.com/document/d/1aMeZq-55IIBXXqBVdrdFVt_nwgT-AVcN5OES1RplMwY/edit?tab=t.0',
-        icon: '📖',
+        icon: NotebookPen,
         type: 'Google Doc'
     },
     {
@@ -22,7 +31,7 @@ const DOCUMENTS = [
         name: 'Semantic SEO Course Notes',
         description: 'Complete notes from the Semantic SEO course curriculum',
         url: 'https://docs.google.com/document/d/1HZt5y2ZxmVUvh1QALzNdkn3SR6oGyQXZUqHsbZszqAU/edit?tab=t.385hhjonffzm#heading=h.ifca5oydvlvv',
-        icon: '🎓',
+        icon: GraduationCap,
         type: 'Google Doc'
     },
     {
@@ -30,7 +39,7 @@ const DOCUMENTS = [
         name: 'Koray YouTube Video Notes',
         description: "Notes from Koray's YouTube videos on semantic SEO",
         url: 'https://docs.google.com/document/d/1I3j_KVaA6eehvxJfsHFC5KtRbeCNcBzl5ZDPyCivRhk/edit?tab=t.0',
-        icon: '🎬',
+        icon: Clapperboard,
         type: 'Google Doc'
     }
 ];
@@ -41,28 +50,28 @@ const TOPICAL_MAPS = [
         name: 'Topical Map Steps',
         description: 'Step-by-step guide to creating topical maps',
         url: 'https://docs.google.com/spreadsheets/d/1-W3opLOA0_Ia8Gs3YfqxgCMB-rZ59wslUNg-U1M4tnc/edit?gid=506888662#gid=506888662',
-        icon: '📋'
+        icon: ListChecks
     },
     {
         id: 'example_1',
         name: 'Example Topical Map 1',
         description: 'Real-world topical map example for reference',
         url: 'https://docs.google.com/spreadsheets/d/1Mxk4opFgKkZf897OXeBDsRF6Rq8CnaElg_KbNPr9rmU/edit?gid=406846650#gid=406846650',
-        icon: '🗺️'
+        icon: Compass
     },
     {
         id: 'example_2',
         name: 'Example Topical Map 2',
         description: 'Another topical map example with different niche',
         url: 'https://docs.google.com/spreadsheets/d/1EzltyZ4Xk3nyDQvhXkL9i_Uw5xPoqFpTu9WLc3z1eYQ/edit#gid=1152234775',
-        icon: '🎯'
+        icon: Target
     },
     {
         id: 'example_3',
         name: 'Example Topical Map 3',
         description: 'Third topical map example for additional reference',
         url: 'https://docs.google.com/spreadsheets/d/1YuyWXy2QOHkAoc7MXLzFeh8HlI16l7LFFE4kPrlD2MA/edit?usp=sharing',
-        icon: '📍'
+        icon: MapPin
     }
 ];
 
@@ -92,7 +101,7 @@ const SEMANTIC_TOOLS = [
         name: 'Wiki Graph',
         description: 'Visualize Wikipedia knowledge graphs for entity research',
         url: 'https://blinpete.github.io/wiki-graph/?lang=en&query=Scaffolding&wordle=',
-        icon: '🕸️'
+        icon: Network
     }
 ];
 
@@ -100,8 +109,13 @@ const SEO_SLIDES = {
     name: 'Semantic SEO Slides',
     description: 'Complete presentation on Semantic SEO fundamentals',
     url: 'https://docs.google.com/presentation/d/15INsgGsQ2CmHmMISgz4Gy5mM8nvgGsgoCH4PJcCtB04/edit',
-    icon: '📽️'
+    icon: Projector
 };
+
+// The slides are a single entry rather than a list, so its icon is named here
+// instead of inside a map callback. JSX only treats a capitalised identifier
+// as a component.
+const SlidesIcon = SEO_SLIDES.icon;
 
 // Helper to get favicon URL from any website
 const getFaviconUrl = (url, size = 64) => {
@@ -176,8 +190,10 @@ const SemanticResourcesPage = () => {
                 </button>
 
                 {expandedSections.documents && (
-                    <div className="px-6 pb-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                        {DOCUMENTS.map(doc => (
+                    <div className="sres-section-body grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                        {DOCUMENTS.map(doc => {
+                            const DocIcon = doc.icon;
+                            return (
                             <a
                                 key={doc.id}
                                 href={doc.url}
@@ -187,7 +203,9 @@ const SemanticResourcesPage = () => {
                             >
                                 <div className="relative">
                                     <div className="flex items-center justify-between mb-3">
-                                        <span className="sres-card-emoji">{doc.icon}</span>
+                                        <span className="sres-card-icon" aria-hidden="true">
+                                            <DocIcon />
+                                        </span>
                                         <span className="ctool-count-badge">{doc.type}</span>
                                     </div>
                                     <h3 className="sres-card-title line-clamp-2">{doc.name}</h3>
@@ -198,7 +216,8 @@ const SemanticResourcesPage = () => {
                                     </div>
                                 </div>
                             </a>
-                        ))}
+                            );
+                        })}
                     </div>
                 )}
             </section>
@@ -224,14 +243,16 @@ const SemanticResourcesPage = () => {
                 </button>
 
                 {expandedSections.slides && (
-                    <div className="px-6 pb-6">
+                    <div className="sres-section-body">
                         <a
                             href={SEO_SLIDES.url}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="sres-card sres-row group"
                         >
-                            <span className="sres-card-emoji">{SEO_SLIDES.icon}</span>
+                            <span className="sres-card-icon" aria-hidden="true">
+                                <SlidesIcon />
+                            </span>
                             <div className="flex-1">
                                 <h3 className="sres-card-title">{SEO_SLIDES.name}</h3>
                                 <p className="sres-section-sub">{SEO_SLIDES.description}</p>
@@ -263,8 +284,10 @@ const SemanticResourcesPage = () => {
                 </button>
 
                 {expandedSections.topicalMaps && (
-                    <div className="px-6 pb-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                        {TOPICAL_MAPS.map(map => (
+                    <div className="sres-section-body grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                        {TOPICAL_MAPS.map(map => {
+                            const MapIcon = map.icon;
+                            return (
                             <a
                                 key={map.id}
                                 href={map.url}
@@ -273,7 +296,9 @@ const SemanticResourcesPage = () => {
                                 className="sres-card group"
                             >
                                 <div className="relative">
-                                    <span className="sres-card-emoji mb-3">{map.icon}</span>
+                                    <span className="sres-card-icon mb-3" aria-hidden="true">
+                                        <MapIcon />
+                                    </span>
                                     <h3 className="sres-card-title">{map.name}</h3>
                                     <p className="sres-section-sub">{map.description}</p>
                                     <div className="sres-card-link">
@@ -282,7 +307,8 @@ const SemanticResourcesPage = () => {
                                     </div>
                                 </div>
                             </a>
-                        ))}
+                            );
+                        })}
                     </div>
                 )}
             </section>
@@ -308,7 +334,7 @@ const SemanticResourcesPage = () => {
                 </button>
 
                 {expandedSections.websites && (
-                    <div className="px-6 pb-6">
+                    <div className="sres-section-body">
                         {/* Search */}
                         <div className="mb-4 relative">
                             <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 sres-search-icon" />
@@ -376,8 +402,10 @@ const SemanticResourcesPage = () => {
                 </button>
 
                 {expandedSections.tools && (
-                    <div className="px-6 pb-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                        {SEMANTIC_TOOLS.map(tool => (
+                    <div className="sres-section-body grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                        {SEMANTIC_TOOLS.map(tool => {
+                            const ToolIcon = tool.icon;
+                            return (
                             <a
                                 key={tool.id}
                                 href={tool.url}
@@ -385,14 +413,17 @@ const SemanticResourcesPage = () => {
                                 rel="noopener noreferrer"
                                 className="sres-card sres-row group"
                             >
-                                <span className="sres-card-emoji">{tool.icon}</span>
+                                <span className="sres-card-icon" aria-hidden="true">
+                                    <ToolIcon />
+                                </span>
                                 <div className="flex-1">
                                     <h3 className="sres-card-title">{tool.name}</h3>
                                     <p className="sres-section-sub">{tool.description}</p>
                                 </div>
                                 <ExternalLink className="w-5 h-5" />
                             </a>
-                        ))}
+                            );
+                        })}
                     </div>
                 )}
             </section>

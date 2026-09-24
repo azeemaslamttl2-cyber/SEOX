@@ -197,7 +197,13 @@ export default function SearchableSelect({
         aria-haspopup="listbox"
         aria-expanded={open}
         aria-controls={open ? listboxId : undefined}
-        className="searchable-select-trigger flex w-full items-center gap-2 border px-3 py-2.5 text-left text-sm outline-none transition disabled:cursor-not-allowed"
+        /* Size and type scale are deliberately NOT set here. They belong to
+           `.searchable-select-trigger` in index.css, which takes them from
+           the same --control-h and 13px the real <select> beside this one
+           uses. Utilities here (`py-2.5 text-sm`) made the field 42px/14px
+           against a native select's 38px/13px, and a padding utility also
+           beats a min-height, so the rule could not correct it from CSS. */
+        className="searchable-select-trigger flex w-full items-center gap-2 border text-left outline-none transition disabled:cursor-not-allowed"
       >
         <span className={`flex-1 truncate ${selected ? "" : "searchable-select-placeholder"}`}>
           {selected ? selected.label : placeholder}
@@ -221,12 +227,12 @@ export default function SearchableSelect({
               aria-label={searchPlaceholder}
               aria-controls={listboxId}
               aria-autocomplete="list"
-              className="w-full border-0 bg-transparent py-2.5 text-sm outline-none"
+              className="searchable-select-search-input w-full border-0 bg-transparent outline-none"
             />
           </div>
 
           {matches.length === 0 ? (
-            <p className="searchable-select-empty px-3 py-4 text-sm">{emptyMessage}</p>
+            <p className="searchable-select-empty px-3 py-4">{emptyMessage}</p>
           ) : (
             <div
               id={listboxId}
@@ -251,7 +257,7 @@ export default function SearchableSelect({
                     style={{ height: ROW_HEIGHT }}
                     onMouseEnter={() => setActiveIndex(index)}
                     onClick={() => commit(option)}
-                    className="searchable-select-option flex w-full items-center gap-2 px-3 text-left text-sm"
+                    className="searchable-select-option flex w-full items-center gap-2 px-3 text-left"
                   >
                     <span className="flex-1 truncate">{option.label}</span>
                     {isSelected && <Check className="h-4 w-4 shrink-0" />}
