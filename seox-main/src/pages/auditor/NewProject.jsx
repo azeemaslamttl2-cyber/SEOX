@@ -272,8 +272,8 @@ export default function NewProject() {
       <header className="sticky top-0 z-20 border-b border-white/10 bg-ink-900/80 backdrop-blur-xl">
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-5">
           <Link to={checksMode ? "/dashboard" : "/auditor"} className="flex items-center gap-2.5">
-            <Logo className="h-8 w-8" />
-            <span className="font-display text-lg font-bold tracking-tight">
+            <Logo className="object-contain w-24 h-auto block" />
+            <span className="font-display text-lg font-bold tracking-tight pt-2.5">
               SEO<span className="text-brand-400">X</span>
             </span>
           </Link>

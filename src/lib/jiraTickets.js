@@ -291,3 +291,48 @@ export function formatDate(value) {
   if (Number.isNaN(ts)) return '—';
   return new Date(ts).toISOString().slice(0, 16).replace('T', ' ');
 }
+
+/* ------------------------------------------------------------------ */
+/*  Presentation helpers                                              */
+/*                                                                    */
+/*  Shared by the ticket table and the detail drawer so a severity or */
+/*  a person never reads one way in the list and another in the       */
+/*  panel. They map a value onto a token name; the colours themselves */
+/*  live in the .jira-* rules in index.css.                           */
+/* ------------------------------------------------------------------ */
+
+/** Semantic tone for an SEO severity. */
+export function severityTone(severity) {
+  if (severity === 'error') return 'error';
+  if (severity === 'warning') return 'warning';
+  return 'neutral';
+}
+
+/** Semantic tone for a Jira status category. */
+export function categoryTone(category) {
+  if (category === 'done') return 'success';
+  if (category === 'indeterminate') return 'info';
+  return 'neutral';
+}
+
+/** Up to two initials, for an avatar. */
+export function initialsOf(name) {
+  const parts = String(name || '')
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean);
+  if (!parts.length) return '';
+  const first = parts[0][0] || '';
+  const last = parts.length > 1 ? parts[parts.length - 1][0] : '';
+  return (first + last).toUpperCase();
+}
+
+/** A stable tint per person, so the same face keeps the same colour. */
+export function avatarTint(name) {
+  const value = String(name || '');
+  let hash = 0;
+  for (let i = 0; i < value.length; i += 1) {
+    hash = (hash * 31 + value.charCodeAt(i)) % 997;
+  }
+  return hash % 5;
+}

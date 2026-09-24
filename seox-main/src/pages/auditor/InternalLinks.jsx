@@ -715,11 +715,11 @@ export default function InternalLinks() {
             <colgroup>
               <col style={{ width: 56 }} />
               <col style={{ width: 300 }} />
-              <col style={{ width: 82 }} />
-              <col style={{ width: 92 }} />
+              <col style={{ width: 100 }} />
+              <col style={{ width: 115 }} />
               <col style={{ width: 150 }} />
               <col style={{ width: 380 }} />
-              <col style={{ width: 98 }} />
+              <col style={{ width: 130 }} />
               <col style={{ width: 88 }} />
               <col style={{ width: 310 }} />
               <col style={{ width: 92 }} />

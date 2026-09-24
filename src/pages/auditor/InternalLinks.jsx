@@ -715,11 +715,11 @@ export default function InternalLinks() {
             <colgroup>
               <col style={{ width: 56 }} />
               <col style={{ width: 300 }} />
-              <col style={{ width: 82 }} />
-              <col style={{ width: 92 }} />
+              <col style={{ width: 100 }} />
+              <col style={{ width: 115 }} />
               <col style={{ width: 150 }} />
               <col style={{ width: 380 }} />
-              <col style={{ width: 98 }} />
+              <col style={{ width: 130 }} />
               <col style={{ width: 88 }} />
               <col style={{ width: 310 }} />
               <col style={{ width: 92 }} />
@@ -846,7 +846,9 @@ function highlight(text, keyword) {
   const parts = text.split(new RegExp(`(${escaped})`, "gi"));
   return parts.map((p, i) =>
     p.toLowerCase() === keyword.toLowerCase() ? (
-      <mark key={i} className="rounded bg-brand-500/25 px-0.5 text-brand-200 font-semibold">{p}</mark>
+      // <mark> carries a UA default background, so its rule sets both
+      // colours rather than relying on a tint alone.
+      <mark key={i} className="ilink-mark">{p}</mark>
     ) : (
       <span key={i}>{p}</span>
     )
@@ -865,41 +867,39 @@ function ContextPatchCell({ row }) {
   };
 
   return (
-    <div className="space-y-2">
-      <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-brand-300">
-        <Target className="h-2.5 w-2.5" /> {row.reason}
+    <div className="ilink-cell">
+      <span className="ilink-reason">
+        <Target aria-hidden="true" />
+        {row.reason}
       </span>
 
-      <p className="rounded-md bg-black/25 px-2.5 py-2 text-sm leading-snug text-white/75">
+      {/* The captured sentence, quoted. It is evidence rather than prose, so
+          it is set apart as a quotation with the keyword marked inside it. */}
+      <blockquote className="ilink-context">
         {highlight(row.context, row.keyword)}
+      </blockquote>
+
+      <p className="ilink-anchor">
+        <Link2 aria-hidden="true" />
+        <span className="ilink-anchor-label">Anchor</span>
+        <span className="ilink-anchor-value">{row.anchor}</span>
       </p>
 
-      <div className="flex items-center gap-1.5 text-[11px]">
-        <Link2 className="h-3 w-3 text-brand-400 flex-shrink-0" />
-        <span className="text-white/40">Anchor:</span>
-        <span className="font-medium text-brand-200">&quot;{row.anchor}&quot;</span>
-      </div>
-
       {row.canPatch && (
-        <div>
+        <div className="ilink-patch-wrap">
           <button
             onClick={() => setExpanded(!expanded)}
-            className="flex items-center gap-1 text-[11px] font-semibold text-emerald-400 transition-colors hover:text-emerald-300"
+            className="ilink-patch-toggle"
+            aria-expanded={expanded}
           >
-            <ArrowRight className={`h-3 w-3 transition-transform ${expanded ? "rotate-90" : ""}`} />
+            <ArrowRight className={expanded ? "is-open" : ""} aria-hidden="true" />
             {expanded ? "Hide patch" : "Show HTML patch"}
           </button>
           {expanded && (
-            <div className="mt-1 flex items-start gap-1.5 rounded-md border border-white/10 bg-black/40 p-2">
-              <code className="flex-1 break-all text-[10px] leading-relaxed text-emerald-300/90 font-mono">
-                {row.patchHtml}
-              </code>
-              <button
-                onClick={handleCopy}
-                className="flex-shrink-0 rounded p-1 text-white/40 hover:bg-white/10 hover:text-white transition-colors"
-                title="Copy HTML"
-              >
-                {copied ? <Check className="h-3 w-3 text-emerald-400" /> : <Copy className="h-3 w-3" />}
+            <div className="ilink-patch">
+              <code>{row.patchHtml}</code>
+              <button onClick={handleCopy} className="ilink-patch-copy" title="Copy HTML">
+                {copied ? <Check className="is-done" /> : <Copy />}
               </button>
             </div>
           )}

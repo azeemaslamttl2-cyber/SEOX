@@ -58,15 +58,14 @@ const REOPEN_OPTIONS = [
   { value: "none", label: "Do nothing in Jira", hint: "SEOX still shows the finding as reopened." },
 ];
 
-const card = "overflow-hidden rounded-2xl border border-white/10 bg-white/[0.03]";
-const cardHeader = "flex items-center gap-3 border-b border-white/10 px-5 py-4";
-const input =
-  "settings-input w-full rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2.5 text-sm outline-none transition";
-const primaryButton =
-  "inline-flex items-center gap-2 rounded-xl bg-brand-500 px-4 py-2.5 text-sm font-bold text-white transition hover:bg-brand-400 disabled:cursor-not-allowed disabled:opacity-50";
-const quietButton =
-  "inline-flex items-center gap-2 rounded-xl border border-white/10 bg-white/[0.04] px-3.5 py-2 text-sm font-semibold text-white/70 transition hover:bg-white/[0.08] disabled:cursor-not-allowed disabled:opacity-50";
-const label = "block text-sm font-semibold text-white/75";
+/* The shared settings vocabulary, named once here so every control in this
+   long panel keeps the same treatment. The rules live in index.css. */
+const card = "settings-card";
+const cardHeader = "settings-card-head";
+const input = "settings-input";
+const primaryButton = "settings-btn is-primary";
+const quietButton = "settings-btn";
+const label = "settings-label";
 
 function relativeTime(value) {
   if (!value) return "never";
@@ -80,17 +79,12 @@ function relativeTime(value) {
 }
 
 function Banner({ tone, children }) {
-  const tones = {
-    error: "border-red-400/20 bg-red-500/10 text-red-200",
-    success: "border-emerald-400/20 bg-emerald-500/10 text-emerald-200",
-    warning: "border-amber-400/20 bg-amber-500/10 text-amber-200",
-  };
   const Icon = tone === "success" ? CheckCircle2 : tone === "warning" ? AlertTriangle : AlertCircle;
   return (
-    <div className={`flex items-start gap-2 rounded-xl border px-4 py-3 text-sm ${tones[tone]}`}>
-      <Icon className="mt-0.5 h-4 w-4 shrink-0" />
+    <p className="settings-banner" data-tone={tone}>
+      <Icon aria-hidden="true" />
       <span>{children}</span>
-    </div>
+    </p>
   );
 }
 
@@ -532,7 +526,7 @@ export default function JiraPanel() {
 
   if (!projectId) {
     return (
-      <div className="max-w-3xl">
+      <div className="settings-measure">
         <Banner tone="warning">
           Select a project first. Jira is configured per project, so each SEOX project can point at
           its own Jira board.
@@ -543,7 +537,7 @@ export default function JiraPanel() {
 
   if (!serverConfigured) {
     return (
-      <div className="max-w-3xl space-y-4">
+      <div className="settings-measure settings-panel">
         <Banner tone="warning">
           Jira integration is not configured on this server. Ask an administrator to set
           JIRA_TOKEN_ENCRYPTION_KEY, which SEOX uses to encrypt stored Jira credentials.
@@ -553,7 +547,7 @@ export default function JiraPanel() {
   }
 
   return (
-    <div className="max-w-3xl space-y-6 pb-10">
+    <div className="settings-measure settings-panel">
       {error && <Banner tone="error">{error}</Banner>}
       {success && <Banner tone="success">{success}</Banner>}
 
@@ -571,81 +565,78 @@ export default function JiraPanel() {
         </Banner>
       )}
 
-      <p className="text-sm text-white/45">
-        Configuring Jira for <span className="font-semibold text-white/70">{project?.name || projectId}</span>.
+      <p className="settings-lede">
+        Configuring Jira for <strong>{project?.name || projectId}</strong>.
       </p>
 
       {/* ---------------- Connection ---------------- */}
       <section className={card}>
         <div className={cardHeader}>
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-500/15 text-blue-300">
-            <SquareKanban className="h-5 w-5" />
-          </div>
-          <div className="flex-1">
-            <h2 className="font-display text-base font-bold text-white">Connection</h2>
-            <p className="text-xs text-white/40">
+          <span className="settings-card-icon" data-tone="navy" aria-hidden="true">
+            <SquareKanban />
+          </span>
+          <div className="settings-card-titles">
+            <h2>Connection</h2>
+            <p>
               {isLoading
                 ? "Checking…"
                 : connected
                   ? `${status?.baseUrl} — ${status?.accountDisplayName || status?.accountEmail}`
                   : "Not connected"}
-              {connected && projectsState.status === "error" && (
-                <span className="text-amber-300"> · project list unavailable</span>
-              )}
+              {connected && projectsState.status === "error" && " · project list unavailable"}
             </p>
           </div>
           {connected && (
-            <span
-              className={`rounded-full border px-2.5 py-1 text-xs font-semibold ${
-                status?.status === "connected"
-                  ? "border-emerald-500/30 bg-emerald-500/15 text-emerald-300"
-                  : "border-rose-500/30 bg-rose-500/15 text-rose-300"
-              }`}
-            >
-              {status?.status === "connected" ? "Connected" : status?.status?.replace(/_/g, " ")}
-            </span>
+            <div className="settings-card-aside">
+              <span
+                className="settings-pill"
+                data-tone={status?.status === "connected" ? "success" : "error"}
+              >
+                {status?.status === "connected" ? "Connected" : status?.status?.replace(/_/g, " ")}
+              </span>
+            </div>
           )}
         </div>
 
         {!connected ? (
-          <form onSubmit={handleConnect} className="space-y-4 p-5">
-            <div>
+          <form onSubmit={handleConnect} className="settings-card-body">
+            <div className="settings-field">
               <label className={label} htmlFor="jira-base-url">Jira URL</label>
               <input
                 id="jira-base-url"
-                className={`${input} mt-2`}
+                className={input}
                 value={baseUrl}
                 onChange={(event) => setBaseUrl(event.target.value)}
                 placeholder="https://your-team.atlassian.net"
                 disabled={busy === "connect"}
               />
             </div>
-            <div>
+            <div className="settings-field">
               <label className={label} htmlFor="jira-email">Jira account email</label>
               <input
                 id="jira-email"
-                className={`${input} mt-2`}
+                className={input}
                 value={email}
                 onChange={(event) => setEmail(event.target.value)}
                 placeholder="you@company.com"
                 disabled={busy === "connect"}
               />
             </div>
-            <div>
+            <div className="settings-field">
               <label className={label} htmlFor="jira-token">API token</label>
               <input
                 id="jira-token"
                 type="password"
-                className={`${input} mt-2`}
+                className={input}
                 value={apiToken}
                 onChange={(event) => setApiToken(event.target.value)}
                 placeholder="Create one in Atlassian account settings"
                 disabled={busy === "connect"}
               />
-              <p className="mt-2 text-xs text-white/40">
+              <p className="settings-hint">
                 Create a token at{" "}
                 <a
-                  className="text-brand-300 underline"
+                  className="settings-link"
                   href="https://id.atlassian.com/manage-profile/security/api-tokens"
                   target="_blank"
                   rel="noreferrer"
@@ -656,50 +647,57 @@ export default function JiraPanel() {
               </p>
             </div>
 
-            <div className="rounded-xl border border-white/10 bg-white/[0.02] p-4 text-xs text-white/50">
-              <p className="font-semibold text-white/70">What SEOX will and will not do</p>
-              <p className="mt-1">
+            <div className="settings-note">
+              <p className="settings-note-title">What SEOX will and will not do</p>
+              <p>
                 It creates issues, reads their status, and comments when it has re-checked a fix. It
                 never closes, reassigns, reprioritises or deletes anything in Jira.
               </p>
             </div>
 
-            <button type="submit" className={primaryButton} disabled={busy === "connect" || !baseUrl || !email || !apiToken}>
-              {busy === "connect" ? <Loader2 className="h-4 w-4 animate-spin" /> : <PlugZap className="h-4 w-4" />}
-              {busy === "connect" ? "Connecting…" : "Connect Jira"}
-            </button>
+            <div className="settings-actions">
+              <button type="submit" className={primaryButton} disabled={busy === "connect" || !baseUrl || !email || !apiToken}>
+                {busy === "connect" ? <Loader2 className="animate-spin" /> : <PlugZap />}
+                {busy === "connect" ? "Connecting…" : "Connect Jira"}
+              </button>
+            </div>
           </form>
         ) : (
-          <div className="space-y-4 p-5">
-            <dl className="grid grid-cols-2 gap-3 text-xs">
+          <div className="settings-card-body">
+            <dl className="settings-kv">
               <div>
-                <dt className="text-white/40">Connected</dt>
-                <dd className="text-white/70">{relativeTime(status?.connectedAt)}</dd>
+                <dt>Connected</dt>
+                <dd>{relativeTime(status?.connectedAt)}</dd>
               </div>
               <div>
-                <dt className="text-white/40">Last checked</dt>
-                <dd className="text-white/70">{relativeTime(status?.lastCheckedAt)}</dd>
+                <dt>Last checked</dt>
+                <dd>{relativeTime(status?.lastCheckedAt)}</dd>
               </div>
               <div>
-                <dt className="text-white/40">Last sync</dt>
-                <dd className="text-white/70">{relativeTime(status?.lastSyncAt)}</dd>
+                <dt>Last sync</dt>
+                <dd>{relativeTime(status?.lastSyncAt)}</dd>
               </div>
               <div>
-                <dt className="text-white/40">Linked findings</dt>
-                <dd className="text-white/70">{counts?.linked ?? 0}</dd>
+                <dt>Linked findings</dt>
+                <dd>{counts?.linked ?? 0}</dd>
               </div>
             </dl>
 
             {status?.statusDetail && <Banner tone="warning">{status.statusDetail}</Banner>}
             {testResult && !testResult.ok && <Banner tone="error">{testResult.detail}</Banner>}
 
-            <div className="flex flex-wrap gap-2">
+            <div className="settings-actions">
               <button type="button" className={quietButton} onClick={handleTest} disabled={busy === "test"}>
-                {busy === "test" ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
+                {busy === "test" ? <Loader2 className="animate-spin" /> : <RefreshCw />}
                 Test connection
               </button>
-              <button type="button" className={quietButton} onClick={handleDisconnect} disabled={busy === "disconnect"}>
-                <Unplug className="h-4 w-4" />
+              <button
+                type="button"
+                className={`${quietButton} is-danger`}
+                onClick={handleDisconnect}
+                disabled={busy === "disconnect"}
+              >
+                <Unplug />
                 Disconnect
               </button>
             </div>
@@ -711,20 +709,18 @@ export default function JiraPanel() {
       {connected && form?.projectId === projectId && (
         <form onSubmit={handleSaveMapping} className={card}>
           <div className={cardHeader}>
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-violet-500/15 text-violet-300">
-              <Link2 className="h-5 w-5" />
-            </div>
-            <div>
-              <h2 className="font-display text-base font-bold text-white">Jira project mapping</h2>
-              <p className="text-xs text-white/40">
-                {mapping ? `Mapped to ${mapping.jiraProjectKey}` : "Not mapped yet"}
-              </p>
+            <span className="settings-card-icon" data-tone="navy" aria-hidden="true">
+              <Link2 />
+            </span>
+            <div className="settings-card-titles">
+              <h2>Jira project mapping</h2>
+              <p>{mapping ? `Mapped to ${mapping.jiraProjectKey}` : "Not mapped yet"}</p>
             </div>
           </div>
 
-          <div className="space-y-4 p-5">
-            <div className="grid gap-4 sm:grid-cols-2">
-              <div>
+          <div className="settings-card-body">
+            <div className="settings-grid">
+              <div className="settings-field">
                 <label className={label} htmlFor="jira-project">Jira project</label>
                 {/* Searchable rather than a plain <select>: a Jira site
                     routinely has hundreds of boards, and the only way to
@@ -733,7 +729,7 @@ export default function JiraPanel() {
                     loaded - typing never reaches Jira. */}
                 <SearchableSelect
                   id="jira-project"
-                  className="mt-2"
+                  className={input}
                   value={form.jiraProjectId}
                   onChange={(value) => setField("jiraProjectId", value)}
                   options={jiraProjectOptions}
@@ -757,14 +753,10 @@ export default function JiraPanel() {
                 />
 
                 {projectsState.status === "error" && (
-                  <p className="mt-2 flex flex-wrap items-center gap-2 text-xs text-red-300">
-                    <AlertCircle className="h-3.5 w-3.5 shrink-0" />
+                  <p className="settings-field-problem">
+                    <AlertCircle aria-hidden="true" />
                     <span>{projectsState.error}</span>
-                    <button
-                      type="button"
-                      onClick={() => setReloadToken((value) => value + 1)}
-                      className="font-semibold text-red-200 underline underline-offset-2 hover:text-red-100"
-                    >
+                    <button type="button" onClick={() => setReloadToken((value) => value + 1)}>
                       Try again
                     </button>
                   </p>
@@ -775,36 +767,35 @@ export default function JiraPanel() {
                     state, so nothing else would tell the user that the board
                     they are hunting for is missing rather than absent. */}
                 {projectsState.status === "ready" && !projectsState.complete && (
-                  <p className="mt-2 flex flex-wrap items-center gap-2 text-xs text-red-300">
-                    <AlertCircle className="h-3.5 w-3.5 shrink-0" />
+                  <p className="settings-field-problem">
+                    <AlertCircle aria-hidden="true" />
                     <span>
                       Unable to load the complete Jira project list — this Jira site has more
                       projects than SEOX could list in one pass, so some are missing below.
                     </span>
-                    <button
-                      type="button"
-                      onClick={() => setReloadToken((value) => value + 1)}
-                      className="font-semibold text-red-200 underline underline-offset-2 hover:text-red-100"
-                    >
+                    <button type="button" onClick={() => setReloadToken((value) => value + 1)}>
                       Try again
                     </button>
                   </p>
                 )}
 
                 {projectsState.status === "ready" && !jiraProjects.length && (
-                  <p className="mt-2 text-xs text-amber-300">
-                    Jira answered, but the connected account
-                    {status?.accountEmail ? ` (${status.accountEmail})` : ""} can see no projects
-                    on {status?.baseUrl || "this Jira site"}. Grant it access to a project in Jira,
-                    then try again.
+                  <p className="settings-field-problem" data-tone="warning">
+                    <AlertCircle aria-hidden="true" />
+                    <span>
+                      Jira answered, but the connected account
+                      {status?.accountEmail ? ` (${status.accountEmail})` : ""} can see no projects
+                      on {status?.baseUrl || "this Jira site"}. Grant it access to a project in
+                      Jira, then try again.
+                    </span>
                   </p>
                 )}
               </div>
-              <div>
+              <div className="settings-field">
                 <label className={label} htmlFor="jira-issue-type">Default issue type</label>
                 <select
                   id="jira-issue-type"
-                  className={`${input} mt-2`}
+                  className={input}
                   value={form.defaultIssueTypeId}
                   onChange={(event) => setField("defaultIssueTypeId", event.target.value)}
                   disabled={!issueTypes.length}
@@ -817,12 +808,12 @@ export default function JiraPanel() {
               </div>
             </div>
 
-            <div className="grid gap-4 sm:grid-cols-2">
-              <div>
+            <div className="settings-grid">
+              <div className="settings-field">
                 <label className={label} htmlFor="jira-assignee">Default assignee</label>
                 <select
                   id="jira-assignee"
-                  className={`${input} mt-2`}
+                  className={input}
                   value={form.defaultAssigneeAccountId}
                   onChange={(event) => setField("defaultAssigneeAccountId", event.target.value)}
                 >
@@ -831,36 +822,36 @@ export default function JiraPanel() {
                     <option key={user.accountId} value={user.accountId}>{user.displayName}</option>
                   ))}
                 </select>
-                <p className="mt-1 text-xs text-white/35">
+                <p className="settings-hint">
                   Leaving this unset lets the team triage as they normally would.
                 </p>
               </div>
-              <div>
+              <div className="settings-field">
                 <label className={label} htmlFor="jira-labels">Labels</label>
                 <input
                   id="jira-labels"
-                  className={`${input} mt-2`}
+                  className={input}
                   value={form.defaultLabels}
                   onChange={(event) => setField("defaultLabels", event.target.value)}
                   placeholder="seox, seo"
                 />
-                <p className="mt-1 text-xs text-white/35">
+                <p className="settings-hint">
                   Comma separated. <code>seox</code> is always applied — sync depends on it.
                 </p>
               </div>
             </div>
 
-            <div>
+            <div className="settings-field">
               <span className={label}>Severity to Jira priority</span>
-              <div className="mt-2 grid gap-3 sm:grid-cols-3">
+              <div className="settings-grid-3">
                 {SEVERITIES.map((severity) => (
-                  <div key={severity.key}>
-                    <label className="text-xs text-white/45" htmlFor={`prio-${severity.key}`}>
+                  <div key={severity.key} className="settings-field">
+                    <label className="settings-sublabel" htmlFor={`prio-${severity.key}`}>
                       {severity.label}
                     </label>
                     <select
                       id={`prio-${severity.key}`}
-                      className={`${input} mt-1`}
+                      className={input}
                       value={form.severityPriorityMap?.[severity.key] || ""}
                       onChange={(event) =>
                         setField("severityPriorityMap", {
@@ -880,12 +871,12 @@ export default function JiraPanel() {
             </div>
 
             {components.length > 0 && (
-              <div>
+              <div className="settings-field">
                 <label className={label} htmlFor="jira-components">Components</label>
                 <select
                   id="jira-components"
                   multiple
-                  className={`${input} mt-2 h-24`}
+                  className={input}
                   value={form.components}
                   onChange={(event) =>
                     setField(
@@ -901,47 +892,44 @@ export default function JiraPanel() {
               </div>
             )}
 
-            <div className="space-y-3 rounded-xl border border-white/10 bg-white/[0.02] p-4">
-              <label className="flex items-start gap-2 text-sm text-white/65">
+            <div className="settings-checks">
+              <label className="settings-check">
                 <input
                   type="checkbox"
-                  className="mt-1"
                   checked={form.autoSyncEnabled}
                   onChange={(event) => setField("autoSyncEnabled", event.target.checked)}
                 />
-                <span>
+                <span className="settings-check-text">
                   Keep statuses in sync
-                  <span className="block text-xs text-white/35">
+                  <span className="settings-check-note">
                     SEOX reads Jira status changes and re-checks fixes automatically.
                   </span>
                 </span>
               </label>
 
-              <label className="flex items-start gap-2 text-sm text-white/65">
+              <label className="settings-check">
                 <input
                   type="checkbox"
-                  className="mt-1"
                   checked={form.postVerificationComments}
                   onChange={(event) => setField("postVerificationComments", event.target.checked)}
                 />
-                <span>
+                <span className="settings-check-text">
                   Comment in Jira when a fix is verified
-                  <span className="block text-xs text-white/35">
+                  <span className="settings-check-note">
                     A failed re-check is always commented, since that is news the team needs.
                   </span>
                 </span>
               </label>
 
-              <label className="flex items-start gap-2 text-sm text-white/65">
+              <label className="settings-check">
                 <input
                   type="checkbox"
-                  className="mt-1"
                   checked={form.autoCreateEnabled}
                   onChange={(event) => setField("autoCreateEnabled", event.target.checked)}
                 />
-                <span>
+                <span className="settings-check-text">
                   Create issues automatically for critical findings
-                  <span className="block text-xs text-amber-300/70">
+                  <span className="settings-check-note" data-tone="warning">
                     Off by default. A first crawl of a neglected site can produce thousands of
                     findings, so automatic creation is capped and limited to error-severity types.
                   </span>
@@ -949,12 +937,12 @@ export default function JiraPanel() {
               </label>
             </div>
 
-            <div className="grid gap-4 sm:grid-cols-2">
-              <div>
+            <div className="settings-grid">
+              <div className="settings-field">
                 <label className={label} htmlFor="jira-reopen">When a fixed finding comes back</label>
                 <select
                   id="jira-reopen"
-                  className={`${input} mt-2`}
+                  className={input}
                   value={form.reopenBehaviour}
                   onChange={(event) => setField("reopenBehaviour", event.target.value)}
                 >
@@ -962,35 +950,35 @@ export default function JiraPanel() {
                     <option key={option.value} value={option.value}>{option.label}</option>
                   ))}
                 </select>
-                <p className="mt-1 text-xs text-white/35">
+                <p className="settings-hint">
                   {REOPEN_OPTIONS.find((option) => option.value === form.reopenBehaviour)?.hint}
                 </p>
               </div>
-              <div>
+              <div className="settings-field">
                 <label className={label} htmlFor="jira-delay">Wait before re-checking (minutes)</label>
                 <input
                   id="jira-delay"
                   type="number"
                   min="0"
                   max="1440"
-                  className={`${input} mt-2`}
+                  className={input}
                   value={form.verificationDelayMinutes}
                   onChange={(event) => setField("verificationDelayMinutes", event.target.value)}
                 />
-                <p className="mt-1 text-xs text-white/35">
-                  Gives a deploy and any CDN cache time to settle.
-                </p>
+                <p className="settings-hint">Gives a deploy and any CDN cache time to settle.</p>
               </div>
             </div>
 
-            <button
-              type="submit"
-              className={primaryButton}
-              disabled={busy === "mapping" || !form.jiraProjectId || !form.defaultIssueTypeId}
-            >
-              {busy === "mapping" ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
-              Save mapping
-            </button>
+            <div className="settings-actions">
+              <button
+                type="submit"
+                className={primaryButton}
+                disabled={busy === "mapping" || !form.jiraProjectId || !form.defaultIssueTypeId}
+              >
+                {busy === "mapping" ? <Loader2 className="animate-spin" /> : <Save />}
+                Save mapping
+              </button>
+            </div>
           </div>
         </form>
       )}
@@ -999,12 +987,12 @@ export default function JiraPanel() {
       {connected && (
         <section className={card}>
           <div className={cardHeader}>
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-500/15 text-amber-300">
-              <Webhook className="h-5 w-5" />
-            </div>
-            <div>
-              <h2 className="font-display text-base font-bold text-white">Webhook</h2>
-              <p className="text-xs text-white/40">
+            <span className="settings-card-icon" data-tone="warning" aria-hidden="true">
+              <Webhook />
+            </span>
+            <div className="settings-card-titles">
+              <h2>Webhook</h2>
+              <p>
                 {webhook?.state === "healthy"
                   ? `Receiving events (last ${relativeTime(webhook.lastEventAt)})`
                   : webhook?.state === "quiet"
@@ -1012,32 +1000,56 @@ export default function JiraPanel() {
                     : "No events received yet — scheduled sync is being used"}
               </p>
             </div>
+            <div className="settings-card-aside">
+              <span
+                className="settings-pill"
+                data-tone={
+                  webhook?.state === "healthy"
+                    ? "success"
+                    : webhook?.state === "quiet"
+                      ? "warning"
+                      : undefined
+                }
+              >
+                {webhook?.state === "healthy"
+                  ? "Healthy"
+                  : webhook?.state === "quiet"
+                    ? "Quiet"
+                    : "Not set up"}
+              </span>
+            </div>
           </div>
 
-          <div className="space-y-4 p-5 text-sm">
+          <div className="settings-card-body">
             {webhookUrl ? (
-              <div>
+              <div className="settings-field">
                 <label className={label} htmlFor="jira-webhook-url">Webhook URL</label>
-                <div className="mt-2 flex gap-2">
+                <div className="settings-field-row">
                   <input id="jira-webhook-url" readOnly className={input} value={webhookUrl} />
-                  <button type="button" className={quietButton} onClick={copyWebhook}>
-                    <Copy className="h-4 w-4" />
+                  <button
+                    type="button"
+                    className={`${quietButton} is-icon`}
+                    onClick={copyWebhook}
+                    aria-label="Copy webhook URL"
+                  >
+                    <Copy />
                   </button>
                 </div>
-                <p className="mt-2 text-xs text-amber-300/70">
-                  Copy this now. It contains a secret and is shown only once.
+                <p className="settings-field-problem" data-tone="warning">
+                  <AlertTriangle aria-hidden="true" />
+                  <span>Copy this now. It contains a secret and is shown only once.</span>
                 </p>
               </div>
             ) : (
-              <p className="text-xs text-white/45">
+              <p className="settings-hint">
                 The webhook URL contains a secret, so it is shown only when it is created.
                 Generate a new one if you no longer have it.
               </p>
             )}
 
-            <div className="rounded-xl border border-white/10 bg-white/[0.02] p-4 text-xs text-white/50">
-              <p className="font-semibold text-white/70">Setting it up in Jira</p>
-              <ol className="mt-2 list-decimal space-y-1 pl-4">
+            <div className="settings-note">
+              <p className="settings-note-title">Setting it up in Jira</p>
+              <ol>
                 <li>Jira Settings → System → WebHooks → Create a WebHook</li>
                 <li>Paste the URL above</li>
                 <li>
@@ -1045,16 +1057,18 @@ export default function JiraPanel() {
                 </li>
                 <li>Tick: Issue updated, Issue deleted, Comment created</li>
               </ol>
-              <p className="mt-2">
+              <p>
                 Webhooks need Jira administrator rights. Without one, SEOX falls back to a scheduled
                 sync every 30 minutes — slower, but everything still works.
               </p>
             </div>
 
-            <button type="button" className={quietButton} onClick={handleRegenerate} disabled={busy === "webhook"}>
-              {busy === "webhook" ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
-              Generate a new webhook URL
-            </button>
+            <div className="settings-actions">
+              <button type="button" className={quietButton} onClick={handleRegenerate} disabled={busy === "webhook"}>
+                {busy === "webhook" ? <Loader2 className="animate-spin" /> : <RefreshCw />}
+                Generate a new webhook URL
+              </button>
+            </div>
           </div>
         </section>
       )}
@@ -1063,70 +1077,67 @@ export default function JiraPanel() {
       {connected && (
         <section className={card}>
           <div className={cardHeader}>
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/[0.06] text-white/60">
-              <RefreshCw className="h-5 w-5" />
-            </div>
-            <div className="flex-1">
-              <h2 className="font-display text-base font-bold text-white">Recent activity</h2>
-              <p className="text-xs text-white/40">
+            <span
+              className="settings-card-icon"
+              data-tone={health?.syncErrors7d ? "error" : "success"}
+              aria-hidden="true"
+            >
+              <RefreshCw />
+            </span>
+            <div className="settings-card-titles">
+              <h2>Recent activity</h2>
+              <p>
                 {health?.syncErrors7d
                   ? `${health.syncErrors7d} error(s) in the last 7 days`
                   : "No errors in the last 7 days"}
               </p>
             </div>
-            <button type="button" className={quietButton} onClick={loadActivity}>
-              <RefreshCw className="h-3.5 w-3.5" />
-            </button>
+            <div className="settings-card-aside">
+              <button
+                type="button"
+                className={`${quietButton} is-small is-icon`}
+                onClick={loadActivity}
+                aria-label="Reload activity"
+              >
+                <RefreshCw />
+              </button>
+            </div>
           </div>
 
-          <div className="p-5">
-            {deadJobs.length > 0 && (
-              <div className="mb-4 space-y-2">
-                {deadJobs.map((job) => (
-                  <div
-                    key={job.id}
-                    className="flex items-start justify-between gap-3 rounded-xl border border-rose-500/25 bg-rose-500/10 px-3 py-2 text-xs"
-                  >
-                    <div className="min-w-0">
-                      <p className="font-semibold text-rose-200">{job.jobType} failed</p>
-                      <p className="truncate text-rose-200/60">{job.lastError}</p>
-                    </div>
-                    <button
-                      type="button"
-                      className={quietButton}
-                      onClick={() => handleRetryJob(job.id)}
-                      disabled={busy === `retry:${job.id}`}
-                    >
-                      Retry
-                    </button>
+          <div className="settings-card-body">
+            {deadJobs.length > 0 &&
+              deadJobs.map((job) => (
+                <div key={job.id} className="settings-job">
+                  <div className="settings-job-main">
+                    <p className="settings-job-title">{job.jobType} failed</p>
+                    <p className="settings-job-error">{job.lastError}</p>
                   </div>
-                ))}
-              </div>
-            )}
+                  <button
+                    type="button"
+                    className={`${quietButton} is-small`}
+                    onClick={() => handleRetryJob(job.id)}
+                    disabled={busy === `retry:${job.id}`}
+                  >
+                    Retry
+                  </button>
+                </div>
+              ))}
 
             {activity.length === 0 ? (
-              <p className="text-xs text-white/35">Nothing yet.</p>
+              <p className="settings-empty">Nothing yet.</p>
             ) : (
-              <ul className="space-y-2 text-xs">
+              <ul className="settings-activity">
                 {activity.map((entry) => (
-                  <li key={entry.id} className="flex items-start gap-2">
-                    <span
-                      className={`mt-1 h-1.5 w-1.5 shrink-0 rounded-full ${
-                        entry.result === "error"
-                          ? "bg-rose-400"
-                          : entry.result === "rate_limited"
-                            ? "bg-amber-400"
-                            : "bg-emerald-400"
-                      }`}
-                    />
-                    <div className="min-w-0 flex-1">
-                      <p className="text-white/65">
-                        <span className="font-semibold text-white/80">{entry.action}</span>
+                  <li key={entry.id}>
+                    <span className="settings-activity-dot" data-result={entry.result} />
+                    <div className="settings-activity-main">
+                      <p className="settings-activity-action">
+                        <strong>{entry.action}</strong>
                         {entry.jiraIssueKey ? ` · ${entry.jiraIssueKey}` : ""}
                       </p>
-                      {entry.message && <p className="text-white/40">{entry.message}</p>}
+                      {entry.message && <p className="settings-activity-message">{entry.message}</p>}
                     </div>
-                    <span className="shrink-0 text-white/30">{relativeTime(entry.createdAt)}</span>
+                    <span className="settings-activity-time">{relativeTime(entry.createdAt)}</span>
                   </li>
                 ))}
               </ul>

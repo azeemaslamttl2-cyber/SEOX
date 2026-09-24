@@ -8,6 +8,8 @@ import { getSessionToken } from "../../../lib/authSession.js";
  * It is the original DeepSeek Settings screen: the same `/api/deepseek-settings`
  * endpoint and the same `deepseek_api_settings` record, so every DeepSeek-backed
  * tool keeps reading the one key that was already configured.
+ *
+ * Presentation comes from the shared `.settings-*` rules in index.css.
  */
 
 const emptySettings = { hasSavedKey: false, apiKeyPreview: "", envConfigured: false, updatedAt: "" };
@@ -54,17 +56,82 @@ export default function DeepSeekPanel() {
   const configured = settings.hasSavedKey || settings.envConfigured;
 
   return (
-    <div className="max-w-3xl space-y-6 pb-10">
-      {error && <div className="flex items-center gap-2 rounded-xl border border-red-400/20 bg-red-500/10 px-4 py-3 text-sm text-red-200"><AlertCircle className="h-4 w-4" />{error}</div>}
-      {success && <div className="flex items-center gap-2 rounded-xl border border-emerald-400/20 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-200"><CheckCircle2 className="h-4 w-4" />{success}</div>}
+    <div className="settings-measure settings-panel">
+      {error && (
+        <p className="settings-banner" data-tone="error">
+          <AlertCircle aria-hidden="true" />
+          <span>{error}</span>
+        </p>
+      )}
+      {success && (
+        <p className="settings-banner" data-tone="success">
+          <CheckCircle2 aria-hidden="true" />
+          <span>{success}</span>
+        </p>
+      )}
 
-      <form onSubmit={saveSettings} className="overflow-hidden rounded-2xl border border-white/10 bg-white/[0.03]">
-        <div className="flex items-center gap-3 border-b border-white/10 px-5 py-4"><div className="flex h-10 w-10 items-center justify-center rounded-xl bg-cyan-500/15 text-cyan-300"><Key className="h-5 w-5" /></div><div><h2 className="font-display text-base font-bold text-white">API key</h2><p className="text-xs text-white/40">{configured ? `Configured${settings.apiKeyPreview ? ` (${settings.apiKeyPreview})` : ""}` : "Not configured"}</p></div></div>
-        <div className="space-y-4 p-5">
-          <label className="block text-sm font-semibold text-white/75" htmlFor="deepseek-api-key">DeepSeek API key</label>
-          <input id="deepseek-api-key" type="password" value={apiKey} onChange={(event) => setApiKey(event.target.value)} placeholder={settings.hasSavedKey ? "Enter a new key to replace the saved key" : "sk-..."} disabled={loading || saving} className="settings-input w-full rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2.5 text-sm outline-none transition" />
-          <label className="flex items-center gap-2 text-sm text-white/55"><input type="checkbox" checked={clearApiKey} onChange={(event) => setClearApiKey(event.target.checked)} disabled={loading || saving} /> Clear saved key</label>
-          <button type="submit" disabled={loading || saving || (!apiKey.trim() && !clearApiKey)} className="inline-flex items-center gap-2 rounded-xl bg-brand-500 px-4 py-2.5 text-sm font-bold text-white transition hover:bg-brand-400 disabled:cursor-not-allowed disabled:opacity-50"><Save className="h-4 w-4" />{saving ? <><Loader2 className="h-4 w-4 animate-spin" />Saving...</> : "Save API key"}</button>
+      <form onSubmit={saveSettings} className="settings-card">
+        <div className="settings-card-head">
+          <span className="settings-card-icon" data-tone="info" aria-hidden="true">
+            <Key />
+          </span>
+          <div className="settings-card-titles">
+            <h2>API key</h2>
+            <p>
+              {configured
+                ? `Configured${settings.apiKeyPreview ? ` (${settings.apiKeyPreview})` : ""}`
+                : "Not configured"}
+            </p>
+          </div>
+          <div className="settings-card-aside">
+            <span className="settings-pill" data-tone={configured ? "success" : undefined}>
+              {configured ? "Connected" : "Not set"}
+            </span>
+          </div>
+        </div>
+
+        <div className="settings-card-body">
+          <div className="settings-field">
+            <label className="settings-label" htmlFor="deepseek-api-key">
+              DeepSeek API key
+            </label>
+            <input
+              id="deepseek-api-key"
+              type="password"
+              value={apiKey}
+              onChange={(event) => setApiKey(event.target.value)}
+              placeholder={settings.hasSavedKey ? "Enter a new key to replace the saved key" : "sk-..."}
+              disabled={loading || saving}
+              className="settings-input"
+            />
+          </div>
+
+          <div className="settings-checks">
+            <label className="settings-check">
+              <input
+                type="checkbox"
+                checked={clearApiKey}
+                onChange={(event) => setClearApiKey(event.target.checked)}
+                disabled={loading || saving}
+              />
+              <span className="settings-check-text">Clear saved key</span>
+            </label>
+          </div>
+
+          <div className="settings-actions">
+            <button
+              type="submit"
+              disabled={loading || saving || (!apiKey.trim() && !clearApiKey)}
+              className="settings-btn is-primary"
+            >
+              {saving ? (
+                <Loader2 className="animate-spin" aria-hidden="true" />
+              ) : (
+                <Save aria-hidden="true" />
+              )}
+              {saving ? "Saving..." : "Save API key"}
+            </button>
+          </div>
         </div>
       </form>
     </div>

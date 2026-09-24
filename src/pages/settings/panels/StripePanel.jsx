@@ -17,6 +17,10 @@ import { getSessionToken } from '../../../lib/authSession.js';
  * Stripe Connect panel, shown by the Settings page under the "Stripe & Payments"
  * tab. It is the original Stripe Settings screen: the same `/api/stripe-connect`
  * calls, the same `stripe_connections` records and the same onboarding flow.
+ *
+ * It used to carry its own hard-coded slate/emerald palette, which is why it
+ * looked like a different product from the panels beside it. It now uses the
+ * shared `.settings-*` vocabulary in index.css like the rest of Settings.
  */
 
 const emptyStatus = {
@@ -34,8 +38,8 @@ const emptyStatus = {
 function StatusPill({ ready, pending }) {
   if (pending) {
     return (
-      <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-50 border border-amber-200 px-3 py-1 text-xs font-bold text-amber-700 shadow-sm">
-        <AlertCircle className="h-3.5 w-3.5 text-amber-500" />
+      <span className="settings-pill has-icon" data-tone="warning">
+        <AlertCircle aria-hidden="true" />
         Action needed
       </span>
     );
@@ -43,39 +47,29 @@ function StatusPill({ ready, pending }) {
 
   if (ready) {
     return (
-      <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 border border-emerald-200 px-3 py-1 text-xs font-bold text-emerald-700 shadow-sm">
-        <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" />
+      <span className="settings-pill has-icon" data-tone="success">
+        <CheckCircle2 aria-hidden="true" />
         Connected
       </span>
     );
   }
 
   return (
-    <span className="inline-flex items-center gap-1.5 rounded-full bg-slate-100 border border-slate-200 px-3 py-1 text-xs font-bold text-slate-600 shadow-sm">
-      <AlertCircle className="h-3.5 w-3.5 text-slate-400" />
+    <span className="settings-pill has-icon">
+      <AlertCircle aria-hidden="true" />
       Not connected
     </span>
   );
 }
 
 function InfoTile({ icon: Icon, label, value, state = "default" }) {
-  const stateStyles = {
-    success: "text-emerald-700 bg-emerald-50/60 border-emerald-100",
-    warning: "text-amber-700 bg-amber-50/60 border-amber-100",
-    default: "text-slate-800 bg-slate-50/80 border-slate-100",
-  };
-
-  const currentStyle = stateStyles[state] || stateStyles.default;
-
   return (
-    <div className={`rounded-xl border p-4 transition-all duration-200 ${currentStyle}`}>
-      <div className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-wider text-slate-500">
-        <Icon className="h-4 w-4 text-brand-500" />
+    <div className="settings-stat" data-tone={state === "default" ? undefined : state}>
+      <div className="settings-stat-label">
+        <Icon aria-hidden="true" />
         {label}
       </div>
-      <div className="mt-2 truncate font-display text-base font-bold text-slate-800">
-        {value || "-"}
-      </div>
+      <div className="settings-stat-value">{value || "-"}</div>
     </div>
   );
 }
@@ -168,157 +162,171 @@ export default function StripePanel() {
   }
 
   return (
-    <div className="stripe-settings-workspace w-full space-y-6 pb-10">
-      <div className="flex justify-end">
+    <div className="settings-panel">
+      <div className="settings-actions is-end">
         <button
           onClick={loadStatus}
           disabled={loading || Boolean(busy)}
-          className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-xs font-bold text-slate-700 shadow-sm transition hover:bg-slate-50 hover:text-slate-900 disabled:cursor-not-allowed disabled:opacity-60"
+          className="settings-btn is-small"
         >
-          <RefreshCw className={`h-3.5 w-3.5 ${loading ? "animate-spin text-brand-500" : ""}`} />
+          <RefreshCw className={loading ? "animate-spin" : ""} aria-hidden="true" />
           Refresh Status
         </button>
       </div>
 
       {/* Return Notification */}
       {returnMessage && (
-        <div className="flex items-center gap-3 rounded-2xl border border-blue-200 bg-blue-50 px-4 py-3 text-sm font-medium text-blue-800 shadow-sm">
-          <CheckCircle2 className="h-5 w-5 text-blue-600 flex-shrink-0" />
+        <p className="settings-banner" data-tone="info">
+          <CheckCircle2 aria-hidden="true" />
           <span>{returnMessage}</span>
-        </div>
+        </p>
       )}
 
       {/* Error Alert */}
       {error && (
-        <div className="flex items-center gap-3 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-medium text-rose-800 shadow-sm">
-          <AlertCircle className="h-5 w-5 text-rose-600 flex-shrink-0" />
+        <p className="settings-banner" data-tone="error">
+          <AlertCircle aria-hidden="true" />
           <span>{error}</span>
-        </div>
+        </p>
       )}
 
       {/* Main Stripe Connect Card */}
-      <div className="overflow-hidden rounded-2xl border border-slate-200/80 bg-white p-6 shadow-[0_4px_20px_-4px_rgba(45,43,111,0.06)]">
-        <div className="flex flex-col gap-5 border-b border-slate-100 pb-6 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex items-center gap-4">
-            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-brand-50 text-brand-500 border border-brand-100 flex-shrink-0">
-              <CreditCard className="h-6 w-6" />
-            </div>
-            <div>
-              <div className="flex flex-wrap items-center gap-2.5">
-                <h2 className="font-display text-lg font-bold text-slate-900">Stripe Connect</h2>
-                <StatusPill ready={ready} pending={pending} />
-              </div>
-              <p className="mt-1 text-xs font-mono text-slate-500">
-                {status.accountId ? status.accountId : "No Stripe account linked"}
-              </p>
-            </div>
+      <section className="settings-card">
+        <div className="settings-card-head">
+          <span className="settings-card-icon" data-tone="brand" aria-hidden="true">
+            <CreditCard />
+          </span>
+          <div className="settings-card-titles">
+            <h2>
+              Stripe Connect
+              <StatusPill ready={ready} pending={pending} />
+            </h2>
+            <p className="settings-mono">
+              {status.accountId ? status.accountId : "No Stripe account linked"}
+            </p>
           </div>
 
-          <div className="flex flex-wrap items-center gap-2.5">
+          <div className="settings-card-aside">
             <button
               onClick={startOnboarding}
               disabled={loading || Boolean(busy)}
-              className="inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-brand-500 to-amber-500 px-5 py-2.5 text-xs font-bold text-white shadow-brand-glow transition hover:scale-[1.01] hover:shadow-lg disabled:cursor-not-allowed disabled:opacity-60"
+              className="settings-btn is-primary"
             >
-              {busy === "connect" ? <Loader2 className="h-4 w-4 animate-spin" /> : <ExternalLink className="h-4 w-4" />}
+              {busy === "connect" ? (
+                <Loader2 className="animate-spin" aria-hidden="true" />
+              ) : (
+                <ExternalLink aria-hidden="true" />
+              )}
               {status.connected ? "Continue Onboarding" : "Connect Stripe"}
             </button>
             <button
               onClick={openDashboard}
               disabled={!status.accountId || loading || Boolean(busy)}
-              className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-xs font-bold text-slate-700 shadow-sm transition hover:bg-slate-50 hover:text-slate-900 disabled:cursor-not-allowed disabled:opacity-40"
+              className="settings-btn"
             >
-              {busy === "dashboard" ? <Loader2 className="h-4 w-4 animate-spin" /> : <ExternalLink className="h-4 w-4" />}
+              {busy === "dashboard" ? (
+                <Loader2 className="animate-spin" aria-hidden="true" />
+              ) : (
+                <ExternalLink aria-hidden="true" />
+              )}
               Open Dashboard
             </button>
           </div>
         </div>
 
         {/* 3 Status / Info Tiles */}
-        <div className="grid grid-cols-1 gap-3.5 pt-6 sm:grid-cols-3">
-          <InfoTile
-            icon={ShieldCheck}
-            label="Onboarding"
-            value={loading ? "Checking..." : status.detailsSubmitted ? "Complete" : "Incomplete"}
-            state={status.detailsSubmitted ? "success" : "warning"}
-          />
-          <InfoTile
-            icon={Wallet}
-            label="Payouts"
-            value={loading ? "Checking..." : status.payoutsEnabled ? "Enabled" : "Disabled"}
-            state={status.payoutsEnabled ? "success" : "warning"}
-          />
-          <InfoTile
-            icon={CreditCard}
-            label="Charges"
-            value={loading ? "Checking..." : status.chargesEnabled ? "Enabled" : "Disabled"}
-            state={status.chargesEnabled ? "success" : "warning"}
-          />
+        <div className="settings-card-body">
+          <div className="settings-stats">
+            <InfoTile
+              icon={ShieldCheck}
+              label="Onboarding"
+              value={loading ? "Checking..." : status.detailsSubmitted ? "Complete" : "Incomplete"}
+              state={status.detailsSubmitted ? "success" : "warning"}
+            />
+            <InfoTile
+              icon={Wallet}
+              label="Payouts"
+              value={loading ? "Checking..." : status.payoutsEnabled ? "Enabled" : "Disabled"}
+              state={status.payoutsEnabled ? "success" : "warning"}
+            />
+            <InfoTile
+              icon={CreditCard}
+              label="Charges"
+              value={loading ? "Checking..." : status.chargesEnabled ? "Enabled" : "Disabled"}
+              state={status.chargesEnabled ? "success" : "warning"}
+            />
+          </div>
         </div>
-      </div>
+      </section>
 
       {/* Details Grid */}
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+      <div className="settings-grid">
         {/* Account Details */}
-        <div className="rounded-2xl border border-slate-200/80 bg-white p-6 shadow-[0_4px_20px_-4px_rgba(45,43,111,0.06)]">
-          <div className="flex items-center gap-2.5 mb-4">
-            <Building className="h-4 w-4 text-brand-500" />
-            <h3 className="font-display text-sm font-bold text-slate-900 uppercase tracking-wider">
-              Account Overview
-            </h3>
-          </div>
-          <div className="space-y-3 text-sm">
-            <div className="flex items-center justify-between gap-4 border-b border-slate-100 pb-3">
-              <span className="text-xs font-semibold text-slate-500">Email</span>
-              <span className="truncate font-medium text-slate-800">{status.email || "—"}</span>
-            </div>
-            <div className="flex items-center justify-between gap-4 border-b border-slate-100 pb-3">
-              <span className="text-xs font-semibold text-slate-500">Country</span>
-              <span className="font-medium text-slate-800">{status.country || "—"}</span>
-            </div>
-            <div className="flex items-center justify-between gap-4 pt-1">
-              <span className="text-xs font-semibold text-slate-500">Business Type</span>
-              <span className="font-medium text-slate-800 capitalize">{status.businessType || "—"}</span>
+        <section className="settings-card">
+          <div className="settings-card-head">
+            <span className="settings-card-icon" data-tone="navy" aria-hidden="true">
+              <Building />
+            </span>
+            <div className="settings-card-titles">
+              <h3>Account Overview</h3>
             </div>
           </div>
-        </div>
+          <div className="settings-card-body">
+            <div className="settings-rows">
+              <div className="settings-row">
+                <span className="settings-row-key">Email</span>
+                <span className="settings-row-value">{status.email || "—"}</span>
+              </div>
+              <div className="settings-row">
+                <span className="settings-row-key">Country</span>
+                <span className="settings-row-value">{status.country || "—"}</span>
+              </div>
+              <div className="settings-row">
+                <span className="settings-row-key">Business Type</span>
+                <span className="settings-row-value capitalize">{status.businessType || "—"}</span>
+              </div>
+            </div>
+          </div>
+        </section>
 
         {/* Requirements & Compliance */}
-        <div className="rounded-2xl border border-slate-200/80 bg-white p-6 shadow-[0_4px_20px_-4px_rgba(45,43,111,0.06)]">
-          <div className="flex items-center gap-2.5 mb-4">
-            <ShieldCheck className="h-4 w-4 text-brand-500" />
-            <h3 className="font-display text-sm font-bold text-slate-900 uppercase tracking-wider">
-              Requirements & Status
-            </h3>
+        <section className="settings-card">
+          <div className="settings-card-head">
+            <span className="settings-card-icon" data-tone="navy" aria-hidden="true">
+              <ShieldCheck />
+            </span>
+            <div className="settings-card-titles">
+              <h3>Requirements &amp; Status</h3>
+            </div>
           </div>
-          <div>
+          <div className="settings-card-body">
             {status.requirementsDue.length > 0 ? (
-              <div className="space-y-2">
-                <p className="text-xs text-amber-700 font-medium">Pending action required on:</p>
-                <div className="flex flex-wrap gap-2">
+              <div className="settings-field">
+                <p className="settings-sublabel">Pending action required on:</p>
+                <div className="settings-tags">
                   {status.requirementsDue.map((item) => (
-                    <span key={item} className="inline-flex items-center gap-1 rounded-full bg-amber-50 border border-amber-200 px-3 py-1 text-xs font-bold text-amber-800">
-                      <AlertCircle className="h-3 w-3 text-amber-600" />
+                    <span key={item} className="settings-tag">
+                      <AlertCircle aria-hidden="true" />
                       {item}
                     </span>
                   ))}
                 </div>
               </div>
             ) : (
-              <div className="flex items-center gap-2.5 rounded-xl bg-emerald-50/60 border border-emerald-100 p-3.5 text-xs font-semibold text-emerald-800">
-                <Check className="h-4 w-4 text-emerald-600 flex-shrink-0" />
+              <p className="settings-banner" data-tone="success">
+                <Check aria-hidden="true" />
                 <span>All verification requirements are satisfied. No pending actions.</span>
-              </div>
+              </p>
             )}
 
             {status.disabledReason && (
-              <div className="mt-3 flex items-start gap-2.5 rounded-xl border border-rose-200 bg-rose-50 p-3 text-xs font-medium text-rose-800">
-                <AlertCircle className="h-4 w-4 text-rose-600 flex-shrink-0 mt-0.5" />
+              <p className="settings-banner" data-tone="error">
+                <AlertCircle aria-hidden="true" />
                 <span>{status.disabledReason}</span>
-              </div>
+              </p>
             )}
           </div>
-        </div>
+        </section>
       </div>
     </div>
   );
