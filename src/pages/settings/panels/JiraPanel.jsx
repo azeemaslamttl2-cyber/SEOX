@@ -727,9 +727,12 @@ export default function JiraPanel() {
                     find one in a native dropdown is to scroll past all the
                     others. The search runs over `jiraProjects` as already
                     loaded - typing never reaches Jira. */}
+                {/* No `className={input}`: the component puts className on
+                    its positioning wrapper, and the `.settings-input` rules
+                    are element-qualified (input/select/textarea), so on a
+                    <div> it matched nothing. The trigger styles itself. */}
                 <SearchableSelect
                   id="jira-project"
-                  className={input}
                   value={form.jiraProjectId}
                   onChange={(value) => setField("jiraProjectId", value)}
                   options={jiraProjectOptions}

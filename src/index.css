@@ -4095,6 +4095,18 @@ select[aria-invalid="true"]:focus {
   color: var(--text-primary) !important;
   border-radius: var(--radius-md);
   font-weight: 400;
+  /* *** THE CONTROL METRICS LIVE HERE, NOT IN THE COMPONENT ***
+     The trigger sits in a grid beside real <select>s, so it has to be
+     the same height and the same type size or the row reads as broken.
+     It carried `px-3 py-2.5 text-sm` instead - 42px tall at 14px against
+     a native select's 38px at 13px - and a padding utility beats a
+     min-height, so the difference could not be corrected from CSS while
+     the utility was still on the element. Both were removed from the
+     component and restated here, from the same variables
+     `select.settings-input` uses. */
+  font-size: 13px;
+  min-height: var(--control-h);
+  padding: 0 11px;
 }
 /* Hover and active restate the background and the text colour rather
    than only the border. The app-wide `button:hover` and `button:active`
@@ -4141,6 +4153,9 @@ select[aria-invalid="true"]:focus {
 }
 .searchable-select-search input {
   color: var(--text-primary);
+  font-size: 13px;
+  padding-bottom: 9px;
+  padding-top: 9px;
 }
 .searchable-select-search input::placeholder {
   color: var(--text-disabled);
@@ -4148,11 +4163,15 @@ select[aria-invalid="true"]:focus {
 }
 .searchable-select-empty {
   color: var(--text-muted);
+  font-size: 13px;
 }
 .searchable-select-option {
   background-color: transparent !important;
   color: var(--text-secondary) !important;
   border-radius: 0;
+  /* Same 13px as the trigger. The row height is an inline style from
+     ROW_HEIGHT (36px), which this does not touch. */
+  font-size: 13px;
   font-weight: 400;
   text-align: left;
 }
@@ -4921,10 +4940,32 @@ button:where([class*="text-red-"]:not([class*="bg-"])) { --btn-fg: var(--error-t
   --btn-fg: rgba(255, 255, 255, 0.72);
 }
 
+/* *** THE BINDING HAS TO FOLLOW THE HOVER BACKGROUND TOO ***
+   The buckets above publish --btn-fg for the RESTING background only, which
+   is fine wherever hover keeps the same foreground. The destructive bucket
+   is the exception: its hover swaps a white surface for a solid --error
+   fill, so the text has to flip to white at the same moment.
+
+   It did not. --btn-fg stayed on --error-text and the shared binding rule
+   applies it at (0,3,1) — above the bucket's own `color: #ffffff !important`
+   hover at (0,2,1) — so every Stop crawl, Disconnect and Delete button in
+   the product went dark red on red under the cursor, label and icon alike,
+   and read as if it had gone blank. Publishing the hover value here fixes
+   the recipe rather than one button at a time. */
+button:where([class*="bg-rose-"]:not([class*="ui-button-"]):not([class*="btn-"])):hover:not(:disabled),
+button:where([class*="bg-red-"]:not([class*="ui-button-"]):not([class*="btn-"])):hover:not(:disabled),
+button:where([class*="text-rose-"]:not([class*="bg-"]):not([class*="ui-button-"])):hover:not(:disabled),
+button:where([class*="text-red-"]:not([class*="bg-"]):not([class*="ui-button-"])):hover:not(:disabled) {
+  --btn-fg: #ffffff;
+}
+
 /* Named variants win over the generic buckets, as they should. */
 .btn-primary, .ui-button-primary { --btn-fg: #ffffff; }
 .btn-ghost, .ui-button-secondary, .ui-button-tertiary { --btn-fg: var(--text-secondary); }
 .ui-button-danger { --btn-fg: var(--error-text); }
+/* Same reason as the destructive bucket above: its hover is a solid
+   --error fill. */
+.ui-button-danger:hover:not(:disabled) { --btn-fg: #ffffff; }
 .user-menu-button, .home-user-menu-button { --btn-fg: var(--brand-blue); }
 .admin-tab { --btn-fg: var(--text-secondary); }
 .admin-tab.active { --btn-fg: #ffffff; }
@@ -10938,6 +10979,21 @@ aside.w3c-card {
 }
 .sres-section-head:hover:not(:disabled) { background: var(--surface-sunken) !important; }
 
+/* --- Accordion body ------------------------------------------------------
+   The head and the content ran together: the panel opened straight into a
+   grid of cards with no rule between them and no breathing room above the
+   first row, so a section header read as part of its own content rather
+   than as the thing that opens it.
+
+   A hairline closes the head and the content opens below it. The padding is
+   restated here rather than left as `px-6 pb-6` utilities so the horizontal
+   value matches the head's own 22px - at 24px the cards sat two pixels
+   outside the header icon above them. */
+.sres-section-body {
+  border-top: 1px solid var(--border);
+  padding: 20px 22px 22px;
+}
+
 .sres-section-icon {
   align-items: center;
   background: var(--tile-bg);
@@ -11017,7 +11073,23 @@ aside.w3c-card {
   gap: 6px;
   margin-top: 14px;
 }
-.sres-card-emoji { display: block; font-size: 26px; line-height: 1; }
+/* The resource tile. Was an emoji at 26px; the icons are lucide now, so the
+   tile is drawn here rather than left to whatever the operating system
+   renders. Same brand tint as .sres-section-icon and .sres-agent-icon, so a
+   resource, an agent and a section header all read as one family. */
+.sres-card-icon {
+  align-items: center;
+  background: var(--tile-bg);
+  border: 1px solid var(--brand-red-border);
+  border-radius: var(--radius-lg);
+  color: var(--brand-red) !important;
+  display: inline-flex;
+  flex: 0 0 auto;
+  height: 42px;
+  justify-content: center;
+  width: 42px;
+}
+.sres-card-icon > svg { height: 19px; width: 19px; }
 
 /* Horizontal variant used by the slides and tools rows. */
 .sres-row {
@@ -11025,7 +11097,10 @@ aside.w3c-card {
   display: flex;
   gap: 16px;
 }
-.sres-row .sres-card-emoji { font-size: 32px; }
+/* The row variant sits beside a title and a description rather than above
+   them, so it carries a little more weight. */
+.sres-row .sres-card-icon { height: 46px; width: 46px; }
+.sres-row .sres-card-icon > svg { height: 21px; width: 21px; }
 .sres-row > svg:last-child { color: var(--text-disabled) !important; flex: 0 0 auto; }
 .sres-row:hover > svg:last-child { color: var(--brand-red) !important; }
 
@@ -11122,20 +11197,33 @@ aside.w3c-card {
 }
 .sres-agent-head > div:first-child { align-items: center; margin-bottom: 14px !important; }
 
-/* The emoji sat loose at 26px against a lot of empty header. It now reads as
-   an icon tile, matching the tiles used on every other card in the app. */
-.sres-agent-head .sres-card-emoji {
+/* The agent tile.
+   This was an emoji — 🔍 ✂️ 🌳 — which is the one graphic on the page the
+   product cannot control: it is drawn by the operating system, so it arrived
+   flat on one machine and glossy 3-D on another, carried its own colours
+   regardless of the brand, and sat at a different optical weight from every
+   lucide glyph beside it. Each agent already had a lucide icon in its data
+   chosen for what it does; the card simply never rendered it, because the
+   emoji branch always won.
+
+   Same geometry as before so the card layout does not move; the fill is the
+   brand tint used by .sres-section-icon, so an agent tile and its category
+   tile now read as the same family. */
+.sres-agent-icon {
   align-items: center;
-  background: var(--surface-sunken);
-  border: 1px solid var(--border);
+  background: var(--tile-bg);
+  border: 1px solid var(--brand-red-border);
   border-radius: var(--radius-lg);
+  color: var(--brand-red) !important;
   display: inline-flex;
   flex: 0 0 auto;
-  font-size: 22px;
   height: 44px;
   justify-content: center;
-  line-height: 1;
   width: 44px;
+}
+.sres-agent-icon > svg {
+  height: 20px;
+  width: 20px;
 }
 
 .sres-agent-title {
@@ -16863,7 +16951,7 @@ input[type="week"]:focus-visible {
   color: var(--text-muted);
   display: inline-flex;
   flex-shrink: 0;
-  font-size: 9px;
+  font-size: 8px;
   font-weight: 700;
   height: 28px;
   justify-content: center;
@@ -20540,9 +20628,28 @@ input[type="week"]:focus-visible {
 }
 /* Panels are forms and read top to bottom; a full-width column of
    inputs is a worse read than a measured one. */
+/* Settings panels fill the width, like every other screen in the product.
+   They were capped at 900px to keep a column of inputs readable, but on a
+   desktop that left most of the page empty beside them, which reads as a
+   broken layout rather than a deliberate measure. Line length is protected
+   where it actually matters instead — the cards tile (.settings-cards), the
+   field pairs stay pairs (.settings-grid), and the prose blocks carry their
+   own ch-based maximums. */
 .settings-measure {
-  max-width: 900px;
   width: 100%;
+}
+
+/* Independent cards tile across the width rather than stacking in one
+   narrow column. auto-fit collapses the empty tracks, so three cards
+   become three equal columns rather than three-of-four. */
+.settings-cards {
+  /* Grid default `stretch` is kept on purpose, so every card in a row ends
+     on the same line. A card with one field then carries some empty space
+     below it — that is the cost of a level row, and a ragged bottom edge
+     across three cards looked worse than the space does. */
+  display: grid;
+  gap: 16px;
+  grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
 }
 
 /* --- Card ---------------------------------------------------------- */
@@ -20551,6 +20658,10 @@ input[type="week"]:focus-visible {
   border: 1px solid var(--border);
   border-radius: var(--radius-xl);
   box-shadow: var(--shadow-xs);
+  /* A column, so a stretched card hands its extra height to the body rather
+     than leaving it below the last field. */
+  display: flex;
+  flex-direction: column;
   overflow: hidden;
 }
 /* --- Card header ---------------------------------------------------
@@ -20561,18 +20672,22 @@ input[type="week"]:focus-visible {
    labels under it. Three cards stacked read as one undifferentiated
    column of inputs.
 
-   All three are fixed at the same time, because each alone would not
-   have been enough:
+   Prominence now comes from the two that carry it without a fill:
 
-     band   --surface-muted, a tint you can actually see, closed by a
-            full-strength border
      tile   the section's hue at full saturation with a white glyph,
             which is what the page header already does with brand red
      title  navy at 1rem/700, one clear step above the 13px labels
+
+   The header shares the card's own white surface, so the full-strength
+   border below it is the only thing dividing the two halves. That is
+   deliberate — it was briefly a --surface-muted band, and the tinted
+   strip read as a second surface stacked on the card rather than as
+   part of it. Keep the border at --border, not --border-subtle: with
+   the fill gone it is doing the separation on its own.
    ------------------------------------------------------------------ */
 .settings-card-head {
   align-items: center;
-  background: var(--surface-muted);
+  background: var(--surface);
   border-bottom: 1px solid var(--border);
   display: flex;
   flex-wrap: wrap;
@@ -20646,6 +20761,7 @@ input[type="week"]:focus-visible {
 }
 .settings-card-body {
   display: flex;
+  flex: 1;
   flex-direction: column;
   gap: 18px;
   padding: 20px;
@@ -20729,15 +20845,25 @@ input.settings-input[readonly] {
   gap: 8px 14px;
   justify-content: space-between;
 }
+/* These wrap a FIXED number of fields in the markup — two for a pair, three
+   for the severity row — so the column count is stated rather than inferred.
+   With `auto-fit` they fanned out to five or six columns per row as soon as
+   the panel was allowed its full width. */
 .settings-grid {
   display: grid;
   gap: 16px;
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 .settings-grid-3 {
   display: grid;
   gap: 12px;
-  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+@media (max-width: 700px) {
+  .settings-grid,
+  .settings-grid-3 {
+    grid-template-columns: minmax(0, 1fr);
+  }
 }
 
 /* --- Checkboxes ----------------------------------------------------- */
@@ -20917,6 +21043,15 @@ input.settings-input[readonly] {
   padding: 0;
   text-decoration: underline;
   text-underline-offset: 2px;
+}
+/* Same trap as .segment-link above: with no hover rule at all, "Try again"
+   took the bucket's brand-red fill AND its white text on hover — a red
+   block inside the error line. `inherit` keeps it on whichever tone the
+   parent is carrying, error or warning. */
+.settings-field-problem button:hover:not(:disabled) {
+  background: transparent !important;
+  color: inherit !important;
+  opacity: 0.78;
 }
 
 /* --- Buttons -------------------------------------------------------- */
@@ -21525,4 +21660,435 @@ input.settings-input[readonly] {
 }
 .ilink-patch-copy svg.is-done {
   color: var(--success);
+}
+
+/* ==================================================================
+   SEGMENT FILTER  (auditor top bar)
+
+   The last dark-theme panel in the auditor. It was a hard-coded
+   `bg-[#2f3032]` slab — a literal hex, so the compatibility layer
+   above had no way to rewrite it — with a navy heading on top that
+   came out invisible, and a 50vh empty div below the controls that
+   opened as a black void two thirds the height of the screen.
+
+   Every control inside was also solid brand red, for one reason: none
+   of them declared a variant class, so bucket 1 of the application-wide
+   button hierarchy claimed them all. In a filter builder that is worse
+   than ugly — AND, OR, Previous, Current, + Rule, + Group and the
+   remove button all looked equally chosen, so the panel could not show
+   its own state.
+
+   It is now a light popover on the product's tokens, with three levels
+   of emphasis doing the work the single red did not: a filled pill for
+   the selected side of a segmented control, a quiet bordered button for
+   an action, and a plain link for the two text actions.
+
+   NOTE ON !important
+   Same as .settings-btn and .jira-segment-btn: the button buckets carry
+   !important, and only another !important beats them.
+   ================================================================== */
+
+.segment-backdrop {
+  background: rgba(23, 27, 43, 0.42);
+  backdrop-filter: blur(2px);
+  inset: 0;
+  position: fixed;
+  z-index: 50;
+  animation: segment-fade var(--dur) var(--ease);
+}
+
+.segment-panel {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-overlay);
+  overflow: hidden;
+  position: absolute;
+  right: 24px;
+  top: 64px;
+  width: min(880px, calc(100vw - 48px));
+  animation: segment-in 180ms var(--ease);
+}
+
+@keyframes segment-fade {
+  from {
+    opacity: 0;
+  }
+}
+@keyframes segment-in {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+}
+
+/* --- Header --------------------------------------------------------- */
+.segment-head {
+  align-items: center;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  gap: 13px;
+  padding: 16px 18px;
+}
+.segment-head-icon {
+  align-items: center;
+  background: var(--brand-red);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 2px 8px rgba(223, 60, 39, 0.26);
+  color: #ffffff;
+  display: inline-flex;
+  flex-shrink: 0;
+  height: 38px;
+  justify-content: center;
+  width: 38px;
+}
+.segment-head-icon svg {
+  height: 18px;
+  width: 18px;
+}
+.segment-head-copy {
+  flex: 1;
+  min-width: 0;
+}
+.segment-head-copy h2 {
+  color: var(--brand-blue);
+  font-size: 1rem;
+  font-weight: 700;
+  letter-spacing: -0.015em;
+  margin: 0;
+}
+.segment-head-copy p {
+  color: var(--text-muted);
+  font-size: 12.5px;
+  margin: 3px 0 0;
+}
+.segment-close {
+  align-items: center;
+  background: var(--surface) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: var(--radius-md);
+  color: var(--text-secondary) !important;
+  display: inline-flex;
+  flex-shrink: 0;
+  height: 32px;
+  justify-content: center;
+  transition: background-color var(--dur) ease, border-color var(--dur) ease,
+    color var(--dur) ease;
+  width: 32px;
+}
+.segment-close:hover:not(:disabled) {
+  background: var(--surface-muted) !important;
+  border-color: var(--border-strong) !important;
+  color: var(--text-primary) !important;
+}
+.segment-close svg {
+  height: 15px;
+  width: 15px;
+}
+
+/* --- Body ----------------------------------------------------------- */
+.segment-body {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 18px;
+}
+
+/* Segmented control: the one filled pill is the chosen side. */
+.segment-seg {
+  background: var(--surface-muted);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  display: inline-flex;
+  flex-shrink: 0;
+  gap: 2px;
+  padding: 3px;
+}
+.segment-seg-btn {
+  background: transparent !important;
+  border: 1px solid transparent !important;
+  border-radius: var(--radius-sm);
+  color: var(--text-secondary) !important;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  min-height: 28px;
+  padding: 0 12px;
+  transition: background-color var(--dur) ease, color var(--dur) ease,
+    box-shadow var(--dur) ease;
+  white-space: nowrap;
+}
+.segment-seg-btn:hover:not(.is-active):not(:disabled) {
+  background: rgba(255, 255, 255, 0.7) !important;
+  color: var(--text-primary) !important;
+}
+.segment-seg-btn.is-active,
+.segment-seg-btn.is-active:hover:not(:disabled) {
+  background: var(--brand-blue) !important;
+  border-color: var(--brand-blue) !important;
+  box-shadow: 0 2px 6px rgba(45, 43, 111, 0.22);
+  color: #ffffff !important;
+}
+
+/* One rule. A sunken strip so a stack of them reads as a list of rules
+   rather than as loose controls on the panel. */
+.segment-rule {
+  align-items: flex-end;
+  background: var(--surface-sunken);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding: 12px;
+}
+.segment-rule > .segment-seg {
+  margin-bottom: 1px;
+}
+/* The body is a flex column, so its children stretch by default and the
+   AND/OR control ran the full width of the panel. It should hug its two
+   pills. */
+.segment-body > .segment-seg {
+  align-self: flex-start;
+}
+.segment-field {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 5px;
+  min-width: 170px;
+}
+.segment-field-label {
+  color: var(--text-muted);
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.segment-select {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  color: var(--text-primary);
+  font-size: 13px;
+  min-height: var(--control-h);
+  outline: none;
+  padding: 0 11px;
+  transition: border-color var(--dur) ease, box-shadow var(--dur) ease;
+  width: 100%;
+}
+.segment-select:hover:not(:disabled) {
+  border-color: var(--border-strong);
+}
+.segment-select:focus {
+  border-color: var(--brand-red);
+  box-shadow: var(--focus-ring-brand);
+}
+.segment-rule-remove {
+  align-items: center;
+  background: var(--surface) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: var(--radius-md);
+  color: var(--text-muted) !important;
+  display: inline-flex;
+  flex-shrink: 0;
+  height: var(--control-h);
+  justify-content: center;
+  transition: background-color var(--dur) ease, border-color var(--dur) ease,
+    color var(--dur) ease;
+  width: var(--control-h);
+}
+.segment-rule-remove:hover:not(:disabled) {
+  background: var(--error) !important;
+  border-color: var(--error) !important;
+  color: #ffffff !important;
+}
+.segment-rule-remove svg {
+  height: 15px;
+  width: 15px;
+}
+
+.segment-add {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+/* --- Buttons and links ---------------------------------------------- */
+.segment-btn {
+  align-items: center;
+  background: var(--surface) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: var(--radius-md);
+  color: var(--text-secondary) !important;
+  display: inline-flex;
+  font-size: 12.5px;
+  font-weight: 600;
+  gap: 6px;
+  justify-content: center;
+  min-height: 32px;
+  padding: 0 12px;
+  transition: background-color var(--dur) ease, border-color var(--dur) ease,
+    color var(--dur) ease;
+  white-space: nowrap;
+}
+.segment-btn:hover:not(:disabled) {
+  background: var(--surface-sunken) !important;
+  border-color: var(--border-strong) !important;
+  color: var(--text-primary) !important;
+}
+.segment-btn svg {
+  height: 13px;
+  width: 13px;
+}
+.segment-btn.is-primary {
+  background: var(--brand-red) !important;
+  border-color: var(--brand-red) !important;
+  box-shadow: var(--shadow-xs);
+  color: #ffffff !important;
+  font-size: 13px;
+  min-height: var(--control-h);
+  padding: 0 18px;
+}
+.segment-btn.is-primary:hover:not(:disabled) {
+  background: var(--brand-red-hover) !important;
+  border-color: var(--brand-red-hover) !important;
+  color: #ffffff !important;
+}
+/* Apply is disabled until the rules change, so it has to look disabled
+   rather than merely dimmed brand red. */
+.segment-btn.is-primary:disabled {
+  background: var(--surface-muted) !important;
+  border-color: var(--border) !important;
+  box-shadow: none;
+  color: var(--text-disabled) !important;
+  cursor: not-allowed;
+}
+
+.segment-link {
+  align-items: center;
+  background: transparent !important;
+  border: 0 !important;
+  color: var(--brand-red) !important;
+  display: inline-flex;
+  font-size: 12.5px;
+  font-weight: 600;
+  gap: 5px;
+  padding: 0;
+}
+/* *** A HOVER RULE HAS TO RESTATE EVERY COLOUR IT WANTS TO KEEP ***
+   The base rule below sets the red, but the button hierarchy's own hover
+   is `button:where(...):hover:not(:disabled)` at (0,2,1) with !important,
+   which outranks a base `.segment-link` at (0,1,0). Leaving `color` out
+   here therefore did not mean "keep the red" — it meant "take the
+   bucket's #ffffff", and the two links turned white on a near-white
+   footer and disappeared under the cursor. */
+.segment-link:hover:not(:disabled) {
+  background: transparent !important;
+  color: var(--brand-red-hover) !important;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.segment-link svg {
+  height: 13px;
+  width: 13px;
+}
+.segment-link.is-end {
+  margin-left: auto;
+}
+
+/* --- Footer ---------------------------------------------------------- */
+.segment-foot {
+  align-items: center;
+  background: var(--surface-sunken);
+  border-top: 1px solid var(--border);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+  padding: 14px 18px;
+}
+.segment-count {
+  color: var(--text-secondary);
+  font-size: 12.5px;
+}
+.segment-count strong {
+  color: var(--text-primary);
+  font-weight: 700;
+}
+
+@media (max-width: 720px) {
+  .segment-panel {
+    left: 12px;
+    right: 12px;
+    top: 12px;
+    width: auto;
+  }
+  .segment-field {
+    min-width: 100%;
+  }
+  .segment-link.is-end {
+    margin-left: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .segment-backdrop,
+  .segment-panel {
+    animation: none;
+  }
+}
+
+/* ==================================================================
+   STOP CRAWL  (.crawl-stop)
+
+   The one destructive action in the auditor, previously written three
+   times from raw utilities — `border-rose-500/40 bg-rose-500/10
+   text-rose-300` in the top bar, `bg-rose-500/20 text-rose-200` in the
+   overview banner, a third variant in the crawl log — and left to the
+   destructive bucket to make presentable. They came out at different
+   heights (34px / 30px), different radii (10px / 12px), and with
+   different icons, for a control that is the same control.
+
+   The hover also broke down on the overview page specifically. The
+   bucket's hover paints the fill AND the border the same --error, which
+   is fine on white but not inside that page's red-tinted "Crawling in
+   progress" banner: a red block on a red band, with no edge, so the
+   button dissolved into its own container at the moment the cursor
+   reached it.
+
+   One named control instead, with an edge that stays darker than the
+   fill so the silhouette survives on any background.
+   ================================================================== */
+.crawl-stop {
+  align-items: center;
+  background: var(--surface) !important;
+  border: 1px solid var(--error-border) !important;
+  border-radius: var(--radius-md);
+  color: var(--error-text) !important;
+  display: inline-flex;
+  flex-shrink: 0;
+  font-size: 12.5px;
+  font-weight: 600;
+  gap: 7px;
+  justify-content: center;
+  min-height: 32px;
+  padding: 0 12px;
+  transition: background-color var(--dur) ease, border-color var(--dur) ease,
+    color var(--dur) ease;
+  white-space: nowrap;
+}
+.crawl-stop:hover:not(:disabled) {
+  background: var(--error) !important;
+  /* Darker than the fill on purpose — this is what the bucket got wrong. */
+  border-color: var(--error-text) !important;
+  color: #ffffff !important;
+}
+.crawl-stop:active:not(:disabled) {
+  background: var(--error-text) !important;
+  border-color: var(--error-text) !important;
+  color: #ffffff !important;
+}
+.crawl-stop svg {
+  height: 13px;
+  width: 13px;
 }

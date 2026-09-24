@@ -1157,7 +1157,14 @@ export default function PageExplorer() {
       </div>
 
       {/* Filters bar */}
-      <div className="relative z-[80] flex flex-wrap items-center gap-1.5 overflow-visible rounded-2xl border border-white/10 bg-ink-800/60 p-1.5 backdrop-blur">
+      {/* z-10, not z-[80]. This bar only has to sit above the table beneath
+          it; its own menus carry `z-index: 100` inside this stacking context
+          (.pe-menu), so they clear the rows regardless. At z-[80] the bar
+          outranked the sticky top bar (z-20) and painted over the project
+          switcher's dropdown — and over the full-screen link panel (z-50)
+          too. Auditor layers: content 0-9, filter bars 10-19, sticky chrome
+          and its menus 20-39, full-screen overlays 50+. */}
+      <div className="relative z-10 flex flex-wrap items-center gap-1.5 overflow-visible rounded-2xl border border-white/10 bg-ink-800/60 p-1.5 backdrop-blur">
         {FILTER_TABS.map((tab) => {
           const active = filter === tab.label || (tab.filter && urlFilter === tab.filter);
           return (
@@ -1306,15 +1313,15 @@ export default function PageExplorer() {
           <table className="w-full min-w-[1100px] text-sm">
             <thead>
               <tr className="border-b border-white/10 text-left text-xs uppercase tracking-wider text-white/40">
-                <th className="px-3 py-3 font-medium">PR ▾</th>
+                <th className="px-3 py-3 font-medium">PR&nbsp;▾</th>
                 <th className="px-3 py-3 font-medium">URL</th>
                 <th className="px-3 py-3 text-right font-medium">Organic traffic</th>
-                <th className="px-3 py-3 text-center font-medium">HTTP status code</th>
+                <th className="px-3 py-3 text-center font-medium">HTTP status&nbsp;code</th>
                 <th className="px-3 py-3 font-medium">Content type</th>
                 <th className="px-3 py-3 text-center font-medium">Depth</th>
-                <th className="px-3 py-3 text-center font-medium">Is indexable page</th>
-                <th className="px-3 py-3 text-right font-medium">No. of all inlinks</th>
-                <th className="px-3 py-3 font-medium">First found at</th>
+                <th className="px-3 py-3 text-center font-medium">Is&nbsp;indexable page</th>
+                <th className="px-3 py-3 text-center font-medium">No.&nbsp;of&nbsp;all inlinks</th>
+                <th className="px-3 py-3 font-medium">First found&nbsp;at</th>
               </tr>
             </thead>
             <tbody>
@@ -1365,7 +1372,7 @@ export default function PageExplorer() {
                       <td className="px-3 py-3 text-xs text-white/60">{u.ct}</td>
                       <td className="px-3 py-3 text-center tabular-nums text-white/70">{u.depth}</td>
                       <td className="px-3 py-3 text-center text-white/70">{u.indexable ? "Yes" : "No"}</td>
-                      <td className="px-3 py-3 text-right tabular-nums text-brand-300 hover:underline cursor-pointer" onClick={() => setSelectedUrl({ ...u, title: displayTitle })}>{u.inlinks} ↗</td>
+                      <td className="px-3 py-3 text-center tabular-nums text-brand-300 hover:underline cursor-pointer" onClick={() => setSelectedUrl({ ...u, title: displayTitle })}>{u.inlinks} ↗</td>
                       <td className="px-3 py-3 text-xs text-white/50">{crawledAt}</td>
                     </tr>
                   );

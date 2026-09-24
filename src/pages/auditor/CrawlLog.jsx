@@ -4,8 +4,8 @@ import {
   ExternalLink,
   HelpCircle,
   CheckCircle2,
-  Pause,
   Play,
+  Square,
   RotateCcw,
   Sparkles,
   Activity,
@@ -76,11 +76,8 @@ export default function CrawlLog() {
         </div>
         <div className="flex items-center gap-2">
           {status === "crawling" ? (
-            <button
-              onClick={stopCrawl}
-              className="flex items-center gap-1.5 rounded-lg border border-rose-500/40 bg-rose-500/10 px-3 py-1.5 text-xs font-semibold text-rose-300 hover:bg-rose-500/15"
-            >
-              <Pause className="h-3.5 w-3.5" /> Stop crawl
+            <button onClick={stopCrawl} className="crawl-stop">
+              <Square className="fill-current" /> Stop crawl
             </button>
           ) : status === "complete" ? (
             <>
@@ -176,10 +173,10 @@ export default function CrawlLog() {
           <table className="w-full min-w-[860px] text-sm">
             <thead>
               <tr className="border-b border-white/10 text-left text-xs uppercase tracking-wider text-white/40">
-                <th className="px-4 py-2.5 font-medium">Time</th>
+                <th className="px-4 py-2.5 font-medium min-w-[105px]">Time</th>
                 <th className="px-3 py-2.5 font-medium">Status</th>
-                <th className="px-1.5 py-2.5 font-medium">Content type</th>
-                <th className="px-1.5 py-2.5 text-right font-medium">Load time</th>
+                <th className="px-1.5 py-2.5 font-medium">Content&nbsp;type</th>
+                <th className="px-1.5 py-2.5 text-right font-medium">Load&nbsp;time</th>
                 <th className="px-3 py-2.5 text-right font-medium">Size</th>
                 <th className="px-3 py-2.5 text-right font-medium">Outlinks</th>
                 <th className="px-3 py-2.5 font-medium">URL</th>

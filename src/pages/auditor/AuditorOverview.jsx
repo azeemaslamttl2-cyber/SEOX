@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Code2, Download, Gauge, HelpCircle, Sparkles, Eye, BarChart3, Play, Loader2, Plus, AlertCircle } from "lucide-react";
+import { Code2, Download, Gauge, HelpCircle, Sparkles, Eye, BarChart3, Play, Loader2, Plus, AlertCircle, Square } from "lucide-react";
 import Card from "../../components/auditor/Card.jsx";
 import DonutChart from "../../components/auditor/DonutChart.jsx";
 import HealthGauge from "../../components/auditor/HealthGauge.jsx";
@@ -160,12 +160,8 @@ export default function AuditorOverview() {
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <button
-              type="button"
-              onClick={stopCrawl}
-              className="rounded-xl border border-rose-500/40 bg-rose-500/20 px-3 py-1.5 text-xs font-semibold text-rose-200 hover:bg-rose-500/30"
-            >
-              Stop Crawl
+            <button type="button" onClick={stopCrawl} className="crawl-stop">
+              <Square className="fill-current" /> Stop crawl
             </button>
           </div>
         </div>

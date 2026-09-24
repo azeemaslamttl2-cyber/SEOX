@@ -11,7 +11,11 @@ import {
     RefreshCw, MessageCircle, Heart, ThumbsUp, CheckCircle, AlertTriangle,
     Bug, Calendar, Image, LineChart, FileSpreadsheet, DollarSign,
     Link, Newspaper, Clock, List, ShieldCheck, PenTool, Calculator,
-    Zap, Package, Play, Eye, User, PlusCircle, XCircle
+    Zap, Package, Play, Eye, User, PlusCircle, XCircle,
+    // No icon appears twice on this page, and no agent wears the icon of a
+    // category header: a repeat reads as "these two are the same kind of
+    // thing", which is exactly what an icon is here to deny.
+    Crosshair, Eraser, GitCompare, ScanSearch, ScrollText, ShieldQuestion, Sigma
 } from 'lucide-react';
 import { Link as RouterLink } from 'react-router-dom';
 
@@ -48,8 +52,7 @@ const AI_AGENTS_DATA = [
                     "Metadata (titles, meta descriptions)",
                     "Content briefs or outlines"
                 ],
-                icon: Filter,
-                emoji: "🔍"
+                icon: Filter
             },
             {
                 name: "Tokenizer, Lemmatizer and Stemmer",
@@ -72,8 +75,7 @@ const AI_AGENTS_DATA = [
                     "English prose without HTML, code, or markdown tables",
                     "Content roughly between 5 and 300 words"
                 ],
-                icon: Scissors,
-                emoji: "✂️"
+                icon: Scissors
             },
             {
                 name: "Syntax Tree Creator",
@@ -96,8 +98,7 @@ const AI_AGENTS_DATA = [
                     "Blog posts, landing page copy, product descriptions",
                     "Metadata (titles, meta descriptions)"
                 ],
-                icon: TreePine,
-                emoji: "🌳"
+                icon: TreePine
             },
             {
                 name: "Contextless Word Remover",
@@ -119,8 +120,7 @@ const AI_AGENTS_DATA = [
                     "English prose without HTML, code, or markdown tables",
                     "Content roughly between 30 and 800 words"
                 ],
-                icon: Scissors,
-                emoji: "🧹"
+                icon: Eraser
             },
             {
                 name: "Vocabulary Richness Auditor",
@@ -143,8 +143,7 @@ const AI_AGENTS_DATA = [
                     "English prose without HTML, code, or markdown tables",
                     "Content roughly between 30 and 800 words for meaningful statistics"
                 ],
-                icon: Gauge,
-                emoji: "📊"
+                icon: Gauge
             },
             {
                 name: "Metadiscourse Markers Auditor",
@@ -168,8 +167,7 @@ const AI_AGENTS_DATA = [
                     "Content briefs or outlines",
                     "1-5 paragraphs at a time for best results"
                 ],
-                icon: BookMarked,
-                emoji: "📑"
+                icon: BookMarked
             },
             {
                 name: "Question Logic Analyzer",
@@ -191,8 +189,7 @@ const AI_AGENTS_DATA = [
                     "'What is the relationship between backlinks and domain authority?'",
                     "Optional: context, goal, language, or constraints"
                 ],
-                icon: HelpCircle,
-                emoji: "❓"
+                icon: HelpCircle
             },
             {
                 name: "Translator (Context-based)",
@@ -216,8 +213,7 @@ const AI_AGENTS_DATA = [
                     "Metadata (titles, meta descriptions)",
                     "Optional: primary keywords, target audience, tone of voice"
                 ],
-                icon: Globe,
-                emoji: "🌍"
+                icon: Globe
             }
         ]
     },
@@ -249,8 +245,7 @@ const AI_AGENTS_DATA = [
                     "Metadata (titles, meta descriptions, headings)",
                     "Optional: Target keyword(s), user intent, market/industry"
                 ],
-                icon: Layers,
-                emoji: "🎯"
+                icon: Layers
             },
             {
                 name: "Semantic Role Labeler",
@@ -274,8 +269,7 @@ const AI_AGENTS_DATA = [
                     "A meta title + meta description pair",
                     "Optional: target keyword or topic, page type"
                 ],
-                icon: Tags,
-                emoji: "🏷️"
+                icon: Tags
             },
             {
                 name: "Word Meaning Extractor",
@@ -298,8 +292,7 @@ const AI_AGENTS_DATA = [
                     "A sentence list for checking ambiguous words",
                     "Optional: list of focus words to emphasize"
                 ],
-                icon: Hash,
-                emoji: "💬"
+                icon: Hash
             },
             {
                 name: "Semantic Emphasizer",
@@ -324,8 +317,7 @@ const AI_AGENTS_DATA = [
                     "Service pages",
                     "Short snippets (1-2 paragraphs) or entire pages"
                 ],
-                icon: Lightbulb,
-                emoji: "💡"
+                icon: Lightbulb
             },
             {
                 name: "Lexical Path Analyzer",
@@ -349,8 +341,7 @@ const AI_AGENTS_DATA = [
                     "FAQ sections or question lists",
                     "Short text, list of concepts, or a mix of both"
                 ],
-                icon: GitBranch,
-                emoji: "🔀"
+                icon: GitBranch
             },
             {
                 name: "Triple Generator",
@@ -373,8 +364,7 @@ const AI_AGENTS_DATA = [
                     "Metadata (titles, meta descriptions)",
                     "Content briefs or outlines"
                 ],
-                icon: Database,
-                emoji: "🗃️"
+                icon: Database
             },
             {
                 name: "Microsemantics – Relevant Item Finder",
@@ -398,8 +388,7 @@ const AI_AGENTS_DATA = [
                     "Content briefs or outlines",
                     "One contextual phrase/concept/keyword to match"
                 ],
-                icon: Target,
-                emoji: "🎯"
+                icon: ScanSearch
             },
             {
                 name: "Knowledge Domain Terms Extractor",
@@ -423,8 +412,7 @@ const AI_AGENTS_DATA = [
                     "'E-commerce product page SEO'",
                     "Format: Topic: [your topic name]"
                 ],
-                icon: BookOpen,
-                emoji: "📖"
+                icon: BookOpen
             },
             {
                 name: "Entity Type Root, Rare, Unique Attribute Extractor",
@@ -447,8 +435,7 @@ const AI_AGENTS_DATA = [
                     "Optional: example entities if you have them",
                     "Optional: number of attributes you want (minimum >20)"
                 ],
-                icon: Boxes,
-                emoji: "📦"
+                icon: Boxes
             }
         ]
     },
@@ -479,8 +466,7 @@ const AI_AGENTS_DATA = [
                     "Optional: page type (blog, product page, category page)",
                     "Optional: constraints (e.g., 'no more than 2 added entities')"
                 ],
-                icon: PlusCircle,
-                emoji: "➕"
+                icon: PlusCircle
             },
             {
                 name: "Named Entity Suggester",
@@ -504,8 +490,7 @@ const AI_AGENTS_DATA = [
                     "Metadata (titles, meta descriptions)",
                     "Optional: main keyword/topic of the content"
                 ],
-                icon: Sparkles,
-                emoji: "✨"
+                icon: Sparkles
             },
             {
                 name: "Named Entity Suggester (Person Type)",
@@ -526,8 +511,7 @@ const AI_AGENTS_DATA = [
                     "Optional: focus area or industry context",
                     "Optional: target audience or content goal"
                 ],
-                icon: Users,
-                emoji: "👥"
+                icon: Users
             },
             {
                 name: "Which-Agent",
@@ -548,8 +532,7 @@ const AI_AGENTS_DATA = [
                     "Optional: criteria that matter most to you",
                     "Optional: constraints (budget, time, team size)"
                 ],
-                icon: HelpCircle,
-                emoji: "❓"
+                icon: GitCompare
             },
             {
                 name: "Who-Agent",
@@ -570,8 +553,7 @@ const AI_AGENTS_DATA = [
                     "Optional: time period or era of focus",
                     "Optional: connection to another person or topic"
                 ],
-                icon: User,
-                emoji: "👤"
+                icon: User
             },
             {
                 name: "What-Agent",
@@ -592,8 +574,7 @@ const AI_AGENTS_DATA = [
                     "Optional: target audience level (beginner, expert)",
                     "Optional: industry or domain context"
                 ],
-                icon: FileQuestion,
-                emoji: "❔"
+                icon: FileQuestion
             },
             {
                 name: "Information Graph Creator with Variables (Legal)",
@@ -615,8 +596,7 @@ const AI_AGENTS_DATA = [
                     "Compliance requirements",
                     "Any structured or semi-structured legal text"
                 ],
-                icon: Scale,
-                emoji: "⚖️"
+                icon: Scale
             },
             {
                 name: "Irrelevant Attribute Auditor",
@@ -637,8 +617,7 @@ const AI_AGENTS_DATA = [
                     "JSON-like or schema-like entity descriptions",
                     "Documentation listing fields collected"
                 ],
-                icon: XCircle,
-                emoji: "❌"
+                icon: XCircle
             }
         ]
     },
@@ -667,8 +646,7 @@ const AI_AGENTS_DATA = [
                     "Optional: target keyword or main topic",
                     "Optional: context about the page or site"
                 ],
-                icon: Target,
-                emoji: "🎯"
+                icon: Crosshair
             },
             {
                 name: "Bridge Topic Suggester",
@@ -689,8 +667,7 @@ const AI_AGENTS_DATA = [
                     "Optional: competitor title tags and URLs",
                     "Optional: target niche or industry"
                 ],
-                icon: Route,
-                emoji: "🌉"
+                icon: Route
             },
             {
                 name: "Topic Clusterer",
@@ -711,8 +688,7 @@ const AI_AGENTS_DATA = [
                     "Optional: target topic or main keyword",
                     "Optional: number of desired clusters"
                 ],
-                icon: ListTree,
-                emoji: "🌳"
+                icon: ListTree
             },
             {
                 name: "Query Term Weight Calculator",
@@ -733,8 +709,7 @@ const AI_AGENTS_DATA = [
                     "Optional: industry or niche context",
                     "Optional: specific analysis method preference"
                 ],
-                icon: Calculator,
-                emoji: "🧮"
+                icon: Calculator
             },
             {
                 name: "Title-Query Coverage Ratio Auditor",
@@ -755,8 +730,7 @@ const AI_AGENTS_DATA = [
                     "Optional: click/impression data for prioritization",
                     "Optional: target coverage threshold"
                 ],
-                icon: Ruler,
-                emoji: "📏"
+                icon: Ruler
             },
             {
                 name: "Contextual Vector Sharpener and Aligner",
@@ -777,8 +751,7 @@ const AI_AGENTS_DATA = [
                     "Optional: page type (blog, product, category)",
                     "Optional: existing entities to preserve"
                 ],
-                icon: Zap,
-                emoji: "⚡"
+                icon: Zap
             },
             {
                 name: "Context Paragraph Refresher",
@@ -799,8 +772,7 @@ const AI_AGENTS_DATA = [
                     "Optional: desired tone (professional, academic, casual)",
                     "Optional: specific entities or experts to include"
                 ],
-                icon: RefreshCw,
-                emoji: "🔄"
+                icon: RefreshCw
             }
         ]
     },
@@ -829,8 +801,7 @@ const AI_AGENTS_DATA = [
                     "Optional: specific aspects to analyze",
                     "Optional: comparison products"
                 ],
-                icon: MessageCircle,
-                emoji: "💬"
+                icon: MessageCircle
             },
             {
                 name: "Comment Sentiment Optimizer",
@@ -851,8 +822,7 @@ const AI_AGENTS_DATA = [
                     "Optional: specific issues to address",
                     "Optional: brand voice guidelines"
                 ],
-                icon: Heart,
-                emoji: "❤️"
+                icon: Heart
             }
         ]
     },
@@ -881,8 +851,7 @@ const AI_AGENTS_DATA = [
                     "Optional: comparison to competitor content",
                     "Optional: specific criteria to focus on"
                 ],
-                icon: ShieldCheck,
-                emoji: "✅"
+                icon: ShieldCheck
             },
             {
                 name: "Quality Update Auditor",
@@ -903,8 +872,7 @@ const AI_AGENTS_DATA = [
                     "Optional: specific updates to analyze",
                     "Optional: site sections or URL patterns"
                 ],
-                icon: TrendingUp,
-                emoji: "📈"
+                icon: TrendingUp
             },
             {
                 name: "Spam Hit Detector",
@@ -925,8 +893,7 @@ const AI_AGENTS_DATA = [
                     "Optional: GSC performance data",
                     "Optional: specific URL patterns to analyze"
                 ],
-                icon: Bug,
-                emoji: "🐛"
+                icon: Bug
             },
             {
                 name: "Publication Frequency Auditor",
@@ -946,8 +913,7 @@ const AI_AGENTS_DATA = [
                     "Optional: specific date range focus",
                     "Optional: content category filters"
                 ],
-                icon: Calendar,
-                emoji: "📅"
+                icon: Calendar
             },
             {
                 name: "Image Auditor",
@@ -968,8 +934,7 @@ const AI_AGENTS_DATA = [
                     "Optional: intended use (hero, thumbnail, product)",
                     "Optional: comparison images"
                 ],
-                icon: Image,
-                emoji: "🖼️"
+                icon: Image
             }
         ]
     },
@@ -997,8 +962,7 @@ const AI_AGENTS_DATA = [
                     "Optional: competitor keywords",
                     "Optional: specific patterns to look for"
                 ],
-                icon: LineChart,
-                emoji: "📉"
+                icon: LineChart
             },
             {
                 name: "Log File Analyzer",
@@ -1018,8 +982,7 @@ const AI_AGENTS_DATA = [
                     "Optional: date range for analysis",
                     "Optional: comparison to previous periods"
                 ],
-                icon: FileText,
-                emoji: "📝"
+                icon: ScrollText
             },
             {
                 name: "Outranking Cost Calculator",
@@ -1039,8 +1002,7 @@ const AI_AGENTS_DATA = [
                     "Optional: your current metrics for comparison",
                     "Optional: budget constraints"
                 ],
-                icon: DollarSign,
-                emoji: "💰"
+                icon: DollarSign
             },
             {
                 name: "Backlink Analyzer",
@@ -1060,8 +1022,7 @@ const AI_AGENTS_DATA = [
                     "Optional: specific metrics to focus on",
                     "Optional: historical data for trends"
                 ],
-                icon: Link,
-                emoji: "🔗"
+                icon: Link
             }
         ]
     },
@@ -1089,8 +1050,7 @@ const AI_AGENTS_DATA = [
                     "Optional: number of key facts to extract",
                     "Optional: output format preference"
                 ],
-                icon: ClipboardList,
-                emoji: "📋"
+                icon: ClipboardList
             },
             {
                 name: "Safe Answer Generator",
@@ -1110,8 +1070,7 @@ const AI_AGENTS_DATA = [
                     "Optional: target audience",
                     "Optional: constraints or guidelines"
                 ],
-                icon: Shield,
-                emoji: "🛡️"
+                icon: ShieldQuestion
             },
             {
                 name: "Footer Link Suggester",
@@ -1131,8 +1090,7 @@ const AI_AGENTS_DATA = [
                     "Optional: target keywords or topics",
                     "Optional: competitor footer examples"
                 ],
-                icon: Link2,
-                emoji: "🔗"
+                icon: Link2
             }
         ]
     },
@@ -1160,8 +1118,7 @@ const AI_AGENTS_DATA = [
                     "Optional: accessibility requirements",
                     "Optional: styling preferences"
                 ],
-                icon: Code,
-                emoji: "💻"
+                icon: Sigma
             },
             {
                 name: "Product Specs Generator",
@@ -1181,8 +1138,7 @@ const AI_AGENTS_DATA = [
                     "Optional: number of specs to generate",
                     "Optional: focus areas (technical, usability, etc.)"
                 ],
-                icon: Package,
-                emoji: "📦"
+                icon: Package
             }
         ]
     }
@@ -1348,10 +1304,15 @@ const AIAgentsPage = () => {
                             </button>
 
                             {expandedCategories[originalIndex] && (
-                                <div className="px-6 pb-6 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
+                                <div className="sres-section-body grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
                                     {category.agents.map((agent, agentIdx) => {
                                         const agentKey = `${originalIndex}-${agentIdx}`;
                                         const isExpanded = expandedAgents[agentKey];
+                                        // Every agent already carries a lucide icon chosen for
+                                        // what it does; the card just never rendered it, because
+                                        // the emoji branch always won. Wand2 covers an agent
+                                        // added later without one.
+                                        const AgentIcon = agent.icon || Wand2;
 
                                         return (
                                             <div
@@ -1361,13 +1322,9 @@ const AIAgentsPage = () => {
                                                 {/* Card Header */}
                                                 <div className={colors.light}>
                                                     <div className="flex items-start justify-between mb-3">
-                                                        {agent.emoji ? (
-                                                            <span className="sres-card-emoji">{agent.emoji}</span>
-                                                        ) : (
-                                                            <div className="sres-section-icon">
-                                                                <Wand2 className="w-5 h-5" />
-                                                            </div>
-                                                        )}
+                                                        <span className="sres-agent-icon" aria-hidden="true">
+                                                            <AgentIcon />
+                                                        </span>
                                                         <a
                                                             href={agent.url}
                                                             target="_blank"

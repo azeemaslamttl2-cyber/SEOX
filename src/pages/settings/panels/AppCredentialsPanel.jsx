@@ -73,6 +73,9 @@ export default function AppCredentialsPanel({ sectionIds, keys, state }) {
         </div>
       ) : (
         <form onSubmit={onSubmit} className="settings-panel">
+          {/* The sections are independent credentials, not steps, so they
+              tile across the width instead of stacking in one column. */}
+          <div className="settings-cards">
           {sections.map((section) => {
             const Icon = section.icon;
             return (
@@ -154,6 +157,7 @@ export default function AppCredentialsPanel({ sectionIds, keys, state }) {
               </section>
             );
           })}
+          </div>
 
           <div className="settings-actions">
             <button type="submit" disabled={saving} className="settings-btn is-primary">

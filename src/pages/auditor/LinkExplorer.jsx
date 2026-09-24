@@ -856,7 +856,14 @@ export default function LinkExplorer() {
       </div>
 
       {/* Filter tabs + search */}
-      <div className="relative z-[80] flex flex-wrap items-center gap-1.5 overflow-visible rounded-2xl border border-white/10 bg-ink-800/60 p-1.5 backdrop-blur">
+      {/* z-10, not z-[80]. This bar only has to sit above the table beneath
+          it; its own menus carry `z-index: 100` inside this stacking context
+          (.pe-menu), so they clear the rows regardless. At z-[80] the bar
+          outranked the sticky top bar (z-20) and painted over the project
+          switcher's dropdown — and over the full-screen link panel (z-50)
+          too. Auditor layers: content 0-9, filter bars 10-19, sticky chrome
+          and its menus 20-39, full-screen overlays 50+. */}
+      <div className="relative z-10 flex flex-wrap items-center gap-1.5 overflow-visible rounded-2xl border border-white/10 bg-ink-800/60 p-1.5 backdrop-blur">
         {FILTER_TABS.map((tab) => {
           const active = activeFilter === tab.id || activeFilter === tab.filter || filterMenus[tab.label]?.some((item) => item.filter === activeFilter);
           return (
@@ -1032,12 +1039,12 @@ export default function LinkExplorer() {
             <thead>
               <tr className="border-b border-white/10 text-left text-xs uppercase tracking-wider text-white/40">
                 <th className="px-3 py-3 font-medium">Link type</th>
-                <th className="px-3 py-3 font-medium">Is nofollow</th>
+                <th className="px-3 py-3 font-medium">Is&nbsp;no follow</th>
                 <th className="px-3 py-3 font-medium">Source URL</th>
-                <th className="px-3 py-3 text-center font-medium">Source HTTP status code</th>
+                <th className="px-3 py-3 text-center font-medium">Source&nbsp;HTTP status&nbsp;code</th>
                 <th className="px-3 py-3 font-medium">Target URL</th>
-                <th className="px-3 py-3 text-center font-medium">Target HTTP status code</th>
-                <th className="px-3 py-3 font-medium">Target no-crawl reason</th>
+                <th className="px-3 py-3 text-center font-medium">Target&nbsp;HTTP status&nbsp;code</th>
+                <th className="px-3 py-3 font-medium">Target&nbsp;no crawl&nbsp;reason</th>
                 <th className="px-3 py-3 font-medium">Anchor</th>
                 <th className="px-3 py-3 font-medium">Image type</th>
               </tr>
