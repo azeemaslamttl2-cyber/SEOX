@@ -1,11 +1,16 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
+  AlertTriangle,
+  CheckCircle2,
   ChevronRight,
+  CircleDot,
   ExternalLink,
   Loader2,
   RefreshCw,
   Search,
   SquareKanban,
+  UserRound,
+  X,
 } from "lucide-react";
 import { getJiraAdminToken } from "../../lib/jiraAdminToken.js";
 import { fetchJiraProjects, fetchJiraTickets } from "../../lib/jiraTicketsApi.js";
@@ -13,16 +18,18 @@ import { presentState } from "../../lib/jiraTicketStates.js";
 import { resolveMappedJiraProject } from "../../lib/jiraProjectMapping.js";
 import {
   CATEGORY_LABELS,
-  CATEGORY_TONE,
   SEVERITY_LABELS,
-  SEVERITY_TONE,
   STATUS_VIEWS,
   requestForView,
   applyFilters,
+  avatarTint,
+  categoryTone,
   collectFacets,
   flattenTickets,
+  initialsOf,
   projectsFromFeed,
   relativeTime,
+  severityTone,
   sortTickets,
 } from "../../lib/jiraTickets.js";
 import JiraAdminTokenGate from "../../components/jira/JiraAdminTokenGate.jsx";
@@ -92,15 +99,22 @@ const SEVERITY_OPTIONS = [
 
 const emptyFilters = { status: "", priority: "", assignee: "", issueType: "", severity: "" };
 
+/**
+ * One labelled facet filter.
+ *
+ * The label is visible rather than screen-reader-only: five unlabelled
+ * dropdowns in a row is a guessing game, and a column of small caps labels
+ * above them costs one line of height and removes it.
+ */
 function Select({ label, value, onChange, children }) {
   return (
-    <label className="flex items-center gap-2 text-xs text-white/40">
-      <span className="sr-only">{label}</span>
+    <label className="jira-field">
+      <span className="jira-field-label">{label}</span>
       <select
         value={value}
         onChange={(event) => onChange(event.target.value)}
         aria-label={label}
-        className="settings-input rounded-lg border border-white/10 bg-white/[0.04] px-2.5 py-1.5 text-xs text-white/80 outline-none transition focus:border-brand-400/50"
+        className={`jira-select${value ? " is-active" : ""}`}
       >
         {children}
       </select>
@@ -419,9 +433,21 @@ export default function JiraTickets() {
     );
   }, []);
 
+  // How many facets are narrowing the list right now. Presentational only -
+  // it drives the count on the "Clear filters" control so a filtered view
+  // never looks like an empty board.
+  const activeFilterCount = [
+    filters.status,
+    filters.priority,
+    filters.assignee,
+    filters.issueType,
+    filters.severity,
+    search,
+  ].filter(Boolean).length;
+
   if (!adminToken) {
     return (
-      <div className="space-y-4">
+      <div className="jira-page">
         <Header onRefresh={() => load()} loading={loading} disabled />
         <JiraAdminTokenGate token={adminToken} onChange={setAdminToken} />
       </div>
@@ -429,29 +455,32 @@ export default function JiraTickets() {
   }
 
   return (
-    <div className="space-y-4">
+    <div className="jira-page">
       <Header
         onRefresh={() => load()}
         loading={loading}
         project={selectedProject}
         seoxProjectName={seoxProjectName}
         count={tickets.length}
+        mappingStatus={mappingResolution.status}
       />
 
+      {/* A read of the rows already in state - no extra request, and the
+          label says "loaded" rather than "total" because that is what it
+          counts. */}
+      {tickets.length > 0 && <TicketStats tickets={tickets} />}
+
       {/* --- Controls ------------------------------------------------- */}
-      <div className="space-y-3 rounded-2xl border border-white/10 bg-ink-800/60 px-4 py-3 backdrop-blur">
-        <div className="flex flex-wrap items-center gap-2">
-          <div className="flex flex-wrap items-center gap-1 rounded-xl border border-white/10 bg-white/[0.03] p-1">
+      <section className="jira-toolbar" aria-label="Ticket views and filters">
+        <div className="jira-toolbar-primary">
+          <div className="jira-segment">
             {STATUS_VIEWS.map((item) => (
               <button
                 key={item.id}
                 type="button"
                 onClick={() => setView(item.id)}
-                className={`rounded-lg px-3 py-1.5 text-xs font-bold transition ${
-                  view === item.id
-                    ? "bg-brand-500/20 text-brand-200"
-                    : "text-white/55 hover:bg-white/[0.05] hover:text-white"
-                }`}
+                aria-pressed={view === item.id}
+                className={`jira-segment-btn${view === item.id ? " is-active" : ""}`}
               >
                 {item.label}
                 {/* Only the ACTIVE view carries a count, because only its
@@ -459,26 +488,26 @@ export default function JiraTickets() {
                     tabs would mean claiming how many resolved tickets exist
                     without having asked Jira for them. */}
                 {view === item.id && tickets.length > 0 && (
-                  <span className="ml-1.5 text-[11px] opacity-70">{tickets.length}</span>
+                  <span className="jira-segment-count">{tickets.length}</span>
                 )}
               </button>
             ))}
           </div>
 
-          <div className="relative ml-auto min-w-[220px] flex-1 sm:max-w-xs">
-            <Search className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-white/30" />
+          <div className="jira-search">
+            <Search className="jira-search-icon" aria-hidden="true" />
             <input
               type="search"
               value={search}
               onChange={(event) => setSearch(event.target.value)}
               placeholder="Key, summary, URL, project, assignee…"
               aria-label="Search tickets"
-              className="settings-input w-full rounded-xl border border-white/10 bg-white/[0.04] py-2 pl-9 pr-3 text-sm text-white outline-none transition focus:border-brand-400/50"
+              className="jira-search-input"
             />
           </div>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="jira-toolbar-filters">
           {/* *** THE JIRA PROJECT SELECTOR ***
               Jira projects, from Jira. The value is the Jira KEY - the stable
               identifier - while the label shows the name for humans. The key
@@ -489,16 +518,14 @@ export default function JiraTickets() {
               be inspected ad hoc, and that manual pick holds until the SEOX
               project changes - at which point the new project's mapping wins,
               because the selection belongs to the project, not to the page. */}
-          <label className="flex items-center gap-2">
-            <span className="text-[11px] font-bold uppercase tracking-wider text-white/35">
-              Jira project
-            </span>
+          <label className="jira-field jira-field-board">
+            <span className="jira-field-label">Jira project</span>
             <select
               value={jiraProjectKey}
               onChange={(event) => setJiraProjectKey(event.target.value)}
               disabled={loadingProjects || jiraProjects.length === 0}
               aria-label="Jira project"
-              className="settings-input min-w-[240px] rounded-lg border border-brand-500/30 bg-brand-500/[0.07] px-2.5 py-1.5 text-xs font-semibold text-white outline-none transition focus:border-brand-400 disabled:opacity-50"
+              className="jira-select jira-select-board"
             >
               {loadingProjects && <option value="">Loading Jira projects…</option>}
               {!loadingProjects && jiraProjects.length === 0 && (
@@ -524,18 +551,7 @@ export default function JiraTickets() {
             </select>
           </label>
 
-          {/* Where that value came from. Without this the dropdown looks like
-              a free choice the user forgot to make, rather than an answer
-              already recorded in Settings. */}
-          {seoxProjectName && (
-            <span className="text-[11px] text-white/30">
-              {mappingResolution.status === "ready"
-                ? `Mapped to ${seoxProjectName}`
-                : mappingResolution.status === "blocked"
-                ? `Not mapped for ${seoxProjectName}`
-                : `Reading the Jira mapping for ${seoxProjectName}…`}
-            </span>
-          )}
+          <span className="jira-filter-divider" aria-hidden="true" />
 
           <Select
             label="Jira status"
@@ -601,25 +617,36 @@ export default function JiraTickets() {
             ))}
           </Select>
 
-          {(filters.status ||
-            filters.priority ||
-            filters.assignee ||
-            filters.issueType ||
-            filters.severity ||
-            search) && (
+          {activeFilterCount > 0 && (
             <button
               type="button"
               onClick={() => {
                 setFilters(emptyFilters);
                 setSearch("");
               }}
-              className="rounded-lg px-2.5 py-1.5 text-xs font-semibold text-white/45 transition hover:text-white"
+              className="jira-clear"
             >
-              Clear filters
+              <X className="jira-clear-icon" aria-hidden="true" />
+              Clear
+              <span className="jira-clear-count">{activeFilterCount}</span>
             </button>
           )}
         </div>
-      </div>
+
+        {/* Where the board above came from. Without this the dropdown looks
+            like a free choice the user forgot to make, rather than an answer
+            already recorded in Settings. */}
+        {seoxProjectName && (
+          <p className="jira-mapping-note" data-status={mappingResolution.status}>
+            <span className="jira-mapping-dot" aria-hidden="true" />
+            {mappingResolution.status === "ready"
+              ? `Mapped to ${seoxProjectName}`
+              : mappingResolution.status === "blocked"
+              ? `Not mapped for ${seoxProjectName}`
+              : `Reading the Jira mapping for ${seoxProjectName}…`}
+          </p>
+        )}
+      </section>
 
       {/* --- Body ----------------------------------------------------- */}
       {/* The Jira project list itself failed. Nothing below can work, and
@@ -639,22 +666,21 @@ export default function JiraTickets() {
            Without this the page renders one empty frame between knowing the
            board and asking for its tickets. */
         (mappingResolution.status === "ready" && !jiraProjectKey) ? (
-        <div className="flex items-center justify-center gap-2 rounded-2xl border border-white/10 bg-ink-800/60 p-10 text-sm text-white/45 backdrop-blur">
-          <Loader2 className="h-4 w-4 animate-spin" />
-          {loadingProjects && !jiraProjects.length
-            ? "Loading Jira projects…"
-            : `Finding the Jira project mapped to ${seoxProjectName || "the selected project"}…`}
-        </div>
+        <TableSkeleton
+          label={
+            loadingProjects && !jiraProjects.length
+              ? "Loading Jira projects…"
+              : `Finding the Jira project mapped to ${seoxProjectName || "the selected project"}…`
+          }
+        />
       ) : loadingProjects && !jiraProjects.length ? (
-        <div className="flex items-center justify-center gap-2 rounded-2xl border border-white/10 bg-ink-800/60 p-10 text-sm text-white/45 backdrop-blur">
-          <Loader2 className="h-4 w-4 animate-spin" />
-          Loading Jira projects…
-        </div>
+        <TableSkeleton label="Loading Jira projects…" />
       ) : loading ? (
-        <div className="flex items-center justify-center gap-2 rounded-2xl border border-white/10 bg-ink-800/60 p-10 text-sm text-white/45 backdrop-blur">
-          <Loader2 className="h-4 w-4 animate-spin" />
-          Loading {selectedProject ? `${selectedProject.name} (${selectedProject.key})` : "Jira"} tickets…
-        </div>
+        <TableSkeleton
+          label={`Loading ${
+            selectedProject ? `${selectedProject.name} (${selectedProject.key})` : "Jira"
+          } tickets…`}
+        />
       ) : requestError ? (
         <>
           <JiraStateNotice state={requestError} onRetry={() => load()} />
@@ -696,24 +722,30 @@ export default function JiraTickets() {
               <>
                 <TicketTable tickets={visible} onSelect={setSelectedKey} />
 
-                <div className="flex flex-wrap items-center justify-between gap-3 px-1 text-xs text-white/40">
-                  <span>
-                    Showing {visible.length} of {tickets.length} loaded
-                    {okProjects[0].jira?.project_key
-                      ? ` from Jira project ${okProjects[0].jira.project_key}`
-                      : ""}
+                <div className="jira-footer">
+                  <span className="jira-footer-count">
+                    Showing <strong>{visible.length}</strong> of <strong>{tickets.length}</strong>{" "}
+                    loaded
+                    {okProjects[0].jira?.project_key ? (
+                      <>
+                        {" from "}
+                        <span className="jira-key jira-key-inline">
+                          {okProjects[0].jira.project_key}
+                        </span>
+                      </>
+                    ) : null}
                   </span>
                   {nextPageToken && (
                     <button
                       type="button"
                       disabled={loadingMore}
                       onClick={() => load({ pageToken: nextPageToken })}
-                      className="inline-flex items-center gap-1 rounded-lg border border-white/10 bg-white/[0.04] px-2.5 py-1.5 font-semibold text-white/70 transition hover:bg-white/[0.08] disabled:opacity-50"
+                      className="jira-loadmore"
                     >
                       {loadingMore ? (
-                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                        <Loader2 className="jira-loadmore-icon animate-spin" />
                       ) : (
-                        <ChevronRight className="h-3.5 w-3.5" />
+                        <ChevronRight className="jira-loadmore-icon" />
                       )}
                       Load more from Jira
                     </button>
@@ -727,7 +759,7 @@ export default function JiraTickets() {
       {selected && (
         <>
           <div
-            className="fixed inset-0 z-40 bg-black/50 backdrop-blur-sm"
+            className="jira-drawer-backdrop"
             onClick={() => setSelectedKey("")}
             aria-hidden="true"
           />
@@ -742,6 +774,14 @@ export default function JiraTickets() {
   );
 }
 
+/* ------------------------------------------------------------------ */
+/*  Page header                                                        */
+/*                                                                     */
+/*  Built to the dashboard header recipe: a white surface with two     */
+/*  very low-opacity brand washes, a brand tile carrying the icon, and */
+/*  the supporting facts on a meta row below a hairline rather than    */
+/*  crammed into one sentence.                                         */
+/* ------------------------------------------------------------------ */
 function Header({
   onRefresh,
   loading,
@@ -749,133 +789,289 @@ function Header({
   project = null,
   seoxProjectName = "",
   count = 0,
+  mappingStatus = "",
 }) {
+  const mappingTone =
+    mappingStatus === "ready" ? "success" : mappingStatus === "blocked" ? "error" : "info";
+
   return (
-    <header className="flex flex-wrap items-start justify-between gap-3">
-      <div className="flex items-center gap-3">
-        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-brand-500/15 text-brand-300">
-          <SquareKanban className="h-5 w-5" />
-        </div>
-        <div>
-          <h1 className="font-display text-xl font-bold text-white">
-            {project ? `${project.name} — Jira Tickets` : "Jira Tickets"}
+    <header className="jira-hero">
+      <div className="jira-hero-top">
+        <span className="jira-hero-icon" aria-hidden="true">
+          <SquareKanban />
+        </span>
+
+        <div className="jira-hero-copy">
+          <p className="jira-hero-eyebrow">Jira integration</p>
+          <h1 className="jira-hero-title">
+            {project ? project.name : "Jira Tickets"}
+            {project && <span className="jira-key jira-hero-key">{project.key}</span>}
           </h1>
-          {/* Both names, because they are different things and the page is
-              only correct when they line up: the SEOX project chosen at the
-              top, and the Jira board its mapping points at. */}
-          <p className="text-sm text-white/45">
+          <p className="jira-hero-sub">
             {project
-              ? `Live from Jira project ${project.key}${
-                  seoxProjectName ? ` · mapped to ${seoxProjectName}` : ""
-                }${count ? ` · ${count} loaded` : ""}`
+              ? "Live from Jira — every issue on this board, whether SEOX filed it or someone raised it by hand."
               : seoxProjectName
               ? `The Jira project mapped to ${seoxProjectName}.`
               : "Live from Jira. Select a project to see its mapped Jira tickets."}
           </p>
         </div>
+
+        <button
+          type="button"
+          onClick={onRefresh}
+          disabled={loading || disabled}
+          className="jira-refresh"
+        >
+          <RefreshCw className={`jira-refresh-icon${loading ? " animate-spin" : ""}`} />
+          Refresh
+        </button>
       </div>
-      <button
-        type="button"
-        onClick={onRefresh}
-        disabled={loading || disabled}
-        className="inline-flex items-center gap-2 rounded-xl border border-white/10 bg-white/[0.04] px-3.5 py-2 text-sm font-semibold text-white/70 transition hover:bg-white/[0.08] disabled:cursor-not-allowed disabled:opacity-50"
-      >
-        <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
-        Refresh
-      </button>
+
+      {/* Both names, because they are different things and the page is only
+          correct when they line up: the SEOX project chosen at the top, and
+          the Jira board its mapping points at. */}
+      {(project || seoxProjectName || count > 0) && (
+        <div className="jira-hero-meta">
+          {project && (
+            <span className="jira-chip" data-tone="brand">
+              <SquareKanban className="jira-chip-icon" aria-hidden="true" />
+              Board {project.key}
+            </span>
+          )}
+          {seoxProjectName && (
+            <span className="jira-chip" data-tone={mappingTone}>
+              <span className="jira-chip-dot" aria-hidden="true" />
+              {mappingStatus === "blocked" ? "Not mapped to " : "Mapped to "}
+              {seoxProjectName}
+            </span>
+          )}
+          {count > 0 && (
+            <span className="jira-chip" data-tone="neutral">
+              {count} loaded
+            </span>
+          )}
+        </div>
+      )}
     </header>
   );
 }
 
+/* ------------------------------------------------------------------ */
+/*  Summary tiles                                                      */
+/*                                                                     */
+/*  A read of the rows already in state. Nothing is fetched for these  */
+/*  and nothing is inferred beyond them, so the label is "loaded", not */
+/*  "total" - the board may hold far more than this page asked for.    */
+/* ------------------------------------------------------------------ */
+function TicketStats({ tickets }) {
+  const counts = useMemo(() => {
+    let critical = 0;
+    let inProgress = 0;
+    let done = 0;
+    let unassigned = 0;
+    for (const ticket of tickets) {
+      if (ticket.severity === "error") critical += 1;
+      const category = String(ticket.status?.category || "").toLowerCase();
+      if (category === "indeterminate") inProgress += 1;
+      else if (category === "done") done += 1;
+      if (!ticket.assignee?.displayName) unassigned += 1;
+    }
+    return { critical, inProgress, done, unassigned };
+  }, [tickets]);
+
+  const tiles = [
+    { key: "loaded", label: "Loaded", value: tickets.length, tone: "neutral", Icon: SquareKanban },
+    { key: "critical", label: "Critical", value: counts.critical, tone: "error", Icon: AlertTriangle },
+    { key: "progress", label: "In progress", value: counts.inProgress, tone: "info", Icon: CircleDot },
+    { key: "done", label: "Done", value: counts.done, tone: "success", Icon: CheckCircle2 },
+    { key: "unassigned", label: "Unassigned", value: counts.unassigned, tone: "warning", Icon: UserRound },
+  ];
+
+  return (
+    <div className="jira-stats">
+      {tiles.map(({ key, label, value, tone, Icon }) => (
+        <div key={key} className="jira-stat" data-tone={tone}>
+          <span className="jira-stat-icon" aria-hidden="true">
+            <Icon />
+          </span>
+          <span className="jira-stat-value">{value}</span>
+          <span className="jira-stat-label">{label}</span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/*  Presentation helpers                                               */
+/* ------------------------------------------------------------------ */
+
+/**
+ * Priority read as a rank, for the dot beside the name.
+ *
+ * Jira lets a site rename its priorities, so this matches on the words that
+ * survive renaming and falls back to an unranked dot rather than guessing.
+ * "highest" and "lowest" are tested before "high" and "low" because each
+ * contains the other.
+ */
+function priorityRank(name) {
+  const value = String(name || "").toLowerCase();
+  if (!value) return "none";
+  if (value.includes("highest") || value.includes("blocker") || value.includes("critical")) {
+    return "highest";
+  }
+  if (value.includes("lowest") || value.includes("trivial")) return "lowest";
+  if (value.includes("high") || value.includes("major") || value.includes("urgent")) return "high";
+  if (value.includes("low") || value.includes("minor")) return "low";
+  if (value.includes("medium") || value.includes("normal")) return "medium";
+  return "none";
+}
+
+/* ------------------------------------------------------------------ */
+/*  Loading placeholder                                                */
+/*                                                                     */
+/*  A shaped skeleton rather than a lone spinner in a box: the page    */
+/*  keeps its height, so the table does not jump into place when the   */
+/*  rows arrive.                                                       */
+/* ------------------------------------------------------------------ */
+function TableSkeleton({ label }) {
+  const widths = ["14%", "9%", "38%", "12%", "10%", "17%"];
+  return (
+    <div className="jira-skeleton" role="status" aria-live="polite">
+      <div className="jira-skeleton-head">
+        <Loader2 className="jira-skeleton-spinner animate-spin" aria-hidden="true" />
+        <span>{label}</span>
+      </div>
+      <div className="jira-skeleton-body" aria-hidden="true">
+        {[0, 1, 2, 3, 4, 5].map((row) => (
+          <div key={row} className="jira-skeleton-row">
+            {widths.map((width, cell) => (
+              <span key={cell} className="jira-skeleton-bar" style={{ width }} />
+            ))}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/*  Ticket table                                                       */
+/* ------------------------------------------------------------------ */
 function TicketTable({ tickets, onSelect }) {
   return (
-    <div className="overflow-hidden rounded-2xl border border-white/10 bg-ink-800/60 backdrop-blur">
-      <div className="overflow-x-auto">
-        <table className="w-full min-w-[1080px] text-left text-sm">
-          <thead className="border-b border-white/10 text-[11px] uppercase tracking-wider text-white/40">
+    <div className="jira-table-card">
+      <div className="jira-table-scroll">
+        <table className="jira-table">
+          <thead>
             <tr>
-              <th className="px-3 py-2.5 font-bold">Project</th>
-              <th className="px-3 py-2.5 font-bold">Jira key</th>
-              <th className="px-3 py-2.5 font-bold">Summary</th>
-              <th className="px-3 py-2.5 font-bold">Type</th>
-              <th className="px-3 py-2.5 font-bold">SEO severity</th>
-              <th className="px-3 py-2.5 font-bold">Priority</th>
-              <th className="px-3 py-2.5 font-bold">Status</th>
-              <th className="px-3 py-2.5 font-bold">Assignee</th>
-              <th className="px-3 py-2.5 font-bold">Updated</th>
-              <th className="px-3 py-2.5 text-right font-bold">Actions</th>
+              <th scope="col">Project</th>
+              <th scope="col">Jira key</th>
+              <th scope="col">Summary</th>
+              <th scope="col">Type</th>
+              <th scope="col">SEO severity</th>
+              <th scope="col">Priority</th>
+              <th scope="col">Status</th>
+              <th scope="col">Assignee</th>
+              <th scope="col">Updated</th>
+              <th scope="col" className="jira-col-actions">
+                Actions
+              </th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-white/[0.06]">
+          <tbody>
             {tickets.map((ticket) => {
               const category = String(ticket.status?.category || "").toLowerCase();
+              const assignee = ticket.assignee?.displayName || "";
               return (
-                <tr
-                  key={ticket.key}
-                  onClick={() => onSelect(ticket.key)}
-                  className="cursor-pointer transition hover:bg-white/[0.03]"
-                >
-                  <td className="max-w-[150px] truncate px-3 py-2.5 text-white/70">
+                <tr key={ticket.key} onClick={() => onSelect(ticket.key)} className="jira-row">
+                  <td className="jira-cell-project" title={ticket.projectName}>
                     {ticket.projectName}
                   </td>
-                  <td className="whitespace-nowrap px-3 py-2.5 font-mono text-xs font-bold text-brand-300">
-                    {ticket.key}
+
+                  <td className="jira-cell-key">
+                    <span className="jira-key">{ticket.key}</span>
                   </td>
-                  <td className="max-w-[300px] truncate px-3 py-2.5 text-white/85">
-                    {ticket.summary}
-                    {ticket.createdBySeox && (
-                      <span
-                        className="ml-2 rounded border border-brand-500/30 bg-brand-500/10 px-1.5 py-0.5 text-[10px] font-bold text-brand-300"
-                        title="Filed by SEOX from an SEO finding"
-                      >
-                        SEOX
+
+                  <td className="jira-cell-summary">
+                    <span className="jira-summary-line">
+                      <span className="jira-summary-text" title={ticket.summary}>
+                        {ticket.summary}
+                      </span>
+                      {ticket.createdBySeox && (
+                        <span className="jira-badge-seox" title="Filed by SEOX from an SEO finding">
+                          SEOX
+                        </span>
+                      )}
+                    </span>
+                    {ticket.affectedUrl && (
+                      <span className="jira-summary-url" title={ticket.affectedUrl}>
+                        {ticket.affectedUrl}
                       </span>
                     )}
                   </td>
-                  <td className="max-w-[120px] truncate px-3 py-2.5 text-xs text-white/50">
-                    {ticket.issueType?.name || "—"}
-                  </td>
-                  <td className="px-3 py-2.5">
+
+                  <td className="jira-cell-type">{ticket.issueType?.name || "—"}</td>
+
+                  <td>
                     {ticket.severity ? (
-                      <span
-                        className={`whitespace-nowrap rounded-md border px-2 py-0.5 text-[11px] font-semibold ${
-                          SEVERITY_TONE[ticket.severity] || SEVERITY_TONE.notice
-                        }`}
-                      >
+                      <span className="jira-pill" data-tone={severityTone(ticket.severity)}>
                         {SEVERITY_LABELS[ticket.severity] || ticket.severity}
                       </span>
                     ) : (
-                      <span className="text-xs text-white/25">—</span>
+                      <span className="jira-dash">—</span>
                     )}
                   </td>
-                  <td className="whitespace-nowrap px-3 py-2.5 text-xs text-white/60">
-                    {ticket.priority?.name || "—"}
+
+                  <td className="jira-cell-priority">
+                    {ticket.priority?.name ? (
+                      <span className="jira-priority" data-rank={priorityRank(ticket.priority.name)}>
+                        <span className="jira-priority-dot" aria-hidden="true" />
+                        {ticket.priority.name}
+                      </span>
+                    ) : (
+                      <span className="jira-dash">—</span>
+                    )}
                   </td>
-                  <td className="px-3 py-2.5">
+
+                  <td>
                     <span
-                      className={`whitespace-nowrap rounded-md border px-2 py-0.5 text-[11px] font-semibold ${
-                        CATEGORY_TONE[category] || CATEGORY_TONE.new
-                      }`}
+                      className="jira-pill"
+                      data-tone={categoryTone(category)}
                       title={CATEGORY_LABELS[category] || ""}
                     >
                       {ticket.status?.name || CATEGORY_LABELS[category] || "Unknown"}
                     </span>
                   </td>
-                  <td className="max-w-[130px] truncate px-3 py-2.5 text-xs text-white/60">
-                    {ticket.assignee?.displayName || "Unassigned"}
+
+                  <td className="jira-cell-assignee">
+                    {assignee ? (
+                      <span className="jira-assignee" title={assignee}>
+                        <span
+                          className="jira-avatar"
+                          data-tint={avatarTint(assignee)}
+                          aria-hidden="true"
+                        >
+                          {initialsOf(assignee)}
+                        </span>
+                        <span className="jira-assignee-name">{assignee}</span>
+                      </span>
+                    ) : (
+                      <span className="jira-assignee is-empty">
+                        <span className="jira-avatar is-empty" aria-hidden="true" />
+                        <span className="jira-assignee-name">Unassigned</span>
+                      </span>
+                    )}
                   </td>
-                  <td className="whitespace-nowrap px-3 py-2.5 text-xs text-white/40">
-                    {relativeTime(ticket.updated)}
-                  </td>
-                  <td className="whitespace-nowrap px-3 py-2.5 text-right">
-                    <div
-                      className="inline-flex items-center gap-1.5"
-                      onClick={(event) => event.stopPropagation()}
-                    >
+
+                  <td className="jira-cell-updated">{relativeTime(ticket.updated)}</td>
+
+                  <td className="jira-cell-actions">
+                    <div className="jira-actions" onClick={(event) => event.stopPropagation()}>
                       <button
                         type="button"
                         onClick={() => onSelect(ticket.key)}
-                        className="rounded-md border border-white/10 bg-white/[0.04] px-2.5 py-1.5 text-xs font-semibold text-white/70 transition hover:bg-white/[0.08]"
+                        className="jira-action"
                       >
                         View
                       </button>
@@ -885,9 +1081,9 @@ function TicketTable({ tickets, onSelect }) {
                           target="_blank"
                           rel="noreferrer noopener"
                           title="Open in Jira"
-                          className="inline-flex items-center rounded-md border border-white/10 bg-white/[0.04] p-1.5 text-white/60 transition hover:bg-white/[0.08] hover:text-white"
+                          className="jira-action jira-action-icon"
                         >
-                          <ExternalLink className="h-3.5 w-3.5" />
+                          <ExternalLink />
                         </a>
                       )}
                     </div>

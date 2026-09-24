@@ -3075,16 +3075,6 @@ button.auth-link:hover:not(:disabled) {
   color: var(--text-secondary) !important;
 }
 
-/* Stripe Settings Workspace Scoped Theme & Contrast */
-.stripe-settings-workspace {
-  color: var(--text-primary);
-}
-.stripe-settings-workspace h1,
-.stripe-settings-workspace h2,
-.stripe-settings-workspace h3 {
-  color: var(--brand-blue) !important;
-}
-
 /* AI Content Helper Workspace Scoped Theme & Contrast */
 .ai-content-helper-workspace {
   color: var(--text-primary);
@@ -18376,4 +18366,3064 @@ input[type="week"]:focus-visible {
   .landing-section.is-stats {
     padding-block: 44px;
   }
+}
+
+
+/* ==================================================================
+   JIRA TICKETS  (/jira/tickets)
+
+   The page was still wearing the old dark theme inline: `bg-ink-800/60
+   backdrop-blur` panels, `text-white/45` copy and `border-white/10`
+   hairlines, all of which the compat layer above has to translate one
+   utility at a time. It is rebuilt here on the same recipe the
+   dashboard uses — token surfaces, a header with a brand tile and a
+   meta row, summary tiles, and one data table with real semantic
+   pills — so the two screens read as the same product.
+
+   Everything in this block is presentation. The markup carries the
+   same data, in the same order, with the same handlers.
+
+   NOTE ON !important
+   The FORM/BUTTON HEURISTICS above paint every unclassed <button>
+   brand red with !important. An !important declaration is only beaten
+   by another !important, so the buttons here restate their colours
+   that way. Nothing else in this block needs it.
+   ================================================================== */
+
+.jira-page {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding-bottom: 24px;
+}
+
+/* --- Header ------------------------------------------------------- */
+.jira-hero {
+  background-color: var(--surface);
+  /* The same two low-opacity washes as the dashboard header: depth on
+     the right-hand side without putting a saturated slab back. */
+  background-image:
+    radial-gradient(120% 110% at 100% 0%, rgba(223, 60, 39, 0.055) 0%, transparent 55%),
+    radial-gradient(90% 110% at 100% 100%, rgba(45, 43, 111, 0.04) 0%, transparent 60%);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-xs);
+  padding: 22px 24px;
+}
+
+.jira-hero-top {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+}
+
+.jira-hero-icon {
+  align-items: center;
+  background: var(--brand-red);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 2px 8px rgba(223, 60, 39, 0.26);
+  color: #ffffff;
+  display: inline-flex;
+  flex-shrink: 0;
+  height: 44px;
+  justify-content: center;
+  width: 44px;
+}
+.jira-hero-icon svg {
+  height: 21px;
+  width: 21px;
+}
+
+.jira-hero-copy {
+  min-width: 0;
+  flex: 1;
+}
+
+.jira-hero-eyebrow {
+  color: var(--text-muted);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  margin: 0 0 2px;
+  text-transform: uppercase;
+}
+
+.jira-hero-title {
+  align-items: center;
+  color: var(--brand-blue);
+  display: flex;
+  flex-wrap: wrap;
+  font-size: 1.5rem;
+  font-weight: 700;
+  gap: 10px;
+  letter-spacing: -0.02em;
+  line-height: 2rem;
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.jira-hero-key {
+  font-size: 12px;
+  padding: 3px 8px;
+}
+
+.jira-hero-sub {
+  color: var(--text-secondary);
+  font-size: 0.875rem;
+  margin: 6px 0 0;
+  max-width: 78ch;
+}
+
+/* The one action on the header. Quiet by design — this screen reads
+   far more often than it refreshes. */
+.jira-refresh {
+  align-items: center;
+  align-self: center;
+  background: var(--surface) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: var(--radius-md);
+  color: var(--text-secondary) !important;
+  display: inline-flex;
+  flex-shrink: 0;
+  font-size: 13px;
+  font-weight: 600;
+  gap: 8px;
+  min-height: var(--control-h);
+  padding: 0 14px;
+  transition: background-color var(--dur) ease, border-color var(--dur) ease,
+    color var(--dur) ease;
+}
+.jira-refresh:hover:not(:disabled) {
+  background: var(--surface-sunken) !important;
+  border-color: var(--border-strong) !important;
+  color: var(--text-primary) !important;
+}
+.jira-refresh:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+.jira-refresh-icon {
+  height: 15px;
+  width: 15px;
+}
+
+/* Meta row sits below a hairline, so the header reads as two bands of
+   information rather than one crowded sentence. */
+.jira-hero-meta {
+  border-top: 1px solid var(--border-subtle);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 18px;
+  padding-top: 16px;
+}
+
+/* --- Chips -------------------------------------------------------- */
+.jira-chip {
+  align-items: center;
+  background: var(--surface-sunken);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text-secondary);
+  display: inline-flex;
+  font-size: 11.5px;
+  font-weight: 600;
+  gap: 6px;
+  letter-spacing: 0.01em;
+  max-width: 100%;
+  overflow: hidden;
+  padding: 4px 10px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.jira-chip-icon {
+  height: 13px;
+  width: 13px;
+}
+.jira-chip-dot {
+  border-radius: var(--radius-pill);
+  flex-shrink: 0;
+  height: 6px;
+  width: 6px;
+}
+.jira-chip[data-tone="brand"] {
+  background: var(--brand-blue-subtle);
+  border-color: var(--brand-blue-border);
+  color: var(--brand-blue);
+}
+.jira-chip[data-tone="success"] {
+  background: var(--success-bg);
+  border-color: var(--success-border);
+  color: var(--success-text);
+}
+.jira-chip[data-tone="success"] .jira-chip-dot {
+  background: var(--success);
+}
+.jira-chip[data-tone="error"] {
+  background: var(--error-bg);
+  border-color: var(--error-border);
+  color: var(--error-text);
+}
+.jira-chip[data-tone="error"] .jira-chip-dot {
+  background: var(--error);
+}
+.jira-chip[data-tone="info"] {
+  background: var(--info-bg);
+  border-color: var(--info-border);
+  color: var(--info-text);
+}
+.jira-chip[data-tone="info"] .jira-chip-dot {
+  background: var(--info);
+}
+.jira-chip[data-tone="neutral"] .jira-chip-dot {
+  background: var(--text-disabled);
+}
+
+/* --- Summary tiles ------------------------------------------------ */
+.jira-stats {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+}
+
+.jira-stat {
+  align-items: center;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-xs);
+  display: grid;
+  grid-template-areas:
+    "icon value"
+    "icon label";
+  grid-template-columns: auto 1fr;
+  column-gap: 12px;
+  padding: 14px 16px;
+  transition: border-color var(--dur) var(--ease), box-shadow var(--dur) var(--ease);
+}
+.jira-stat:hover {
+  border-color: var(--border-strong);
+  box-shadow: var(--shadow-sm);
+}
+
+.jira-stat-icon {
+  align-items: center;
+  background: var(--surface-muted);
+  border-radius: var(--radius-lg);
+  color: var(--text-muted);
+  display: inline-flex;
+  grid-area: icon;
+  height: 36px;
+  justify-content: center;
+  width: 36px;
+}
+.jira-stat-icon svg {
+  height: 17px;
+  width: 17px;
+}
+
+.jira-stat-value {
+  color: var(--text-primary);
+  font-size: 1.375rem;
+  font-weight: 700;
+  grid-area: value;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+}
+
+.jira-stat-label {
+  color: var(--text-muted);
+  font-size: 11px;
+  font-weight: 600;
+  grid-area: label;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.jira-stat[data-tone="error"] .jira-stat-icon {
+  background: var(--error-bg);
+  color: var(--error-text);
+}
+.jira-stat[data-tone="warning"] .jira-stat-icon {
+  background: var(--warning-bg);
+  color: var(--warning-text);
+}
+.jira-stat[data-tone="info"] .jira-stat-icon {
+  background: var(--info-bg);
+  color: var(--info-text);
+}
+.jira-stat[data-tone="success"] .jira-stat-icon {
+  background: var(--success-bg);
+  color: var(--success-text);
+}
+
+/* --- Toolbar ------------------------------------------------------ */
+.jira-toolbar {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-xs);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 16px;
+}
+
+.jira-toolbar-primary {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+/* Segmented view switch. */
+.jira-segment {
+  background: var(--surface-muted);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  display: inline-flex;
+  gap: 2px;
+  padding: 3px;
+}
+
+.jira-segment-btn {
+  align-items: center;
+  background: transparent !important;
+  border: 1px solid transparent !important;
+  border-radius: var(--radius-sm);
+  color: var(--text-secondary) !important;
+  display: inline-flex;
+  font-size: 12.5px;
+  font-weight: 600;
+  gap: 6px;
+  padding: 6px 13px;
+  transition: background-color var(--dur) ease, color var(--dur) ease,
+    box-shadow var(--dur) ease;
+  white-space: nowrap;
+}
+.jira-segment-btn:hover:not(.is-active) {
+  background: rgba(255, 255, 255, 0.7) !important;
+  color: var(--text-primary) !important;
+}
+.jira-segment-btn.is-active {
+  background: var(--surface) !important;
+  border-color: var(--border) !important;
+  box-shadow: var(--shadow-xs);
+  color: var(--brand-blue) !important;
+}
+
+.jira-segment-count {
+  background: var(--brand-blue);
+  border-radius: var(--radius-pill);
+  color: #ffffff;
+  font-size: 10.5px;
+  font-weight: 700;
+  line-height: 1;
+  min-width: 18px;
+  padding: 3px 6px;
+  text-align: center;
+}
+
+/* Search field: the ring lives on the shell, not the bare input. */
+.jira-search {
+  align-items: center;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  display: flex;
+  flex: 1;
+  gap: 8px;
+  margin-left: auto;
+  min-height: var(--control-h);
+  min-width: 220px;
+  max-width: 340px;
+  padding: 0 12px;
+  transition: border-color var(--dur) ease, box-shadow var(--dur) ease;
+}
+.jira-search:hover {
+  border-color: var(--border-strong);
+}
+.jira-search:focus-within {
+  border-color: var(--brand-red);
+  box-shadow: var(--focus-ring-brand);
+}
+.jira-search-icon {
+  color: var(--text-disabled);
+  flex-shrink: 0;
+  height: 15px;
+  width: 15px;
+}
+.jira-search-input {
+  background: transparent;
+  border: 0;
+  color: var(--text-primary);
+  flex: 1;
+  font-size: 13px;
+  min-width: 0;
+  outline: none;
+  padding: 0;
+}
+.jira-search-input::placeholder {
+  color: var(--text-disabled);
+  opacity: 1;
+}
+.jira-search-input:focus-visible {
+  outline: none !important;
+}
+
+/* Filter row. */
+.jira-toolbar-filters {
+  align-items: flex-end;
+  border-top: 1px solid var(--border-subtle);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding-top: 14px;
+}
+
+.jira-field {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  min-width: 0;
+}
+.jira-field-label {
+  color: var(--text-muted);
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.jira-select {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  color: var(--text-primary);
+  font-size: 12.5px;
+  font-weight: 500;
+  min-height: 34px;
+  outline: none;
+  padding: 0 10px;
+  transition: border-color var(--dur) ease, box-shadow var(--dur) ease;
+}
+.jira-select:hover:not(:disabled) {
+  border-color: var(--border-strong);
+}
+.jira-select:focus {
+  border-color: var(--brand-red);
+  box-shadow: var(--focus-ring-brand);
+}
+.jira-select:disabled {
+  background: var(--surface-muted);
+  color: var(--text-disabled);
+  cursor: not-allowed;
+}
+/* A facet that is actually narrowing the list says so. */
+.jira-select.is-active {
+  background: var(--brand-red-subtle);
+  border-color: var(--brand-red-border);
+  color: var(--brand-red);
+  font-weight: 600;
+}
+
+/* The board selector is the one the page is driven by, so it is the
+   one that carries weight. */
+.jira-field-board {
+  min-width: 240px;
+}
+.jira-select-board {
+  border-color: var(--brand-blue-border);
+  color: var(--brand-blue);
+  font-weight: 600;
+  width: 100%;
+}
+
+.jira-filter-divider {
+  align-self: stretch;
+  background: var(--border);
+  margin: 0 2px;
+  width: 1px;
+}
+
+.jira-clear {
+  align-items: center;
+  background: var(--surface) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: var(--radius-md);
+  color: var(--text-secondary) !important;
+  display: inline-flex;
+  font-size: 12.5px;
+  font-weight: 600;
+  gap: 6px;
+  min-height: 34px;
+  padding: 0 10px;
+}
+.jira-clear:hover:not(:disabled) {
+  background: var(--error-bg) !important;
+  border-color: var(--error-border) !important;
+  color: var(--error-text) !important;
+}
+.jira-clear-icon {
+  height: 13px;
+  width: 13px;
+}
+.jira-clear-count {
+  background: var(--surface-muted);
+  border-radius: var(--radius-pill);
+  font-size: 10.5px;
+  font-weight: 700;
+  line-height: 1;
+  padding: 3px 6px;
+}
+
+/* Where the board above came from. */
+.jira-mapping-note {
+  align-items: center;
+  color: var(--text-muted);
+  display: flex;
+  font-size: 12px;
+  gap: 7px;
+  margin: 0;
+}
+.jira-mapping-dot {
+  background: var(--info);
+  border-radius: var(--radius-pill);
+  flex-shrink: 0;
+  height: 6px;
+  width: 6px;
+}
+.jira-mapping-note[data-status="ready"] .jira-mapping-dot {
+  background: var(--success);
+}
+.jira-mapping-note[data-status="blocked"] {
+  color: var(--error-text);
+}
+.jira-mapping-note[data-status="blocked"] .jira-mapping-dot {
+  background: var(--error);
+}
+
+/* --- Ticket table ------------------------------------------------- */
+.jira-table-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-xs);
+  overflow: hidden;
+}
+.jira-table-scroll {
+  overflow-x: auto;
+}
+
+.jira-table {
+  border-collapse: separate;
+  border-spacing: 0;
+  min-width: 1120px;
+  text-align: left;
+  width: 100%;
+}
+
+.jira-table thead th {
+  background: var(--surface-sunken);
+  border-bottom: 1px solid var(--border);
+  color: var(--text-muted);
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  padding: 11px 14px;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.jira-table th.jira-col-actions {
+  text-align: right;
+}
+
+.jira-row {
+  cursor: pointer;
+  transition: background-color var(--dur-fast) ease;
+}
+.jira-row > td {
+  border-bottom: 1px solid var(--border-subtle);
+  font-size: 13px;
+  padding: 11px 14px;
+  vertical-align: middle;
+}
+.jira-row:last-child > td {
+  border-bottom: 0;
+}
+.jira-row:hover {
+  background: var(--surface-sunken);
+}
+
+.jira-cell-project {
+  color: var(--text-secondary);
+  max-width: 160px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.jira-cell-key {
+  white-space: nowrap;
+}
+.jira-cell-type,
+.jira-cell-priority,
+.jira-cell-assignee {
+  color: var(--text-secondary);
+  font-size: 12.5px;
+}
+.jira-cell-type {
+  max-width: 130px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.jira-cell-updated {
+  color: var(--text-muted);
+  font-size: 12px;
+  white-space: nowrap;
+}
+.jira-cell-actions {
+  text-align: right;
+  white-space: nowrap;
+}
+.jira-dash {
+  color: var(--text-disabled);
+}
+
+/* The Jira key, as a quiet monospace tag. */
+.jira-key {
+  background: var(--brand-blue-subtle);
+  border: 1px solid var(--brand-blue-border);
+  border-radius: var(--radius-xs);
+  color: var(--brand-blue);
+  display: inline-block;
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  padding: 2px 7px;
+  white-space: nowrap;
+}
+.jira-key-inline {
+  font-size: 11px;
+  padding: 1px 6px;
+}
+
+/* Summary: the issue on the first line, the URL it came from beneath.
+   The URL is already on the row, and it is the fastest way to tell two
+   otherwise identical findings apart. */
+.jira-cell-summary {
+  max-width: 340px;
+  min-width: 260px;
+}
+.jira-summary-line {
+  align-items: center;
+  display: flex;
+  gap: 8px;
+  min-width: 0;
+}
+.jira-summary-text {
+  color: var(--text-primary);
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.jira-summary-url {
+  color: var(--text-disabled);
+  display: block;
+  font-size: 11px;
+  margin-top: 2px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.jira-badge-seox {
+  background: var(--brand-red-subtle);
+  border: 1px solid var(--brand-red-border);
+  border-radius: var(--radius-xs);
+  color: var(--brand-red);
+  flex-shrink: 0;
+  font-size: 9.5px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  padding: 2px 5px;
+}
+
+/* Severity and status share one pill. */
+.jira-pill {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface-sunken);
+  color: var(--text-secondary);
+  display: inline-block;
+  font-size: 11.5px;
+  font-weight: 600;
+  max-width: 160px;
+  overflow: hidden;
+  padding: 3px 9px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.jira-pill[data-tone="error"] {
+  background: var(--error-bg);
+  border-color: var(--error-border);
+  color: var(--error-text);
+}
+.jira-pill[data-tone="warning"] {
+  background: var(--warning-bg);
+  border-color: var(--warning-border);
+  color: var(--warning-text);
+}
+.jira-pill[data-tone="info"] {
+  background: var(--info-bg);
+  border-color: var(--info-border);
+  color: var(--info-text);
+}
+.jira-pill[data-tone="success"] {
+  background: var(--success-bg);
+  border-color: var(--success-border);
+  color: var(--success-text);
+}
+
+/* Priority reads as a rank at a glance, then as a word. */
+.jira-priority {
+  align-items: center;
+  display: inline-flex;
+  gap: 7px;
+  white-space: nowrap;
+}
+.jira-priority-dot {
+  border-radius: var(--radius-pill);
+  background: var(--text-disabled);
+  flex-shrink: 0;
+  height: 7px;
+  width: 7px;
+}
+.jira-priority[data-rank="highest"] .jira-priority-dot {
+  background: var(--error);
+  box-shadow: 0 0 0 3px rgba(217, 45, 32, 0.12);
+}
+.jira-priority[data-rank="high"] .jira-priority-dot {
+  background: #f04438;
+}
+.jira-priority[data-rank="medium"] .jira-priority-dot {
+  background: var(--warning);
+}
+.jira-priority[data-rank="low"] .jira-priority-dot {
+  background: #7cb8e8;
+}
+.jira-priority[data-rank="lowest"] .jira-priority-dot {
+  background: var(--text-disabled);
+}
+
+/* Assignee, with the initials that make a column of names scannable. */
+.jira-assignee {
+  align-items: center;
+  display: inline-flex;
+  gap: 8px;
+  max-width: 170px;
+  min-width: 0;
+}
+.jira-assignee-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.jira-assignee.is-empty .jira-assignee-name {
+  color: var(--text-disabled);
+}
+.jira-avatar {
+  align-items: center;
+  border-radius: var(--radius-pill);
+  display: inline-flex;
+  flex-shrink: 0;
+  font-size: 9.5px;
+  font-weight: 700;
+  height: 24px;
+  justify-content: center;
+  letter-spacing: 0.02em;
+  width: 24px;
+}
+.jira-avatar.is-empty {
+  border: 1px dashed var(--border-strong);
+  background: transparent;
+}
+.jira-avatar[data-tint="0"] {
+  background: #e7e6f3;
+  color: #3b3880;
+}
+.jira-avatar[data-tint="1"] {
+  background: #d9ecf8;
+  color: #1c5f8a;
+}
+.jira-avatar[data-tint="2"] {
+  background: #d9f2e4;
+  color: #1c6b46;
+}
+.jira-avatar[data-tint="3"] {
+  background: #fbe4dd;
+  color: #a33a23;
+}
+.jira-avatar[data-tint="4"] {
+  background: #f6e8c9;
+  color: #8a6416;
+}
+
+/* Row actions recede until the row is under the cursor, but never
+   disappear — on a touch screen there is no hover to wait for. */
+.jira-actions {
+  display: inline-flex;
+  gap: 6px;
+  opacity: 0.6;
+  transition: opacity var(--dur) ease;
+}
+.jira-row:hover .jira-actions,
+.jira-actions:focus-within {
+  opacity: 1;
+}
+
+.jira-action {
+  align-items: center;
+  background: var(--surface) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: var(--radius-sm);
+  color: var(--text-secondary) !important;
+  display: inline-flex;
+  font-size: 12px;
+  font-weight: 600;
+  gap: 6px;
+  justify-content: center;
+  min-height: 28px;
+  padding: 0 10px;
+  transition: background-color var(--dur) ease, border-color var(--dur) ease,
+    color var(--dur) ease;
+}
+.jira-action:hover:not(:disabled) {
+  background: var(--surface-muted) !important;
+  border-color: var(--border-strong) !important;
+  color: var(--text-primary) !important;
+}
+.jira-action-icon {
+  padding: 0;
+  width: 28px;
+}
+.jira-action-icon svg {
+  height: 14px;
+  width: 14px;
+}
+
+/* --- Footer ------------------------------------------------------- */
+.jira-footer {
+  align-items: center;
+  color: var(--text-muted);
+  display: flex;
+  flex-wrap: wrap;
+  font-size: 12.5px;
+  gap: 12px;
+  justify-content: space-between;
+  padding: 0 4px;
+}
+.jira-footer-count strong {
+  color: var(--text-primary);
+  font-weight: 700;
+}
+.jira-loadmore {
+  align-items: center;
+  background: var(--surface) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: var(--radius-md);
+  color: var(--text-secondary) !important;
+  display: inline-flex;
+  font-size: 12.5px;
+  font-weight: 600;
+  gap: 7px;
+  min-height: 34px;
+  padding: 0 13px;
+}
+.jira-loadmore:hover:not(:disabled) {
+  background: var(--surface-sunken) !important;
+  border-color: var(--border-strong) !important;
+  color: var(--text-primary) !important;
+}
+.jira-loadmore:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+.jira-loadmore-icon {
+  height: 14px;
+  width: 14px;
+}
+
+/* --- Loading skeleton --------------------------------------------- */
+.jira-skeleton {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-xs);
+  overflow: hidden;
+}
+.jira-skeleton-head {
+  align-items: center;
+  background: var(--surface-sunken);
+  border-bottom: 1px solid var(--border);
+  color: var(--text-secondary);
+  display: flex;
+  font-size: 12.5px;
+  font-weight: 600;
+  gap: 9px;
+  padding: 12px 16px;
+}
+.jira-skeleton-spinner {
+  color: var(--brand-red);
+  height: 15px;
+  width: 15px;
+}
+.jira-skeleton-row {
+  align-items: center;
+  border-bottom: 1px solid var(--border-subtle);
+  display: flex;
+  gap: 24px;
+  padding: 14px 16px;
+}
+.jira-skeleton-row:last-child {
+  border-bottom: 0;
+}
+.jira-skeleton-bar {
+  background: linear-gradient(
+    90deg,
+    var(--surface-muted) 0%,
+    var(--surface-sunken) 50%,
+    var(--surface-muted) 100%
+  );
+  background-size: 200% 100%;
+  border-radius: var(--radius-xs);
+  display: block;
+  height: 10px;
+  animation: jira-skeleton-shimmer 1.4s ease-in-out infinite;
+}
+.jira-skeleton-row:nth-child(2) .jira-skeleton-bar {
+  animation-delay: 0.08s;
+}
+.jira-skeleton-row:nth-child(3) .jira-skeleton-bar {
+  animation-delay: 0.16s;
+}
+.jira-skeleton-row:nth-child(4) .jira-skeleton-bar {
+  animation-delay: 0.24s;
+}
+.jira-skeleton-row:nth-child(5) .jira-skeleton-bar {
+  animation-delay: 0.32s;
+}
+.jira-skeleton-row:nth-child(6) .jira-skeleton-bar {
+  animation-delay: 0.4s;
+}
+
+@keyframes jira-skeleton-shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+/* --- State notice -------------------------------------------------
+   The rule this page follows: a configuration failure and an empty
+   backlog must not look the same. The empty tone is a quiet neutral
+   card; the error tone takes the warning palette and names the fix.
+   ------------------------------------------------------------------ */
+.jira-notice {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-xs);
+  display: flex;
+  gap: 16px;
+  padding: 22px 24px;
+}
+.jira-notice[data-tone="error"] {
+  background: var(--warning-bg);
+  border-color: var(--warning-border);
+}
+
+.jira-notice-icon {
+  align-items: center;
+  background: var(--surface-muted);
+  border-radius: var(--radius-lg);
+  color: var(--text-muted);
+  display: inline-flex;
+  flex-shrink: 0;
+  height: 40px;
+  justify-content: center;
+  width: 40px;
+}
+.jira-notice-icon svg {
+  height: 19px;
+  width: 19px;
+}
+.jira-notice[data-tone="error"] .jira-notice-icon {
+  background: #fdf0d5;
+  color: var(--warning-text);
+}
+
+.jira-notice-body {
+  flex: 1;
+  min-width: 0;
+}
+.jira-notice-project {
+  color: var(--text-muted);
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  margin: 0 0 3px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.jira-notice-title {
+  color: var(--text-primary);
+  font-size: 1rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  margin: 0;
+}
+.jira-notice[data-tone="error"] .jira-notice-title {
+  color: var(--warning-text);
+}
+.jira-notice-detail {
+  color: var(--text-secondary);
+  font-size: 13.5px;
+  margin: 5px 0 0;
+  max-width: 72ch;
+}
+
+/* What SEOX actually resolved, so the user can see how far the chain
+   got rather than guessing. */
+.jira-notice-facts {
+  border-top: 1px solid var(--border-subtle);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 22px;
+  margin: 14px 0 0;
+  padding-top: 12px;
+}
+.jira-notice[data-tone="error"] .jira-notice-facts {
+  border-top-color: var(--warning-border);
+}
+.jira-notice-fact {
+  display: flex;
+  font-size: 12px;
+  gap: 6px;
+}
+.jira-notice-fact dt {
+  color: var(--text-muted);
+}
+.jira-notice-fact dd {
+  color: var(--text-primary);
+  font-weight: 600;
+  margin: 0;
+}
+.jira-notice-fact dd.is-mono {
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+}
+
+.jira-notice-actions {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 16px;
+}
+.jira-notice-cta {
+  align-items: center;
+  background: var(--brand-red) !important;
+  border: 1px solid var(--brand-red) !important;
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-xs);
+  color: #ffffff !important;
+  display: inline-flex;
+  font-size: 13px;
+  font-weight: 600;
+  gap: 8px;
+  min-height: var(--control-h);
+  padding: 0 16px;
+}
+.jira-notice-cta:hover {
+  background: var(--brand-red-hover) !important;
+  border-color: var(--brand-red-hover) !important;
+}
+.jira-notice-retry {
+  align-items: center;
+  background: var(--surface) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: var(--radius-md);
+  color: var(--text-secondary) !important;
+  display: inline-flex;
+  font-size: 13px;
+  font-weight: 600;
+  gap: 8px;
+  min-height: var(--control-h);
+  padding: 0 14px;
+}
+.jira-notice-retry:hover:not(:disabled) {
+  background: var(--surface-sunken) !important;
+  border-color: var(--border-strong) !important;
+  color: var(--text-primary) !important;
+}
+.jira-notice-retry svg {
+  height: 14px;
+  width: 14px;
+}
+
+/* The machine-readable code, for a support conversation. */
+.jira-notice-code {
+  color: var(--text-disabled);
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+  font-size: 11px;
+  margin: 14px 0 0;
+}
+
+/* --- Admin token gate --------------------------------------------- */
+.jira-gate {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-xs);
+  overflow: hidden;
+}
+.jira-gate-head {
+  align-items: center;
+  background: var(--surface-sunken);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  gap: 12px;
+  padding: 14px 20px;
+}
+.jira-gate-icon {
+  align-items: center;
+  background: var(--brand-red);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 2px 8px rgba(223, 60, 39, 0.26);
+  color: #ffffff;
+  display: inline-flex;
+  flex-shrink: 0;
+  height: 38px;
+  justify-content: center;
+  width: 38px;
+}
+.jira-gate-icon svg {
+  height: 18px;
+  width: 18px;
+}
+.jira-gate-title {
+  color: var(--text-primary);
+  font-size: 0.9375rem;
+  font-weight: 700;
+  margin: 0;
+}
+.jira-gate-status {
+  color: var(--text-muted);
+  font-size: 12px;
+  margin: 1px 0 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.jira-gate-spinner {
+  color: var(--text-muted);
+  height: 16px;
+  margin-left: auto;
+  width: 16px;
+}
+.jira-gate-form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 18px 20px 20px;
+}
+.jira-gate-lede {
+  color: var(--text-secondary);
+  font-size: 13.5px;
+  line-height: 1.6;
+  margin: 0;
+  max-width: 76ch;
+}
+.jira-gate-code {
+  background: var(--surface-muted);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xs);
+  color: var(--text-primary);
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+  font-size: 12px;
+  padding: 1px 5px;
+}
+.jira-gate-row {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.jira-gate-input {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  color: var(--text-primary);
+  flex: 1;
+  font-size: 13px;
+  min-height: var(--control-h);
+  min-width: 260px;
+  outline: none;
+  padding: 0 12px;
+  transition: border-color var(--dur) ease, box-shadow var(--dur) ease;
+}
+.jira-gate-input::placeholder {
+  color: var(--text-disabled);
+  opacity: 1;
+}
+.jira-gate-input:hover {
+  border-color: var(--border-strong);
+}
+.jira-gate-input:focus {
+  border-color: var(--brand-red);
+  box-shadow: var(--focus-ring-brand);
+}
+.jira-gate-save {
+  align-items: center;
+  background: var(--brand-red) !important;
+  border: 1px solid var(--brand-red) !important;
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-xs);
+  color: #ffffff !important;
+  display: inline-flex;
+  font-size: 13px;
+  font-weight: 600;
+  gap: 8px;
+  min-height: var(--control-h);
+  padding: 0 16px;
+}
+.jira-gate-save:hover:not(:disabled) {
+  background: var(--brand-red-hover) !important;
+  border-color: var(--brand-red-hover) !important;
+}
+.jira-gate-save:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+.jira-gate-forget {
+  align-items: center;
+  background: var(--surface) !important;
+  border: 1px solid var(--error-border) !important;
+  border-radius: var(--radius-md);
+  color: var(--error-text) !important;
+  display: inline-flex;
+  font-size: 13px;
+  font-weight: 600;
+  gap: 8px;
+  min-height: var(--control-h);
+  padding: 0 14px;
+}
+.jira-gate-forget:hover:not(:disabled) {
+  background: var(--error) !important;
+  border-color: var(--error) !important;
+  color: #ffffff !important;
+}
+.jira-gate-save svg,
+.jira-gate-forget svg {
+  height: 15px;
+  width: 15px;
+}
+.jira-gate-error {
+  background: var(--error-bg);
+  border: 1px solid var(--error-border);
+  border-radius: var(--radius-md);
+  color: var(--error-text);
+  font-size: 13px;
+  margin: 0;
+  padding: 9px 12px;
+}
+.jira-gate-note {
+  align-items: flex-start;
+  color: var(--text-muted);
+  display: flex;
+  font-size: 12px;
+  gap: 8px;
+  line-height: 1.55;
+  margin: 0;
+}
+.jira-gate-note svg {
+  flex-shrink: 0;
+  height: 14px;
+  margin-top: 2px;
+  width: 14px;
+}
+.jira-gate-note code {
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+}
+
+/* --- Responsive ---------------------------------------------------- */
+@media (max-width: 860px) {
+  .jira-hero {
+    padding: 18px;
+  }
+  /* `min-width: 0` on the copy column lets it shrink to nothing rather
+     than pushing the button onto its own line, so the wrap has to be
+     forced with a real floor. */
+  .jira-hero-top {
+    flex-wrap: wrap;
+  }
+  .jira-hero-copy {
+    flex: 1 1 240px;
+    min-width: 240px;
+  }
+  .jira-refresh {
+    align-self: flex-start;
+    flex: 0 0 auto;
+    margin-left: 58px;
+  }
+  .jira-hero-title {
+    font-size: 1.25rem;
+    line-height: 1.75rem;
+  }
+  .jira-search {
+    margin-left: 0;
+    max-width: none;
+  }
+  .jira-field-board {
+    min-width: 100%;
+  }
+  .jira-notice {
+    flex-direction: column;
+    gap: 12px;
+    padding: 18px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .jira-skeleton-bar {
+    animation: none;
+  }
+}
+
+/* ==================================================================
+   JIRA TICKET DRAWER
+
+   The panel behind /jira/tickets, on the same token surfaces as the
+   list it opens from. Structure, in reading order: what this ticket
+   is (sticky header), what you can do about it (the action panel),
+   then what is known about it (read-only detail).
+
+   The action panel leads because it is why the panel was opened. The
+   old layout put it first too, but gave it the same flat treatment as
+   the reference sections below it, so nothing said which part was
+   interactive.
+   ================================================================== */
+
+.jira-drawer-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  background: rgba(23, 27, 43, 0.42);
+  backdrop-filter: blur(2px);
+  animation: jira-drawer-fade var(--dur) var(--ease);
+}
+
+.jira-drawer {
+  background: var(--bg-app);
+  border-left: 1px solid var(--border);
+  bottom: 0;
+  box-shadow: var(--shadow-overlay);
+  display: flex;
+  flex-direction: column;
+  max-width: 720px;
+  position: fixed;
+  right: 0;
+  top: 0;
+  width: 100%;
+  z-index: 50;
+  animation: jira-drawer-in 220ms var(--ease);
+}
+
+@keyframes jira-drawer-fade {
+  from {
+    opacity: 0;
+  }
+}
+@keyframes jira-drawer-in {
+  from {
+    transform: translateX(24px);
+    opacity: 0;
+  }
+}
+
+/* --- Header -------------------------------------------------------- */
+.jira-drawer-head {
+  align-items: flex-start;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  flex-shrink: 0;
+  gap: 12px;
+  padding: 18px 22px;
+}
+.jira-drawer-head-main {
+  flex: 1;
+  min-width: 0;
+}
+.jira-drawer-tags {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.jira-drawer-title {
+  color: var(--text-primary);
+  font-size: 1.0625rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  line-height: 1.4;
+  margin: 10px 0 0;
+  overflow-wrap: anywhere;
+}
+.jira-drawer-close {
+  align-items: center;
+  background: var(--surface) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: var(--radius-md);
+  color: var(--text-secondary) !important;
+  display: inline-flex;
+  flex-shrink: 0;
+  height: 34px;
+  justify-content: center;
+  transition: background-color var(--dur) ease, border-color var(--dur) ease,
+    color var(--dur) ease;
+  width: 34px;
+}
+.jira-drawer-close:hover {
+  background: var(--surface-muted) !important;
+  border-color: var(--border-strong) !important;
+  color: var(--text-primary) !important;
+}
+.jira-drawer-close svg {
+  height: 16px;
+  width: 16px;
+}
+
+/* --- Body ---------------------------------------------------------- */
+.jira-drawer-body {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 14px;
+  overflow-y: auto;
+  padding: 18px 22px 28px;
+}
+
+/* --- Panels -------------------------------------------------------- */
+.jira-panel {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-xs);
+  padding: 18px;
+}
+
+/* The one panel you can act in. A left brand rule and a slightly
+   raised surface separate "do" from "read" without a second colour. */
+.jira-panel-action {
+  border-left: 3px solid var(--brand-red);
+  box-shadow: var(--shadow-sm);
+}
+
+.jira-panel-head {
+  align-items: flex-start;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 14px;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+.jira-panel-heading {
+  flex: 1;
+  min-width: 200px;
+}
+.jira-panel-heading h3 {
+  align-items: center;
+  color: var(--text-primary);
+  display: flex;
+  font-size: 0.9375rem;
+  font-weight: 700;
+  gap: 8px;
+  letter-spacing: -0.01em;
+  margin: 0;
+}
+.jira-panel-heading p {
+  color: var(--text-muted);
+  font-size: 12px;
+  line-height: 1.55;
+  margin: 4px 0 0;
+  max-width: 62ch;
+}
+.jira-panel-icon {
+  color: var(--text-muted);
+  height: 15px;
+  width: 15px;
+}
+.jira-panel-badge {
+  background: var(--surface-muted);
+  border-radius: var(--radius-pill);
+  color: var(--text-secondary);
+  font-size: 10.5px;
+  font-weight: 700;
+  line-height: 1;
+  padding: 4px 8px;
+}
+.jira-panel-actions {
+  display: flex;
+  flex-shrink: 0;
+  gap: 8px;
+}
+.jira-panel-actions .jira-action {
+  white-space: nowrap;
+}
+.jira-panel-actions .jira-action svg {
+  height: 13px;
+  width: 13px;
+}
+
+/* The "raised in Jira, not by SEOX" panel. Quiet on purpose — it is a
+   statement of fact, not a problem to solve. */
+.jira-panel-empty {
+  background: var(--surface-sunken);
+  box-shadow: none;
+}
+.jira-panel-empty h3 {
+  color: var(--text-primary);
+  font-size: 0.9375rem;
+  font-weight: 700;
+  margin: 0;
+}
+.jira-panel-empty p {
+  color: var(--text-muted);
+  font-size: 12.5px;
+  line-height: 1.6;
+  margin: 5px 0 0;
+  max-width: 68ch;
+}
+
+/* --- Banners ------------------------------------------------------- */
+.jira-banner {
+  align-items: flex-start;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface-sunken);
+  color: var(--text-secondary);
+  display: flex;
+  font-size: 13px;
+  gap: 9px;
+  line-height: 1.55;
+  margin: 0 0 12px;
+  padding: 11px 13px;
+}
+.jira-panel > .jira-banner:first-of-type {
+  margin-top: 0;
+}
+.jira-drawer-body > .jira-banner {
+  margin-bottom: 0;
+}
+.jira-banner svg {
+  flex-shrink: 0;
+  height: 16px;
+  margin-top: 1px;
+  width: 16px;
+}
+.jira-banner[data-tone="success"] {
+  background: var(--success-bg);
+  border-color: var(--success-border);
+  color: var(--success-text);
+}
+.jira-banner[data-tone="error"] {
+  background: var(--error-bg);
+  border-color: var(--error-border);
+  color: var(--error-text);
+}
+.jira-banner[data-tone="warning"] {
+  background: var(--warning-bg);
+  border-color: var(--warning-border);
+  color: var(--warning-text);
+}
+
+.jira-drawer-loading {
+  align-items: center;
+  color: var(--text-muted);
+  display: flex;
+  font-size: 13px;
+  gap: 9px;
+  margin: 0;
+}
+.jira-drawer-loading svg {
+  color: var(--brand-red);
+  height: 15px;
+  width: 15px;
+}
+.jira-drawer-hint {
+  color: var(--text-muted);
+  font-size: 12.5px;
+  line-height: 1.6;
+  margin: 0 0 12px;
+}
+
+/* The boundary this integration exists to keep, set apart from the
+   form so it is not read as another caption under the button. */
+.jira-drawer-rule {
+  border-top: 1px solid var(--border-subtle);
+  color: var(--text-muted);
+  font-size: 12px;
+  line-height: 1.6;
+  margin: 16px 0 0;
+  padding-top: 13px;
+}
+
+/* --- Form ---------------------------------------------------------- */
+.jira-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.jira-form-row {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.jira-form-label {
+  color: var(--text-muted);
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.jira-form-select,
+.jira-form-textarea {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  color: var(--text-primary);
+  font-family: inherit;
+  font-size: 13px;
+  outline: none;
+  transition: border-color var(--dur) ease, box-shadow var(--dur) ease;
+  width: 100%;
+}
+.jira-form-select {
+  min-height: var(--control-h);
+  padding: 0 11px;
+}
+.jira-form-textarea {
+  line-height: 1.6;
+  padding: 10px 12px;
+  resize: vertical;
+}
+.jira-form-textarea::placeholder {
+  color: var(--text-disabled);
+  opacity: 1;
+}
+.jira-form-select:hover:not(:disabled),
+.jira-form-textarea:hover:not(:disabled) {
+  border-color: var(--border-strong);
+}
+.jira-form-select:focus,
+.jira-form-textarea:focus {
+  border-color: var(--brand-red);
+  box-shadow: var(--focus-ring-brand);
+}
+.jira-form-select:disabled,
+.jira-form-textarea:disabled {
+  background: var(--surface-muted);
+  color: var(--text-disabled);
+  cursor: not-allowed;
+}
+.jira-form-hint {
+  color: var(--text-muted);
+  font-size: 11.5px;
+  line-height: 1.55;
+  margin: 0;
+}
+.jira-form-warning {
+  color: var(--warning-text);
+  font-size: 11.5px;
+  line-height: 1.55;
+  margin: 0;
+}
+.jira-form-submit {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.jira-submit {
+  align-items: center;
+  background: var(--brand-red) !important;
+  border: 1px solid var(--brand-red) !important;
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-xs);
+  color: #ffffff !important;
+  display: inline-flex;
+  font-size: 13px;
+  font-weight: 600;
+  gap: 8px;
+  min-height: var(--control-h);
+  padding: 0 16px;
+}
+.jira-submit:hover:not(:disabled) {
+  background: var(--brand-red-hover) !important;
+  border-color: var(--brand-red-hover) !important;
+}
+.jira-submit:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+.jira-submit svg {
+  height: 15px;
+  width: 15px;
+}
+
+/* --- Detail grid ---------------------------------------------------
+   Label above value, two columns, hairline between rows. A dense
+   read that still lets the eye run down one column.
+   ------------------------------------------------------------------ */
+.jira-detail-grid {
+  display: grid;
+  gap: 0;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  margin: 0;
+}
+.jira-detail-field {
+  border-top: 1px solid var(--border-subtle);
+  min-width: 0;
+  padding: 11px 0;
+}
+/* The first row in each column opens the list, so it carries no rule. */
+.jira-detail-field:nth-child(1),
+.jira-detail-field:nth-child(2) {
+  border-top: 0;
+  padding-top: 0;
+}
+.jira-detail-field.is-wide {
+  grid-column: 1 / -1;
+}
+.jira-detail-field:nth-child(odd) {
+  padding-right: 18px;
+}
+.jira-detail-field.is-wide {
+  padding-right: 0;
+}
+.jira-detail-field dt {
+  color: var(--text-muted);
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.jira-detail-field dd {
+  color: var(--text-primary);
+  font-size: 13px;
+  margin: 4px 0 0;
+  overflow-wrap: anywhere;
+}
+.jira-detail-mono {
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}
+.jira-detail-link {
+  color: var(--brand-red);
+  font-weight: 500;
+  overflow-wrap: anywhere;
+  text-decoration: none;
+}
+.jira-detail-link:hover {
+  text-decoration: underline;
+}
+.jira-detail-prose {
+  background: var(--surface-sunken);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  color: var(--text-secondary);
+  font-size: 12.5px;
+  line-height: 1.65;
+  margin: 0;
+  max-height: 16rem;
+  overflow-y: auto;
+  padding: 11px 13px;
+  white-space: pre-wrap;
+}
+
+/* --- Comments ------------------------------------------------------ */
+.jira-comments {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  grid-column: 1 / -1;
+}
+.jira-comment {
+  display: flex;
+  gap: 11px;
+}
+.jira-comment-body {
+  background: var(--surface-sunken);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  flex: 1;
+  min-width: 0;
+  padding: 10px 13px;
+}
+.jira-comment-head {
+  align-items: baseline;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.jira-comment-author {
+  color: var(--text-primary);
+  font-size: 12.5px;
+  font-weight: 600;
+}
+.jira-comment-date {
+  color: var(--text-muted);
+  font-size: 11.5px;
+}
+.jira-comment-link {
+  color: var(--brand-red);
+  font-size: 11.5px;
+  font-weight: 600;
+  margin-left: auto;
+  text-decoration: none;
+  white-space: nowrap;
+}
+.jira-comment-link:hover {
+  text-decoration: underline;
+}
+.jira-comment-text {
+  color: var(--text-secondary);
+  font-size: 12.5px;
+  line-height: 1.65;
+  margin: 6px 0 0;
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+}
+
+/* --- Attachments --------------------------------------------------- */
+.jira-attachments {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  grid-column: 1 / -1;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.jira-attachment {
+  align-items: center;
+  background: var(--surface-sunken);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 10px;
+  padding: 9px 12px;
+}
+.jira-attachment-icon {
+  color: var(--text-disabled);
+  flex-shrink: 0;
+  height: 14px;
+  width: 14px;
+}
+.jira-attachment-name {
+  color: var(--brand-red);
+  font-size: 12.5px;
+  font-weight: 500;
+  overflow-wrap: anywhere;
+  text-decoration: none;
+}
+.jira-attachment-name:hover {
+  text-decoration: underline;
+}
+.jira-attachment-meta {
+  color: var(--text-muted);
+  font-size: 11.5px;
+  margin-left: auto;
+  white-space: nowrap;
+}
+.jira-attachment-meta + .jira-attachment-meta {
+  margin-left: 0;
+}
+
+/* --- Responsive ---------------------------------------------------- */
+@media (max-width: 720px) {
+  .jira-drawer-head {
+    padding: 16px;
+  }
+  .jira-drawer-body {
+    gap: 12px;
+    padding: 16px 16px 24px;
+  }
+  .jira-panel {
+    padding: 15px;
+  }
+  /* One column: two columns of 13px values inside a phone-width panel
+     leaves neither enough room to read. */
+  .jira-detail-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .jira-detail-field:nth-child(2) {
+    border-top: 1px solid var(--border-subtle);
+    padding-top: 11px;
+  }
+  .jira-detail-field:nth-child(odd) {
+    padding-right: 0;
+  }
+  .jira-panel-actions {
+    width: 100%;
+  }
+  /* Pushing the size and date to the far right leaves the date stranded
+     on its own line once the filename wraps. Narrow, they just follow
+     the name. */
+  .jira-attachment-meta {
+    margin-left: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .jira-drawer,
+  .jira-drawer-backdrop {
+    animation: none;
+  }
+}
+
+/* ==================================================================
+   SETTINGS  (/settings/general?tab=...)
+
+   The page and its four panels were still written in dark-theme
+   utilities — `bg-white/[0.03]` cards, `text-white/40` captions,
+   `border-white/10` hairlines — which the compatibility layer above
+   had to translate one class at a time, and which the Stripe panel had
+   already given up on in favour of hard-coded slate/emerald values of
+   its own. The result was four panels that shared an endpoint and
+   nothing else.
+
+   They now share one vocabulary, on the same token surfaces as the
+   dashboard: `.settings-card` with a toned icon tile, `.settings-field`
+   for every labelled control, `.settings-banner` for every outcome,
+   and two button variants. Structure, copy and behaviour are unchanged
+   — this is all presentation.
+
+   NOTE ON !important
+   The FORM/BUTTON HEURISTICS earlier in this file paint every unclassed
+   <button> brand red with !important, and an !important declaration is
+   only beaten by another !important. So the buttons here restate their
+   colours that way; nothing else in this block needs it.
+   ================================================================== */
+
+.settings-page {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  padding-bottom: 32px;
+}
+
+/* --- Page header --------------------------------------------------- */
+.settings-hero {
+  background-color: var(--surface);
+  background-image:
+    radial-gradient(120% 110% at 100% 0%, rgba(223, 60, 39, 0.055) 0%, transparent 55%),
+    radial-gradient(90% 110% at 100% 100%, rgba(45, 43, 111, 0.04) 0%, transparent 60%);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-xs);
+  display: flex;
+  gap: 14px;
+  padding: 22px 24px;
+}
+.settings-hero-icon {
+  align-items: center;
+  background: var(--brand-red);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 2px 8px rgba(223, 60, 39, 0.26);
+  color: #ffffff;
+  display: inline-flex;
+  flex-shrink: 0;
+  height: 44px;
+  justify-content: center;
+  width: 44px;
+}
+.settings-hero-icon svg {
+  height: 21px;
+  width: 21px;
+}
+.settings-hero-copy {
+  flex: 1;
+  min-width: 0;
+}
+.settings-hero-eyebrow {
+  align-items: center;
+  color: var(--text-muted);
+  display: flex;
+  font-size: 11px;
+  font-weight: 600;
+  gap: 6px;
+  letter-spacing: 0.06em;
+  margin: 0 0 2px;
+  text-transform: uppercase;
+}
+.settings-hero-eyebrow svg {
+  height: 13px;
+  width: 13px;
+}
+.settings-hero h1 {
+  color: var(--brand-blue);
+  font-size: 1.5rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 2rem;
+  margin: 0;
+}
+.settings-hero p.settings-hero-sub {
+  color: var(--text-secondary);
+  font-size: 0.875rem;
+  margin: 6px 0 0;
+  max-width: 78ch;
+}
+
+/* --- Tab bar -------------------------------------------------------
+   The selected-tab treatment below is deliberate and documented at the
+   original rule; only the container is restated here so the bar keeps
+   its shape without utility classes.
+   ------------------------------------------------------------------ */
+.settings-tabs {
+  align-items: center;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  display: flex;
+  flex-wrap: wrap;
+  padding: 6px;
+}
+.settings-tabs .settings-tab {
+  align-items: center;
+  border-radius: var(--radius-md);
+  display: inline-flex;
+  gap: 7px;
+  padding: 0 14px;
+  transition: background-color var(--dur) ease, border-color var(--dur) ease,
+    color var(--dur) ease;
+  white-space: nowrap;
+}
+.settings-tabs .settings-tab svg {
+  height: 15px;
+  width: 15px;
+}
+
+/* --- Tab panel ----------------------------------------------------- */
+.settings-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.settings-lede {
+  color: var(--text-secondary);
+  font-size: 13.5px;
+  line-height: 1.6;
+  margin: 0;
+  max-width: 82ch;
+}
+.settings-lede strong {
+  color: var(--text-primary);
+  font-weight: 600;
+}
+/* Panels are forms and read top to bottom; a full-width column of
+   inputs is a worse read than a measured one. */
+.settings-measure {
+  max-width: 900px;
+  width: 100%;
+}
+
+/* --- Card ---------------------------------------------------------- */
+.settings-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-xs);
+  overflow: hidden;
+}
+/* --- Card header ---------------------------------------------------
+   The first version of this was too quiet to do its job. Its band was
+   --surface-sunken (#f7f8fb) against a white body — about 3% apart, so
+   the header did not read as a header; the icon sat in a pale wash of
+   its own hue; and the title was 15px, the same weight as the field
+   labels under it. Three cards stacked read as one undifferentiated
+   column of inputs.
+
+   All three are fixed at the same time, because each alone would not
+   have been enough:
+
+     band   --surface-muted, a tint you can actually see, closed by a
+            full-strength border
+     tile   the section's hue at full saturation with a white glyph,
+            which is what the page header already does with brand red
+     title  navy at 1rem/700, one clear step above the 13px labels
+   ------------------------------------------------------------------ */
+.settings-card-head {
+  align-items: center;
+  background: var(--surface-muted);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  padding: 16px 20px;
+}
+.settings-card-icon {
+  align-items: center;
+  background: var(--brand-blue);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 2px 6px rgba(23, 27, 43, 0.16);
+  color: #ffffff;
+  display: inline-flex;
+  flex-shrink: 0;
+  height: 40px;
+  justify-content: center;
+  width: 40px;
+}
+.settings-card-icon svg {
+  height: 19px;
+  width: 19px;
+}
+.settings-card-icon[data-tone="brand"] {
+  background: var(--brand-red);
+  box-shadow: 0 2px 8px rgba(223, 60, 39, 0.26);
+}
+.settings-card-icon[data-tone="navy"] {
+  background: var(--brand-blue);
+}
+.settings-card-icon[data-tone="success"] {
+  background: var(--success);
+}
+.settings-card-icon[data-tone="warning"] {
+  background: var(--warning);
+}
+.settings-card-icon[data-tone="error"] {
+  background: var(--error);
+}
+.settings-card-icon[data-tone="info"] {
+  background: var(--info);
+}
+.settings-card-titles {
+  flex: 1;
+  min-width: 180px;
+}
+.settings-card-titles h2,
+.settings-card-titles h3 {
+  align-items: center;
+  color: var(--brand-blue);
+  display: flex;
+  flex-wrap: wrap;
+  font-size: 1rem;
+  font-weight: 700;
+  gap: 8px;
+  letter-spacing: -0.015em;
+  line-height: 1.35;
+  margin: 0;
+}
+.settings-card-titles p {
+  color: var(--text-secondary);
+  font-size: 12.5px;
+  line-height: 1.55;
+  margin: 4px 0 0;
+  overflow-wrap: anywhere;
+}
+.settings-card-aside {
+  display: flex;
+  flex-shrink: 0;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.settings-card-body {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  padding: 20px;
+}
+
+/* --- Fields -------------------------------------------------------- */
+.settings-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+.settings-field-head {
+  align-items: baseline;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: space-between;
+}
+.settings-label {
+  color: var(--text-primary);
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+}
+.settings-sublabel {
+  color: var(--text-muted);
+  font-size: 11.5px;
+  font-weight: 600;
+}
+
+input.settings-input,
+select.settings-input,
+textarea.settings-input {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  color: var(--text-primary);
+  font-family: inherit;
+  font-size: 13px;
+  outline: none;
+  transition: border-color var(--dur) ease, box-shadow var(--dur) ease;
+  width: 100%;
+}
+input.settings-input,
+select.settings-input {
+  min-height: var(--control-h);
+  padding: 0 11px;
+}
+textarea.settings-input,
+select.settings-input[multiple] {
+  line-height: 1.6;
+  min-height: 96px;
+  padding: 9px 11px;
+  resize: vertical;
+}
+input.settings-input:hover:not(:disabled),
+select.settings-input:hover:not(:disabled),
+textarea.settings-input:hover:not(:disabled) {
+  border-color: var(--border-strong);
+}
+input.settings-input:focus,
+select.settings-input:focus,
+textarea.settings-input:focus {
+  border-color: var(--brand-red);
+  box-shadow: var(--focus-ring-brand);
+}
+input.settings-input[readonly] {
+  background: var(--surface-sunken);
+  color: var(--text-secondary);
+}
+
+.settings-field-row {
+  display: flex;
+  gap: 8px;
+}
+.settings-field-foot {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 14px;
+  justify-content: space-between;
+}
+.settings-grid {
+  display: grid;
+  gap: 16px;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+}
+.settings-grid-3 {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+}
+
+/* --- Checkboxes ----------------------------------------------------- */
+.settings-checks {
+  background: var(--surface-sunken);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 6px;
+}
+.settings-check {
+  align-items: flex-start;
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+  cursor: pointer;
+  display: flex;
+  font-size: 13px;
+  font-weight: 500;
+  gap: 10px;
+  padding: 10px 12px;
+  transition: background-color var(--dur-fast) ease;
+}
+.settings-check:hover {
+  background: var(--surface-muted);
+}
+.settings-check input[type="checkbox"] {
+  accent-color: var(--brand-red);
+  flex-shrink: 0;
+  height: 15px;
+  margin-top: 1px;
+  width: 15px;
+}
+.settings-check-text {
+  min-width: 0;
+}
+.settings-check-note {
+  color: var(--text-muted);
+  display: block;
+  font-size: 11.5px;
+  font-weight: 400;
+  line-height: 1.55;
+  margin-top: 2px;
+}
+.settings-check-note[data-tone="warning"] {
+  color: var(--warning-text);
+}
+/* A checkbox that sits inline under a field, not in a group. */
+.settings-check-inline {
+  align-items: center;
+  color: var(--text-muted);
+  cursor: pointer;
+  display: inline-flex;
+  font-size: 11.5px;
+  font-weight: 500;
+  gap: 7px;
+}
+.settings-check-inline input[type="checkbox"] {
+  accent-color: var(--brand-red);
+  height: 14px;
+  width: 14px;
+}
+
+/* --- Banners -------------------------------------------------------- */
+.settings-banner {
+  align-items: flex-start;
+  background: var(--surface-sunken);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  color: var(--text-secondary);
+  display: flex;
+  font-size: 13px;
+  gap: 9px;
+  line-height: 1.55;
+  margin: 0;
+  padding: 11px 14px;
+}
+.settings-banner svg {
+  flex-shrink: 0;
+  height: 16px;
+  margin-top: 1px;
+  width: 16px;
+}
+.settings-banner[data-tone="success"] {
+  background: var(--success-bg);
+  border-color: var(--success-border);
+  color: var(--success-text);
+}
+.settings-banner[data-tone="error"] {
+  background: var(--error-bg);
+  border-color: var(--error-border);
+  color: var(--error-text);
+}
+.settings-banner[data-tone="warning"] {
+  background: var(--warning-bg);
+  border-color: var(--warning-border);
+  color: var(--warning-text);
+}
+.settings-banner[data-tone="info"] {
+  background: var(--info-bg);
+  border-color: var(--info-border);
+  color: var(--info-text);
+}
+
+/* An explanatory aside inside a card: what a thing does, or how to set
+   it up. Quieter than a banner, because it is not an outcome. */
+.settings-note {
+  background: var(--surface-sunken);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  color: var(--text-secondary);
+  font-size: 12.5px;
+  line-height: 1.6;
+  padding: 13px 15px;
+}
+.settings-note-title {
+  color: var(--text-primary);
+  font-size: 12.5px;
+  font-weight: 700;
+  margin: 0 0 4px;
+}
+.settings-note p {
+  margin: 0;
+}
+.settings-note p + p {
+  margin-top: 7px;
+}
+.settings-note ol {
+  list-style: decimal;
+  margin: 6px 0 0;
+  padding-left: 18px;
+}
+.settings-note ul {
+  list-style: disc;
+  margin: 6px 0 0;
+  padding-left: 18px;
+}
+.settings-note li + li {
+  margin-top: 3px;
+}
+.settings-note code,
+.settings-hint code {
+  background: var(--surface-muted);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xs);
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+  font-size: 11.5px;
+  padding: 1px 5px;
+}
+
+/* An inline problem attached to one field, with its own retry. */
+.settings-field-problem {
+  align-items: center;
+  color: var(--error-text);
+  display: flex;
+  flex-wrap: wrap;
+  font-size: 11.5px;
+  gap: 6px;
+  line-height: 1.55;
+  margin: 0;
+}
+.settings-field-problem[data-tone="warning"] {
+  color: var(--warning-text);
+}
+.settings-field-problem svg {
+  flex-shrink: 0;
+  height: 13px;
+  width: 13px;
+}
+.settings-field-problem button {
+  background: transparent !important;
+  border: 0 !important;
+  color: inherit !important;
+  font-size: 11.5px;
+  font-weight: 700;
+  padding: 0;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+/* --- Buttons -------------------------------------------------------- */
+.settings-btn {
+  align-items: center;
+  background: var(--surface) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: var(--radius-md);
+  color: var(--text-secondary) !important;
+  display: inline-flex;
+  font-size: 13px;
+  font-weight: 600;
+  gap: 8px;
+  justify-content: center;
+  min-height: var(--control-h);
+  padding: 0 14px;
+  text-decoration: none;
+  transition: background-color var(--dur) ease, border-color var(--dur) ease,
+    color var(--dur) ease;
+  white-space: nowrap;
+}
+.settings-btn:hover:not(:disabled) {
+  background: var(--surface-sunken) !important;
+  border-color: var(--border-strong) !important;
+  color: var(--text-primary) !important;
+}
+.settings-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+.settings-btn svg {
+  height: 15px;
+  width: 15px;
+}
+.settings-btn.is-primary {
+  background: var(--brand-red) !important;
+  border-color: var(--brand-red) !important;
+  box-shadow: var(--shadow-xs);
+  color: #ffffff !important;
+}
+.settings-btn.is-primary:hover:not(:disabled) {
+  background: var(--brand-red-hover) !important;
+  border-color: var(--brand-red-hover) !important;
+  color: #ffffff !important;
+}
+.settings-btn.is-danger {
+  border-color: var(--error-border) !important;
+  color: var(--error-text) !important;
+}
+.settings-btn.is-danger:hover:not(:disabled) {
+  background: var(--error) !important;
+  border-color: var(--error) !important;
+  color: #ffffff !important;
+}
+.settings-btn.is-small {
+  font-size: 12px;
+  min-height: 32px;
+  padding: 0 11px;
+}
+.settings-btn.is-small svg {
+  height: 13px;
+  width: 13px;
+}
+.settings-btn.is-icon {
+  padding: 0;
+  width: var(--control-h);
+}
+.settings-actions {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.settings-actions.is-end {
+  justify-content: flex-end;
+}
+/* The save row closes a form, so it is set off from the last field. */
+.settings-card-body > .settings-actions:last-child {
+  border-top: 1px solid var(--border-subtle);
+  margin-top: 2px;
+  padding-top: 18px;
+}
+
+/* --- Status pill ---------------------------------------------------- */
+.settings-pill {
+  align-items: center;
+  background: var(--surface-muted);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text-secondary);
+  display: inline-flex;
+  font-size: 11.5px;
+  font-weight: 600;
+  gap: 6px;
+  letter-spacing: 0.01em;
+  padding: 4px 10px;
+  text-transform: capitalize;
+  white-space: nowrap;
+}
+.settings-pill svg {
+  height: 13px;
+  width: 13px;
+}
+.settings-pill::before {
+  background: var(--text-disabled);
+  border-radius: var(--radius-pill);
+  content: "";
+  flex-shrink: 0;
+  height: 6px;
+  width: 6px;
+}
+.settings-pill.has-icon::before {
+  display: none;
+}
+.settings-pill[data-tone="success"] {
+  background: var(--success-bg);
+  border-color: var(--success-border);
+  color: var(--success-text);
+}
+.settings-pill[data-tone="success"]::before {
+  background: var(--success);
+}
+.settings-pill[data-tone="warning"] {
+  background: var(--warning-bg);
+  border-color: var(--warning-border);
+  color: var(--warning-text);
+}
+.settings-pill[data-tone="warning"]::before {
+  background: var(--warning);
+}
+.settings-pill[data-tone="error"] {
+  background: var(--error-bg);
+  border-color: var(--error-border);
+  color: var(--error-text);
+}
+.settings-pill[data-tone="error"]::before {
+  background: var(--error);
+}
+
+/* --- Stat tiles ----------------------------------------------------- */
+.settings-stats {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+}
+.settings-stat {
+  background: var(--surface-sunken);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  padding: 13px 15px;
+}
+.settings-stat-label {
+  align-items: center;
+  color: var(--text-muted);
+  display: flex;
+  font-size: 10.5px;
+  font-weight: 700;
+  gap: 7px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.settings-stat-label svg {
+  height: 14px;
+  width: 14px;
+}
+.settings-stat-value {
+  color: var(--text-primary);
+  font-size: 1.0625rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  margin-top: 6px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.settings-stat[data-tone="success"] {
+  background: var(--success-bg);
+  border-color: var(--success-border);
+}
+.settings-stat[data-tone="success"] .settings-stat-label,
+.settings-stat[data-tone="success"] .settings-stat-value {
+  color: var(--success-text);
+}
+.settings-stat[data-tone="warning"] {
+  background: var(--warning-bg);
+  border-color: var(--warning-border);
+}
+.settings-stat[data-tone="warning"] .settings-stat-label,
+.settings-stat[data-tone="warning"] .settings-stat-value {
+  color: var(--warning-text);
+}
+
+/* --- Key / value rows ----------------------------------------------- */
+.settings-kv {
+  display: grid;
+  gap: 14px 24px;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  margin: 0;
+}
+.settings-kv > div {
+  min-width: 0;
+}
+.settings-kv dt {
+  color: var(--text-muted);
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.settings-kv dd {
+  color: var(--text-primary);
+  font-size: 13px;
+  margin: 4px 0 0;
+  overflow-wrap: anywhere;
+}
+.settings-kv dd.is-mono {
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+  font-size: 12px;
+}
+
+/* Two-column rows inside a narrow card (Stripe account overview). */
+.settings-rows {
+  display: flex;
+  flex-direction: column;
+}
+.settings-row {
+  align-items: center;
+  border-top: 1px solid var(--border-subtle);
+  display: flex;
+  gap: 16px;
+  justify-content: space-between;
+  padding: 10px 0;
+}
+.settings-row:first-child {
+  border-top: 0;
+  padding-top: 0;
+}
+.settings-row:last-child {
+  padding-bottom: 0;
+}
+.settings-row-key {
+  color: var(--text-muted);
+  font-size: 12px;
+  font-weight: 600;
+}
+.settings-row-value {
+  color: var(--text-primary);
+  font-size: 13px;
+  font-weight: 500;
+  overflow: hidden;
+  text-align: right;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* --- Tag list (Stripe requirements) --------------------------------- */
+.settings-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+}
+.settings-tag {
+  align-items: center;
+  background: var(--warning-bg);
+  border: 1px solid var(--warning-border);
+  border-radius: var(--radius-sm);
+  color: var(--warning-text);
+  display: inline-flex;
+  font-size: 11.5px;
+  font-weight: 600;
+  gap: 6px;
+  padding: 4px 9px;
+}
+.settings-tag svg {
+  height: 12px;
+  width: 12px;
+}
+
+/* --- Activity feed --------------------------------------------------- */
+.settings-activity {
+  display: flex;
+  flex-direction: column;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.settings-activity li {
+  align-items: baseline;
+  border-top: 1px solid var(--border-subtle);
+  display: flex;
+  gap: 10px;
+  padding: 9px 0;
+}
+.settings-activity li:first-child {
+  border-top: 0;
+  padding-top: 0;
+}
+.settings-activity-dot {
+  background: var(--success);
+  border-radius: var(--radius-pill);
+  flex-shrink: 0;
+  height: 7px;
+  transform: translateY(-1px);
+  width: 7px;
+}
+.settings-activity-dot[data-result="error"] {
+  background: var(--error);
+}
+.settings-activity-dot[data-result="rate_limited"] {
+  background: var(--warning);
+}
+.settings-activity-main {
+  flex: 1;
+  min-width: 0;
+}
+.settings-activity-action {
+  color: var(--text-primary);
+  font-size: 12.5px;
+  margin: 0;
+}
+.settings-activity-action strong {
+  font-weight: 700;
+}
+.settings-activity-message {
+  color: var(--text-muted);
+  font-size: 11.5px;
+  margin: 2px 0 0;
+  overflow-wrap: anywhere;
+}
+.settings-activity-time {
+  color: var(--text-disabled);
+  flex-shrink: 0;
+  font-size: 11.5px;
+  white-space: nowrap;
+}
+
+/* A dead background job, with its retry. */
+.settings-job {
+  align-items: center;
+  background: var(--error-bg);
+  border: 1px solid var(--error-border);
+  border-radius: var(--radius-md);
+  display: flex;
+  gap: 12px;
+  justify-content: space-between;
+  padding: 10px 13px;
+}
+.settings-job-main {
+  min-width: 0;
+}
+.settings-job-title {
+  color: var(--error-text);
+  font-size: 12.5px;
+  font-weight: 700;
+  margin: 0;
+}
+.settings-job-error {
+  color: var(--error-text);
+  font-size: 11.5px;
+  margin: 2px 0 0;
+  opacity: 0.85;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* --- Misc ----------------------------------------------------------- */
+.settings-loading {
+  align-items: center;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-xs);
+  color: var(--text-muted);
+  display: flex;
+  font-size: 13px;
+  gap: 9px;
+  justify-content: center;
+  padding: 36px 20px;
+}
+.settings-loading svg {
+  color: var(--brand-red);
+  height: 16px;
+  width: 16px;
+}
+.settings-empty {
+  color: var(--text-disabled);
+  font-size: 12.5px;
+  margin: 0;
+}
+.settings-link {
+  color: var(--brand-red);
+  font-weight: 500;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.settings-mono {
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+  font-size: 12px;
+}
+
+@media (max-width: 640px) {
+  .settings-hero {
+    padding: 18px;
+  }
+  .settings-hero h1 {
+    font-size: 1.25rem;
+    line-height: 1.75rem;
+  }
+  .settings-card-head,
+  .settings-card-body {
+    padding: 14px 16px;
+  }
+  .settings-kv {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* ==================================================================
+   INTERNAL LINKS — KEYWORD CONTEXT CELL  (/auditor/internal-links)
+
+   The context snippet was `bg-black/25` with `text-white/75` inside a
+   `<mark>` tinted `bg-brand-500/25`. Unlike the `bg-white/*` recipe,
+   `bg-black/*` is not something the compatibility layer above rewrites
+   — there is nothing sensible to rewrite it TO — so it stayed a literal
+   25% black wash and rendered as a grey slab with a salmon highlight
+   sitting on it. The HTML patch box below it had the same problem at
+   `bg-black/40`.
+
+   The cell is evidence: a sentence found on the source page, with the
+   keyword that could become a link marked inside it. So it is set as a
+   quotation — a sunken panel with a brand rule down its left edge —
+   and the mark is a brand tint that reads as a highlighter rather than
+   a background colour that happens to be red.
+   ================================================================== */
+
+.ilink-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+}
+
+/* Why this pairing was suggested. */
+.ilink-reason {
+  align-items: center;
+  color: var(--brand-red);
+  display: flex;
+  font-size: 10.5px;
+  font-weight: 700;
+  gap: 5px;
+  letter-spacing: 0.03em;
+  line-height: 1.4;
+}
+.ilink-reason svg {
+  flex-shrink: 0;
+  height: 11px;
+  width: 11px;
+}
+
+/* The captured sentence. */
+.ilink-context {
+  background: var(--surface-sunken);
+  border: 1px solid var(--border-subtle);
+  border-left: 3px solid var(--brand-red-border);
+  border-radius: var(--radius-sm);
+  color: var(--text-secondary);
+  font-size: 12.5px;
+  line-height: 1.65;
+  margin: 0;
+  overflow-wrap: anywhere;
+  padding: 9px 11px;
+}
+
+/* The keyword inside it. A highlighter pen, not a filled box: the tint
+   is light enough to read brand red on, and the underline survives for
+   anyone who cannot separate the two by colour. */
+.ilink-mark {
+  background: var(--tile-bg);
+  border-radius: var(--radius-xs);
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+  color: var(--brand-red);
+  font-weight: 600;
+  padding: 1px 3px;
+  text-decoration: underline;
+  text-decoration-color: var(--brand-red-border);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 2px;
+}
+
+/* The anchor text this would use. */
+.ilink-anchor {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0;
+  min-width: 0;
+}
+.ilink-anchor > svg {
+  color: var(--brand-red);
+  flex-shrink: 0;
+  height: 12px;
+  width: 12px;
+}
+.ilink-anchor-label {
+  color: var(--text-muted);
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.ilink-anchor-value {
+  background: var(--brand-blue-subtle);
+  border: 1px solid var(--brand-blue-border);
+  border-radius: var(--radius-xs);
+  color: var(--brand-blue);
+  font-size: 11.5px;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+  padding: 2px 7px;
+}
+
+/* --- The HTML patch ------------------------------------------------ */
+.ilink-patch-wrap {
+  min-width: 0;
+}
+/* Scoped under .ilink-cell on purpose. Bucket 5 of the button colour
+   hierarchy is `:is(td, th, ...) button:where(...)`, which scores
+   (0,1,1) with !important — higher than a bare `.ilink-patch-toggle`
+   at (0,1,0), so an unscoped rule loses and the toggle comes out the
+   same grey as every other in-table button. The parent class lifts
+   these to (0,2,0) and settles it. Same reason `.settings-tab` is
+   scoped under `.settings-tabs`. */
+.ilink-cell .ilink-patch-toggle {
+  align-items: center;
+  background: transparent !important;
+  border: 0 !important;
+  color: var(--success-text) !important;
+  display: inline-flex;
+  font-size: 11.5px;
+  font-weight: 700;
+  gap: 5px;
+  padding: 0;
+}
+.ilink-cell .ilink-patch-toggle:hover:not(:disabled) {
+  background: transparent !important;
+  color: var(--success) !important;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.ilink-patch-toggle svg {
+  height: 12px;
+  transition: transform var(--dur) var(--ease);
+  width: 12px;
+}
+.ilink-patch-toggle svg.is-open {
+  transform: rotate(90deg);
+}
+
+/* A dark code block in a white table cell read as a hole in the page.
+   Code gets its own quiet surface instead, in the same family as the
+   rest of the row. */
+.ilink-patch {
+  align-items: flex-start;
+  background: var(--surface-muted);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  display: flex;
+  gap: 6px;
+  margin-top: 6px;
+  padding: 8px 8px 8px 10px;
+}
+.ilink-patch code {
+  color: var(--text-primary);
+  flex: 1;
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+  font-size: 10.5px;
+  line-height: 1.6;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.ilink-cell .ilink-patch-copy {
+  align-items: center;
+  background: var(--surface) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: var(--radius-xs);
+  color: var(--text-muted) !important;
+  display: inline-flex;
+  flex-shrink: 0;
+  height: 24px;
+  justify-content: center;
+  transition: background-color var(--dur) ease, border-color var(--dur) ease,
+    color var(--dur) ease;
+  width: 24px;
+}
+.ilink-cell .ilink-patch-copy:hover:not(:disabled) {
+  background: var(--surface-sunken) !important;
+  border-color: var(--border-strong) !important;
+  color: var(--text-primary) !important;
+}
+.ilink-patch-copy svg {
+  height: 12px;
+  width: 12px;
+}
+.ilink-patch-copy svg.is-done {
+  color: var(--success);
 }

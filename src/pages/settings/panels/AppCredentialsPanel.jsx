@@ -1,4 +1,4 @@
-import { AlertCircle, CheckCircle2, Loader2, Save } from "lucide-react";
+import { AlertCircle, CheckCircle2, Loader2, RotateCcw, Save } from "lucide-react";
 import { HINTS, SECTION_BY_ID } from "../settingsCatalog.js";
 import { formatSettingDate } from "../formatSettingDate.js";
 
@@ -15,6 +15,8 @@ const SOURCE_LABELS = {
  * All state lives in the shared `useAppSettings` hook, so the SEO APIs and
  * Google tabs edit one copy of the data and save through the one existing
  * `/api/settings/general` endpoint.
+ *
+ * Presentation comes from the shared `.settings-*` rules in index.css.
  */
 export default function AppCredentialsPanel({ sectionIds, keys, state }) {
   const {
@@ -41,53 +43,51 @@ export default function AppCredentialsPanel({ sectionIds, keys, state }) {
   }
 
   return (
-    <div className="max-w-4xl space-y-6 pb-10">
+    <div className="settings-measure settings-panel">
       {error && (
-        <div className="flex items-start gap-2 rounded-xl border border-red-400/20 bg-red-500/10 px-4 py-3 text-sm text-red-200">
-          <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
-          {error}
-        </div>
+        <p className="settings-banner" data-tone="error">
+          <AlertCircle aria-hidden="true" />
+          <span>{error}</span>
+        </p>
       )}
       {success && (
-        <div className="flex items-center gap-2 rounded-xl border border-emerald-400/20 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-200">
-          <CheckCircle2 className="h-4 w-4" />
-          {success}
-        </div>
+        <p className="settings-banner" data-tone="success">
+          <CheckCircle2 aria-hidden="true" />
+          <span>{success}</span>
+        </p>
       )}
       {!loading && pendingEnvMigration > 0 && (
-        <div className="flex items-start gap-2 rounded-xl border border-amber-400/20 bg-amber-500/10 px-4 py-3 text-sm text-amber-200">
-          <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
-          {pendingEnvMigration} setting{pendingEnvMigration === 1 ? " is" : "s are"} still being read
-          from the server environment. Save them here to move them into the database.
-        </div>
+        <p className="settings-banner" data-tone="warning">
+          <AlertCircle aria-hidden="true" />
+          <span>
+            {pendingEnvMigration} setting{pendingEnvMigration === 1 ? " is" : "s are"} still being
+            read from the server environment. Save them here to move them into the database.
+          </span>
+        </p>
       )}
 
       {loading ? (
-        <div className="flex items-center gap-2 rounded-2xl border border-white/10 bg-white/[0.03] px-5 py-8 text-sm text-white/50">
-          <Loader2 className="h-4 w-4 animate-spin" /> Loading settings...
+        <div className="settings-loading">
+          <Loader2 className="animate-spin" aria-hidden="true" />
+          Loading settings...
         </div>
       ) : (
-        <form onSubmit={onSubmit} className="space-y-5">
+        <form onSubmit={onSubmit} className="settings-panel">
           {sections.map((section) => {
             const Icon = section.icon;
             return (
-              <section
-                key={section.id}
-                className="overflow-hidden rounded-2xl border border-white/10 bg-white/[0.03]"
-              >
-                <div className="flex items-start gap-3 border-b border-white/10 px-5 py-4">
-                  <div
-                    className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${section.accent}`}
-                  >
-                    <Icon className="h-5 w-5" />
-                  </div>
-                  <div>
-                    <h2 className="font-display text-base font-bold text-white">{section.title}</h2>
-                    <p className="text-xs text-white/40">{section.description}</p>
+              <section key={section.id} className="settings-card">
+                <div className="settings-card-head">
+                  <span className="settings-card-icon" data-tone={section.tone} aria-hidden="true">
+                    <Icon />
+                  </span>
+                  <div className="settings-card-titles">
+                    <h2>{section.title}</h2>
+                    <p>{section.description}</p>
                   </div>
                 </div>
 
-                <div className="space-y-5 p-5">
+                <div className="settings-card-body">
                   {section.keys.map((key) => {
                     const setting = byKey.get(key);
                     if (!setting) return null;
@@ -95,9 +95,9 @@ export default function AppCredentialsPanel({ sectionIds, keys, state }) {
                     const isCleared = Boolean(cleared[key]);
 
                     return (
-                      <div key={key} className="space-y-2">
-                        <div className="flex flex-wrap items-baseline justify-between gap-2">
-                          <label className="text-sm font-semibold text-white/75" htmlFor={key}>
+                      <div key={key} className="settings-field">
+                        <div className="settings-field-head">
+                          <label className="settings-label" htmlFor={key}>
                             {setting.label}
                           </label>
                           <span className={`settings-badge settings-badge-${sourceLabel.tone}`}>
@@ -121,13 +121,13 @@ export default function AppCredentialsPanel({ sectionIds, keys, state }) {
                                 : "Not configured"
                               : HINTS[key] || ""
                           }
-                          className="settings-input w-full rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2.5 text-sm outline-none transition"
+                          className="settings-input"
                         />
 
-                        <div className="flex flex-wrap items-center justify-between gap-3">
+                        <div className="settings-field-foot">
                           <p className="settings-hint">{HINTS[key]}</p>
                           {setting.configured && (
-                            <label className="flex items-center gap-2 text-[11px] text-white/45">
+                            <label className="settings-check-inline">
                               <input
                                 type="checkbox"
                                 checked={isCleared}
@@ -139,15 +139,14 @@ export default function AppCredentialsPanel({ sectionIds, keys, state }) {
                           )}
                         </div>
 
-                        {fieldErrors[key] && (
-                          <p className="settings-error">{fieldErrors[key]}</p>
-                        )}
-                        {setting.source === "admin_settings" && formatSettingDate(setting.updatedAt) && (
-                          <p className="settings-meta">
-                            Updated {formatSettingDate(setting.updatedAt)}
-                            {setting.updatedBy ? ` by ${setting.updatedBy}` : ""}
-                          </p>
-                        )}
+                        {fieldErrors[key] && <p className="settings-error">{fieldErrors[key]}</p>}
+                        {setting.source === "admin_settings" &&
+                          formatSettingDate(setting.updatedAt) && (
+                            <p className="settings-meta">
+                              Updated {formatSettingDate(setting.updatedAt)}
+                              {setting.updatedBy ? ` by ${setting.updatedBy}` : ""}
+                            </p>
+                          )}
                       </div>
                     );
                   })}
@@ -156,21 +155,22 @@ export default function AppCredentialsPanel({ sectionIds, keys, state }) {
             );
           })}
 
-          <div className="flex items-center gap-3">
-            <button
-              type="submit"
-              disabled={saving}
-              className="inline-flex items-center gap-2 rounded-xl bg-brand-500 px-4 py-2.5 text-sm font-bold text-white transition hover:bg-brand-400 disabled:cursor-not-allowed disabled:opacity-50"
-            >
-              {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+          <div className="settings-actions">
+            <button type="submit" disabled={saving} className="settings-btn is-primary">
+              {saving ? (
+                <Loader2 className="animate-spin" aria-hidden="true" />
+              ) : (
+                <Save aria-hidden="true" />
+              )}
               {saving ? "Saving..." : "Save settings"}
             </button>
             <button
               type="button"
               onClick={reload}
               disabled={saving}
-              className="rounded-xl border border-white/10 bg-white/[0.04] px-4 py-2.5 text-sm font-semibold transition disabled:opacity-50"
+              className="settings-btn"
             >
+              <RotateCcw aria-hidden="true" />
               Reset
             </button>
           </div>

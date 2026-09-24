@@ -26,7 +26,7 @@ export const CREDENTIAL_SECTIONS = [
     title: "PageSpeed",
     description: "Google PageSpeed Insights key used by the speed and project audits.",
     icon: Gauge,
-    accent: "bg-amber-500/15 text-amber-300",
+    tone: "warning",
     keys: ["pagespeed_api_key"],
   },
   {
@@ -34,7 +34,7 @@ export const CREDENTIAL_SECTIONS = [
     title: "Bing Webmaster",
     description: "Key used by the Bing Webmaster Tools integration.",
     icon: Search,
-    accent: "bg-sky-500/15 text-sky-300",
+    tone: "info",
     keys: ["bing_webmaster_api_key"],
   },
   {
@@ -43,7 +43,7 @@ export const CREDENTIAL_SECTIONS = [
     description:
       "Credentials for keyword research, Brand Radar, plagiarism and the other DataForSEO-backed tools.",
     icon: KeyRound,
-    accent: "bg-violet-500/15 text-violet-300",
+    tone: "navy",
     keys: ["dataforseo_login", "dataforseo_password"],
   },
   {
@@ -52,7 +52,7 @@ export const CREDENTIAL_SECTIONS = [
     description:
       "One Google OAuth client serves Search Console, Google sign-in and Business Profile. Each flow uses its own redirect URI below.",
     icon: ShieldCheck,
-    accent: "bg-emerald-500/15 text-emerald-300",
+    tone: "success",
     keys: ["google_client_id", "google_client_secret", "google_gsc_redirect_uri"],
   },
   {
@@ -61,7 +61,7 @@ export const CREDENTIAL_SECTIONS = [
     description:
       "Redirect URIs for the remaining Google flows. Each must match a redirect registered on the OAuth client.",
     icon: Globe,
-    accent: "bg-rose-500/15 text-rose-300",
+    tone: "error",
     keys: ["google_auth_redirect_uri", "google_gbp_redirect_uri"],
   },
 ];

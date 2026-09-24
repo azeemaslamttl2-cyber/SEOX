@@ -4,17 +4,21 @@ import {
   CheckCircle2,
   ExternalLink,
   Loader2,
+  MessageSquare,
+  Paperclip,
   RefreshCw,
   X,
 } from "lucide-react";
 import { fetchJiraTransitions, updateJiraTicketStatus } from "../../lib/jiraTicketsApi.js";
 import {
   CATEGORY_LABELS,
-  CATEGORY_TONE,
   SEVERITY_LABELS,
-  SEVERITY_TONE,
+  avatarTint,
+  categoryTone,
   formatDate,
+  initialsOf,
   relativeTime,
+  severityTone,
 } from "../../lib/jiraTickets.js";
 
 /**
@@ -35,6 +39,10 @@ import {
  * The status and the review are one form and one request, because they are
  * one intention: "I moved this, and here is why." Two buttons would let the
  * second half be forgotten.
+ *
+ * The look is carried by the `.jira-drawer-*` rules in index.css, on the same
+ * token surfaces as the list behind it. The actions panel comes FIRST because
+ * it is why the panel was opened; the read-only detail follows it.
  */
 
 // Matches MAX_REVIEW_LENGTH on the server. Enforced here only so the textarea
@@ -47,21 +55,34 @@ function Field({ label, children, wide = false }) {
     return null;
   }
   return (
-    <div className={wide ? "sm:col-span-2" : ""}>
-      <dt className="text-[11px] font-bold uppercase tracking-wider text-white/35">{label}</dt>
-      <dd className="mt-1 break-words text-sm text-white/80">{children}</dd>
+    <div className={`jira-detail-field${wide ? " is-wide" : ""}`}>
+      <dt>{label}</dt>
+      <dd>{children}</dd>
     </div>
   );
 }
 
-function Section({ title, subtitle, children }) {
+/**
+ * One panel of the drawer.
+ *
+ * `plain` swaps the definition grid for a plain block. Comments and
+ * attachments are lists, not term/description pairs, and wrapping a <ul> in a
+ * <dl> to borrow its column span was invalid markup for a layout reason.
+ */
+function Section({ title, subtitle, icon: Icon = null, badge = "", plain = false, children }) {
   return (
-    <section className="rounded-2xl border border-white/10 bg-white/[0.02] p-4">
-      <header className="mb-3">
-        <h3 className="font-display text-sm font-bold text-white">{title}</h3>
-        {subtitle && <p className="text-xs text-white/40">{subtitle}</p>}
+    <section className="jira-panel">
+      <header className="jira-panel-head">
+        <div className="jira-panel-heading">
+          <h3>
+            {Icon && <Icon className="jira-panel-icon" aria-hidden="true" />}
+            {title}
+            {badge && <span className="jira-panel-badge">{badge}</span>}
+          </h3>
+          {subtitle && <p>{subtitle}</p>}
+        </div>
       </header>
-      <dl className="grid gap-x-6 gap-y-3 sm:grid-cols-2">{children}</dl>
+      {plain ? <div>{children}</div> : <dl className="jira-detail-grid">{children}</dl>}
     </section>
   );
 }
@@ -189,78 +210,63 @@ export default function JiraTicketDetail({ ticket, onClose, onUpdated }) {
 
   return (
     <aside
-      className="fixed inset-y-0 right-0 z-50 flex w-full max-w-2xl flex-col border-l border-white/10 bg-ink-900 shadow-2xl"
+      className="jira-drawer"
       role="dialog"
       aria-modal="true"
       aria-label={`Jira ticket ${issueKey}`}
     >
-      <header className="flex items-start gap-3 border-b border-white/10 px-5 py-4">
-        <div className="min-w-0 flex-1">
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="font-mono text-sm font-bold text-brand-300">{issueKey}</span>
-            <span
-              className={`rounded-md border px-2 py-0.5 text-[11px] font-semibold ${
-                CATEGORY_TONE[category] || CATEGORY_TONE.new
-              }`}
-            >
+      <header className="jira-drawer-head">
+        <div className="jira-drawer-head-main">
+          <div className="jira-drawer-tags">
+            <span className="jira-key">{issueKey}</span>
+            <span className="jira-pill" data-tone={categoryTone(category)}>
               {ticket.status?.name || CATEGORY_LABELS[category] || "Unknown"}
             </span>
             {ticket.severity && (
-              <span
-                className={`rounded-md border px-2 py-0.5 text-[11px] font-semibold ${
-                  SEVERITY_TONE[ticket.severity] || SEVERITY_TONE.notice
-                }`}
-              >
+              <span className="jira-pill" data-tone={severityTone(ticket.severity)}>
                 {SEVERITY_LABELS[ticket.severity] || ticket.severity}
               </span>
             )}
           </div>
-          <h2 className="mt-1.5 font-display text-base font-bold leading-snug text-white">
-            {ticket.summary}
-          </h2>
+          <h2 className="jira-drawer-title">{ticket.summary}</h2>
         </div>
-        <button
-          type="button"
-          onClick={onClose}
-          className="rounded-lg border border-white/10 bg-white/[0.04] p-2 text-white/60 transition hover:bg-white/[0.08] hover:text-white"
-          aria-label="Close"
-        >
-          <X className="h-4 w-4" />
+        <button type="button" onClick={onClose} className="jira-drawer-close" aria-label="Close">
+          <X />
         </button>
       </header>
 
-      <div className="flex-1 space-y-4 overflow-y-auto px-5 py-4">
+      <div className="jira-drawer-body">
         {note && (
-          <p className="flex items-start gap-2 rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-3 py-2.5 text-sm text-emerald-200">
-            <CheckCircle2 className="mt-0.5 h-4 w-4 flex-shrink-0" />
+          <p className="jira-banner" data-tone="success">
+            <CheckCircle2 aria-hidden="true" />
             <span>{note}</span>
           </p>
         )}
         {actionError && (
-          <p className="flex items-start gap-2 rounded-xl border border-rose-500/30 bg-rose-500/10 px-3 py-2.5 text-sm text-rose-200">
-            <AlertTriangle className="mt-0.5 h-4 w-4 flex-shrink-0" />
+          <p className="jira-banner" data-tone="error">
+            <AlertTriangle aria-hidden="true" />
             <span>{actionError}</span>
           </p>
         )}
 
         {/* --- Actions ------------------------------------------------- */}
-        <section className="rounded-2xl border border-white/10 bg-white/[0.02] p-4">
-          <header className="mb-3 flex items-center justify-between gap-3">
-            <div>
-              <h3 className="font-display text-sm font-bold text-white">Update in Jira</h3>
-              <p className="text-xs text-white/40">
+        <section className="jira-panel jira-panel-action">
+          <header className="jira-panel-head">
+            <div className="jira-panel-heading">
+              <h3>Update in Jira</h3>
+              <p>
                 Only the transitions this issue&apos;s workflow actually offers right now. The
                 review is posted to Jira as a comment.
               </p>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="jira-panel-actions">
               <button
                 type="button"
                 onClick={() => loadTransitions()}
                 disabled={loadingTransitions}
-                className="inline-flex items-center gap-1.5 rounded-md border border-white/10 bg-white/[0.04] px-2.5 py-1.5 text-xs font-semibold text-white/70 transition hover:bg-white/[0.08] disabled:opacity-50"
+                className="jira-action"
               >
-                <RefreshCw className={`h-3.5 w-3.5 ${loadingTransitions ? "animate-spin" : ""}`} />
+                <RefreshCw className={loadingTransitions ? "animate-spin" : ""} />
                 Refresh
               </button>
               {ticket.url && (
@@ -268,9 +274,9 @@ export default function JiraTicketDetail({ ticket, onClose, onUpdated }) {
                   href={ticket.url}
                   target="_blank"
                   rel="noreferrer noopener"
-                  className="inline-flex items-center gap-1.5 rounded-md border border-white/10 bg-white/[0.04] px-2.5 py-1.5 text-xs font-semibold text-white/70 transition hover:bg-white/[0.08]"
+                  className="jira-action"
                 >
-                  <ExternalLink className="h-3.5 w-3.5" />
+                  <ExternalLink />
                   Open in Jira
                 </a>
               )}
@@ -278,8 +284,8 @@ export default function JiraTicketDetail({ ticket, onClose, onUpdated }) {
           </header>
 
           {loadingTransitions && !transitions.length ? (
-            <p className="flex items-center gap-2 text-sm text-white/45">
-              <Loader2 className="h-4 w-4 animate-spin" />
+            <p className="jira-drawer-loading">
+              <Loader2 className="animate-spin" aria-hidden="true" />
               Reading the workflow from Jira…
             </p>
           ) : (
@@ -289,23 +295,21 @@ export default function JiraTicketDetail({ ticket, onClose, onUpdated }) {
                   separate Jira endpoint. So these are notices above the form,
                   never a replacement for it. */}
               {transitionError && (
-                <p className="mb-3 rounded-xl border border-amber-500/30 bg-amber-500/10 px-3 py-2.5 text-sm text-amber-200">
-                  {transitionError}
+                <p className="jira-banner" data-tone="warning">
+                  <AlertTriangle aria-hidden="true" />
+                  <span>{transitionError}</span>
                 </p>
               )}
               {!transitionError && transitions.length === 0 && (
-                <p className="mb-3 text-sm text-white/45">
+                <p className="jira-drawer-hint">
                   Jira offers no transitions on this issue for the connected account. You can
                   still leave a review.
                 </p>
               )}
 
-              <form onSubmit={submitUpdate} className="space-y-3">
-                <div>
-                  <label
-                    htmlFor="jira-transition"
-                    className="text-[11px] font-bold uppercase tracking-wider text-white/35"
-                  >
+              <form onSubmit={submitUpdate} className="jira-form">
+                <div className="jira-form-row">
+                  <label htmlFor="jira-transition" className="jira-form-label">
                     Status
                   </label>
                   <select
@@ -313,7 +317,7 @@ export default function JiraTicketDetail({ ticket, onClose, onUpdated }) {
                     value={transitionId}
                     onChange={(event) => setTransitionId(event.target.value)}
                     disabled={busy || transitions.length === 0}
-                    className="mt-1 w-full rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2 text-sm text-white/90 outline-none transition focus:border-brand-400/50 disabled:cursor-not-allowed disabled:opacity-50"
+                    className="jira-form-select"
                   >
                     {/* Leaving the status alone is a deliberate choice, not an
                         oversight - it is how a review is posted on its own. */}
@@ -327,18 +331,15 @@ export default function JiraTicketDetail({ ticket, onClose, onUpdated }) {
                     ))}
                   </select>
                   {selectedTransition?.has_screen && (
-                    <p className="mt-1.5 text-xs text-amber-200/80">
+                    <p className="jira-form-warning">
                       This transition has a Jira screen. If any of its fields are required, Jira
                       may refuse it.
                     </p>
                   )}
                 </div>
 
-                <div>
-                  <label
-                    htmlFor="jira-review"
-                    className="text-[11px] font-bold uppercase tracking-wider text-white/35"
-                  >
+                <div className="jira-form-row">
+                  <label htmlFor="jira-review" className="jira-form-label">
                     Review / comment
                   </label>
                   <textarea
@@ -349,38 +350,34 @@ export default function JiraTicketDetail({ ticket, onClose, onUpdated }) {
                     disabled={busy}
                     onChange={(event) => setReview(event.target.value)}
                     placeholder="Optional. Added to this ticket's comments in Jira."
-                    className="mt-1 w-full resize-y rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2 text-sm text-white/90 outline-none transition placeholder:text-white/25 focus:border-brand-400/50 disabled:cursor-not-allowed disabled:opacity-50"
+                    className="jira-form-textarea"
                   />
-                  <p className="mt-1 text-xs text-white/35">
+                  <p className="jira-form-hint">
                     Posted to Jira by SEOX using the connected Jira account, so everyone watching
                     the ticket sees it.
                   </p>
                 </div>
 
-                <div className="flex flex-wrap items-center gap-3">
-                  <button
-                    type="submit"
-                    disabled={busy || !canSubmit}
-                    className="inline-flex items-center gap-2 rounded-xl bg-brand-500 px-3.5 py-2 text-sm font-bold text-white transition hover:bg-brand-400 disabled:cursor-not-allowed disabled:opacity-50"
-                  >
+                <div className="jira-form-submit">
+                  <button type="submit" disabled={busy || !canSubmit} className="jira-submit">
                     {busy ? (
-                      <Loader2 className="h-4 w-4 animate-spin" />
+                      <Loader2 className="animate-spin" aria-hidden="true" />
                     ) : (
-                      <CheckCircle2 className="h-4 w-4" />
+                      <CheckCircle2 aria-hidden="true" />
                     )}
                     Update Ticket
                   </button>
                   {!canSubmit && (
-                    <span className="text-xs text-white/35">
-                      Choose a status, write a review, or both.
-                    </span>
+                    <span className="jira-form-hint">Choose a status, write a review, or both.</span>
                   )}
                 </div>
               </form>
             </>
           )}
 
-          <p className="mt-3 text-xs text-white/35">
+          {/* The boundary this whole integration exists to keep. It reads as a
+              rule rather than a footnote, because it is one. */}
+          <p className="jira-drawer-rule">
             Resolving the Jira ticket does not mark the SEO issue fixed. SEOX re-checks the
             affected URL and only then records the finding as verified — or reopens it.
           </p>
@@ -404,7 +401,7 @@ export default function JiraTicketDetail({ ticket, onClose, onUpdated }) {
               {ticket.seox.last_synced_at ? relativeTime(ticket.seox.last_synced_at) : ""}
             </Field>
             <Field label="Fingerprint">
-              <span className="break-all font-mono text-xs">{ticket.seox.fingerprint}</span>
+              <span className="jira-detail-mono">{ticket.seox.fingerprint}</span>
             </Field>
             <Field label="Affected URL" wide>
               {ticket.seox.affected_url ? (
@@ -412,7 +409,7 @@ export default function JiraTicketDetail({ ticket, onClose, onUpdated }) {
                   href={ticket.seox.affected_url}
                   target="_blank"
                   rel="noreferrer noopener"
-                  className="break-all text-brand-300 hover:underline"
+                  className="jira-detail-link"
                 >
                   {ticket.seox.affected_url}
                 </a>
@@ -430,9 +427,9 @@ export default function JiraTicketDetail({ ticket, onClose, onUpdated }) {
         ) : (
           /* Most tickets on a real board were raised by hand. Saying so is
              better than an empty "SEOX finding" panel that looks broken. */
-          <section className="rounded-2xl border border-white/10 bg-white/[0.02] p-4">
-            <h3 className="font-display text-sm font-bold text-white">No SEOX finding</h3>
-            <p className="mt-1 text-xs text-white/45">
+          <section className="jira-panel jira-panel-empty">
+            <h3>No SEOX finding</h3>
+            <p>
               This ticket was raised in Jira rather than filed by SEOX, so there is no SEO
               finding attached to it. It can still be transitioned from here.
             </p>
@@ -442,7 +439,7 @@ export default function JiraTicketDetail({ ticket, onClose, onUpdated }) {
         {/* --- Jira ---------------------------------------------------- */}
         <Section title="Jira issue" subtitle="What the team is doing about it">
           <Field label="Issue key">
-            <span className="font-mono">{ticket.key}</span>
+            <span className="jira-detail-mono">{ticket.key}</span>
           </Field>
           <Field label="Jira project">{ticket.project?.name || ticket.jiraProjectKey}</Field>
           <Field label="Issue type">{ticket.issueType?.name}</Field>
@@ -494,7 +491,7 @@ export default function JiraTicketDetail({ ticket, onClose, onUpdated }) {
                 href={ticket.parent.url}
                 target="_blank"
                 rel="noreferrer noopener"
-                className="text-brand-300 hover:underline"
+                className="jira-detail-link"
               >
                 {ticket.parent.key} {ticket.parent.summary}
               </a>
@@ -509,9 +506,7 @@ export default function JiraTicketDetail({ ticket, onClose, onUpdated }) {
             {ticket.description ? (
               /* Jira returns ADF, which the server flattens to text. Rendered
                  with whitespace preserved so paragraphs and lists survive. */
-              <p className="max-h-64 overflow-y-auto whitespace-pre-wrap text-xs leading-relaxed text-white/70">
-                {ticket.description}
-              </p>
+              <p className="jira-detail-prose">{ticket.description}</p>
             ) : (
               ""
             )}
@@ -522,7 +517,7 @@ export default function JiraTicketDetail({ ticket, onClose, onUpdated }) {
                 href={ticket.url}
                 target="_blank"
                 rel="noreferrer noopener"
-                className="break-all text-brand-300 hover:underline"
+                className="jira-detail-link"
               >
                 {ticket.url}
               </a>
@@ -536,65 +531,80 @@ export default function JiraTicketDetail({ ticket, onClose, onUpdated }) {
         {Array.isArray(ticket.comments) && ticket.comments.length > 0 && (
           <Section
             title="Comments"
+            icon={MessageSquare}
+            plain
+            badge={String(ticket.commentCount ?? ticket.comments.length)}
             subtitle={
               ticket.commentCount > ticket.comments.length
                 ? `Showing the latest ${ticket.comments.length} of ${ticket.commentCount}`
                 : `${ticket.commentCount} on this issue`
             }
           >
-            <div className="sm:col-span-2 space-y-3">
-              {ticket.comments.map((comment) => (
-                <article
-                  key={comment.id}
-                  className="rounded-xl border border-white/10 bg-white/[0.02] p-3"
-                >
-                  <header className="flex flex-wrap items-baseline gap-2 text-xs">
-                    <span className="font-semibold text-white/75">
-                      {comment.author?.displayName || "Unknown"}
+            <div className="jira-comments">
+              {ticket.comments.map((comment) => {
+                const author = comment.author?.displayName || "Unknown";
+                return (
+                  <article key={comment.id} className="jira-comment">
+                    <span
+                      className="jira-avatar"
+                      data-tint={avatarTint(author)}
+                      aria-hidden="true"
+                    >
+                      {initialsOf(author)}
                     </span>
-                    <span className="text-white/35">{formatDate(comment.created)}</span>
-                    {comment.url && (
-                      <a
-                        href={comment.url}
-                        target="_blank"
-                        rel="noreferrer noopener"
-                        className="ml-auto text-brand-300 hover:underline"
-                      >
-                        Open in Jira
-                      </a>
-                    )}
-                  </header>
-                  <p className="mt-2 whitespace-pre-wrap text-xs leading-relaxed text-white/70">
-                    {comment.body}
-                  </p>
-                </article>
-              ))}
+                    <div className="jira-comment-body">
+                      <header className="jira-comment-head">
+                        <span className="jira-comment-author">{author}</span>
+                        <span className="jira-comment-date">{formatDate(comment.created)}</span>
+                        {comment.url && (
+                          <a
+                            href={comment.url}
+                            target="_blank"
+                            rel="noreferrer noopener"
+                            className="jira-comment-link"
+                          >
+                            Open in Jira
+                          </a>
+                        )}
+                      </header>
+                      <p className="jira-comment-text">{comment.body}</p>
+                    </div>
+                  </article>
+                );
+              })}
             </div>
           </Section>
         )}
 
         {/* --- Attachments --------------------------------------------- */}
         {Array.isArray(ticket.attachments) && ticket.attachments.length > 0 && (
-          <Section title="Attachments" subtitle={`${ticket.attachments.length} file(s)`}>
-            <ul className="sm:col-span-2 space-y-2">
+          <Section
+            title="Attachments"
+            icon={Paperclip}
+            plain
+            badge={String(ticket.attachments.length)}
+            subtitle={`${ticket.attachments.length} file(s)`}
+          >
+            <ul className="jira-attachments">
               {ticket.attachments.map((attachment) => (
-                <li key={attachment.id} className="flex flex-wrap items-baseline gap-2 text-xs">
+                <li key={attachment.id} className="jira-attachment">
                   {/* The download URL is Jira's own and needs a Jira session.
                       SEOX does not proxy it, because proxying would mean
                       spending the stored credential on serving a file to a
                       browser that was never authenticated against Jira. */}
+                  <Paperclip className="jira-attachment-icon" aria-hidden="true" />
                   <a
                     href={attachment.url}
                     target="_blank"
                     rel="noreferrer noopener"
-                    className="break-all text-brand-300 hover:underline"
+                    className="jira-attachment-name"
                   >
                     {attachment.filename}
                   </a>
-                  <span className="text-white/35">
+                  <span className="jira-attachment-meta">
                     {attachment.size ? `${Math.ceil(attachment.size / 1024)} KB` : ""}
                   </span>
-                  <span className="text-white/35">{formatDate(attachment.created)}</span>
+                  <span className="jira-attachment-meta">{formatDate(attachment.created)}</span>
                 </li>
               ))}
             </ul>

@@ -154,8 +154,8 @@ test("the settings page marks the active tab for assistive tech and CSS", () => 
   const page = fs.readFileSync(new URL("../src/pages/settings/SettingsPage.jsx", import.meta.url), "utf8");
   // The selected style keys off aria-selected, so the two cannot drift apart.
   assert.match(page, /aria-selected=\{isActive\}/);
-  assert.match(page, /className="settings-tabs/);
-  assert.match(page, /className="settings-tab /);
+  assert.match(page, /className="settings-tabs"/);
+  assert.match(page, /className="settings-tab"/);
 });
 
 test("an updated_at timestamp renders as a date, never as raw machine output", () => {
@@ -177,29 +177,52 @@ test("an updated_at timestamp renders as a date, never as raw machine output", (
   assert.equal(formatSettingDate("not a date"), "");
 });
 
-test("settings inputs use the recipe the form-control styles actually cover", () => {
-  // "FORM CONTROL SURFACES" in index.css keys off bg-white/* and bg-ink-*.
-  // bg-black/20 matches neither, so the fields rendered as grey slabs.
+test("settings inputs carry a surface of their own, not an inherited one", () => {
+  // This used to pin the opposite arrangement: the fields wore `bg-white/*`
+  // utilities purely so the "FORM CONTROL SURFACES" compatibility rules would
+  // recognise and repaint them, and a field that drifted off that recipe (an
+  // earlier `bg-black/20`) rendered as an unstyled grey slab.
+  //
+  // `.settings-input` now states its own background, border and focus ring, so
+  // the rule to protect is the reverse: the panels name the class, and the
+  // class is a real control surface rather than a hook for something else.
+  const css = fs.readFileSync(new URL("../src/index.css", import.meta.url), "utf8");
+  const block = css.slice(css.indexOf("input.settings-input,"));
+  assert.ok(block.length, "settings input styles are missing from index.css");
+  assert.match(block, /background: var\(--surface\)/);
+  assert.match(block, /border: 1px solid var\(--border\)/);
+  assert.match(block, /input\.settings-input:focus/);
+
   for (const file of [
     "../src/pages/settings/panels/AppCredentialsPanel.jsx",
     "../src/pages/settings/panels/DeepSeekPanel.jsx",
   ]) {
     const source = fs.readFileSync(new URL(file, import.meta.url), "utf8");
     assert.doesNotMatch(source, /bg-black\//, `${file} uses an unstyled input surface`);
-    assert.match(source, /settings-input[^"]*bg-white\//, `${file} input is off-recipe`);
+    assert.match(source, /className="settings-input"/, `${file} input is off-recipe`);
   }
 });
 
 test("the quiet actions are not painted as primary buttons", () => {
   // Bucket 1 of the button colour hierarchy paints any button with no bg-*
-  // utility solid brand red, which made Reset look as loud as Save.
+  // utility solid brand red, which made Reset look as loud as Save. The quiet
+  // variant now says so by name, and `.settings-btn` restates its own colours
+  // with !important - the only thing that beats that bucket.
   const source = fs.readFileSync(
     new URL("../src/pages/settings/panels/AppCredentialsPanel.jsx", import.meta.url),
     "utf8"
   );
   const reset = /onClick=\{reload\}[\s\S]{0,400}?className="([^"]+)"/.exec(source);
   assert.ok(reset, "no reset button found");
-  assert.match(reset[1], /bg-white\//);
+  assert.match(reset[1], /(^|\s)settings-btn(\s|$)/);
+  assert.doesNotMatch(reset[1], /is-primary/, "Reset must not be the primary action");
+  // Save is, so the two stay distinguishable.
+  assert.match(source, /type="submit"[\s\S]{0,200}?className="settings-btn is-primary"/);
+
+  const css = fs.readFileSync(new URL("../src/index.css", import.meta.url), "utf8");
+  const block = css.slice(css.indexOf(".settings-btn {"));
+  assert.match(block, /\.settings-btn \{[^}]*background: var\(--surface\) !important;/);
+  assert.match(block, /\.settings-btn\.is-primary \{[^}]*background: var\(--brand-red\) !important;/);
 });
 
 test("Stripe onboarding returns to the Stripe tab of the settings page", () => {
