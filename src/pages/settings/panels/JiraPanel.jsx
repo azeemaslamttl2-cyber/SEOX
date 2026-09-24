@@ -13,6 +13,7 @@ import {
   Unplug,
   Webhook,
 } from "lucide-react";
+import SearchableSelect from "../../../components/ui/SearchableSelect.jsx";
 import { useProjectSelection } from "../../../context/CrawlContext.jsx";
 import {
   connectJira,
@@ -332,6 +333,25 @@ export default function JiraPanel() {
   const selectedJiraProject = useMemo(
     () => jiraProjects.find((entry) => entry.id === activeJiraProjectId) || null,
     [jiraProjects, activeJiraProjectId]
+  );
+
+  /**
+   * The Jira projects as the searchable dropdown wants them.
+   *
+   * `searchText` carries the key and the name separately from the label so
+   * the query matches either one, and matches them without having to get
+   * past the "—" the label joins them with. Memoised because the dropdown
+   * re-filters this array on every keystroke and it must not be rebuilt
+   * underneath it.
+   */
+  const jiraProjectOptions = useMemo(
+    () =>
+      jiraProjects.map((entry) => ({
+        value: entry.id,
+        label: `${entry.key} — ${entry.name}`,
+        searchText: `${entry.key} ${entry.name}`,
+      })),
+    [jiraProjects]
   );
 
   useEffect(() => {
@@ -706,33 +726,35 @@ export default function JiraPanel() {
             <div className="grid gap-4 sm:grid-cols-2">
               <div>
                 <label className={label} htmlFor="jira-project">Jira project</label>
-                <select
+                {/* Searchable rather than a plain <select>: a Jira site
+                    routinely has hundreds of boards, and the only way to
+                    find one in a native dropdown is to scroll past all the
+                    others. The search runs over `jiraProjects` as already
+                    loaded - typing never reaches Jira. */}
+                <SearchableSelect
                   id="jira-project"
-                  className={`${input} mt-2`}
+                  className="mt-2"
                   value={form.jiraProjectId}
-                  onChange={(event) => setField("jiraProjectId", event.target.value)}
+                  onChange={(value) => setField("jiraProjectId", value)}
+                  options={jiraProjectOptions}
                   disabled={projectsState.status !== "ready" || !jiraProjects.length}
-                >
-                  {/* The placeholder says which of the three situations this
-                      is. An empty list is not self-explanatory: loading,
-                      failed and genuinely-none look identical otherwise, and
-                      the user is left staring at a dropdown that will not
-                      open with no idea why. */}
-                  <option value="">
-                    {projectsState.status === "loading"
+                  searchPlaceholder="Search by project name or key…"
+                  emptyMessage="No Jira projects found."
+                  /* The placeholder says which of the three situations this
+                     is. An empty list is not self-explanatory: loading,
+                     failed and genuinely-none look identical otherwise, and
+                     the user is left staring at a dropdown that will not
+                     open with no idea why. */
+                  placeholder={
+                    projectsState.status === "loading"
                       ? "Loading Jira projects…"
                       : projectsState.status === "error"
                         ? "Jira projects could not be loaded"
                         : jiraProjects.length
                           ? "Select a project…"
-                          : "No Jira projects are visible to this account"}
-                  </option>
-                  {jiraProjects.map((entry) => (
-                    <option key={entry.id} value={entry.id}>
-                      {entry.key} — {entry.name}
-                    </option>
-                  ))}
-                </select>
+                          : "No Jira projects are visible to this account"
+                  }
+                />
 
                 {projectsState.status === "error" && (
                   <p className="mt-2 flex flex-wrap items-center gap-2 text-xs text-red-300">
