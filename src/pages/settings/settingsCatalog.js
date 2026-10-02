@@ -64,6 +64,15 @@ export const CREDENTIAL_SECTIONS = [
     accent: "bg-rose-500/15 text-rose-300",
     keys: ["google_auth_redirect_uri", "google_gbp_redirect_uri"],
   },
+  {
+    id: "google-indexing",
+    title: "Google Indexing API",
+    description:
+      "Service account used by Off-Page SEO > Backlink Indexer to submit URLs to the Google Indexing API. The key stays on the server.",
+    icon: ShieldCheck,
+    accent: "bg-amber-500/15 text-amber-300",
+    keys: ["google_indexing_service_account"],
+  },
 ];
 
 export const SECTION_BY_ID = new Map(CREDENTIAL_SECTIONS.map((section) => [section.id, section]));
@@ -79,6 +88,8 @@ export const HINTS = {
     "Must be exactly https://your-domain/gsc/oauth-callback and registered on the OAuth client.",
   google_auth_redirect_uri:
     "Must be exactly https://your-domain/api/auth/google/callback and registered on the OAuth client.",
+  google_indexing_service_account:
+    "Paste the full service-account JSON key. Enable the Web Search Indexing API on its project and add its client_email as an Owner of each site in Search Console.",
   google_gbp_redirect_uri:
     "Must be exactly https://your-domain/gbp/oauth-callback. Leave blank to use that automatically - do not reuse the Search Console or sign-in URI, they return to different pages.",
 };

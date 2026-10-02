@@ -104,6 +104,13 @@ export const SETTING_DEFINITIONS = [
     public: true,
   },
   {
+    key: "google_indexing_service_account",
+    group: "google",
+    label: "Google Indexing API Service Account (JSON)",
+    envKeys: ["GOOGLE_INDEXING_SERVICE_ACCOUNT_KEY"],
+    secret: true,
+  },
+  {
     key: "google_gbp_redirect_uri",
     group: "google",
     label: "Google Business Profile Redirect URI",

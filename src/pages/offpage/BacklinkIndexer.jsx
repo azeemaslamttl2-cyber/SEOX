@@ -15,6 +15,7 @@ import {
   Bookmark,
 } from "lucide-react";
 import { backlinkIndexerData } from "../../data/offPageData.js";
+import GoogleIndexingPanel from "../../components/offpage/GoogleIndexingPanel.jsx";
 
 const PING_BUILDERS = {
   "Google Ping": (u) => `https://www.google.com/ping?sitemap=${encodeURIComponent(u)}`,
@@ -59,6 +60,7 @@ export default function BacklinkIndexer() {
   const [pingLinks, setPingLinks] = useState([]);
   const [pinged, setPinged] = useState(0);
   const [formError, setFormError] = useState("");
+  const [googleSubmitted, setGoogleSubmitted] = useState(0);
 
   const urlCount = parseUrls(urls).length;
   const enabledCount = d.pingServices.filter((s) => enabled[s.name]).length;
@@ -126,7 +128,7 @@ export default function BacklinkIndexer() {
             <div className="bi-stats">
               <IndexStat value={urlCount} label="URLs" tone="info" />
               <IndexStat value={pinged} label="Pinged" tone="success" />
-              <IndexStat value={0} label="Google API" tone="neutral" />
+              <IndexStat value={googleSubmitted} label="Google API" tone="neutral" />
             </div>
           </div>
         </div>
@@ -306,8 +308,11 @@ export default function BacklinkIndexer() {
         </div>
       )}
 
+      {/* Google Indexing API */}
+      {activeTab === 2 && <GoogleIndexingPanel onSubmittedChange={setGoogleSubmitted} />}
+
       {/* Other tabs - placeholder content */}
-      {activeTab > 0 && (
+      {activeTab > 0 && activeTab !== 2 && (
         <div className="mt-5 flex flex-col items-center justify-center rounded-2xl border border-white/[0.06] bg-white/[0.02] py-16">
           {(() => { const Icon = tabIcons[activeTab]; return <Icon className="h-10 w-10 text-white/10" />; })()}
           <p className="mt-3 text-sm font-semibold text-white/30">{d.tabs[activeTab]}</p>
