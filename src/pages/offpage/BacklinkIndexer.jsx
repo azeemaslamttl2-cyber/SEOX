@@ -16,6 +16,38 @@ import {
 } from "lucide-react";
 import { backlinkIndexerData } from "../../data/offPageData.js";
 
+const PING_BUILDERS = {
+  "Google Ping": (u) => `https://www.google.com/ping?sitemap=${encodeURIComponent(u)}`,
+  "Bing Ping": (u) => `https://www.bing.com/ping?sitemap=${encodeURIComponent(u)}`,
+  IndexNow: (u, key) =>
+    `https://api.indexnow.org/indexnow?url=${encodeURIComponent(u)}${key ? `&key=${encodeURIComponent(key)}` : ""}`,
+  Pingomatic: (u) =>
+    `https://pingomatic.com/ping/?title=${encodeURIComponent(u)}&blogurl=${encodeURIComponent(u)}&rssurl=&chk_weblogscom=on&chk_blogs=on&chk_feedburner=on&chk_technorati=on&chk_googleblogsearch=on`,
+  Twingly: (u) => `https://www.twingly.com/ping?url=${encodeURIComponent(u)}`,
+};
+
+const BOOKMARK_BUILDERS = {
+  Reddit: (u) => `https://www.reddit.com/submit?url=${encodeURIComponent(u)}`,
+  "Mix (StumbleUpon)": (u) => `https://mix.com/add?url=${encodeURIComponent(u)}`,
+  Diigo: (u) => `https://www.diigo.com/post?url=${encodeURIComponent(u)}`,
+  Pocket: (u) => `https://getpocket.com/save?url=${encodeURIComponent(u)}`,
+  Flipboard: (u) => `https://share.flipboard.com/bookmarklet/popout?v=2&url=${encodeURIComponent(u)}`,
+  "Scoop.it": (u) => `https://www.scoop.it/bookmarklet?url=${encodeURIComponent(u)}`,
+};
+
+function parseUrls(text) {
+  return [...new Set(text.split(/[\s,]+/).map((u) => u.trim()).filter(Boolean))];
+}
+
+function isHttpUrl(value) {
+  try {
+    const { protocol } = new URL(value);
+    return protocol === "http:" || protocol === "https:";
+  } catch {
+    return false;
+  }
+}
+
 export default function BacklinkIndexer() {
   const d = backlinkIndexerData;
   const [activeTab, setActiveTab] = useState(0);
@@ -23,7 +55,50 @@ export default function BacklinkIndexer() {
   const [pingOpen, setPingOpen] = useState(true);
   const [indexNowKey, setIndexNowKey] = useState("");
 
-  const urlCount = urls.split("\n").filter((u) => u.trim()).length;
+  const [enabled, setEnabled] = useState(() => Object.fromEntries(d.pingServices.map((s) => [s.name, s.enabled])));
+  const [pingLinks, setPingLinks] = useState([]);
+  const [pinged, setPinged] = useState(0);
+  const [formError, setFormError] = useState("");
+
+  const urlCount = parseUrls(urls).length;
+  const enabledCount = d.pingServices.filter((s) => enabled[s.name]).length;
+
+  const generatePingLinks = () => {
+    const list = parseUrls(urls);
+    if (!list.length) return setFormError("Paste at least one backlink URL.");
+    const invalid = list.filter((u) => !isHttpUrl(u));
+    if (invalid.length) return setFormError(`Invalid URL: ${invalid[0]} (must start with http:// or https://)`);
+    const services = d.pingServices.filter((s) => enabled[s.name]);
+    if (!services.length) return setFormError("Enable at least one ping service.");
+    const key = indexNowKey.trim();
+    const links = [];
+    for (const url of list) {
+      for (const svc of services) {
+        if (svc.name === "IndexNow" && !key) continue;
+        links.push({ url, service: svc.name, href: PING_BUILDERS[svc.name](url, key) });
+      }
+    }
+    setFormError(
+      services.some((s) => s.name === "IndexNow") && !key
+        ? "IndexNow was skipped because no IndexNow key was entered."
+        : ""
+    );
+    setPingLinks(links);
+    setPinged(0);
+  };
+
+  const openLink = (href) => {
+    window.open(href, "_blank", "noopener,noreferrer");
+    setPinged((n) => n + 1);
+  };
+
+  const openAll = () => pingLinks.forEach((l) => openLink(l.href));
+
+  const openBookmark = (name) => {
+    const list = parseUrls(urls).filter(isHttpUrl);
+    if (!list.length) return setFormError("Paste a valid backlink URL first.");
+    openLink(BOOKMARK_BUILDERS[name](list[0]));
+  };
 
   const tabIcons = [Send, Search, Key, Rss, Clock];
 
@@ -50,7 +125,7 @@ export default function BacklinkIndexer() {
             </div>
             <div className="bi-stats">
               <IndexStat value={urlCount} label="URLs" tone="info" />
-              <IndexStat value={0} label="Pinged" tone="success" />
+              <IndexStat value={pinged} label="Pinged" tone="success" />
               <IndexStat value={0} label="Google API" tone="neutral" />
             </div>
           </div>
@@ -94,9 +169,36 @@ export default function BacklinkIndexer() {
                 placeholder={`Paste your backlink URLs here (one per line)\n\nhttps://example.com/my-backlink-page\nhttps://another-site.com/article-with-link\n...`}
               />
               <p className="mt-2 text-[11px] text-white/25">Note: Ping services will open in new tabs. Allow popups for best experience.</p>
-              <button className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-violet-500 to-purple-600 py-3 text-sm font-bold text-white shadow-lg shadow-violet-500/25 transition hover:shadow-violet-500/40">
+              {formError && <p className="mt-2 text-xs text-amber-400">{formError}</p>}
+              <button
+                type="button"
+                onClick={generatePingLinks}
+                className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-violet-500 to-purple-600 py-3 text-sm font-bold text-white shadow-lg shadow-violet-500/25 transition hover:shadow-violet-500/40"
+              >
                 <Link2 className="h-4 w-4" /> Generate Ping Links
               </button>
+
+              {pingLinks.length > 0 && (
+                <div className="mt-4">
+                  <div className="mb-2 flex items-center justify-between">
+                    <span className="text-xs font-bold text-white/70">{pingLinks.length} ping links generated</span>
+                    <button type="button" onClick={openAll} className="text-xs font-semibold text-violet-300 hover:underline">
+                      Open all in new tabs
+                    </button>
+                  </div>
+                  <ul className="max-h-64 space-y-1.5 overflow-y-auto">
+                    {pingLinks.map((l, i) => (
+                      <li key={i} className="flex items-center gap-2 rounded-lg bg-white/[0.02] px-3 py-2 text-xs">
+                        <span className="w-24 shrink-0 font-semibold text-white/70">{l.service}</span>
+                        <span className="min-w-0 flex-1 truncate text-white/40" title={l.url}>{l.url}</span>
+                        <button type="button" onClick={() => openLink(l.href)} className="shrink-0 text-violet-300 hover:underline">
+                          Open
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
             </div>
 
             {/* IndexNow Key */}
@@ -134,7 +236,7 @@ export default function BacklinkIndexer() {
                 </div>
                 <div className="flex items-center gap-2">
                   <span className="backlink-ping-count text-[11px]">
-                    {d.pingServices.filter((s) => s.enabled).length} of {d.pingServices.length} services enabled
+                    {enabledCount} of {d.pingServices.length} services enabled
                   </span>
                   {pingOpen ? <ChevronUp className="h-4 w-4 text-white/20" /> : <ChevronDown className="h-4 w-4 text-white/20" />}
                 </div>
@@ -144,9 +246,16 @@ export default function BacklinkIndexer() {
                   {d.pingServices.map((svc, i) => (
                     <div key={i} className="flex items-center justify-between rounded-lg bg-white/[0.02] px-3 py-2">
                       <span className="text-sm text-white/70">{svc.name}</span>
-                      <div className={`h-5 w-9 rounded-full transition ${svc.enabled ? "bg-emerald-500" : "bg-white/10"} relative`}>
-                        <div className={`absolute top-0.5 h-4 w-4 rounded-full bg-white transition ${svc.enabled ? "right-0.5" : "left-0.5"}`} />
-                      </div>
+                      <button
+                        type="button"
+                        role="switch"
+                        aria-checked={!!enabled[svc.name]}
+                        aria-label={`Toggle ${svc.name}`}
+                        onClick={() => setEnabled((prev) => ({ ...prev, [svc.name]: !prev[svc.name] }))}
+                        className={`h-5 w-9 rounded-full transition ${enabled[svc.name] ? "bg-emerald-500" : "bg-white/10"} relative`}
+                      >
+                        <span className={`absolute top-0.5 h-4 w-4 rounded-full bg-white transition ${enabled[svc.name] ? "right-0.5" : "left-0.5"}`} />
+                      </button>
                     </div>
                   ))}
                 </div>
@@ -166,6 +275,8 @@ export default function BacklinkIndexer() {
                 {d.socialBookmarks.map((bm, i) => (
                   <button
                     key={i}
+                    type="button"
+                    onClick={() => openBookmark(bm.name)}
                     className="flex items-center gap-2 rounded-xl border border-white/[0.06] bg-white/[0.02] px-3 py-2.5 text-left transition hover:bg-white/[0.04]"
                   >
                     <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-white/[0.06] text-[10px] font-bold text-white/40">
