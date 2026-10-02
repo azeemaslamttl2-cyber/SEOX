@@ -41,3 +41,6 @@ src/app/api/save-project.js
 
 # Vite writes these while loading the config; they are build artifacts.
 vite.config.js.timestamp-*.mjs
+
+# Google service-account key files downloaded from Cloud Console
+project-*-*.json
