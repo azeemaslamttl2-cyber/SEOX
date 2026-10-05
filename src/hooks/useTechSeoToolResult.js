@@ -112,7 +112,11 @@ export function useTechSeoToolResult({ toolKey, project, projectUrl, emptyResult
     setPersistenceError("");
 
     const cached = readLocalResult(toolKey, projectId, projectUrl);
-    setResultState(cached?.result || defaultResult(emptyResultRef.current, projectUrl));
+    setResultState(
+      cached?.result
+        ? { ...emptyResultRef.current, ...cached.result }
+        : defaultResult(emptyResultRef.current, projectUrl)
+    );
 
     if (!userId || !projectId) return;
     // A fresh session copy is authoritative - skip the database round-trip.
@@ -122,6 +126,10 @@ export function useTechSeoToolResult({ toolKey, project, projectUrl, emptyResult
       .then((storedResult) => {
         if (loadIdRef.current !== loadId) return;
         if (storedResult) {
+          // Older releases and the crawler wrote differently shaped objects
+          // under the same key; merging onto the empty shape keeps every
+          // array/object field the page reads defined.
+          storedResult = { ...emptyResultRef.current, ...storedResult };
           setResultState(storedResult);
           writeLocalResult(toolKey, projectId, projectUrl, storedResult);
         }

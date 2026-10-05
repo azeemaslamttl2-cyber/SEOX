@@ -3,8 +3,9 @@ import {
   createProjectDetailsHandler,
   createProjectInsertHandler,
 } from "../functions/_handlers/project-details.js";
+import { resolveGscData } from "../functions/_lib/gsc-server.js";
 
-const getProjectDetails = createProjectDetailsHandler(queryOne);
+const getProjectDetails = createProjectDetailsHandler(queryOne, { resolveGscData, env: process.env });
 const insertProject = createProjectInsertHandler(queryOne, query);
 
 /**

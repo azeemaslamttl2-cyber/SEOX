@@ -1,0 +1,676 @@
+================================================================================
+ SEOX - PRODUCTION DEPLOYMENT GUIDE FOR A VPS
+ Domain : smartclients.io  (and www.smartclients.io)
+ OS     : Ubuntu 24.04 LTS (22.04 also works; commands are the same)
+================================================================================
+
+HOW THIS APP RUNS IN PRODUCTION
+--------------------------------------------------------------------------------
+This is NOT a normal static site. It has three parts:
+
+  1. React frontend      -> built by `npm run build` into dist/
+  2. Backend API (/api/*) -> the code in functions/ . On a VPS these routes
+                            are served by the Vite PREVIEW server
+                            (`npm run preview`, port 4173). vite.config.js
+                            registers every /api route for the preview server.
+  3. MySQL database      -> mysql2 connection that reads MYSQL_* from .env
+
+The current production server (aismart.thetowertech.com) runs the same way:
+`npm run preview` on :4173, managed by systemd, behind nginx. This guide
+sets up smartclients.io the same way:
+
+     Browser --HTTPS--> Nginx :443 --HTTP--> Node (vite preview) 127.0.0.1:4173
+                                                   |
+                                                   +--> MySQL 127.0.0.1:3306
+
+Do NOT use `npm start` / `next start`. The Next.js app/ folder is not
+the production entry point.
+
+
+================================================================================
+ STEP 0 - WHAT YOU NEED BEFORE STARTING
+================================================================================
+[ ] A VPS with Ubuntu 24.04. Minimum 2 vCPU / 4 GB RAM / 40 GB SSD.
+    (`npm run build` needs about 2 GB RAM. With less, add swap; see Step 1.6.)
+[ ] The VPS public IPv4 address, for example 203.0.113.10
+[ ] Root or sudo SSH access to the VPS
+[ ] Access to the DNS panel for smartclients.io
+[ ] A copy of the current working .env (API keys and secrets)
+[ ] A dump of the current database (see Step 4)
+
+
+================================================================================
+ STEP 1 - POINT THE DOMAIN TO THE VPS (do this first, DNS takes time)
+================================================================================
+In the DNS panel for smartclients.io, create:
+
+   Type   Name   Value              TTL
+   A      @      <VPS_IPv4>         300
+   A      www    <VPS_IPv4>         300
+
+Only add an AAAA (IPv6) record if the VPS really has working public
+IPv6. A wrong AAAA record breaks SSL issuance and some visitors.
+
+If the domain is on Cloudflare, set these records to "DNS only" (grey cloud)
+until SSL is issued in Step 9. You can turn the proxy on afterwards, with
+SSL mode set to "Full (strict)".
+
+Check from your PC (it should print the VPS IP):
+   nslookup smartclients.io 8.8.8.8
+   nslookup www.smartclients.io 8.8.8.8
+
+
+================================================================================
+ STEP 2 - PREPARE THE SERVER
+================================================================================
+SSH in as root:
+   ssh root@<VPS_IPv4>
+
+2.1  Update the system
+   apt update && apt upgrade -y
+   timedatectl set-timezone Asia/Karachi        # or your timezone
+
+2.2  Create a deploy user (do not run the app as root)
+   adduser deploy
+   usermod -aG sudo deploy
+
+2.3  SSH key login for the deploy user (run this ON YOUR PC)
+   ssh-copy-id deploy@<VPS_IPv4>
+   # Windows without ssh-copy-id: paste the contents of your
+   # ~/.ssh/id_ed25519.pub into /home/deploy/.ssh/authorized_keys
+
+2.4  Harden SSH (only AFTER key login works)
+   sudo nano /etc/ssh/sshd_config
+       PermitRootLogin no
+       PasswordAuthentication no
+   sudo systemctl restart ssh
+
+2.5  Firewall: allow only SSH, HTTP and HTTPS
+   sudo ufw allow OpenSSH
+   sudo ufw allow 80/tcp
+   sudo ufw allow 443/tcp
+   sudo ufw enable
+   sudo ufw status
+   # Ports 4173 (Node) and 3306 (MySQL) must stay CLOSED to the internet.
+
+2.6  Swap (recommended for VPS with 4 GB RAM or less)
+   sudo fallocate -l 2G /swapfile
+   sudo chmod 600 /swapfile
+   sudo mkswap /swapfile && sudo swapon /swapfile
+   echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab
+
+2.7  Basic tools and brute-force protection
+   sudo apt install -y git curl unzip build-essential fail2ban
+   sudo systemctl enable --now fail2ban
+
+
+================================================================================
+ STEP 3 - INSTALL NODE.JS 24, NGINX, MYSQL, CERTBOT
+================================================================================
+3.1  Node.js 24 (the same major version as current production, v24.x)
+   curl -fsSL https://deb.nodesource.com/setup_24.x | sudo -E bash -
+   sudo apt install -y nodejs
+   node -v      # must print v24.x
+   npm -v
+
+3.2  Nginx
+   sudo apt install -y nginx
+   sudo systemctl enable --now nginx
+
+3.3  MySQL 8
+   sudo apt install -y mysql-server
+   sudo systemctl enable --now mysql
+   sudo mysql_secure_installation
+     - VALIDATE PASSWORD component: yes (medium)
+     - Remove anonymous users: yes
+     - Disallow root login remotely: yes
+     - Remove test database: yes
+     - Reload privilege tables: yes
+
+   Make sure MySQL only listens locally:
+   sudo grep bind-address /etc/mysql/mysql.conf.d/mysqld.cnf
+     -> bind-address = 127.0.0.1
+
+   REQUIRED: raise the sort buffer. The app stores very large JSON rows
+   (project_data can be tens of MB). The Ubuntu default of 256K makes any
+   sorted query over those rows fail with "Out of sort memory". Local WAMP
+   uses 16M. Add under [mysqld] in /etc/mysql/mysql.conf.d/mysqld.cnf:
+       sort_buffer_size   = 16M
+       max_allowed_packet = 256M
+   sudo systemctl restart mysql
+
+3.4  Certbot (for free SSL from Let's Encrypt)
+   sudo apt install -y certbot python3-certbot-nginx
+
+
+================================================================================
+ STEP 4 - CREATE AND LOAD THE DATABASE
+================================================================================
+4.1  Create the database and an app user
+   sudo mysql
+
+   CREATE DATABASE `code-step-mysql`
+     CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
+   CREATE USER 'seox'@'localhost' IDENTIFIED BY 'PUT_A_STRONG_PASSWORD_HERE';
+   GRANT ALL PRIVILEGES ON `code-step-mysql`.* TO 'seox'@'localhost';
+   FLUSH PRIVILEGES;
+   EXIT;
+
+   (The name contains a hyphen, so it MUST be wrapped in backticks in SQL.
+    You can use a different name; just match MYSQL_DATABASE in .env.)
+
+4.2  Load the schema and data. RECOMMENDED: copy the live database
+   The SQL files in the repo do not contain every table. The GBP and Jira
+   tables are not in mysql_tables.sql, and migration.txt has to be run by
+   hand. The safest way to get a complete and correct schema is to dump the
+   database that already works.
+
+   On the machine with the working database (local WAMP or aismart):
+     mysqldump -u root -p --single-transaction --routines --triggers \
+       --default-character-set=utf8mb4 code-step-mysql > seox_dump.sql
+
+     # Schema only, no users/projects (for a clean, empty start):
+     mysqldump -u root -p --no-data --routines --triggers code-step-mysql > seox_schema.sql
+
+   Upload and import:
+     scp seox_dump.sql deploy@<VPS_IPv4>:/home/deploy/
+     mysql -u seox -p code-step-mysql < /home/deploy/seox_dump.sql
+     rm /home/deploy/seox_dump.sql
+
+   Local WAMP runs MySQL 9.1. If MySQL 8 on the VPS rejects the dump
+   because of a collation such as utf8mb4_0900_ai_ci or a MySQL 9 keyword,
+   run this on the dump and import again:
+     sed -i 's/utf8mb4_0900_ai_ci/utf8mb4_general_ci/g' seox_dump.sql
+
+4.3  Alternative (no existing DB): build it from the repo files, in this order
+     mysql -u seox -p code-step-mysql < mysql_tables.sql
+     then every file in migration/mysql/ that starts with a date (2026....sql),
+     oldest first
+     then the GBP migrations in seox-main/migration/mysql/, oldest first:
+         20260908_gbp_connection_module.sql
+         20260909_gbp_profile_audit_posts.sql
+         20260910_gbp_reviews_qanda.sql
+         20260911_gbp_recommendations.sql
+         20260912_gbp_schema_completion.sql
+         (SEOX_GBP_SECURITY_ALL.sql looks like a combined version of these.
+          Read it before running it, and do not run both.)
+     then the Jira statements in migration.txt (read the file first; it says
+     "REVIEW AND RUN MANUALLY")
+     The code also uses a `worker_heartbeats` table that none of these files
+     were checked for. Confirm that it exists.
+   After that, open every screen once and check `journalctl -u seox` for
+   "Table ... doesn't exist" errors. This is why 4.2 is recommended.
+
+4.4  Check
+   mysql -u seox -p -e "USE \`code-step-mysql\`; SHOW TABLES;"
+   Make sure this index exists (it prevents "Out of sort memory" on /api/projects):
+   mysql -u seox -p -e "SHOW INDEX FROM \`code-step-mysql\`.user_projects WHERE Key_name='idx_user_created';"
+   If it prints nothing:
+   mysql -u seox -p code-step-mysql < migration/mysql/add_projects_index.sql
+
+
+================================================================================
+ STEP 5 - UPLOAD THE APPLICATION CODE
+================================================================================
+The app lives in /opt/seox (the current production server uses /opt/seo-crawl).
+
+   sudo mkdir -p /opt/seox
+   sudo chown deploy:deploy /opt/seox
+
+Option A - from Git (recommended)
+   cd /opt/seox
+   git clone <YOUR_REPO_URL> .
+   git checkout main            # or the branch you deploy from
+
+Option B - upload from your Windows PC (no Git on the server)
+   Zip the project WITHOUT these folders/files:
+       node_modules/  dist/  .wrangler/  .git/  .env*  .dev.vars
+       *.zip  service-account.json  *.log
+   Then:
+       scp seox.zip deploy@<VPS_IPv4>:/opt/seox/
+       ssh deploy@<VPS_IPv4> "cd /opt/seox && unzip -o seox.zip && rm seox.zip"
+
+Never upload node_modules from Windows. Some packages include
+platform-specific binaries (esbuild, rolldown, sharp) and will crash on Linux.
+Always run `npm ci` on the server.
+
+
+================================================================================
+ STEP 6 - CREATE THE PRODUCTION .env FILE
+================================================================================
+IMPORTANT: put the secrets in a file named exactly `.env` in /opt/seox.
+The API loader in vite.config.js reads `.env` (and `.dev.vars`) at runtime.
+It does NOT read `.env.production`, so secrets placed only there are
+invisible to the /api routes.
+
+   cd /opt/seox
+   cp .env.example .env
+   nano .env
+
+Fill in (example values; generate your own):
+
+   # --- Database ---
+   MYSQL_HOST=127.0.0.1
+   MYSQL_PORT=3306
+   MYSQL_USER=seox
+   MYSQL_PASSWORD=PUT_A_STRONG_PASSWORD_HERE
+   MYSQL_DATABASE=code-step-mysql
+
+   # --- Public origin: MUST be the real domain, https, no trailing slash ---
+   APP_URL=https://smartclients.io
+
+   # --- Session signing. At least 32 chars. Changing it logs everybody out.
+   #     Reuse the old value if you move users from the old server. ---
+   AUTH_JWT_SECRET=<openssl rand -base64 48>
+
+   # --- Admin access (comma separated) ---
+   ADMIN_EMAILS=you@example.com
+
+   # --- Frontend (baked into the JS bundle at BUILD time) ---
+   VITE_ADMIN_API_BASE=
+   VITE_GOOGLE_CLIENT_ID=<google oauth client id>
+   VITE_GOOGLE_REDIRECT_URI=https://smartclients.io/gsc/oauth-callback
+
+   # --- Google OAuth (server) ---
+   GOOGLE_CLIENT_ID=<google oauth client id>
+   GOOGLE_CLIENT_SECRET=<google oauth client secret>
+   # Do NOT set any *_REDIRECT_URI to localhost / 127.0.0.1 in production.
+
+   # --- Third-party APIs ---
+   DEEPSEEK_API_KEY=
+   PAGESPEED_API_KEY=
+   DATAFORSEO_LOGIN=
+   DATAFORSEO_PASSWORD=
+   WPSCAN_API_TOKEN=            # optional; free tier is non-commercial only
+   STRIPE_SECRET_KEY=           # use the LIVE key sk_live_... in production
+
+   # --- Jira (optional) ---
+   JIRA_TOKEN_ENCRYPTION_KEY=<openssl rand -base64 32>
+   JIRA_SCHEDULER_TOKEN=<openssl rand -hex 32>
+   # JIRA_ALLOW_INSECURE_BASE_URL  -> must stay UNSET in production
+
+   # --- Google Business Profile (optional) ---
+   GBP_TOKEN_ENCRYPTION_KEY=<openssl rand -base64 32>
+   GBP_SCHEDULER_TOKEN=<openssl rand -hex 32>
+
+Generate random secrets on the server:
+   openssl rand -base64 48      # AUTH_JWT_SECRET
+   openssl rand -base64 32      # *_ENCRYPTION_KEY
+   openssl rand -hex 32         # *_SCHEDULER_TOKEN
+
+IF YOU COPY THE DATABASE FROM THE OLD SERVER: reuse the SAME
+JIRA_TOKEN_ENCRYPTION_KEY and GBP_TOKEN_ENCRYPTION_KEY. Otherwise every stored
+Jira/GBP credential becomes unreadable and users must reconnect.
+
+Rules:
+ - Never prefix a secret with VITE_ . Anything VITE_* is published inside
+   the browser JavaScript.
+ - VITE_* values are read at BUILD time. After changing one, run
+   `npm run build` again.
+
+Lock the file:
+   chmod 600 .env
+
+
+================================================================================
+ STEP 7 - ALLOW THE DOMAIN IN VITE PREVIEW  (one-time code change)
+================================================================================
+Vite 8 rejects requests whose Host header it does not recognise
+("Blocked request. This host is not allowed."). Add the domain to the
+`preview` block near the end of vite.config.js:
+
+   preview: {
+     host: '127.0.0.1',        // only nginx can reach it; was `true`
+     port: 4173,
+     allowedHosts: ['smartclients.io', 'www.smartclients.io'],
+   },
+
+Commit this change so it is not lost on the next deploy.
+(`host: '127.0.0.1'` is extra protection on top of the firewall. Node then
+does not listen on the public interface at all.)
+
+
+================================================================================
+ STEP 8 - INSTALL DEPENDENCIES, BUILD, AND TEST BY HAND
+================================================================================
+   cd /opt/seox
+   npm ci                 # clean install from package-lock.json
+   npm run build          # creates dist/
+   npm test               # optional: run the test suite
+
+Quick manual run (Ctrl+C to stop):
+   npm run preview
+In a second SSH window:
+   curl -I http://127.0.0.1:4173/                         # expect 200
+   curl -s http://127.0.0.1:4173/api/settings/public      # expect JSON
+
+If both work, stop it with Ctrl+C and continue.
+
+
+================================================================================
+ STEP 9 - RUN THE APP AS A SYSTEM SERVICE (auto-start, auto-restart)
+================================================================================
+   sudo nano /etc/systemd/system/seox.service
+
+Paste:
+--------------------------------------------------------------------------
+[Unit]
+Description=SEOX (smartclients.io) - Vite preview server
+After=network.target mysql.service
+Wants=mysql.service
+
+[Service]
+Type=simple
+User=deploy
+Group=deploy
+WorkingDirectory=/opt/seox
+Environment=NODE_ENV=production
+ExecStart=/usr/bin/npm run preview
+Restart=always
+RestartSec=5
+# Log to journald: view with `journalctl -u seox -f`
+StandardOutput=journal
+StandardError=journal
+LimitNOFILE=65535
+
+[Install]
+WantedBy=multi-user.target
+--------------------------------------------------------------------------
+
+   sudo systemctl daemon-reload
+   sudo systemctl enable --now seox
+   sudo systemctl status seox
+   journalctl -u seox -f          # live logs (Ctrl+C to exit)
+
+
+================================================================================
+ STEP 10 - NGINX REVERSE PROXY
+================================================================================
+   sudo nano /etc/nginx/sites-available/smartclients.io
+
+Paste (HTTP only for now; certbot adds HTTPS in Step 11):
+--------------------------------------------------------------------------
+upstream seox_app {
+    server 127.0.0.1:4173;
+    keepalive 32;
+}
+
+server {
+    listen 80;
+    listen [::]:80;
+    server_name smartclients.io www.smartclients.io;
+
+    # Screaming Frog / CSV uploads and large JSON bodies
+    client_max_body_size 50M;
+
+    # AI generation, crawls and audits can take minutes
+    proxy_connect_timeout 60s;
+    proxy_send_timeout    300s;
+    proxy_read_timeout    300s;
+
+    gzip on;
+    gzip_types text/plain text/css application/json application/javascript
+               application/xml image/svg+xml;
+    gzip_min_length 1024;
+
+    # Hashed build assets never change, so let browsers cache them for a year
+    location /assets/ {
+        proxy_pass http://seox_app;
+        proxy_set_header Host $host;
+        expires 1y;
+        add_header Cache-Control "public, immutable";
+    }
+
+    location / {
+        proxy_pass http://seox_app;
+        proxy_http_version 1.1;
+        proxy_set_header Connection "";
+        proxy_set_header Host              $host;
+        proxy_set_header X-Real-IP         $remote_addr;
+        proxy_set_header X-Forwarded-For   $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header X-Forwarded-Host  $host;
+    }
+}
+--------------------------------------------------------------------------
+
+Enable it and remove the default site:
+   sudo ln -s /etc/nginx/sites-available/smartclients.io /etc/nginx/sites-enabled/
+   sudo rm -f /etc/nginx/sites-enabled/default
+   sudo nginx -t
+   sudo systemctl reload nginx
+
+Test:  http://smartclients.io  should open the app.
+
+
+================================================================================
+ STEP 11 - HTTPS (FREE SSL WITH LET'S ENCRYPT)
+================================================================================
+DNS from Step 1 must already point to this VPS.
+
+   sudo certbot --nginx -d smartclients.io -d www.smartclients.io \
+        --redirect -m you@example.com --agree-tos --no-eff-email
+
+Certbot adds the 443 server block and the HTTP->HTTPS redirect.
+
+Optional: send www to the bare domain (one canonical URL, better for SEO).
+Edit /etc/nginx/sites-available/smartclients.io and, in the 443 server
+block, add at the top:
+       if ($host = www.smartclients.io) {
+           return 301 https://smartclients.io$request_uri;
+       }
+   sudo nginx -t && sudo systemctl reload nginx
+
+Auto-renewal is installed by certbot. Check it:
+   sudo certbot renew --dry-run
+   systemctl list-timers | grep certbot
+
+
+================================================================================
+ STEP 12 - UPDATE THIRD-PARTY DASHBOARDS FOR THE NEW DOMAIN
+================================================================================
+12.1  Google Cloud Console -> APIs & Services -> Credentials -> OAuth client
+      Authorized JavaScript origins:
+          https://smartclients.io
+          https://www.smartclients.io
+      Authorized redirect URIs (add all three):
+          https://smartclients.io/api/auth/google/callback     (sign-in)
+          https://smartclients.io/gsc/oauth-callback           (Search Console)
+          https://smartclients.io/gbp/oauth-callback           (Business Profile)
+      OAuth consent screen: set Home page, Privacy policy
+      (https://smartclients.io/privacy-policy.html) and Authorized domain
+      = smartclients.io. Google must be able to reach these pages from the
+      public internet.
+
+12.2  App admin settings (stored in the DATABASE, not in .env)
+      If you copied the database from aismart, log in as admin and open the
+      settings. Change every stored URL still pointing at
+      aismart.thetowertech.com, especially:
+          google_auth_redirect_uri
+          google_gsc_redirect_uri
+          google_gbp_redirect_uri
+      Otherwise Google returns "redirect_uri_mismatch".
+
+12.3  Stripe dashboard
+      - Use LIVE keys in .env.
+      - Update any Connect redirect / return URLs to https://smartclients.io/...
+
+12.4  Jira (if used)
+      Update the Jira webhook URL to:
+          https://smartclients.io/api/jira/webhook
+
+12.5  Search engines
+      - Google Search Console: add the property https://smartclients.io
+        (the files google9d93284e6b9e5d51.html and BingSiteAuth.xml in public/
+        belong to the OLD property; add new verification files/meta tags for
+        the new domain if needed).
+      - Bing Webmaster Tools: same.
+
+
+================================================================================
+ STEP 13 - SCHEDULED JOBS (CRON)
+================================================================================
+The Jira and GBP background runners do not run by themselves. A cron job has
+to call them.
+
+   crontab -e        (as the deploy user)
+
+Add (replace the tokens with the values from .env):
+--------------------------------------------------------------------------
+# Jira background sync, every 5 minutes
+*/5 * * * * curl -fsS -m 120 -X POST -H "X-Jira-Scheduler-Token: <JIRA_SCHEDULER_TOKEN>" -H "Content-Type: application/json" -d '{"trigger":"cron"}' http://127.0.0.1:4173/api/jira/jobs >/dev/null 2>&1
+
+# Google Business Profile jobs, every 10 minutes
+*/10 * * * * curl -fsS -m 120 -X POST -H "X-GBP-Scheduler-Token: <GBP_SCHEDULER_TOKEN>" http://127.0.0.1:4173/api/gbp/jobs >/dev/null 2>&1
+
+# Daily database backup at 02:30, keep 14 days
+30 2 * * * /opt/seox-backup.sh >/dev/null 2>&1
+--------------------------------------------------------------------------
+
+Note: if you set `allowedHosts` in Step 7, requests to 127.0.0.1 are still
+allowed (Vite always accepts localhost and IP addresses).
+
+
+================================================================================
+ STEP 14 - DATABASE BACKUPS
+================================================================================
+   sudo mkdir -p /var/backups/seox && sudo chown deploy:deploy /var/backups/seox
+
+Store the DB password in a protected file instead of the script:
+   nano ~/.my.cnf
+       [mysqldump]
+       user=seox
+       password=PUT_A_STRONG_PASSWORD_HERE
+   chmod 600 ~/.my.cnf
+
+   sudo nano /opt/seox-backup.sh
+--------------------------------------------------------------------------
+#!/bin/bash
+set -e
+STAMP=$(date +%F_%H%M)
+mysqldump --single-transaction --routines --triggers code-step-mysql \
+  | gzip > /var/backups/seox/seox_$STAMP.sql.gz
+find /var/backups/seox -name '*.sql.gz' -mtime +14 -delete
+--------------------------------------------------------------------------
+   sudo chown deploy:deploy /opt/seox-backup.sh
+   chmod +x /opt/seox-backup.sh
+   /opt/seox-backup.sh && ls -lh /var/backups/seox
+
+Also copy backups OFF the server regularly (another server, S3, Google
+Drive, etc.). A backup kept only on the same VPS is lost if the VPS is lost.
+
+
+================================================================================
+ STEP 15 - FINAL CHECKLIST (test on https://smartclients.io)
+================================================================================
+[ ] https://smartclients.io loads; the padlock shows a valid certificate
+[ ] http:// and www redirect to https://smartclients.io
+[ ] Refreshing a deep link (e.g. /dashboard) works; no 404
+[ ] Email/password sign up and login
+[ ] Google sign-in (no redirect_uri_mismatch)
+[ ] Create a project -> saved in MySQL
+[ ] AI tools (DeepSeek) return results
+[ ] PageSpeed / Tech SEO speed test
+[ ] Crawler / URL proxy / fetch-url-meta
+[ ] Keyword research (DataForSEO)
+[ ] Search Console connect
+[ ] Stripe Connect flow
+[ ] Admin panel opens for ADMIN_EMAILS users
+[ ] `journalctl -u seox --since "10 min ago"` shows no errors
+[ ] Reboot test: `sudo reboot`, then the site comes back by itself
+[ ] Port check from your PC: 4173 and 3306 are NOT reachable
+
+
+================================================================================
+ STEP 16 - DEPLOYING UPDATES LATER
+================================================================================
+   ssh deploy@<VPS_IPv4>
+   cd /opt/seox
+   /opt/seox-backup.sh                 # backup before every release
+   git pull                            # or upload the new zip (Step 5B)
+   npm ci                              # only needed if package-lock.json changed
+   # run any NEW migration/mysql/*.sql files here
+   npm run build
+   sudo systemctl restart seox
+   journalctl -u seox -n 50
+
+Why the restart matters: the frontend changes as soon as dist/ is rebuilt,
+but the backend files in functions/ are already loaded in the running Node
+process. Backend changes only take effect after `systemctl restart seox`.
+
+Rollback: `git checkout <previous-commit>`, `npm ci`, `npm run build`,
+`sudo systemctl restart seox`. Restore the DB from /var/backups/seox if a
+migration was involved.
+
+
+================================================================================
+ TROUBLESHOOTING
+================================================================================
+Symptom: 502 Bad Gateway
+  -> The Node service is down. `sudo systemctl status seox`,
+     `journalctl -u seox -n 100`. Often a missing .env or a MySQL login error.
+
+Symptom: "Blocked request. This host is not allowed."
+  -> Step 7 was skipped. Add allowedHosts and restart the service.
+
+Symptom: /api/... returns 401 / "not configured" / empty data
+  -> The secrets are in .env.production instead of .env, or the service was
+     not restarted after editing .env.
+
+Symptom: "Access denied for user" / ECONNREFUSED 3306
+  -> Check MYSQL_* in .env; test with
+     mysql -u seox -p -h 127.0.0.1 code-step-mysql
+
+Symptom: {"error":"Out of sort memory, consider increasing server sort buffer size"}
+  -> sort_buffer_size is still at the 256K default, and/or the
+     idx_user_created index is missing. See Step 3.3 and Step 4.4.
+
+Symptom: "Table 'code-step-mysql.xxx' doesn't exist"
+  -> The schema is incomplete. Import it from the working DB (Step 4.2).
+
+Symptom: Google calls fail with "TypeError: fetch failed" / ETIMEDOUT
+  -> Known issue on hosts without working IPv6 or with high latency to Google.
+     Server-side calls to Google must use googleFetch()
+     (functions/_lib/google-fetch.js). Check the VPS:
+       curl -6 -I https://www.google.com      (fails = no IPv6)
+     Optional system-wide fix: prefer IPv4 by adding
+       Environment=NODE_OPTIONS=--dns-result-order=ipv4first
+     to seox.service, then daemon-reload and restart.
+
+Symptom: Google sign-in "redirect_uri_mismatch"
+  -> Step 12.1 and 12.2. The URI must match EXACTLY (https, no trailing slash).
+
+Symptom: 413 Request Entity Too Large on upload
+  -> Raise client_max_body_size in the nginx config.
+
+Symptom: 504 Gateway Timeout on long AI/crawl tasks
+  -> Raise proxy_read_timeout in the nginx config.
+
+Symptom: The build is killed ("JavaScript heap out of memory" / Killed)
+  -> Add swap (Step 2.6) or run:
+     NODE_OPTIONS=--max-old-space-size=3072 npm run build
+
+Useful commands:
+   sudo systemctl restart seox        restart the app
+   journalctl -u seox -f              app logs (live)
+   sudo tail -f /var/log/nginx/error.log
+   sudo nginx -t && sudo systemctl reload nginx
+   sudo certbot certificates          SSL expiry dates
+   df -h ; free -m ; htop             disk / memory / CPU
+
+
+================================================================================
+ SECURITY NOTES
+================================================================================
+ - service-account.json, .env and .dev.vars exist in the local project folder.
+   Never upload them to Git. Put only the values the server needs in the
+   server's .env.
+ - Keep `.env` at chmod 600, owned by deploy.
+ - Only ports 22, 80 and 443 are open (ufw). MySQL and Node listen on
+   127.0.0.1 only.
+ - Install security updates automatically:
+      sudo apt install -y unattended-upgrades
+      sudo dpkg-reconfigure --priority=low unattended-upgrades
+ - Use a different AUTH_JWT_SECRET per environment unless you intentionally
+   move live sessions from the old server.
+================================================================================

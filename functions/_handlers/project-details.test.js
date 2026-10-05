@@ -354,3 +354,114 @@ test("parses JSON string feature values correctly", async () => {
     eeat: { result: { score: 85 }, updatedAt: "2026-07-31" },
   });
 });
+
+function gscHandler(resolveGscData, projectData) {
+  return createProjectDetailsHandler(
+    async (sql) =>
+      sql.includes("FROM users")
+        ? { id: 7 }
+        : {
+            project_id: "project-1",
+            project_data: projectData,
+            full_url: "https://example.com",
+            project_name: "Example",
+            user_id: 3,
+            domain: "example.com",
+          },
+    { resolveGscData }
+  );
+}
+
+const auditData = { signedIn: true, metrics: {}, topQueries: [], fetchedAt: "2026-10-02T00:00:00.000Z" };
+const insightsData = { signedIn: true, summary: {}, keywords: [], fetchedAt: "2026-10-02T00:00:01.000Z" };
+
+test("adds GSC Audit and Insights under their own keys and leaves project_data.gsc alone", async () => {
+  const seen = [];
+  const dashboardGsc = { status: "complete", metrics: { clicks: 5 } };
+  const project = await gscHandler(
+    async (args) => {
+      seen.push(args);
+      return {
+        gsc_audit: { data: auditData, status: "fresh" },
+        gsc_insights: { data: insightsData, status: "cached" },
+      };
+    },
+    { speed_test: { score: 90 }, gsc: dashboardGsc }
+  )({ admin_token: "secret", url: "https://example.com", refresh: "1" });
+
+  assert.deepEqual(project.project_data, {
+    speed_test: { score: 90 },
+    gsc: dashboardGsc,
+    gsc_audit: auditData,
+    gsc_insights: insightsData,
+  });
+  assert.deepEqual(project.gsc_audit_status, { status: "fresh", fetched_at: auditData.fetchedAt });
+  assert.deepEqual(project.gsc_insights_status, { status: "cached", fetched_at: insightsData.fetchedAt });
+  assert.equal(project.user_id, undefined);
+  assert.equal(project.domain, undefined);
+  assert.equal(seen.length, 1, "one resolver call covers both modules");
+  assert.deepEqual(seen[0].want, ["gsc_audit", "gsc_insights"]);
+  assert.equal(seen[0].project.user_id, 3);
+  assert.equal(seen[0].force, true);
+});
+
+test("a GSC failure keeps saved data and project_data, and reports the error", async () => {
+  const project = await gscHandler(
+    async () => ({
+      gsc_audit: { data: auditData, status: "error", error: { code: "GSC_NOT_CONNECTED", message: "nope" } },
+      gsc_insights: { data: null, status: "error", error: { code: "GSC_NOT_CONNECTED", message: "nope" } },
+    }),
+    { gsc_audit: auditData, speed_test: { score: 90 } }
+  )({ admin_token: "secret", url: "https://example.com" });
+
+  assert.equal(project.project_data.speed_test.score, 90);
+  assert.deepEqual(project.project_data.gsc_audit, auditData);
+  assert.equal("gsc_insights" in project.project_data, false);
+  assert.equal(project.gsc_audit_status.error.code, "GSC_NOT_CONNECTED");
+  assert.equal(project.gsc_insights_status.status, "error");
+});
+
+test("a throwing-free resolver result of nothing leaves the response untouched", async () => {
+  const project = await gscHandler(async () => ({}), { speed_test: { score: 90 } })({
+    admin_token: "secret",
+    url: "https://example.com",
+  });
+  assert.deepEqual(project.project_data, { speed_test: { score: 90 } });
+  assert.equal("gsc_audit_status" in project, false);
+});
+
+test("feature filter selects which GSC modules run", async () => {
+  const wants = [];
+  const resolver = async ({ want }) => {
+    wants.push(want);
+    return { gsc_audit: { data: auditData, status: "cached" }, gsc_insights: { data: insightsData, status: "cached" } };
+  };
+  await gscHandler(resolver, { speed_test: { score: 1 } })({ admin_token: "s", url: "https://example.com", feature: "speed" });
+  assert.deepEqual(wants, [], "unrelated features make no Google call");
+
+  const audit = await gscHandler(resolver, {})({ admin_token: "s", url: "https://example.com", feature: "gsc-audit" });
+  assert.deepEqual(wants[0], ["gsc_audit"]);
+  assert.deepEqual(Object.keys(audit.project_data), ["gsc_audit"]);
+
+  const insights = await gscHandler(resolver, {})({ admin_token: "s", url: "https://example.com", feature: "gsc_insights" });
+  assert.deepEqual(wants[1], ["gsc_insights"]);
+  assert.deepEqual(Object.keys(insights.project_data), ["gsc_insights"]);
+});
+
+test("feature=gsc still returns the dashboard value, untouched", async () => {
+  const project = await gscHandler(async () => ({}), { gsc: { status: "complete" } })({
+    admin_token: "s",
+    url: "https://example.com",
+    feature: "gsc",
+  });
+  assert.deepEqual(project.project_data, { gsc: { status: "complete" } });
+});
+
+test("feature=gsc_audit with a failed run and nothing saved returns null and the error, not 404", async () => {
+  const project = await gscHandler(
+    async () => ({ gsc_audit: { data: null, status: "error", error: { code: "GSC_NOT_CONNECTED", message: "x" } } }),
+    { speed_test: { score: 1 } }
+  )({ admin_token: "s", url: "https://example.com", feature: "gsc_audit" });
+  assert.deepEqual(project.project_data, { gsc_audit: null });
+  assert.equal(project.gsc_audit_status.error.code, "GSC_NOT_CONNECTED");
+});
