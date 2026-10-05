@@ -46,6 +46,8 @@ function extractFeatureData(projectData, featureName) {
     low_hanging_keywords: "low-hanging-keywords",
     lost_keyword: "lost-keywords",
     lost_keywords: "lost-keywords",
+    "gsc-audit": "gsc_audit",
+    "gsc-insights": "gsc_insights",
   };
   const canonicalFeatureName = featureAliases[featureName] || featureName;
 
@@ -96,7 +98,7 @@ function extractFeatureData(projectData, featureName) {
   throw error;
 }
 
-export function validateProjectDetailsInput({ admin_token, url, full_url, project_url, project_id, feature } = {}) {
+export function validateProjectDetailsInput({ admin_token, url, full_url, project_url, project_id, feature, refresh } = {}) {
   const adminToken = typeof admin_token === "string" ? admin_token.trim() : "";
   const rawUrl = typeof url === "string" ? url.trim() : typeof full_url === "string" ? full_url.trim() : typeof project_url === "string" ? project_url.trim() : "";
   const projectId = typeof project_id === "string" ? project_id.trim() : "";
@@ -114,7 +116,9 @@ export function validateProjectDetailsInput({ admin_token, url, full_url, projec
     if (!projectDomain) throw badRequest("url is invalid");
   }
 
-  return { adminToken, url: rawUrl, projectDomain, projectId, feature: featureName };
+  const refreshGsc = ["1", "true", "yes"].includes(String(refresh ?? "").trim().toLowerCase());
+
+  return { adminToken, url: rawUrl, projectDomain, projectId, feature: featureName, refresh: refreshGsc };
 }
 
 /**
@@ -138,11 +142,26 @@ export function validateProjectCreateInput({ admin_token, project_id, project_na
   return { adminToken, projectId, projectName, fullUrl, projectData: data };
 }
 
-export function createProjectDetailsHandler(queryOne) {
+// Which GSC modules a `feature` filter asks for. No filter means all of them;
+// any other feature (speed, eeat, gsc, ...) triggers no Google call at all.
+const GSC_FEATURE_MODULES = {
+  gsc_audit: ["gsc_audit"],
+  "gsc-audit": ["gsc_audit"],
+  gsc_insights: ["gsc_insights"],
+  "gsc-insights": ["gsc_insights"],
+};
+const ALL_GSC_MODULES = ["gsc_audit", "gsc_insights"];
+
+/**
+ * `resolveGscData` is optional so the handler stays usable (and testable)
+ * without Google/network access; when supplied it adds the GSC Audit and GSC
+ * Insights results to project_data.gsc_audit / gsc_insights. It must never throw.
+ */
+export function createProjectDetailsHandler(queryOne, { resolveGscData, env } = {}) {
   if (typeof queryOne !== "function") throw new TypeError("queryOne must be a function");
 
   return async function getProjectDetails(input) {
-    const { adminToken, projectDomain, projectId, feature } = validateProjectDetailsInput(input);
+    const { adminToken, projectDomain, projectId, feature, refresh } = validateProjectDetailsInput(input);
 
     const admin = await queryOne(
       `SELECT id
@@ -163,7 +182,7 @@ export function createProjectDetailsHandler(queryOne) {
     let project = null;
     if (projectId) {
       project = await queryOne(
-        `SELECT project_id, project_data, full_url, project_name
+        `SELECT project_id, project_data, full_url, project_name, user_id, domain
          FROM user_projects
          WHERE project_id = ?
          LIMIT 1`,
@@ -171,7 +190,7 @@ export function createProjectDetailsHandler(queryOne) {
       );
     } else {
       project = await queryOne(
-        `SELECT project_id, project_data, full_url, project_name
+        `SELECT project_id, project_data, full_url, project_name, user_id, domain
          FROM user_projects
          WHERE domain = ?
          LIMIT 1`,
@@ -185,14 +204,43 @@ export function createProjectDetailsHandler(queryOne) {
       throw error;
     }
 
-    const parsedProjectData = parseProjectData(project.project_data);
-    
+    // user_id/domain are selected only to locate the owner's GSC connection;
+    // they were never part of this response, so they stay out of it.
+    const { user_id: ownerId, domain: projectRowDomain, ...publicProject } = project;
+    let parsedProjectData = parseProjectData(project.project_data);
+
+    const gscStatuses = {};
+    const wantedGsc = feature ? GSC_FEATURE_MODULES[feature] || [] : ALL_GSC_MODULES;
+    if (typeof resolveGscData === "function" && wantedGsc.length) {
+      const results = await resolveGscData({
+        env,
+        project: { ...project, user_id: ownerId, domain: projectRowDomain },
+        saved: Object.fromEntries(wantedGsc.map((key) => [key, parsedProjectData[key]])),
+        want: wantedGsc,
+        force: refresh,
+      });
+      for (const key of wantedGsc) {
+        const result = results?.[key];
+        if (!result) continue;
+        if (result.data) parsedProjectData = { ...parsedProjectData, [key]: result.data };
+        // A feature request for a module that failed with nothing saved gets
+        // null plus the error status, not a 404 about a missing feature.
+        else if (feature && !(key in parsedProjectData)) parsedProjectData = { ...parsedProjectData, [key]: null };
+        gscStatuses[`${key}_status`] = {
+          status: result.status,
+          ...(result.error ? { error: result.error } : {}),
+          ...(result.data?.fetchedAt ? { fetched_at: result.data.fetchedAt } : {}),
+        };
+      }
+    }
+
     // If a specific feature is requested, filter the project data
     const filteredProjectData = feature ? extractFeatureData(parsedProjectData, feature) : parsedProjectData;
 
     return {
-      ...project,
+      ...publicProject,
       project_data: filteredProjectData,
+      ...gscStatuses,
     };
   };
 }

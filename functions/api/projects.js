@@ -256,12 +256,25 @@ async function loadProjects(userId, { includeAllUsers = false } = {}) {
     user_agent, url_limit, total_urls, compare_to, crawled_on, render_js, respect_robots, notify_email,
     owner, owner_email, owner_uid, project_data, selected_project_id, deleted_project_ids, created_at, updated_at`;
   
-  const rows = await query(
+  // Sort only the narrow (id, created_at) pairs, then fetch the wide rows by
+  // id. Sorting rows that carry project_data makes MySQL fail with "Out of
+  // sort memory" once one row outgrows sort_buffer_size (256K by default).
+  const orderedIds = (await query(
     includeAllUsers
-      ? `SELECT ${columnList} FROM user_projects ORDER BY created_at DESC LIMIT 1000`
-      : `SELECT ${columnList} FROM user_projects WHERE user_id = ? ORDER BY created_at DESC LIMIT 1000`,
+      ? `SELECT id FROM user_projects ORDER BY created_at DESC, id DESC LIMIT 1000`
+      : `SELECT id FROM user_projects WHERE user_id = ? ORDER BY created_at DESC, id DESC LIMIT 1000`,
     includeAllUsers ? [] : [userId]
-  );
+  )).map(row => row.id);
+
+  const rowsById = new Map();
+  if (orderedIds.length > 0) {
+    const fetched = await query(
+      `SELECT id, ${columnList} FROM user_projects WHERE id IN (${orderedIds.map(() => '?').join(', ')})`,
+      orderedIds
+    );
+    fetched.forEach(row => rowsById.set(String(row.id), row));
+  }
+  const rows = orderedIds.map(id => rowsById.get(String(id))).filter(Boolean);
 
   // Transform MySQL rows to match expected format
   const projects = rows.map(row => ({

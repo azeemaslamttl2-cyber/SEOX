@@ -1,5 +1,6 @@
 import proxyHandler from "../../_handlers/proxy.js";
 import { configureMysqlConnection, queryOne } from "../../_lib/mysql.js";
+import { describeDataForSeoError } from "../../_lib/dataforseo-errors.js";
 import { DATAFORSEO_LOCATIONS } from "../../../src/lib/keywordTools.js";
 
 const MAX_TOKEN_LENGTH = 512;
@@ -89,7 +90,13 @@ export async function onRequest({ request, env }) {
     );
     const result = response.result();
     if (result.statusCode >= 400 || result.body?.error) {
-      return json({ success: false, error: result.body?.message || result.body?.error || "Keyword research failed." }, result.statusCode);
+      const described = describeDataForSeoError({
+        httpStatus: result.statusCode,
+        statusCode: result.body?.status_code,
+        statusMessage: result.body?.status_message,
+        fallback: result.body?.message || result.body?.error,
+      });
+      return json({ success: false, error: described.message, code: described.code }, described.status);
     }
     return json({ success: true, data: result.body });
   } catch (caught) {
